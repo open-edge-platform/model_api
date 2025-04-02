@@ -18,10 +18,10 @@
 namespace {
 class MaskRCNNModelParamsSetter {
 public:
-    std::shared_ptr<ModelBase> model;
+    std::shared_ptr<ImageModel> model;
     bool state;
     MaskRCNNModel* model_ptr;
-    MaskRCNNModelParamsSetter(std::shared_ptr<ModelBase> model_) : model(model_) {
+    MaskRCNNModelParamsSetter(std::shared_ptr<ImageModel> model_) : model(model_) {
         model_ptr = static_cast<MaskRCNNModel*>(model.get());
         state = model_ptr->postprocess_semantic_masks;
         model_ptr->postprocess_semantic_masks = false;

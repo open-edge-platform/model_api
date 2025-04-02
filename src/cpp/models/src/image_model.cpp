@@ -15,17 +15,137 @@
 #include <utils/ocv_common.hpp>
 #include <vector>
 
+#include "adapters/openvino_adapter.h"
 #include "models/input_data.h"
 #include "models/internal_model_data.h"
 #include "models/results.h"
+#include "utils/common.hpp"
+
+namespace {
+class TmpCallbackSetter {
+public:
+    ImageModel* model;
+    std::function<void(std::unique_ptr<ResultBase>, const ov::AnyMap&)> last_callback;
+    TmpCallbackSetter(ImageModel* model_,
+                      std::function<void(std::unique_ptr<ResultBase>, const ov::AnyMap&)> tmp_callback,
+                      std::function<void(std::unique_ptr<ResultBase>, const ov::AnyMap&)> last_callback_)
+        : model(model_),
+          last_callback(last_callback_) {
+        model->setCallback(tmp_callback);
+    }
+    ~TmpCallbackSetter() {
+        if (last_callback) {
+            model->setCallback(last_callback);
+        } else {
+            model->setCallback([](std::unique_ptr<ResultBase>, const ov::AnyMap&) {});
+        }
+    }
+};
+}  // namespace
 
 ImageModel::ImageModel(const std::string& modelFile,
                        const std::string& resize_type,
                        bool useAutoResize,
                        const std::string& layout)
-    : ModelBase(modelFile, layout),
-      useAutoResize(useAutoResize),
-      resizeMode(selectResizeMode(resize_type)) {}
+    : useAutoResize(useAutoResize),
+      resizeMode(selectResizeMode(resize_type)),
+      modelFile(modelFile),
+      inputsLayouts(parseLayoutString(layout)) {
+    auto core = ov::Core();
+    model = core.read_model(modelFile);
+}
+
+
+void ImageModel::load(ov::Core& core, const std::string& device, size_t num_infer_requests) {
+    if (!inferenceAdapter) {
+        inferenceAdapter = std::make_shared<OpenVINOInferenceAdapter>();
+    }
+
+    // Update model_info erased by pre/postprocessing
+    updateModelInfo();
+
+    inferenceAdapter->loadModel(model, core, device, {}, num_infer_requests);
+}
+
+std::shared_ptr<ov::Model> ImageModel::prepare() {
+    prepareInputsOutputs(model);
+    logBasicModelInfo(model);
+    ov::set_batch(model, 1);
+
+    return model;
+}
+
+ov::Layout ImageModel::getInputLayout(const ov::Output<ov::Node>& input) {
+    ov::Layout layout = ov::layout::get_layout(input);
+    if (layout.empty()) {
+        if (inputsLayouts.empty()) {
+            layout = getLayoutFromShape(input.get_partial_shape());
+            slog::warn << "Automatically detected layout '" << layout.to_string() << "' for input '"
+                       << input.get_any_name() << "' will be used." << slog::endl;
+        } else if (inputsLayouts.size() == 1) {
+            layout = inputsLayouts.begin()->second;
+        } else {
+            layout = inputsLayouts[input.get_any_name()];
+        }
+    }
+
+    return layout;
+}
+
+size_t ImageModel::getNumAsyncExecutors() const {
+    return inferenceAdapter->getNumAsyncExecutors();
+}
+
+bool ImageModel::isReady() {
+    return inferenceAdapter->isReady();
+}
+void ImageModel::awaitAll() {
+    inferenceAdapter->awaitAll();
+}
+void ImageModel::awaitAny() {
+    inferenceAdapter->awaitAny();
+}
+
+void ImageModel::setCallback(
+    std::function<void(std::unique_ptr<ResultBase>, const ov::AnyMap& callback_args)> callback) {
+    lastCallback = callback;
+    inferenceAdapter->setCallback([this, callback](ov::InferRequest request, CallbackData args) {
+        InferenceResult result;
+
+        InferenceOutput output;
+        for (const auto& item : this->getInferenceAdapter()->getOutputNames()) {
+            output.emplace(item, request.get_tensor(item));
+        }
+
+        result.outputsData = output;
+        auto model_data_iter = args->find("internalModelData");
+        if (model_data_iter != args->end()) {
+            result.internalModelData = std::move(model_data_iter->second.as<std::shared_ptr<InternalModelData>>());
+        }
+        auto retVal = this->postprocess(result);
+        *retVal = static_cast<ResultBase&>(result);
+        callback(std::move(retVal), args ? *args : ov::AnyMap());
+    });
+}
+
+std::shared_ptr<ov::Model> ImageModel::getModel() {
+    if (!model) {
+        throw std::runtime_error(std::string("ov::Model is not accessible for the current model adapter: ") +
+                                 typeid(inferenceAdapter).name());
+    }
+
+    updateModelInfo();
+    return model;
+}
+
+std::shared_ptr<InferenceAdapter> ImageModel::getInferenceAdapter() {
+    if (!inferenceAdapter) {
+        throw std::runtime_error(std::string("Model wasn't loaded"));
+    }
+
+    return inferenceAdapter;
+}
+
 
 RESIZE_MODE ImageModel::selectResizeMode(const std::string& resize_type) {
     RESIZE_MODE resize = RESIZE_FILL;
@@ -68,36 +188,88 @@ void ImageModel::init_from_config(const ov::AnyMap& top_priority, const ov::AnyM
 }
 
 ImageModel::ImageModel(std::shared_ptr<ov::Model>& model, const ov::AnyMap& configuration)
-    : ModelBase(model, configuration) {
+    : model(model) {
+    auto layout_iter = configuration.find("layout");
+    std::string layout = "";
+
+    if (layout_iter != configuration.end()) {
+        layout = layout_iter->second.as<std::string>();
+    } else {
+        if (model->has_rt_info("model_info", "layout")) {
+            layout = model->get_rt_info<std::string>("model_info", "layout");
+        }
+    }
+    inputsLayouts = parseLayoutString(layout);
     init_from_config(configuration,
                      model->has_rt_info("model_info") ? model->get_rt_info<ov::AnyMap>("model_info") : ov::AnyMap{});
 }
 
 ImageModel::ImageModel(std::shared_ptr<InferenceAdapter>& adapter, const ov::AnyMap& configuration)
-    : ModelBase(adapter, configuration) {
+    : inferenceAdapter(adapter) {
+    const ov::AnyMap& adapter_configuration = adapter->getModelConfig();
+
+    std::string layout = "";
+    layout = get_from_any_maps("layout", configuration, adapter_configuration, layout);
+    inputsLayouts = parseLayoutString(layout);
+
+    inputNames = adapter->getInputNames();
+    outputNames = adapter->getOutputNames();
+
     init_from_config(configuration, adapter->getModelConfig());
 }
 
 std::unique_ptr<ResultBase> ImageModel::inferImage(const ImageInputData& inputData) {
-    return ModelBase::infer(static_cast<const InputData&>(inputData));
-    ;
+    InferenceInput inputs;
+    InferenceResult result;
+    auto internalModelData = this->preprocess(inputData, inputs);
+
+    result.outputsData = inferenceAdapter->infer(inputs);
+    result.internalModelData = std::move(internalModelData);
+
+    auto retVal = this->postprocess(result);
+    *retVal = static_cast<ResultBase&>(result);
+    return retVal;
 }
 
 std::vector<std::unique_ptr<ResultBase>> ImageModel::inferBatchImage(const std::vector<ImageInputData>& inputImgs) {
-    std::vector<std::reference_wrapper<const InputData>> inputData;
+    std::vector<std::reference_wrapper<const ImageInputData>> inputData;
     inputData.reserve(inputImgs.size());
     for (const auto& img : inputImgs) {
-        inputData.push_back(static_cast<const InputData&>(img));
+        inputData.push_back(img);
     }
-    return ModelBase::inferBatch(inputData);
+    auto results = std::vector<std::unique_ptr<ResultBase>>(inputData.size());
+    auto setter = TmpCallbackSetter(
+        this,
+        [&](std::unique_ptr<ResultBase> result, const ov::AnyMap& callback_args) {
+            size_t id = callback_args.find("id")->second.as<size_t>();
+            results[id] = std::move(result);
+        },
+        lastCallback);
+    size_t req_id = 0;
+    for (const auto& data : inputData) {
+        inferAsync(data, {{"id", req_id++}});
+    }
+    awaitAll();
+    return results;
 }
 
 void ImageModel::inferAsync(const ImageInputData& inputData, const ov::AnyMap& callback_args) {
-    ModelBase::inferAsync(static_cast<const InputData&>(inputData), callback_args);
+    InferenceInput inputs;
+    auto internalModelData = this->preprocess(inputData, inputs);
+    auto callback_args_ptr = std::make_shared<ov::AnyMap>(callback_args);
+    (*callback_args_ptr)["internalModelData"] = std::move(internalModelData);
+    inferenceAdapter->inferAsync(inputs, callback_args_ptr);
 }
 
 void ImageModel::updateModelInfo() {
-    ModelBase::updateModelInfo();
+    if (!model) {
+        throw std::runtime_error("The ov::Model object is not accessible");
+    }
+
+    if (!inputsLayouts.empty()) {
+        auto layouts = formatLayouts(inputsLayouts);
+        model->set_rt_info(layouts, "model_info", "layout");
+    }
 
     model->set_rt_info(useAutoResize, "model_info", "auto_resize");
     model->set_rt_info(formatResizeMode(resizeMode), "model_info", "resize_type");
