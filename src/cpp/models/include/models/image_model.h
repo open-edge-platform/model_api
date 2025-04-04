@@ -12,9 +12,9 @@
 #include "adapters/inference_adapter.h"
 #include "models/input_data.h"
 #include "models/results.h"
+#include "utils/args_helper.hpp"
 #include "utils/image_utils.h"
 #include "utils/ocv_common.hpp"
-#include "utils/args_helper.hpp"
 
 namespace ov {
 class InferRequest;

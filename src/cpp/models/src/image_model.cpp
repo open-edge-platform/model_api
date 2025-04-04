@@ -55,7 +55,6 @@ ImageModel::ImageModel(const std::string& modelFile,
     model = core.read_model(modelFile);
 }
 
-
 void ImageModel::load(ov::Core& core, const std::string& device, size_t num_infer_requests) {
     if (!inferenceAdapter) {
         inferenceAdapter = std::make_shared<OpenVINOInferenceAdapter>();
@@ -146,7 +145,6 @@ std::shared_ptr<InferenceAdapter> ImageModel::getInferenceAdapter() {
     return inferenceAdapter;
 }
 
-
 RESIZE_MODE ImageModel::selectResizeMode(const std::string& resize_type) {
     RESIZE_MODE resize = RESIZE_FILL;
     if ("crop" == resize_type) {
@@ -187,8 +185,7 @@ void ImageModel::init_from_config(const ov::AnyMap& top_priority, const ov::AnyM
     mean_values = get_from_any_maps("mean_values", top_priority, mid_priority, mean_values);
 }
 
-ImageModel::ImageModel(std::shared_ptr<ov::Model>& model, const ov::AnyMap& configuration)
-    : model(model) {
+ImageModel::ImageModel(std::shared_ptr<ov::Model>& model, const ov::AnyMap& configuration) : model(model) {
     auto layout_iter = configuration.find("layout");
     std::string layout = "";
 
