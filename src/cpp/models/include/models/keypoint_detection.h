@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-#include "models/image_model.h"
+#include "models/base_model.h"
 
 namespace ov {
 class Model;
@@ -18,7 +18,7 @@ struct ResultBase;
 struct KeypointDetectionResult;
 struct ImageInputData;
 
-class KeypointDetectionModel : public ImageModel {
+class KeypointDetectionModel : public BaseModel {
 public:
     KeypointDetectionModel(std::shared_ptr<ov::Model>& model, const ov::AnyMap& configuration);
     KeypointDetectionModel(std::shared_ptr<InferenceAdapter>& adapter, const ov::AnyMap& configuration = {});

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "models/image_model.h"
+#include "models/base_model.h"
 
 #include <adapters/inference_adapter.h>
 #include <utils/image_utils.h>
@@ -24,9 +24,9 @@
 namespace {
 class TmpCallbackSetter {
 public:
-    ImageModel* model;
+    BaseModel* model;
     std::function<void(std::unique_ptr<ResultBase>, const ov::AnyMap&)> last_callback;
-    TmpCallbackSetter(ImageModel* model_,
+    TmpCallbackSetter(BaseModel* model_,
                       std::function<void(std::unique_ptr<ResultBase>, const ov::AnyMap&)> tmp_callback,
                       std::function<void(std::unique_ptr<ResultBase>, const ov::AnyMap&)> last_callback_)
         : model(model_),
@@ -43,10 +43,10 @@ public:
 };
 }  // namespace
 
-ImageModel::ImageModel(const std::string& modelFile,
-                       const std::string& resize_type,
-                       bool useAutoResize,
-                       const std::string& layout)
+BaseModel::BaseModel(const std::string& modelFile,
+                     const std::string& resize_type,
+                     bool useAutoResize,
+                     const std::string& layout)
     : useAutoResize(useAutoResize),
       resizeMode(selectResizeMode(resize_type)),
       modelFile(modelFile),
@@ -55,7 +55,7 @@ ImageModel::ImageModel(const std::string& modelFile,
     model = core.read_model(modelFile);
 }
 
-void ImageModel::load(ov::Core& core, const std::string& device, size_t num_infer_requests) {
+void BaseModel::load(ov::Core& core, const std::string& device, size_t num_infer_requests) {
     if (!inferenceAdapter) {
         inferenceAdapter = std::make_shared<OpenVINOInferenceAdapter>();
     }
@@ -66,7 +66,7 @@ void ImageModel::load(ov::Core& core, const std::string& device, size_t num_infe
     inferenceAdapter->loadModel(model, core, device, {}, num_infer_requests);
 }
 
-std::shared_ptr<ov::Model> ImageModel::prepare() {
+std::shared_ptr<ov::Model> BaseModel::prepare() {
     prepareInputsOutputs(model);
     logBasicModelInfo(model);
     ov::set_batch(model, 1);
@@ -74,7 +74,7 @@ std::shared_ptr<ov::Model> ImageModel::prepare() {
     return model;
 }
 
-ov::Layout ImageModel::getInputLayout(const ov::Output<ov::Node>& input) {
+ov::Layout BaseModel::getInputLayout(const ov::Output<ov::Node>& input) {
     ov::Layout layout = ov::layout::get_layout(input);
     if (layout.empty()) {
         if (inputsLayouts.empty()) {
@@ -91,21 +91,21 @@ ov::Layout ImageModel::getInputLayout(const ov::Output<ov::Node>& input) {
     return layout;
 }
 
-size_t ImageModel::getNumAsyncExecutors() const {
+size_t BaseModel::getNumAsyncExecutors() const {
     return inferenceAdapter->getNumAsyncExecutors();
 }
 
-bool ImageModel::isReady() {
+bool BaseModel::isReady() {
     return inferenceAdapter->isReady();
 }
-void ImageModel::awaitAll() {
+void BaseModel::awaitAll() {
     inferenceAdapter->awaitAll();
 }
-void ImageModel::awaitAny() {
+void BaseModel::awaitAny() {
     inferenceAdapter->awaitAny();
 }
 
-void ImageModel::setCallback(
+void BaseModel::setCallback(
     std::function<void(std::unique_ptr<ResultBase>, const ov::AnyMap& callback_args)> callback) {
     lastCallback = callback;
     inferenceAdapter->setCallback([this, callback](ov::InferRequest request, CallbackData args) {
@@ -127,7 +127,7 @@ void ImageModel::setCallback(
     });
 }
 
-std::shared_ptr<ov::Model> ImageModel::getModel() {
+std::shared_ptr<ov::Model> BaseModel::getModel() {
     if (!model) {
         throw std::runtime_error(std::string("ov::Model is not accessible for the current model adapter: ") +
                                  typeid(inferenceAdapter).name());
@@ -137,7 +137,7 @@ std::shared_ptr<ov::Model> ImageModel::getModel() {
     return model;
 }
 
-std::shared_ptr<InferenceAdapter> ImageModel::getInferenceAdapter() {
+std::shared_ptr<InferenceAdapter> BaseModel::getInferenceAdapter() {
     if (!inferenceAdapter) {
         throw std::runtime_error(std::string("Model wasn't loaded"));
     }
@@ -145,7 +145,7 @@ std::shared_ptr<InferenceAdapter> ImageModel::getInferenceAdapter() {
     return inferenceAdapter;
 }
 
-RESIZE_MODE ImageModel::selectResizeMode(const std::string& resize_type) {
+RESIZE_MODE BaseModel::selectResizeMode(const std::string& resize_type) {
     RESIZE_MODE resize = RESIZE_FILL;
     if ("crop" == resize_type) {
         resize = RESIZE_CROP;
@@ -162,7 +162,7 @@ RESIZE_MODE ImageModel::selectResizeMode(const std::string& resize_type) {
     return resize;
 }
 
-void ImageModel::init_from_config(const ov::AnyMap& top_priority, const ov::AnyMap& mid_priority) {
+void BaseModel::init_from_config(const ov::AnyMap& top_priority, const ov::AnyMap& mid_priority) {
     useAutoResize = get_from_any_maps("auto_resize", top_priority, mid_priority, useAutoResize);
 
     std::string resize_type = "standard";
@@ -185,7 +185,7 @@ void ImageModel::init_from_config(const ov::AnyMap& top_priority, const ov::AnyM
     mean_values = get_from_any_maps("mean_values", top_priority, mid_priority, mean_values);
 }
 
-ImageModel::ImageModel(std::shared_ptr<ov::Model>& model, const ov::AnyMap& configuration) : model(model) {
+BaseModel::BaseModel(std::shared_ptr<ov::Model>& model, const ov::AnyMap& configuration) : model(model) {
     auto layout_iter = configuration.find("layout");
     std::string layout = "";
 
@@ -201,7 +201,7 @@ ImageModel::ImageModel(std::shared_ptr<ov::Model>& model, const ov::AnyMap& conf
                      model->has_rt_info("model_info") ? model->get_rt_info<ov::AnyMap>("model_info") : ov::AnyMap{});
 }
 
-ImageModel::ImageModel(std::shared_ptr<InferenceAdapter>& adapter, const ov::AnyMap& configuration)
+BaseModel::BaseModel(std::shared_ptr<InferenceAdapter>& adapter, const ov::AnyMap& configuration)
     : inferenceAdapter(adapter) {
     const ov::AnyMap& adapter_configuration = adapter->getModelConfig();
 
@@ -215,7 +215,7 @@ ImageModel::ImageModel(std::shared_ptr<InferenceAdapter>& adapter, const ov::Any
     init_from_config(configuration, adapter->getModelConfig());
 }
 
-std::unique_ptr<ResultBase> ImageModel::inferImage(const ImageInputData& inputData) {
+std::unique_ptr<ResultBase> BaseModel::inferImage(const ImageInputData& inputData) {
     InferenceInput inputs;
     InferenceResult result;
     auto internalModelData = this->preprocess(inputData, inputs);
@@ -228,7 +228,7 @@ std::unique_ptr<ResultBase> ImageModel::inferImage(const ImageInputData& inputDa
     return retVal;
 }
 
-std::vector<std::unique_ptr<ResultBase>> ImageModel::inferBatchImage(const std::vector<ImageInputData>& inputImgs) {
+std::vector<std::unique_ptr<ResultBase>> BaseModel::inferBatchImage(const std::vector<ImageInputData>& inputImgs) {
     std::vector<std::reference_wrapper<const ImageInputData>> inputData;
     inputData.reserve(inputImgs.size());
     for (const auto& img : inputImgs) {
@@ -250,7 +250,7 @@ std::vector<std::unique_ptr<ResultBase>> ImageModel::inferBatchImage(const std::
     return results;
 }
 
-void ImageModel::inferAsync(const ImageInputData& inputData, const ov::AnyMap& callback_args) {
+void BaseModel::inferAsync(const ImageInputData& inputData, const ov::AnyMap& callback_args) {
     InferenceInput inputs;
     auto internalModelData = this->preprocess(inputData, inputs);
     auto callback_args_ptr = std::make_shared<ov::AnyMap>(callback_args);
@@ -258,7 +258,7 @@ void ImageModel::inferAsync(const ImageInputData& inputData, const ov::AnyMap& c
     inferenceAdapter->inferAsync(inputs, callback_args_ptr);
 }
 
-void ImageModel::updateModelInfo() {
+void BaseModel::updateModelInfo() {
     if (!model) {
         throw std::runtime_error("The ov::Model object is not accessible");
     }
@@ -280,17 +280,17 @@ void ImageModel::updateModelInfo() {
     model->set_rt_info(netInputHeight, "model_info", "orig_height");
 }
 
-std::shared_ptr<ov::Model> ImageModel::embedProcessing(std::shared_ptr<ov::Model>& model,
-                                                       const std::string& inputName,
-                                                       const ov::Layout& layout,
-                                                       const RESIZE_MODE resize_mode,
-                                                       const cv::InterpolationFlags interpolationMode,
-                                                       const ov::Shape& targetShape,
-                                                       uint8_t pad_value,
-                                                       bool brg2rgb,
-                                                       const std::vector<float>& mean,
-                                                       const std::vector<float>& scale,
-                                                       const std::type_info& dtype) {
+std::shared_ptr<ov::Model> BaseModel::embedProcessing(std::shared_ptr<ov::Model>& model,
+                                                      const std::string& inputName,
+                                                      const ov::Layout& layout,
+                                                      const RESIZE_MODE resize_mode,
+                                                      const cv::InterpolationFlags interpolationMode,
+                                                      const ov::Shape& targetShape,
+                                                      uint8_t pad_value,
+                                                      bool brg2rgb,
+                                                      const std::vector<float>& mean,
+                                                      const std::vector<float>& scale,
+                                                      const std::type_info& dtype) {
     ov::preprocess::PrePostProcessor ppp(model);
 
     // Change the input type to the 8-bit image
@@ -326,7 +326,7 @@ std::shared_ptr<ov::Model> ImageModel::embedProcessing(std::shared_ptr<ov::Model
     return ppp.build();
 }
 
-std::shared_ptr<InternalModelData> ImageModel::preprocess(const InputData& inputData, InferenceInput& input) {
+std::shared_ptr<InternalModelData> BaseModel::preprocess(const InputData& inputData, InferenceInput& input) {
     const auto& origImg = inputData.asRef<ImageInputData>().inputImage;
     auto img = inputTransform(origImg);
 
@@ -351,7 +351,7 @@ std::shared_ptr<InternalModelData> ImageModel::preprocess(const InputData& input
     return std::make_shared<InternalImageModelData>(origImg.cols, origImg.rows);
 }
 
-std::vector<std::string> ImageModel::loadLabels(const std::string& labelFilename) {
+std::vector<std::string> BaseModel::loadLabels(const std::string& labelFilename) {
     std::vector<std::string> labelsList;
 
     /* Read labels (if any) */

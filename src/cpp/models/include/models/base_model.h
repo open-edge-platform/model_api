@@ -23,19 +23,19 @@ struct InputData;
 struct InternalModelData;
 
 // ImageModel implements preprocess(), ImageModel's direct or indirect children are expected to implement prostprocess()
-class ImageModel {
+class BaseModel {
 public:
     /// Constructor
     /// @param modelFile name of model to load
     /// @param useAutoResize - if true, image is resized by openvino
     /// @param layout - model input layout
-    ImageModel(const std::string& modelFile,
-               const std::string& resize_type,
-               bool useAutoResize,
-               const std::string& layout = "");
+    BaseModel(const std::string& modelFile,
+              const std::string& resize_type,
+              bool useAutoResize,
+              const std::string& layout = "");
 
-    ImageModel(std::shared_ptr<ov::Model>& model, const ov::AnyMap& configuration);
-    ImageModel(std::shared_ptr<InferenceAdapter>& adapter, const ov::AnyMap& configuration = {});
+    BaseModel(std::shared_ptr<ov::Model>& model, const ov::AnyMap& configuration);
+    BaseModel(std::shared_ptr<InferenceAdapter>& adapter, const ov::AnyMap& configuration = {});
 
     virtual std::shared_ptr<InternalModelData> preprocess(const InputData& inputData, InferenceInput& input);
     virtual std::unique_ptr<ResultBase> postprocess(InferenceResult& infResult) = 0;

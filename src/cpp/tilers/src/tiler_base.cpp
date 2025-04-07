@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <models/image_model.h>
+#include <models/base_model.h>
 #include <models/input_data.h>
 #include <models/results.h>
 #include <tilers/tiler_base.h>
@@ -11,9 +11,7 @@
 #include <opencv2/core.hpp>
 #include <vector>
 
-TilerBase::TilerBase(const std::shared_ptr<ImageModel>& _model,
-                     const ov::AnyMap& configuration,
-                     ExecutionMode exec_mode)
+TilerBase::TilerBase(const std::shared_ptr<BaseModel>& _model, const ov::AnyMap& configuration, ExecutionMode exec_mode)
     : model(_model),
       run_mode(exec_mode) {
     ov::AnyMap extra_config;

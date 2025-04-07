@@ -4,7 +4,7 @@
  */
 
 #pragma once
-#include <models/image_model.h>
+#include <models/base_model.h>
 
 #include <map>
 #include <memory>
@@ -20,7 +20,7 @@ enum class ExecutionMode { sync, async };
 
 class TilerBase {
 public:
-    TilerBase(const std::shared_ptr<ImageModel>& model,
+    TilerBase(const std::shared_ptr<BaseModel>& model,
               const ov::AnyMap& configuration,
               ExecutionMode exec_mode = ExecutionMode::sync);
 
@@ -38,7 +38,7 @@ protected:
                                                       const cv::Size&,
                                                       const std::vector<cv::Rect>&) = 0;
 
-    std::shared_ptr<ImageModel> model;
+    std::shared_ptr<BaseModel> model;
     size_t tile_size = 400;
     float tiles_overlap = 0.5f;
     float iou_threshold = 0.45f;

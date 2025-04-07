@@ -52,7 +52,7 @@ void init_classification(nb::module_& m) {
             },
             nb::rv_policy::reference_internal);
 
-    nb::class_<ClassificationModel, ImageModel>(m, "ClassificationModel")
+    nb::class_<ClassificationModel, BaseModel>(m, "ClassificationModel")
         .def_static(
             "create_model",
             [](const std::string& model_path,

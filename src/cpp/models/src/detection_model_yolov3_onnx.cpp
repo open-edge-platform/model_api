@@ -103,7 +103,7 @@ std::shared_ptr<InternalModelData> ModelYoloV3ONNX::preprocess(const InputData& 
     data[0] = origImg.rows;
     data[1] = origImg.cols;
     input.emplace(inputNames[1], std::move(info));
-    return ImageModel::preprocess(inputData, input);
+    return BaseModel::preprocess(inputData, input);
 }
 
 namespace {

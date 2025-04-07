@@ -505,7 +505,7 @@ void YOLOv5::prepareInputsOutputs(std::shared_ptr<ov::Model>& model) {
     inputNames.push_back(input.get_any_name());
     const ov::Layout& inputLayout = getInputLayout(input);
     if (!embedded_processing) {
-        model = ImageModel::embedProcessing(
+        model = BaseModel::embedProcessing(
             model,
             inputNames[0],
             inputLayout,

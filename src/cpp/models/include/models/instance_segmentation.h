@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-#include "models/image_model.h"
+#include "models/base_model.h"
 
 namespace ov {
 class Model;
@@ -19,7 +19,7 @@ struct InstanceSegmentationResult;
 struct ImageInputData;
 struct SegmentedObject;
 
-class MaskRCNNModel : public ImageModel {
+class MaskRCNNModel : public BaseModel {
 public:
     MaskRCNNModel(std::shared_ptr<ov::Model>& model, const ov::AnyMap& configuration);
     MaskRCNNModel(std::shared_ptr<InferenceAdapter>& adapter, const ov::AnyMap& configuration = {});

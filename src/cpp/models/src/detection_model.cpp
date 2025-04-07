@@ -10,17 +10,17 @@
 #include <string>
 #include <vector>
 
+#include "models/base_model.h"
 #include "models/detection_model_ssd.h"
 #include "models/detection_model_yolo.h"
 #include "models/detection_model_yolov3_onnx.h"
 #include "models/detection_model_yolox.h"
-#include "models/image_model.h"
 #include "models/input_data.h"
 #include "models/results.h"
 #include "utils/slog.hpp"
 
 DetectionModel::DetectionModel(std::shared_ptr<ov::Model>& model, const ov::AnyMap& configuration)
-    : ImageModel(model, configuration) {
+    : BaseModel(model, configuration) {
     auto confidence_threshold_iter = configuration.find("confidence_threshold");
     if (confidence_threshold_iter == configuration.end()) {
         if (model->has_rt_info("model_info", "confidence_threshold")) {
@@ -32,13 +32,13 @@ DetectionModel::DetectionModel(std::shared_ptr<ov::Model>& model, const ov::AnyM
 }
 
 DetectionModel::DetectionModel(std::shared_ptr<InferenceAdapter>& adapter, const ov::AnyMap& configuration)
-    : ImageModel(adapter, configuration) {
+    : BaseModel(adapter, configuration) {
     confidence_threshold =
         get_from_any_maps("confidence_threshold", configuration, adapter->getModelConfig(), confidence_threshold);
 }
 
 void DetectionModel::updateModelInfo() {
-    ImageModel::updateModelInfo();
+    BaseModel::updateModelInfo();
 
     model->set_rt_info(confidence_threshold, "model_info", "confidence_threshold");
 }
@@ -103,12 +103,12 @@ std::unique_ptr<DetectionModel> DetectionModel::create_model(std::shared_ptr<Inf
 }
 
 std::unique_ptr<DetectionResult> DetectionModel::infer(const ImageInputData& inputData) {
-    auto result = ImageModel::inferImage(inputData);
+    auto result = BaseModel::inferImage(inputData);
     return std::unique_ptr<DetectionResult>(static_cast<DetectionResult*>(result.release()));
 }
 
 std::vector<std::unique_ptr<DetectionResult>> DetectionModel::inferBatch(const std::vector<ImageInputData>& inputImgs) {
-    auto results = ImageModel::inferBatchImage(inputImgs);
+    auto results = BaseModel::inferBatchImage(inputImgs);
     std::vector<std::unique_ptr<DetectionResult>> detResults;
     detResults.reserve(results.size());
     for (auto& result : results) {
