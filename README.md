@@ -9,7 +9,6 @@ Model API searches for additional information required for model inference, data
 ## Features
 
 - Python and C++ API
-- Automatic prefetch of public models from [OpenVINO Model Zoo](https://github.com/openvinotoolkit/open_model_zoo) (Python only)
 - Synchronous and asynchronous inference
 - Local inference and serving through the rest API (Python only)
 - Model preprocessing embedding for faster inference
@@ -18,17 +17,15 @@ Model API searches for additional information required for model inference, data
 
 ### Python
 
-- Clone this repository
-- Navigate to `model_api/python` folder
-- Run `pip install .`
+`pip install openvino-model-api`
 
 ### C++
 
 - Install dependencies. For installation on Ubuntu, you can use the following script:
 
   ```bash
-  chmod +x model_api/cpp/install_dependencies.sh
-  sudo model_api/cpp/install_dependencies.sh
+  chmod +x src/cpp/install_dependencies.sh
+  sudo src/cpp/install_dependencies.sh
   ```
 
 - Build library:
@@ -45,44 +42,48 @@ Model API searches for additional information required for model inference, data
   cmake ../model_api/cpp -DOpenCV_DIR=<OpenCV cmake dir> -DOpenVINO_DIR=<OpenVINO cmake dir>
   ```
 
-  - Build:
+`OpenCV` location is optional. In most cases, system OpenCV is discovered by cmake without extra guidance.
 
-  ```bash
-  cmake --build . -j
-  ```
+- Build:
 
-  - To build a `.tar.gz` package with the library, run:
+```bash
+cmake --build . -j
+```
 
-  ```bash
-  cmake --build . --target package -j
-  ```
+- To build a `.tar.gz` package with the library, run:
+
+```bash
+cmake --build . --target package -j
+```
 
 ## Usage
 
 ### Python
 
 ```python
-from model_api.models import DetectionModel
+from model_api.models import Model
 
-# Create a model (downloaded and cached automatically for OpenVINO Model Zoo models)
-# Use URL to work with served model, e.g. "localhost:9000/models/ssdlite_mobilenet_v2"
-ssd = DetectionModel.create_model("ssdlite_mobilenet_v2")
+# Create a model wrapper from a compatible model converted to OV format
+# Use URL to work with OVMS-served model, e.g. "localhost:9000/models/ssdlite_mobilenet_v2"
+model = Model.create_model("model.xml")
 
 # Run synchronous inference locally
-detections = ssd(image)  # image is numpy.ndarray
+result = model(image)  # image is numpy.ndarray
 
-# Print the list of Detection objects with box coordinates, confidence and label string
-print(f"Detection results: {detections}")
+# Print results in model-specific format
+print(f"Inference result: {result}")
 ```
 
 ### C++
+
+In C++ we have to specify model type in advance, let's set it to detection model.
 
 ```cpp
 #include <models/detection_model.h>
 #include <models/results.h>
 
-// Load the model fetched using Python API
-auto model = DetectionModel::create_model("~/.cache/omz/public/ssdlite_mobilenet_v2/FP16/ssdlite_mobilenet_v2.xml");
+// Load the model
+auto model = Model::create_model("model.xml");
 
 // Run synchronous inference locally
 auto result = model->infer(image); // image is cv::Mat
@@ -125,41 +126,3 @@ auto model = DetectionModel::create_model(adapter);
 ```
 
 For more details please refer to the [examples](https://github.com/openvinotoolkit/model_api/tree/master/examples) of this project.
-
-## Supported models
-
-### Python
-
-- Image Classification:
-  - [OpenVINO Model Zoo models](https://github.com/openvinotoolkit/open_model_zoo/blob/master/models/public/index.md#classification-models)
-- Object Detection:
-  - [OpenVINO Model Zoo models](https://github.com/openvinotoolkit/open_model_zoo/blob/master/models/public/index.md#object-detection-models):
-    - SSD-based models (e.g. "ssdlite_mobilenet_v2", etc.)
-    - YOLO-based models (e.g. "yolov3", "yolov4", etc.)
-    - CTPN: "ctpn"
-    - DETR: "detr-resnet50"
-    - CenterNet: "ctdet_coco_dlav0_512"
-    - FaceBoxes: "faceboxes-pytorch"
-    - RetinaFace: "retinaface-resnet50-pytorch"
-    - Ultra Lightweight Face Detection: "ultra-lightweight-face-detection-rfb-320" and "ultra-lightweight-face-detection-slim-320"
-    - NanoDet with ShuffleNetV2: "nanodet-m-1.5x-416"
-    - NanoDet Plus with ShuffleNetV2: "nanodet-plus-m-1.5x-416"
-- Semantic Segmentation:
-  - [OpenVINO Model Zoo models](https://github.com/openvinotoolkit/open_model_zoo/blob/master/models/public/index.md#semantic-segmentation-models)
-- Instance Segmentation:
-  - [OpenVINO Model Zoo models](https://github.com/openvinotoolkit/open_model_zoo/blob/master/models/public/index.md#instance-segmentation-models)
-
-### C++
-
-- Image Classification:
-  - [OpenVINO Model Zoo models](https://github.com/openvinotoolkit/open_model_zoo/blob/master/models/public/index.md#classification-models)
-- Object Detection:
-  - SSD-based models (e.g. "ssdlite_mobilenet_v2", etc.)
-    - YOLO-based models (e.g. "yolov3", "yolov4", etc.)
-    - CenterNet: "ctdet_coco_dlav0_512"
-    - FaceBoxes: "faceboxes-pytorch"
-    - RetinaFace: "retinaface-resnet50-pytorch"
-- Semantic Segmentation:
-  - [OpenVINO Model Zoo models](https://github.com/openvinotoolkit/open_model_zoo/blob/master/models/public/index.md#semantic-segmentation-models)
-
-[Model configuration](https://github.com/openvinotoolkit/model_api/blob/master/docs/model-configuration.md) discusses possible configurations.
