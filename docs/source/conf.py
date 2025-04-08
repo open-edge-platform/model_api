@@ -10,15 +10,15 @@ import sys
 from pathlib import Path
 
 # Define the path to your module using Path
-module_path = Path(__file__).parent.parent / "model_api" / "python"
+module_path = Path(__file__).parent.parent / "src" / "python"
 
 # Insert the path to sys.path
 sys.path.insert(0, str(module_path.resolve()))
 
-project = "InferenceSDK"
-copyright = "2024, Intel OpenVINO"
-author = "Intel OpenVINO"
-release = "2024"
+project = "ModelAPI"
+copyright = "2025, Intel"
+author = "Intel"
+release = "2025"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
