@@ -221,20 +221,20 @@ void ClassificationModel::init_from_config(const ov::AnyMap& top_priority, const
 }
 
 ClassificationModel::ClassificationModel(std::shared_ptr<ov::Model>& model, const ov::AnyMap& configuration)
-    : ImageModel(model, configuration) {
+    : BaseModel(model, configuration) {
     init_from_config(configuration,
                      model->has_rt_info("model_info") ? model->get_rt_info<ov::AnyMap>("model_info") : ov::AnyMap{});
 }
 
 ClassificationModel::ClassificationModel(std::shared_ptr<InferenceAdapter>& adapter, const ov::AnyMap& configuration)
-    : ImageModel(adapter, configuration) {
+    : BaseModel(adapter, configuration) {
     outputNames = get_non_xai_names(adapter->getOutputNames());
     append_xai_names(adapter->getOutputNames(), outputNames);
     init_from_config(configuration, adapter->getModelConfig());
 }
 
 void ClassificationModel::updateModelInfo() {
-    ImageModel::updateModelInfo();
+    BaseModel::updateModelInfo();
 
     model->set_rt_info(ClassificationModel::ModelType, "model_info", "model_type");
     model->set_rt_info(topk, "model_info", "topk");
@@ -468,7 +468,7 @@ void ClassificationModel::prepareInputsOutputs(std::shared_ptr<ov::Model>& model
     const ov::Layout& inputLayout = getInputLayout(input);
 
     if (!embedded_processing) {
-        model = ImageModel::embedProcessing(
+        model = BaseModel::embedProcessing(
             model,
             inputNames[0],
             inputLayout,
@@ -536,13 +536,13 @@ void ClassificationModel::prepareInputsOutputs(std::shared_ptr<ov::Model>& model
 }
 
 std::unique_ptr<ClassificationResult> ClassificationModel::infer(const ImageInputData& inputData) {
-    auto result = ImageModel::inferImage(inputData);
+    auto result = BaseModel::inferImage(inputData);
     return std::unique_ptr<ClassificationResult>(static_cast<ClassificationResult*>(result.release()));
 }
 
 std::vector<std::unique_ptr<ClassificationResult>> ClassificationModel::inferBatch(
     const std::vector<ImageInputData>& inputImgs) {
-    auto results = ImageModel::inferBatchImage(inputImgs);
+    auto results = BaseModel::inferBatchImage(inputImgs);
     std::vector<std::unique_ptr<ClassificationResult>> clsResults;
     clsResults.reserve(results.size());
     for (auto& result : results) {

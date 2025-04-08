@@ -4,7 +4,7 @@
  */
 
 #pragma once
-#include "models/image_model.h"
+#include "models/base_model.h"
 
 namespace ov {
 class Model;
@@ -12,7 +12,7 @@ class Model;
 struct AnomalyResult;
 struct ImageInputData;
 
-class AnomalyModel : public ImageModel {
+class AnomalyModel : public BaseModel {
 public:
     AnomalyModel(std::shared_ptr<ov::Model>& model, const ov::AnyMap& configuration);
     AnomalyModel(std::shared_ptr<InferenceAdapter>& adapter, const ov::AnyMap& configuration = {});

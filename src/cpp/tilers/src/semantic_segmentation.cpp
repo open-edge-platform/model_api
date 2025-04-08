@@ -32,7 +32,7 @@ void normalize_soft_prediction(cv::Mat& soft_prediction, const cv::Mat& normaliz
 }
 }  // namespace
 
-SemanticSegmentationTiler::SemanticSegmentationTiler(std::shared_ptr<ImageModel> _model,
+SemanticSegmentationTiler::SemanticSegmentationTiler(std::shared_ptr<BaseModel> _model,
                                                      const ov::AnyMap& configuration,
                                                      ExecutionMode exec_mode)
     : TilerBase(_model, configuration, exec_mode) {

@@ -11,7 +11,7 @@ struct ImageResultWithSoftPrediction;
 
 class SemanticSegmentationTiler : public TilerBase {
 public:
-    SemanticSegmentationTiler(std::shared_ptr<ImageModel> model,
+    SemanticSegmentationTiler(std::shared_ptr<BaseModel> model,
                               const ov::AnyMap& configuration,
                               ExecutionMode exec_mode = ExecutionMode::sync);
     virtual std::unique_ptr<ImageResultWithSoftPrediction> run(const ImageInputData& inputData);

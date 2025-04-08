@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-#include "models/image_model.h"
+#include "models/base_model.h"
 
 namespace ov {
 class Model;
@@ -20,7 +20,7 @@ struct ImageResultWithSoftPrediction;
 struct ImageInputData;
 struct Contour;
 
-class SegmentationModel : public ImageModel {
+class SegmentationModel : public BaseModel {
 public:
     SegmentationModel(std::shared_ptr<ov::Model>& model, const ov::AnyMap& configuration);
     SegmentationModel(std::shared_ptr<InferenceAdapter>& adapter, const ov::AnyMap& configuration = {});

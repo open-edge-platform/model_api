@@ -12,7 +12,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "models/image_model.h"
+#include "models/base_model.h"
 
 namespace ov {
 class Model;
@@ -88,7 +88,7 @@ protected:
     SimpleLabelsGraph label_tree;
 };
 
-class ClassificationModel : public ImageModel {
+class ClassificationModel : public BaseModel {
 public:
     ClassificationModel(std::shared_ptr<ov::Model>& model, const ov::AnyMap& configuration);
     ClassificationModel(std::shared_ptr<InferenceAdapter>& adapter, const ov::AnyMap& configuration = {});
