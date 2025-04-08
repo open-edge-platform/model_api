@@ -28,7 +28,6 @@ dependencies = [
     "opencv-python-headless",
     "scipy>=1.5.4",
     "openvino>=2025.0",
-    "omz_tools @ git+https://github.com/openvinotoolkit/open_model_zoo.git@master#egg=omz_tools&subdirectory=tools/model_tools",
     "pillow",
 ]
 

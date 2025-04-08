@@ -24,7 +24,6 @@ jobs:
           python -m pip install --upgrade build
       - name: Build sdist
         run: |
-          sed -i '/omz_tools/d' src/python/pyproject.toml
           python -m build --sdist src/python/
       - uses: actions/upload-artifact@v4
         with:
@@ -32,7 +31,6 @@ jobs:
           path: src/python/dist/*.tar.gz
       - name: Build wheel
         run: |
-          sed -i '/omz_tools/d' src/python/pyproject.toml
           python -m build --wheel src/python/
       - uses: actions/upload-artifact@v4
         with:

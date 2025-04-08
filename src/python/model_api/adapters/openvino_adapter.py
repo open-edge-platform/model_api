@@ -171,21 +171,8 @@ class OpenvinoAdapter(InferenceAdapter):
             )
             self.model = core.read_model(self.model_path, weights_path)
             return
-        if isinstance(model, str):
-            from omz_tools.models import OMZModel, list_models
 
-            if model in list_models():
-                omz_model = OMZModel.download(
-                    model,
-                    precision=precision,
-                    download_dir=download_dir,
-                    cache_dir=cache_dir,
-                )
-                self.model_path = omz_model.model_path
-                log.info(f"Reading model {self.model_path}")
-                self.model = core.read_model(self.model_path)
-                return
-        msg = "Model must be bytes, a file or existing OMZ model name"
+        msg = "Model must be bytes or a file"
         raise RuntimeError(msg)
 
     def load_model(self) -> None:
