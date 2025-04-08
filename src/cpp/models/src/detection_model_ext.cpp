@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-#include "models/image_model.h"
+#include "models/base_model.h"
 #include "models/input_data.h"
 #include "models/results.h"
 

@@ -96,14 +96,14 @@ void KeypointDetectionModel::init_from_config(const ov::AnyMap& top_priority, co
 }
 
 KeypointDetectionModel::KeypointDetectionModel(std::shared_ptr<ov::Model>& model, const ov::AnyMap& configuration)
-    : ImageModel(model, configuration) {
+    : BaseModel(model, configuration) {
     init_from_config(configuration,
                      model->has_rt_info("model_info") ? model->get_rt_info<ov::AnyMap>("model_info") : ov::AnyMap{});
 }
 
 KeypointDetectionModel::KeypointDetectionModel(std::shared_ptr<InferenceAdapter>& adapter,
                                                const ov::AnyMap& configuration)
-    : ImageModel(adapter, configuration) {
+    : BaseModel(adapter, configuration) {
     init_from_config(configuration, adapter->getModelConfig());
 }
 
@@ -156,7 +156,7 @@ std::unique_ptr<KeypointDetectionModel> KeypointDetectionModel::create_model(
 }
 
 void KeypointDetectionModel::updateModelInfo() {
-    ImageModel::updateModelInfo();
+    BaseModel::updateModelInfo();
 
     model->set_rt_info(KeypointDetectionModel::ModelType, "model_info", "model_type");
     model->set_rt_info(labels, "model_info", "labels");
@@ -182,7 +182,7 @@ void KeypointDetectionModel::prepareInputsOutputs(std::shared_ptr<ov::Model>& mo
     }
 
     if (!embedded_processing) {
-        model = ImageModel::embedProcessing(
+        model = BaseModel::embedProcessing(
             model,
             inputNames[0],
             inputLayout,
@@ -250,13 +250,13 @@ std::unique_ptr<ResultBase> KeypointDetectionModel::postprocess(InferenceResult&
 }
 
 std::unique_ptr<KeypointDetectionResult> KeypointDetectionModel::infer(const ImageInputData& inputData) {
-    auto result = ImageModel::inferImage(inputData);
+    auto result = BaseModel::inferImage(inputData);
     return std::unique_ptr<KeypointDetectionResult>(static_cast<KeypointDetectionResult*>(result.release()));
 }
 
 std::vector<std::unique_ptr<KeypointDetectionResult>> KeypointDetectionModel::inferBatch(
     const std::vector<ImageInputData>& inputImgs) {
-    auto results = ImageModel::inferBatchImage(inputImgs);
+    auto results = BaseModel::inferBatchImage(inputImgs);
     std::vector<std::unique_ptr<KeypointDetectionResult>> kpDetResults;
     kpDetResults.reserve(results.size());
     for (auto& result : results) {

@@ -251,7 +251,7 @@ void ModelSSD::prepareInputsOutputs(std::shared_ptr<ov::Model>& model) {
             }
 
             if (!embedded_processing) {
-                model = ImageModel::embedProcessing(
+                model = BaseModel::embedProcessing(
                     model,
                     inputNames[0],
                     inputLayout,

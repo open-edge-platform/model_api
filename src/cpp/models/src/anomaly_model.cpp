@@ -10,7 +10,7 @@
 #include <openvino/core/model.hpp>
 #include <ostream>
 
-#include "models/image_model.h"
+#include "models/base_model.h"
 #include "models/input_data.h"
 #include "models/internal_model_data.h"
 #include "models/results.h"
@@ -29,23 +29,23 @@ void AnomalyModel::init_from_config(const ov::AnyMap& top_priority, const ov::An
 }
 
 AnomalyModel::AnomalyModel(std::shared_ptr<ov::Model>& model, const ov::AnyMap& configuration)
-    : ImageModel(model, configuration) {
+    : BaseModel(model, configuration) {
     init_from_config(configuration, model->get_rt_info<ov::AnyMap>("model_info"));
 }
 
 AnomalyModel::AnomalyModel(std::shared_ptr<InferenceAdapter>& adapter, const ov::AnyMap& configuration)
-    : ImageModel(adapter, configuration) {
+    : BaseModel(adapter, configuration) {
     init_from_config(configuration, adapter->getModelConfig());
 }
 
 std::unique_ptr<AnomalyResult> AnomalyModel::infer(const ImageInputData& inputData) {
-    auto result = ImageModel::inferImage(inputData);
+    auto result = BaseModel::inferImage(inputData);
 
     return std::unique_ptr<AnomalyResult>(static_cast<AnomalyResult*>(result.release()));
 }
 
 std::vector<std::unique_ptr<AnomalyResult>> AnomalyModel::inferBatch(const std::vector<ImageInputData>& inputImgs) {
-    auto results = ImageModel::inferBatchImage(inputImgs);
+    auto results = BaseModel::inferBatchImage(inputImgs);
     std::vector<std::unique_ptr<AnomalyResult>> anoResults;
     anoResults.reserve(results.size());
     for (auto& result : results) {
@@ -177,7 +177,7 @@ void AnomalyModel::prepareInputsOutputs(std::shared_ptr<ov::Model>& model) {
     const ov::Layout& inputLayout = getInputLayout(input);
 
     if (!embedded_processing) {
-        model = ImageModel::embedProcessing(
+        model = BaseModel::embedProcessing(
             model,
             inputNames[0],
             inputLayout,
@@ -194,7 +194,7 @@ void AnomalyModel::prepareInputsOutputs(std::shared_ptr<ov::Model>& model) {
 }
 
 void AnomalyModel::updateModelInfo() {
-    ImageModel::updateModelInfo();
+    BaseModel::updateModelInfo();
 
     model->set_rt_info(AnomalyModel::ModelType, "model_info", "model_type");
     model->set_rt_info(task, "model_info", "task");

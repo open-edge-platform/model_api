@@ -7,13 +7,13 @@
 
 #include <string>
 
-#include "models/image_model.h"
+#include "models/base_model.h"
 
 struct DetectionResult;
 struct ImageInputData;
 struct InferenceAdatper;
 
-class DetectionModel : public ImageModel {
+class DetectionModel : public BaseModel {
 public:
     DetectionModel(std::shared_ptr<ov::Model>& model, const ov::AnyMap& configuration);
     DetectionModel(std::shared_ptr<InferenceAdapter>& adapter, const ov::AnyMap& configuration = {});

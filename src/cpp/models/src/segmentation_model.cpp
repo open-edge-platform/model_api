@@ -81,13 +81,13 @@ void SegmentationModel::init_from_config(const ov::AnyMap& top_priority, const o
 }
 
 SegmentationModel::SegmentationModel(std::shared_ptr<ov::Model>& model, const ov::AnyMap& configuration)
-    : ImageModel(model, configuration) {
+    : BaseModel(model, configuration) {
     init_from_config(configuration,
                      model->has_rt_info("model_info") ? model->get_rt_info<ov::AnyMap>("model_info") : ov::AnyMap{});
 }
 
 SegmentationModel::SegmentationModel(std::shared_ptr<InferenceAdapter>& adapter, const ov::AnyMap& configuration)
-    : ImageModel(adapter, configuration) {
+    : BaseModel(adapter, configuration) {
     init_from_config(configuration, adapter->getModelConfig());
 }
 
@@ -139,7 +139,7 @@ std::unique_ptr<SegmentationModel> SegmentationModel::create_model(std::shared_p
 }
 
 void SegmentationModel::updateModelInfo() {
-    ImageModel::updateModelInfo();
+    BaseModel::updateModelInfo();
 
     model->set_rt_info(SegmentationModel::ModelType, "model_info", "model_type");
     model->set_rt_info(blur_strength, "model_info", "blur_strength");
@@ -182,7 +182,7 @@ void SegmentationModel::prepareInputsOutputs(std::shared_ptr<ov::Model>& model) 
     }
 
     if (!embedded_processing) {
-        model = ImageModel::embedProcessing(
+        model = BaseModel::embedProcessing(
             model,
             inputNames[0],
             inputLayout,
@@ -316,12 +316,12 @@ std::vector<Contour> SegmentationModel::getContours(const ImageResultWithSoftPre
 }
 
 std::unique_ptr<ImageResult> SegmentationModel::infer(const ImageInputData& inputData) {
-    auto result = ImageModel::inferImage(inputData);
+    auto result = BaseModel::inferImage(inputData);
     return std::unique_ptr<ImageResult>(static_cast<ImageResult*>(result.release()));
 }
 
 std::vector<std::unique_ptr<ImageResult>> SegmentationModel::inferBatch(const std::vector<ImageInputData>& inputImgs) {
-    auto results = ImageModel::inferBatchImage(inputImgs);
+    auto results = BaseModel::inferBatchImage(inputImgs);
     std::vector<std::unique_ptr<ImageResult>> segResults;
     segResults.reserve(results.size());
     for (auto& result : results) {

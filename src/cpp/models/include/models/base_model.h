@@ -9,9 +9,12 @@
 #include <memory>
 #include <string>
 
+#include "adapters/inference_adapter.h"
 #include "models/input_data.h"
-#include "models/model_base.h"
+#include "models/results.h"
+#include "utils/args_helper.hpp"
 #include "utils/image_utils.h"
+#include "utils/ocv_common.hpp"
 
 namespace ov {
 class InferRequest;
@@ -20,22 +23,37 @@ struct InputData;
 struct InternalModelData;
 
 // ImageModel implements preprocess(), ImageModel's direct or indirect children are expected to implement prostprocess()
-class ImageModel : public ModelBase {
+class BaseModel {
 public:
     /// Constructor
     /// @param modelFile name of model to load
     /// @param useAutoResize - if true, image is resized by openvino
     /// @param layout - model input layout
-    ImageModel(const std::string& modelFile,
-               const std::string& resize_type,
-               bool useAutoResize,
-               const std::string& layout = "");
+    BaseModel(const std::string& modelFile,
+              const std::string& resize_type,
+              bool useAutoResize,
+              const std::string& layout = "");
 
-    ImageModel(std::shared_ptr<ov::Model>& model, const ov::AnyMap& configuration);
-    ImageModel(std::shared_ptr<InferenceAdapter>& adapter, const ov::AnyMap& configuration = {});
-    using ModelBase::ModelBase;
+    BaseModel(std::shared_ptr<ov::Model>& model, const ov::AnyMap& configuration);
+    BaseModel(std::shared_ptr<InferenceAdapter>& adapter, const ov::AnyMap& configuration = {});
 
-    std::shared_ptr<InternalModelData> preprocess(const InputData& inputData, InferenceInput& input) override;
+    virtual std::shared_ptr<InternalModelData> preprocess(const InputData& inputData, InferenceInput& input);
+    virtual std::unique_ptr<ResultBase> postprocess(InferenceResult& infResult) = 0;
+
+    void load(ov::Core& core, const std::string& device, size_t num_infer_requests = 1);
+
+    std::shared_ptr<ov::Model> prepare();
+
+    virtual size_t getNumAsyncExecutors() const;
+    virtual bool isReady();
+    virtual void awaitAll();
+    virtual void awaitAny();
+    virtual void setCallback(
+        std::function<void(std::unique_ptr<ResultBase>, const ov::AnyMap& callback_args)> callback);
+
+    std::shared_ptr<ov::Model> getModel();
+    std::shared_ptr<InferenceAdapter> getInferenceAdapter();
+
     static std::vector<std::string> loadLabels(const std::string& labelFilename);
     std::shared_ptr<ov::Model> embedProcessing(std::shared_ptr<ov::Model>& model,
                                                const std::string& inputName,
@@ -54,7 +72,7 @@ public:
 
 protected:
     RESIZE_MODE selectResizeMode(const std::string& resize_type);
-    void updateModelInfo() override;
+    virtual void updateModelInfo();
     void init_from_config(const ov::AnyMap& top_priority, const ov::AnyMap& mid_priority);
 
     std::string getLabelName(size_t labelID) {
@@ -73,4 +91,18 @@ protected:
     bool reverse_input_channels = false;
     std::vector<float> scale_values;
     std::vector<float> mean_values;
+
+protected:
+    virtual void prepareInputsOutputs(std::shared_ptr<ov::Model>& model) = 0;
+
+    InputTransform inputTransform = InputTransform();
+
+    std::shared_ptr<ov::Model> model;
+    std::vector<std::string> inputNames;
+    std::vector<std::string> outputNames;
+    std::string modelFile;
+    std::shared_ptr<InferenceAdapter> inferenceAdapter;
+    std::map<std::string, ov::Layout> inputsLayouts;
+    ov::Layout getInputLayout(const ov::Output<ov::Node>& input);
+    std::function<void(std::unique_ptr<ResultBase>, const ov::AnyMap&)> lastCallback;
 };
