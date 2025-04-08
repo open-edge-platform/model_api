@@ -1,5 +1,17 @@
 # OpenVINO Model API
 
+[![PyPI](https://img.shields.io/pypi/v/otx)](https://pypi.org/project/openvino-model-api)
+[![Downloads](https://static.pepy.tech/personalized-badge/otx?period=total&units=international_system&left_color=grey&right_color=green&left_text=PyPI%20Downloads)](https://pepy.tech/project/openvino-model-api)
+<!-- markdownlint-disable MD042 -->
+[![openvino](https://img.shields.io/badge/openvino-2025.0-purple)]()
+<!-- markdownlint-enable  MD042 -->
+[![Pre-Merge Test](https://github.com/open-edge-platform/model_api/actions/workflows/pre_commit.yml/badge.svg)](https://github.com/open-edge-platform/model_api/actions/workflows/pre_commit.yml)
+[![Build Docs](https://github.com/open-edge-platform/model_api/actions/workflows/docs.yml/badge.svg)](https://github.com/open-edge-platform/model_api/actions/workflows/docs.yml)
+
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
+## Introduction
+
 Model API is a set of wrapper classes for particular tasks and model architectures, simplifying data preprocess and postprocess as well as routine procedures (model loading, asynchronous execution, etc.). It is aimed at simplifying end-to-end model inference for different deployment scenarios, including local execution and serving. The Model API is based on the OpenVINO inference API.
 
 ## How it works
@@ -50,7 +62,7 @@ Training Extensions embed all the metadata required for inference into model fil
   cmake ../model_api/cpp -DOpenCV_DIR=<OpenCV cmake dir> -DOpenVINO_DIR=<OpenVINO cmake dir>
   ```
 
-`OpenCV` and `OpenVINO` locations are optional. In most cases, system these dependencies are discovered by cmake without extra guidance.
+`OpenCV` and `OpenVINO` locations are optional. In most cases, these dependencies are discovered by cmake without extra guidance.
 
 - Build:
 
