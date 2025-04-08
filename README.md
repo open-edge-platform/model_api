@@ -2,9 +2,13 @@
 
 [![PyPI](https://img.shields.io/pypi/v/otx)](https://pypi.org/project/openvino-model-api)
 [![Downloads](https://static.pepy.tech/personalized-badge/otx?period=total&units=international_system&left_color=grey&right_color=green&left_text=PyPI%20Downloads)](https://pepy.tech/project/openvino-model-api)
+
 <!-- markdownlint-disable MD042 -->
+
 [![openvino](https://img.shields.io/badge/openvino-2025.0-purple)]()
+
 <!-- markdownlint-enable  MD042 -->
+
 [![Pre-Merge Test](https://github.com/open-edge-platform/model_api/actions/workflows/pre_commit.yml/badge.svg)](https://github.com/open-edge-platform/model_api/actions/workflows/pre_commit.yml)
 [![Build Docs](https://github.com/open-edge-platform/model_api/actions/workflows/docs.yml/badge.svg)](https://github.com/open-edge-platform/model_api/actions/workflows/docs.yml)
 
