@@ -1,0 +1,21 @@
+[build-system]
+requires = ["scikit-build-core >=0.4.3", "nanobind >=1.3.2"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "py_model_api"
+version = "0.0.1"
+description = "set of wrapper classes for particular tasks and model architectures, simplifying data preprocess and postprocess as well as routine procedures"
+readme = "README.md"
+requires-python = ">=3.8"
+authors = [
+    { name = "Ronald Hecker", email = "ronald.hecker@intel.com" },
+]
+classifiers = [
+    "License :: BSD",
+]
+# Optional: runtime dependency specification
+# dependencies = [ "cryptography >=41.0" ]
+
+[project.urls]
+Homepage = "https://github.com/open-edge-platform/model_api"
