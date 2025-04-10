@@ -7,7 +7,7 @@ cmake_minimum_required(VERSION 3.26)
 add_subdirectory(../ model_api/cpp)
 
 set(Python_FIND_VIRTUALENV FIRST)
-project(vision_api LANGUAGES CXX)
+project(_vision_api LANGUAGES CXX)
 find_package(Python COMPONENTS Interpreter Development REQUIRED)
 
 execute_process(
@@ -16,14 +16,19 @@ execute_process(
 find_package(nanobind CONFIG REQUIRED)
 
 
-file(GLOB BINDINGS_SOURCES ./src/*.cpp)
-file(GLOB BINDINGS_HEADERS ./src/*.hpp)
+file(GLOB BINDINGS_SOURCES src/vision_api/*.cpp)
+file(GLOB BINDINGS_HEADERS src/vision_api/*.hpp)
 
-nanobind_add_module(vision_api_impl NB_STATIC STABLE_ABI LTO ${BINDINGS_SOURCES} ${BINDINGS_HEADERS})
+message(INFO ${BINDINGS_SOURCES})
 
-target_link_libraries(vision_api_impl PRIVATE model_api)
+nanobind_add_module(_vision_api NB_STATIC STABLE_ABI LTO ${BINDINGS_SOURCES} ${BINDINGS_HEADERS})
 
-install(TARGETS vision_api_impl LIBRARY DESTINATION vision_api)
+set_target_properties(_vision_api PROPERTIES
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/src/vision_api"
+)
+target_link_libraries(_vision_api PRIVATE model_api)
+
+#install(TARGETS _vision_api_impl LIBRARY DESTINATION vision_api)
 
 # nanobind_add_stub(
 #     py_model_api_stub

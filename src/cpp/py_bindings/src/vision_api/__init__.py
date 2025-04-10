@@ -1,3 +1,7 @@
 #!/usr/bin/env python3
 
-from ._my_ext_impl import hello
+from ._vision_api import Classification, ClassificationModel
+
+
+def hello():
+    print("World!")
