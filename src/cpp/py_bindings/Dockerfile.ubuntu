@@ -2,6 +2,7 @@ FROM --platform=linux/amd64 ubuntu:22.04
 USER root
 
 ENV DEBIAN_FRONTEND=noninteractive
+
 RUN apt-get update && apt-get install -y \
     clang cmake git \
     ninja-build pkg-config \
@@ -14,14 +15,15 @@ RUN apt-get update && apt-get install -y \
     python3-pip \
     python3.10-venv
 
+RUN python3 -m venv /opt/venv
+ENV VIRTUAL_ENV=/opt/venv
+ENV PATH=/opt/venv/bin:$PATH
+
 COPY src /build/src
 
 WORKDIR /build
 
-RUN src/cpp/install_dependencies.sh
-RUN python3 -m venv /opt/venv
-ENV VIRTUAL_ENV=/opt/venv
-ENV PATH=/opt/venv/bin:$PATH
-#RUN pip install nanobind
 RUN rm -r src/cpp/py_bindings/build
+RUN pip install cmake
+RUN pip install openvino
 RUN pip install src/cpp/py_bindings

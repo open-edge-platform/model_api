@@ -3,8 +3,12 @@
 
 ## Test building dependencies:
 
+You can build the package in docker by running from root model_api path
+
 ``` sh
-docker build -t vision-api-build -f ./Dockerfile.ubuntu .
+docker build -t vision-api-build -f src/cpp/py_bindings/Dockerfile.ubuntu .
+docker run --volume <path-to-data-folder>:/data -it vision-api-build bash 
+python src/cpp/py_bindings/scratch.py /data/classification_model_with_xai_head.xml /data/sheep.jpg
 ```
 
 ## Test dependencies to run python package
