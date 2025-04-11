@@ -10,7 +10,7 @@ assignees: ""
     Thank you very much for contributing to this project by creating an issue!
 -->
 
-**Describe the bug**
+### Describe the bug
 
 <!--
     A clear and concise description of what the bug is.
@@ -18,14 +18,14 @@ assignees: ""
     What are you trying to accomplish?
 -->
 
-**Steps to Reproduce**
+### Steps to Reproduce
 
 1.
 2.
 3.
 4.
 
-**Environment:**
+### Environment
 
 - OS: <!--[for example, Linux Ubuntu 12.04]-->
 - OpenVINO version:
