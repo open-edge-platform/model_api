@@ -1,0 +1,20 @@
+FROM ubuntu:22.04
+
+WORKDIR /project
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y \
+    python3.10 \
+    python3-pip \
+    python3.10-venv \
+    libopencv-dev
+
+RUN python3 -m venv /opt/venv
+ENV VIRTUAL_ENV=/opt/venv
+ENV PATH=/opt/venv/bin:$PATH
+
+COPY vision_api-0.0.1-cp310-cp310-linux_x86_64.whl .
+COPY scratch.py .
+
+RUN pip install vision_api-0.0.1-cp310-cp310-linux_x86_64.whl
+# RUN python scratch.py /data/classification_model_with_xai_head.xml /data/sheep.jpg

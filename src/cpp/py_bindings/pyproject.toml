@@ -15,7 +15,10 @@ classifiers = [
     "License :: BSD",
 ]
 # Optional: runtime dependency specification
-# dependencies = [ "cryptography >=41.0" ]
+dependencies = [
+    "openvino>=2025.0",
+    "opencv-python-headless",
+]
 
 [project.urls]
 Homepage = "https://github.com/open-edge-platform/model_api"
