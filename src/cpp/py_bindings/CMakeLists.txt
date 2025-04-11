@@ -25,18 +25,6 @@ nanobind_add_module(_vision_api NB_STATIC STABLE_ABI LTO ${BINDINGS_SOURCES} ${B
 
 set_target_properties(_vision_api PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/src/vision_api"
-    BUILD_WITH_INSTALL_RPATH TRUE
-    INSTALL_RPATH "$ORIGIN/../openvino/libs"
 )
 
 target_link_libraries(_vision_api PRIVATE model_api)
-
-#install(TARGETS _vision_api_impl LIBRARY DESTINATION vision_api)
-
-# nanobind_add_stub(
-#     py_model_api_stub
-#     MODULE vision_sdk
-#     OUTPUT py_model_api.pyi
-#     PYTHON_PATH $<TARGET_FILE_DIR:py_model_api>
-#     DEPENDS py_model_api
-# )
