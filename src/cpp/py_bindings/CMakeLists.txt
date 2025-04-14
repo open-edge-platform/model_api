@@ -4,15 +4,16 @@
 
 cmake_minimum_required(VERSION 3.26)
 
+if(WIN32)
+  set(CMAKE_GENERATOR_TOOLSET "v142")
+endif()
+
+
 add_subdirectory(../ model_api/cpp)
 
 set(Python_FIND_VIRTUALENV FIRST)
 project(_vision_api LANGUAGES CXX)
 find_package(Python COMPONENTS Interpreter Development REQUIRED)
-
-if(MSVC)
-  set(CMAKE_GENERATOR_TOOLSET "v142")
-endif()
 
 execute_process(
   COMMAND "${Python_EXECUTABLE}" -m nanobind --cmake_dir
