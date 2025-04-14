@@ -44,6 +44,9 @@ jobs:
           pip install typing_extensions==4.12.2
           cmake ../tests/cpp/accuracy/
           make -j
+      - name: Build CPP-PY Bindings
+        run: |
+          pip install src/cpp/py_bindings
       - name: Run CPP Test
         run: |
           build/test_accuracy -d data -p tests/python/accuracy/public_scope.json

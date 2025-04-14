@@ -10,7 +10,7 @@ from pathlib import Path
 import cv2
 
 from model_api.models import Model
-from py_model_api import ClassificationModel
+from vision_api import ClassificationModel
 
 
 def read_config(models_config: str, model_type: str):
