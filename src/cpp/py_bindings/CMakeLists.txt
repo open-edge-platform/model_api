@@ -10,6 +10,10 @@ set(Python_FIND_VIRTUALENV FIRST)
 project(_vision_api LANGUAGES CXX)
 find_package(Python COMPONENTS Interpreter Development REQUIRED)
 
+if(MSVC)
+  set(CMAKE_GENERATOR_TOOLSET "v142")
+endif()
+
 execute_process(
   COMMAND "${Python_EXECUTABLE}" -m nanobind --cmake_dir
   OUTPUT_STRIP_TRAILING_WHITESPACE OUTPUT_VARIABLE nanobind_ROOT)
@@ -28,3 +32,5 @@ set_target_properties(_vision_api PROPERTIES
 )
 
 target_link_libraries(_vision_api PRIVATE model_api)
+
+include(opencv.cmake)
