@@ -9,7 +9,7 @@ on:
 
 jobs:
   Build-Docs:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     permissions:
       contents: write
     steps:
@@ -22,7 +22,7 @@ jobs:
       - name: Install dependencies
         run: pip install 'src/python/.[docs]'
       - name: Install and Generate Doxygen
-        uses: mattnotmitt/doxygen-action@v1.9.8
+        uses: mattnotmitt/doxygen-action@v1.12.0
       - name: Build Docs
         run: |
           cd docs
@@ -46,6 +46,8 @@ jobs:
             git config --local user.name "GitHub Action"
             git checkout --orphan gh-pages
             git reset --hard
+            echo '<html><head><meta http-equiv="refresh" content="0; url=latest/" /></head></html>' > index.html
+            git add index.html
             touch .nojekyll
             git add .nojekyll
             git commit -m "Initializing gh-pages branch"
@@ -62,7 +64,7 @@ jobs:
           mkdir -p /tmp/docs_build
           cp -r docs/build/html/* /tmp/docs_build/
           rm -rf ${{ env.RELEASE_VERSION }}/*
-          echo '<html><head><meta http-equiv="refresh" content="0; url=stable/" /></head></html>' > index.html
+          echo '<html><head><meta http-equiv="refresh" content="0; url=latest/" /></head></html>' > index.html
           mkdir -p ${{ env.RELEASE_VERSION }}
           cp -r /tmp/docs_build/* ./${{ env.RELEASE_VERSION }}
           rm -rf /tmp/docs_build
@@ -72,6 +74,7 @@ jobs:
             ln -sfn ${{ env.RELEASE_VERSION }} latest
           fi
           git add ./latest ${{ env.RELEASE_VERSION }}
+          git add index.html
           git commit -m "Update documentation" -a || true
       - name: Push changes
         uses: ad-m/github-push-action@master

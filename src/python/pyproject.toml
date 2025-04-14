@@ -28,7 +28,6 @@ dependencies = [
     "opencv-python-headless",
     "scipy>=1.5.4",
     "openvino>=2025.0",
-    "omz_tools @ git+https://github.com/openvinotoolkit/open_model_zoo.git@master#egg=omz_tools&subdirectory=tools/model_tools",
     "pillow",
 ]
 
@@ -63,9 +62,9 @@ build = [
 full = ["openvino_model_api[dependencies, ovms, tests, docs, build]"]
 
 [project.urls]
-Homepage = "https://github.com/openvinotoolkit/model_api"
-Documentation = "https://github.com/openvinotoolkit/model_api/blob/master/README.md"
-Repository = "https://github.com/openvinotoolkit/model_api.git"
+Homepage = "https://github.com/open-edge-platform/model_api"
+Documentation = "https://github.com/open-edge-platform/model_api/blob/master/README.md"
+Repository = "https://github.com/open-edge-platform/model_api.git"
 
 [tool.setuptools.packages.find]
 include = ["model_api*"]
