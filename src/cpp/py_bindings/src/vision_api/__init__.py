@@ -2,12 +2,11 @@
 
 try:
     from openvino import Core
+
     _ = Core()  # Triggers loading of shared libs like libopenvino.so
 except Exception as e:
     raise ImportError(f"Failed to initialize OpenVINO runtime: {e}")
 
-from ._vision_api import Classification, ClassificationModel
+from ._vision_api import ClassificationModel
 
-
-def hello():
-    print("World!")
+__all__ = [ClassificationModel]
