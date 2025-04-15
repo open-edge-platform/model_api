@@ -48,7 +48,7 @@ def test_classification_models(data: str, classification_configs):
         cpp_model = ClassificationModel.create_model(name, preload=True)
 
         image_path = Path(data) / next(iter(model_data["test_data"]))["image"]
-        image = cv2.imread(str(image_path))
+        image = cv2.cvtColor(cv2.imread(image_path), cv2.COLOR_BGR2RGB)
 
         py_result = model(image)
         cpp_result = cpp_model(image)
