@@ -60,7 +60,7 @@ TEST_P(AccuracySuit, TestDetector) {
     EXPECT_EQ(ss.str(),
               string{*cached_model(param.model_name)
                           ->infer(cv::imread(data() + "/coco128/images/train2017/" + param.refpath.stem().string() +
-                                             ".jpg"))});
+                                             ".jpg"))->detection_result});
 }
 
 INSTANTIATE_TEST_SUITE_P(YOLOv8, AccuracySuit, testing::ValuesIn([] {

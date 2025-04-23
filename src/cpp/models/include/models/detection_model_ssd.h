@@ -25,12 +25,12 @@ class ModelSSD : public DetectionModel {
 public:
     using DetectionModel::DetectionModel;
     std::shared_ptr<InternalModelData> preprocess(const InputData& inputData, InferenceInput& input) override;
-    std::unique_ptr<ResultBase> postprocess(InferenceResult& infResult) override;
+    std::unique_ptr<Scene> postprocess(InferenceResult& infResult) override;
     static std::string ModelType;
 
 protected:
-    std::unique_ptr<ResultBase> postprocessSingleOutput(InferenceResult& infResult);
-    std::unique_ptr<ResultBase> postprocessMultipleOutputs(InferenceResult& infResult);
+    std::unique_ptr<Scene> postprocessSingleOutput(InferenceResult& infResult);
+    std::unique_ptr<Scene> postprocessMultipleOutputs(InferenceResult& infResult);
     void prepareInputsOutputs(std::shared_ptr<ov::Model>& model) override;
     void prepareSingleOutput(std::shared_ptr<ov::Model>& model);
     void prepareMultipleOutputs(std::shared_ptr<ov::Model>& model);

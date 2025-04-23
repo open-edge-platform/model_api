@@ -68,8 +68,8 @@ std::vector<cv::Rect> TilerBase::filter_tiles(const cv::Mat&, const std::vector<
     return coords;
 }
 
-std::unique_ptr<ResultBase> TilerBase::predict_sync(const cv::Mat& image, const std::vector<cv::Rect>& tile_coords) {
-    std::vector<std::unique_ptr<ResultBase>> tile_results;
+std::unique_ptr<Scene> TilerBase::predict_sync(const cv::Mat& image, const std::vector<cv::Rect>& tile_coords) {
+    std::vector<std::unique_ptr<Scene>> tile_results;
 
     for (const auto& coord : tile_coords) {
         auto tile_img = crop_tile(image, coord);
@@ -81,7 +81,7 @@ std::unique_ptr<ResultBase> TilerBase::predict_sync(const cv::Mat& image, const 
     return merge_results(tile_results, image.size(), tile_coords);
 }
 
-std::unique_ptr<ResultBase> TilerBase::predict_async(const cv::Mat& image, const std::vector<cv::Rect>& tile_coords) {
+std::unique_ptr<Scene> TilerBase::predict_async(const cv::Mat& image, const std::vector<cv::Rect>& tile_coords) {
     std::vector<ImageInputData> input_data;
 
     input_data.reserve(tile_coords.size());
@@ -90,7 +90,7 @@ std::unique_ptr<ResultBase> TilerBase::predict_async(const cv::Mat& image, const
         input_data.push_back(ImageInputData(tile_img.clone()));
     }
 
-    std::vector<std::unique_ptr<ResultBase>> tile_results;
+    std::vector<std::unique_ptr<Scene>> tile_results;
     auto tile_predictions = model->inferBatchImage(input_data);
     for (size_t i = 0; i < tile_predictions.size(); ++i) {
         auto tile_result = postprocess_tile(std::move(tile_predictions[i]), tile_coords[i]);
@@ -103,7 +103,7 @@ cv::Mat TilerBase::crop_tile(const cv::Mat& image, const cv::Rect& coord) {
     return cv::Mat(image, coord);
 }
 
-std::unique_ptr<ResultBase> TilerBase::run_impl(const ImageInputData& inputData) {
+std::unique_ptr<Scene> TilerBase::run_impl(const ImageInputData& inputData) {
     auto& image = inputData.inputImage;
     auto tile_coords = tile(image.size());
     tile_coords = filter_tiles(image, tile_coords);

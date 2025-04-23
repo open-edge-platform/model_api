@@ -219,7 +219,7 @@ void SegmentationModel::prepareInputsOutputs(std::shared_ptr<ov::Model>& model) 
     }
 }
 
-std::unique_ptr<ResultBase> SegmentationModel::postprocess(InferenceResult& infResult) {
+std::unique_ptr<Scene> SegmentationModel::postprocess(InferenceResult& infResult) {
     const auto& inputImgSize = infResult.internalModelData->asRef<InternalImageModelData>();
     const auto& outputName = outputNames[0] == feature_vector_name ? outputNames[1] : outputNames[0];
     const auto& outTensor = infResult.outputsData[outputName];
@@ -259,6 +259,7 @@ std::unique_ptr<ResultBase> SegmentationModel::postprocess(InferenceResult& infR
                0.0,
                cv::INTER_NEAREST);
 
+    auto scene = std::make_unique<Scene>(infResult.frameId, infResult.metaData);
     if (return_soft_prediction) {
         ImageResultWithSoftPrediction* result =
             new ImageResultWithSoftPrediction(infResult.frameId, infResult.metaData);
@@ -275,12 +276,13 @@ std::unique_ptr<ResultBase> SegmentationModel::postprocess(InferenceResult& infR
             result->saliency_map = get_activation_map(soft_prediction);
             result->feature_vector = iter->second;
         }
-        return std::unique_ptr<ResultBase>(result);
+        scene->image_result = std::unique_ptr<ImageResult>(result);
+    } else {
+        auto result = std::make_unique<ImageResult>(infResult.frameId, infResult.metaData);
+        result->resultImage = hard_prediction;
+        scene->image_result = std::move(result);
     }
-
-    ImageResult* result = new ImageResult(infResult.frameId, infResult.metaData);
-    result->resultImage = hard_prediction;
-    return std::unique_ptr<ResultBase>(result);
+    return scene;
 }
 
 std::vector<Contour> SegmentationModel::getContours(const ImageResultWithSoftPrediction& imageResult) {
@@ -315,17 +317,10 @@ std::vector<Contour> SegmentationModel::getContours(const ImageResultWithSoftPre
     return combined_contours;
 }
 
-std::unique_ptr<ImageResult> SegmentationModel::infer(const ImageInputData& inputData) {
-    auto result = BaseModel::inferImage(inputData);
-    return std::unique_ptr<ImageResult>(static_cast<ImageResult*>(result.release()));
+std::unique_ptr<Scene> SegmentationModel::infer(const ImageInputData& inputData) {
+    return BaseModel::inferImage(inputData);
 }
 
-std::vector<std::unique_ptr<ImageResult>> SegmentationModel::inferBatch(const std::vector<ImageInputData>& inputImgs) {
-    auto results = BaseModel::inferBatchImage(inputImgs);
-    std::vector<std::unique_ptr<ImageResult>> segResults;
-    segResults.reserve(results.size());
-    for (auto& result : results) {
-        segResults.emplace_back(static_cast<ImageResult*>(result.release()));
-    }
-    return segResults;
+std::vector<std::unique_ptr<Scene>> SegmentationModel::inferBatch(const std::vector<ImageInputData>& inputImgs) {
+    return BaseModel::inferBatchImage(inputImgs);
 }

@@ -25,10 +25,10 @@ namespace {
 class TmpCallbackSetter {
 public:
     BaseModel* model;
-    std::function<void(std::unique_ptr<ResultBase>, const ov::AnyMap&)> last_callback;
+    std::function<void(std::unique_ptr<Scene>, const ov::AnyMap&)> last_callback;
     TmpCallbackSetter(BaseModel* model_,
-                      std::function<void(std::unique_ptr<ResultBase>, const ov::AnyMap&)> tmp_callback,
-                      std::function<void(std::unique_ptr<ResultBase>, const ov::AnyMap&)> last_callback_)
+                      std::function<void(std::unique_ptr<Scene>, const ov::AnyMap&)> tmp_callback,
+                      std::function<void(std::unique_ptr<Scene>, const ov::AnyMap&)> last_callback_)
         : model(model_),
           last_callback(last_callback_) {
         model->setCallback(tmp_callback);
@@ -37,7 +37,7 @@ public:
         if (last_callback) {
             model->setCallback(last_callback);
         } else {
-            model->setCallback([](std::unique_ptr<ResultBase>, const ov::AnyMap&) {});
+            model->setCallback([](std::unique_ptr<Scene>, const ov::AnyMap&) {});
         }
     }
 };
@@ -106,7 +106,7 @@ void BaseModel::awaitAny() {
 }
 
 void BaseModel::setCallback(
-    std::function<void(std::unique_ptr<ResultBase>, const ov::AnyMap& callback_args)> callback) {
+    std::function<void(std::unique_ptr<Scene>, const ov::AnyMap& callback_args)> callback) {
     lastCallback = callback;
     inferenceAdapter->setCallback([this, callback](ov::InferRequest request, CallbackData args) {
         InferenceResult result;
@@ -121,9 +121,7 @@ void BaseModel::setCallback(
         if (model_data_iter != args->end()) {
             result.internalModelData = std::move(model_data_iter->second.as<std::shared_ptr<InternalModelData>>());
         }
-        auto retVal = this->postprocess(result);
-        *retVal = static_cast<ResultBase&>(result);
-        callback(std::move(retVal), args ? *args : ov::AnyMap());
+        callback(std::move(this->postprocess(result)), args ? *args : ov::AnyMap());
     });
 }
 
@@ -215,7 +213,7 @@ BaseModel::BaseModel(std::shared_ptr<InferenceAdapter>& adapter, const ov::AnyMa
     init_from_config(configuration, adapter->getModelConfig());
 }
 
-std::unique_ptr<ResultBase> BaseModel::inferImage(const ImageInputData& inputData) {
+std::unique_ptr<Scene> BaseModel::inferImage(const ImageInputData& inputData) {
     InferenceInput inputs;
     InferenceResult result;
     auto internalModelData = this->preprocess(inputData, inputs);
@@ -223,21 +221,19 @@ std::unique_ptr<ResultBase> BaseModel::inferImage(const ImageInputData& inputDat
     result.outputsData = inferenceAdapter->infer(inputs);
     result.internalModelData = std::move(internalModelData);
 
-    auto retVal = this->postprocess(result);
-    *retVal = static_cast<ResultBase&>(result);
-    return retVal;
+    return this->postprocess(result);
 }
 
-std::vector<std::unique_ptr<ResultBase>> BaseModel::inferBatchImage(const std::vector<ImageInputData>& inputImgs) {
+std::vector<std::unique_ptr<Scene>> BaseModel::inferBatchImage(const std::vector<ImageInputData>& inputImgs) {
     std::vector<std::reference_wrapper<const ImageInputData>> inputData;
     inputData.reserve(inputImgs.size());
     for (const auto& img : inputImgs) {
         inputData.push_back(img);
     }
-    auto results = std::vector<std::unique_ptr<ResultBase>>(inputData.size());
+    auto results = std::vector<std::unique_ptr<Scene>>(inputData.size());
     auto setter = TmpCallbackSetter(
         this,
-        [&](std::unique_ptr<ResultBase> result, const ov::AnyMap& callback_args) {
+        [&](std::unique_ptr<Scene> result, const ov::AnyMap& callback_args) {
             size_t id = callback_args.find("id")->second.as<size_t>();
             results[id] = std::move(result);
         },

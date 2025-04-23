@@ -126,7 +126,7 @@ std::shared_ptr<InternalModelData> ModelYoloX::preprocess(const InputData& input
     return std::make_shared<InternalScaleData>(origImg.cols, origImg.rows, scale, scale);
 }
 
-std::unique_ptr<ResultBase> ModelYoloX::postprocess(InferenceResult& infResult) {
+std::unique_ptr<Scene> ModelYoloX::postprocess(InferenceResult& infResult) {
     // Get metadata about input image shape and scale
     const auto& scale = infResult.internalModelData->asRef<InternalScaleData>();
 
@@ -136,7 +136,8 @@ std::unique_ptr<ResultBase> ModelYoloX::postprocess(InferenceResult& infResult) 
     float* outputPtr = output.data<float>();
 
     // Generate detection results
-    DetectionResult* result = new DetectionResult(infResult.frameId, infResult.metaData);
+    auto scene = std::make_unique<Scene>(infResult.frameId, infResult.metaData);
+    auto result = std::make_unique<DetectionResult>(infResult.frameId, infResult.metaData);
 
     // Update coordinates according to strides
     for (size_t box_index = 0; box_index < expandedStrides.size(); ++box_index) {
@@ -200,5 +201,6 @@ std::unique_ptr<ResultBase> ModelYoloX::postprocess(InferenceResult& infResult) 
         result->objects.push_back(obj);
     }
 
-    return std::unique_ptr<ResultBase>(result);
+    scene->detection_result = std::move(result);
+    return scene;
 }

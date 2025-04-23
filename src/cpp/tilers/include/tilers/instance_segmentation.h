@@ -14,17 +14,17 @@ public:
     InstanceSegmentationTiler(std::shared_ptr<BaseModel> model,
                               const ov::AnyMap& configuration,
                               ExecutionMode exec_mode = ExecutionMode::sync);
-    virtual std::unique_ptr<InstanceSegmentationResult> run(const ImageInputData& inputData);
+    virtual std::unique_ptr<Scene> run(const ImageInputData& inputData);
     virtual ~InstanceSegmentationTiler() = default;
     bool postprocess_semantic_masks = true;
 
 protected:
-    virtual std::unique_ptr<ResultBase> postprocess_tile(std::unique_ptr<ResultBase>, const cv::Rect&);
-    virtual std::unique_ptr<ResultBase> merge_results(const std::vector<std::unique_ptr<ResultBase>>&,
+    virtual std::unique_ptr<Scene> postprocess_tile(std::unique_ptr<Scene>, const cv::Rect&);
+    virtual std::unique_ptr<Scene> merge_results(const std::vector<std::unique_ptr<Scene>>&,
                                                       const cv::Size&,
                                                       const std::vector<cv::Rect>&);
 
-    std::vector<cv::Mat_<std::uint8_t>> merge_saliency_maps(const std::vector<std::unique_ptr<ResultBase>>&,
+    std::vector<cv::Mat_<std::uint8_t>> merge_saliency_maps(const std::vector<std::unique_ptr<Scene>>&,
                                                             const cv::Size&,
                                                             const std::vector<cv::Rect>&);
 

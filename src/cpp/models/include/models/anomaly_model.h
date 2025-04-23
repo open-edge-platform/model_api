@@ -23,9 +23,9 @@ public:
                                                       const std::string& device = "AUTO");
     static std::unique_ptr<AnomalyModel> create_model(std::shared_ptr<InferenceAdapter>& adapter);
 
-    virtual std::unique_ptr<AnomalyResult> infer(const ImageInputData& inputData);
-    virtual std::vector<std::unique_ptr<AnomalyResult>> inferBatch(const std::vector<ImageInputData>& inputImgs);
-    std::unique_ptr<ResultBase> postprocess(InferenceResult& infResult) override;
+    virtual std::unique_ptr<Scene> infer(const ImageInputData& inputData);
+    virtual std::vector<std::unique_ptr<Scene>> inferBatch(const std::vector<ImageInputData>& inputImgs);
+    std::unique_ptr<Scene> postprocess(InferenceResult& infResult) override;
 
     friend std::ostream& operator<<(std::ostream& os, std::unique_ptr<AnomalyModel>& model);
 

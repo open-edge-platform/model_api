@@ -38,23 +38,15 @@ AnomalyModel::AnomalyModel(std::shared_ptr<InferenceAdapter>& adapter, const ov:
     init_from_config(configuration, adapter->getModelConfig());
 }
 
-std::unique_ptr<AnomalyResult> AnomalyModel::infer(const ImageInputData& inputData) {
-    auto result = BaseModel::inferImage(inputData);
-
-    return std::unique_ptr<AnomalyResult>(static_cast<AnomalyResult*>(result.release()));
+std::unique_ptr<Scene> AnomalyModel::infer(const ImageInputData& inputData) {
+    return BaseModel::inferImage(inputData);
 }
 
-std::vector<std::unique_ptr<AnomalyResult>> AnomalyModel::inferBatch(const std::vector<ImageInputData>& inputImgs) {
-    auto results = BaseModel::inferBatchImage(inputImgs);
-    std::vector<std::unique_ptr<AnomalyResult>> anoResults;
-    anoResults.reserve(results.size());
-    for (auto& result : results) {
-        anoResults.emplace_back(static_cast<AnomalyResult*>(result.release()));
-    }
-    return anoResults;
+std::vector<std::unique_ptr<Scene>> AnomalyModel::inferBatch(const std::vector<ImageInputData>& inputImgs) {
+    return BaseModel::inferBatchImage(inputImgs);
 }
 
-std::unique_ptr<ResultBase> AnomalyModel::postprocess(InferenceResult& infResult) {
+std::unique_ptr<Scene> AnomalyModel::postprocess(InferenceResult& infResult) {
     ov::Tensor predictions = infResult.outputsData[outputNames[0]];
     const auto& inputImgSize = infResult.internalModelData->asRef<InternalImageModelData>();
 
@@ -95,13 +87,16 @@ std::unique_ptr<ResultBase> AnomalyModel::postprocess(InferenceResult& infResult
         pred_boxes = getBoxes(pred_mask);
     }
 
-    AnomalyResult* result = new AnomalyResult(infResult.frameId, infResult.metaData);
+    auto scene = std::make_unique<Scene>(infResult.frameId, infResult.metaData);
+    auto result = std::make_unique<AnomalyResult>(infResult.frameId, infResult.metaData);
     result->anomaly_map = std::move(anomaly_map);
     result->pred_score = pred_score;
     result->pred_label = std::move(pred_label);
     result->pred_mask = std::move(pred_mask);
     result->pred_boxes = std::move(pred_boxes);
-    return std::unique_ptr<ResultBase>(result);
+
+    scene->anomaly_result = std::move(result);
+    return scene;
 }
 
 cv::Mat AnomalyModel::normalize(cv::Mat& tensor, float threshold) {

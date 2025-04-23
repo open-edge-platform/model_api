@@ -31,10 +31,10 @@ public:
                                                            const std::string& device = "AUTO");
     static std::unique_ptr<SegmentationModel> create_model(std::shared_ptr<InferenceAdapter>& adapter);
 
-    std::unique_ptr<ResultBase> postprocess(InferenceResult& infResult) override;
+    std::unique_ptr<Scene> postprocess(InferenceResult& infResult) override;
 
-    virtual std::unique_ptr<ImageResult> infer(const ImageInputData& inputData);
-    virtual std::vector<std::unique_ptr<ImageResult>> inferBatch(const std::vector<ImageInputData>& inputImgs);
+    virtual std::unique_ptr<Scene> infer(const ImageInputData& inputData);
+    virtual std::vector<std::unique_ptr<Scene>> inferBatch(const std::vector<ImageInputData>& inputImgs);
 
     static std::string ModelType;
     std::vector<Contour> getContours(const ImageResultWithSoftPrediction& imageResult);

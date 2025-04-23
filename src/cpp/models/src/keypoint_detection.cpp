@@ -207,8 +207,9 @@ void KeypointDetectionModel::prepareInputsOutputs(std::shared_ptr<ov::Model>& mo
     }
 }
 
-std::unique_ptr<ResultBase> KeypointDetectionModel::postprocess(InferenceResult& infResult) {
-    KeypointDetectionResult* result = new KeypointDetectionResult(infResult.frameId, infResult.metaData);
+std::unique_ptr<Scene> KeypointDetectionModel::postprocess(InferenceResult& infResult) {
+    auto scene = std::make_unique<Scene>(infResult.frameId, infResult.metaData);
+    auto result = std::make_unique<KeypointDetectionResult>(infResult.frameId, infResult.metaData);
 
     const ov::Tensor& pred_x_tensor = infResult.outputsData.find(outputNames[0])->second;
     size_t shape_offset = pred_x_tensor.get_shape().size() == 3 ? 1 : 0;
@@ -246,21 +247,15 @@ std::unique_ptr<ResultBase> KeypointDetectionModel::postprocess(InferenceResult&
     result->poses.emplace_back(
         decode_simcc(pred_x_mat, pred_y_mat, {inverted_scale_x, inverted_scale_y}, {pad_left, pad_top}, apply_softmax));
 
-    return std::unique_ptr<ResultBase>(result);
+    scene->keypoint_detection_result = std::move(result);
+    return scene;
 }
 
-std::unique_ptr<KeypointDetectionResult> KeypointDetectionModel::infer(const ImageInputData& inputData) {
-    auto result = BaseModel::inferImage(inputData);
-    return std::unique_ptr<KeypointDetectionResult>(static_cast<KeypointDetectionResult*>(result.release()));
+std::unique_ptr<Scene> KeypointDetectionModel::infer(const ImageInputData& inputData) {
+    return BaseModel::inferImage(inputData);
 }
 
-std::vector<std::unique_ptr<KeypointDetectionResult>> KeypointDetectionModel::inferBatch(
+std::vector<std::unique_ptr<Scene>> KeypointDetectionModel::inferBatch(
     const std::vector<ImageInputData>& inputImgs) {
-    auto results = BaseModel::inferBatchImage(inputImgs);
-    std::vector<std::unique_ptr<KeypointDetectionResult>> kpDetResults;
-    kpDetResults.reserve(results.size());
-    for (auto& result : results) {
-        kpDetResults.emplace_back(static_cast<KeypointDetectionResult*>(result.release()));
-    }
-    return kpDetResults;
+    return BaseModel::inferBatchImage(inputImgs);
 }

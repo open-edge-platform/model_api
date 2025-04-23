@@ -93,30 +93,29 @@ std::shared_ptr<InternalModelData> ModelSSD::preprocess(const InputData& inputDa
     return DetectionModel::preprocess(inputData, input);
 }
 
-std::unique_ptr<ResultBase> ModelSSD::postprocess(InferenceResult& infResult) {
-    std::unique_ptr<ResultBase> result = filterOutXai(outputNames).size() > 1 ? postprocessMultipleOutputs(infResult)
+std::unique_ptr<Scene> ModelSSD::postprocess(InferenceResult& infResult) {
+    std::unique_ptr<Scene> result = filterOutXai(outputNames).size() > 1 ? postprocessMultipleOutputs(infResult)
                                                                               : postprocessSingleOutput(infResult);
-    DetectionResult* cls_res = static_cast<DetectionResult*>(result.get());
     auto saliency_map_iter = infResult.outputsData.find(saliency_map_name);
     if (saliency_map_iter != infResult.outputsData.end()) {
-        cls_res->saliency_map = std::move(saliency_map_iter->second);
+        result->detection_result->saliency_map = std::move(saliency_map_iter->second);
     }
     auto feature_vector_iter = infResult.outputsData.find(feature_vector_name);
     if (feature_vector_iter != infResult.outputsData.end()) {
-        cls_res->feature_vector = std::move(feature_vector_iter->second);
+        result->detection_result->feature_vector = std::move(feature_vector_iter->second);
     }
     return result;
 }
 
-std::unique_ptr<ResultBase> ModelSSD::postprocessSingleOutput(InferenceResult& infResult) {
+std::unique_ptr<Scene> ModelSSD::postprocessSingleOutput(InferenceResult& infResult) {
     const std::vector<std::string> namesWithoutXai = filterOutXai(outputNames);
     assert(namesWithoutXai.size() == 1);
     const ov::Tensor& detectionsTensor = infResult.outputsData[namesWithoutXai[0]];
     NumAndStep numAndStep = fromSingleOutput(detectionsTensor.get_shape());
     const float* detections = detectionsTensor.data<float>();
 
-    DetectionResult* result = new DetectionResult(infResult.frameId, infResult.metaData);
-    auto retVal = std::unique_ptr<ResultBase>(result);
+    auto scene = std::make_unique<Scene>(infResult.frameId, infResult.metaData);
+    auto result = std::make_unique<DetectionResult>(infResult.frameId, infResult.metaData);
 
     const auto& internalData = infResult.internalModelData->asRef<InternalImageModelData>();
     float floatInputImgWidth = float(internalData.inputImgWidth),
@@ -168,10 +167,11 @@ std::unique_ptr<ResultBase> ModelSSD::postprocessSingleOutput(InferenceResult& i
         }
     }
 
-    return retVal;
+    scene->detection_result = std::move(result);
+    return scene;
 }
 
-std::unique_ptr<ResultBase> ModelSSD::postprocessMultipleOutputs(InferenceResult& infResult) {
+std::unique_ptr<Scene> ModelSSD::postprocessMultipleOutputs(InferenceResult& infResult) {
     const std::vector<std::string> namesWithoutXai = filterOutXai(outputNames);
     const float* boxes = infResult.outputsData[namesWithoutXai[0]].data<float>();
     NumAndStep numAndStep = fromMultipleOutputs(infResult.outputsData[namesWithoutXai[0]].get_shape());
@@ -179,8 +179,8 @@ std::unique_ptr<ResultBase> ModelSSD::postprocessMultipleOutputs(InferenceResult
     const float* scores =
         namesWithoutXai.size() > 2 ? infResult.outputsData[namesWithoutXai[2]].data<float>() : nullptr;
 
-    DetectionResult* result = new DetectionResult(infResult.frameId, infResult.metaData);
-    auto retVal = std::unique_ptr<ResultBase>(result);
+    auto scene = std::make_unique<Scene>(infResult.frameId, infResult.metaData);
+    auto result = std::make_unique<DetectionResult>(infResult.frameId, infResult.metaData);
 
     const auto& internalData = infResult.internalModelData->asRef<InternalImageModelData>();
     float floatInputImgWidth = float(internalData.inputImgWidth),
@@ -232,7 +232,8 @@ std::unique_ptr<ResultBase> ModelSSD::postprocessMultipleOutputs(InferenceResult
         }
     }
 
-    return retVal;
+    scene->detection_result = std::move(result);
+    return scene;
 }
 
 void ModelSSD::prepareInputsOutputs(std::shared_ptr<ov::Model>& model) {

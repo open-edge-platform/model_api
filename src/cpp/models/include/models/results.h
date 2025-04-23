@@ -16,6 +16,7 @@
 #include "internal_model_data.h"
 
 struct MetaData;
+
 struct ResultBase {
     ResultBase(int64_t frameId = -1, const std::shared_ptr<MetaData>& metaData = nullptr)
         : frameId(frameId),
@@ -376,4 +377,22 @@ struct KeypointDetectionResult : public ResultBase {
     KeypointDetectionResult(int64_t frameId = -1, const std::shared_ptr<MetaData>& metaData = nullptr)
         : ResultBase(frameId, metaData) {}
     std::vector<DetectedKeypoints> poses;
+};
+
+
+class Scene {
+public:
+    Scene(int64_t frameId = -1, const std::shared_ptr<MetaData>& metaData = nullptr)
+        : frameId(frameId),
+          metaData(metaData) {}
+
+    int64_t frameId;
+    std::shared_ptr<MetaData> metaData;
+
+    std::unique_ptr<DetectionResult> detection_result;
+    std::unique_ptr<ClassificationResult> classification_result;
+    std::unique_ptr<KeypointDetectionResult> keypoint_detection_result;
+    std::unique_ptr<AnomalyResult> anomaly_result;
+    std::unique_ptr<InstanceSegmentationResult> instance_segmentation_result;
+    std::unique_ptr<ImageResult> image_result;
 };

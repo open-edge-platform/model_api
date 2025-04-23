@@ -42,9 +42,9 @@ DetectionTiler::DetectionTiler(const std::shared_ptr<BaseModel>& _model,
     max_pred_number = get_from_any_maps("max_pred_number", configuration, extra_config, max_pred_number);
 }
 
-std::unique_ptr<ResultBase> DetectionTiler::postprocess_tile(std::unique_ptr<ResultBase> tile_result,
+std::unique_ptr<Scene> DetectionTiler::postprocess_tile(std::unique_ptr<Scene> tile_result,
                                                              const cv::Rect& coord) {
-    DetectionResult* det_res = static_cast<DetectionResult*>(tile_result.get());
+    auto& det_res = tile_result->detection_result;
     for (auto& det : det_res->objects) {
         det.x += coord.x;
         det.y += coord.y;
@@ -66,19 +66,18 @@ std::unique_ptr<ResultBase> DetectionTiler::postprocess_tile(std::unique_ptr<Res
     return tile_result;
 }
 
-std::unique_ptr<ResultBase> DetectionTiler::merge_results(const std::vector<std::unique_ptr<ResultBase>>& tiles_results,
+std::unique_ptr<Scene> DetectionTiler::merge_results(const std::vector<std::unique_ptr<Scene>>& tiles_results,
                                                           const cv::Size& image_size,
                                                           const std::vector<cv::Rect>& tile_coords) {
-    DetectionResult* result = new DetectionResult();
-    auto retVal = std::unique_ptr<ResultBase>(result);
+    auto result = std::make_unique<DetectionResult>();
+    auto scene = std::make_unique<Scene>();
 
     std::vector<AnchorLabeled> all_detections;
     std::vector<std::reference_wrapper<DetectedObject>> all_detections_refs;
     std::vector<float> all_scores;
 
     for (const auto& result : tiles_results) {
-        DetectionResult* det_res = static_cast<DetectionResult*>(result.get());
-        for (auto& det : det_res->objects) {
+        for (auto& det : result->detection_result->objects) {
             all_detections.emplace_back(det.x, det.y, det.x + det.width, det.y + det.height, det.labelID);
             all_scores.push_back(det.confidence);
             all_detections_refs.push_back(det);
@@ -93,7 +92,7 @@ std::unique_ptr<ResultBase> DetectionTiler::merge_results(const std::vector<std:
     }
 
     if (tiles_results.size()) {
-        DetectionResult* det_res = static_cast<DetectionResult*>(tiles_results.begin()->get());
+        auto& det_res = tiles_results.begin()->get()->detection_result;
         if (det_res->feature_vector) {
             result->feature_vector =
                 ov::Tensor(det_res->feature_vector.get_element_type(), det_res->feature_vector.get_shape());
@@ -110,8 +109,7 @@ std::unique_ptr<ResultBase> DetectionTiler::merge_results(const std::vector<std:
         std::fill(feature_ptr, feature_ptr + feature_size, 0.f);
 
         for (const auto& result : tiles_results) {
-            DetectionResult* det_res = static_cast<DetectionResult*>(result.get());
-            const float* current_feature_ptr = det_res->feature_vector.data<float>();
+            const float* current_feature_ptr = result->detection_result->feature_vector.data<float>();
 
             for (size_t i = 0; i < feature_size; ++i) {
                 feature_ptr[i] += current_feature_ptr[i];
@@ -123,17 +121,18 @@ std::unique_ptr<ResultBase> DetectionTiler::merge_results(const std::vector<std:
         }
     }
 
-    return retVal;
+    scene->detection_result = std::move(result);
+
+    return scene;
 }
 
-ov::Tensor DetectionTiler::merge_saliency_maps(const std::vector<std::unique_ptr<ResultBase>>& tiles_results,
+ov::Tensor DetectionTiler::merge_saliency_maps(const std::vector<std::unique_ptr<Scene>>& tiles_results,
                                                const cv::Size& image_size,
                                                const std::vector<cv::Rect>& tile_coords) {
     std::vector<ov::Tensor> all_saliency_maps;
     all_saliency_maps.reserve(tiles_results.size());
     for (const auto& result : tiles_results) {
-        auto det_res = static_cast<DetectionResult*>(result.get());
-        all_saliency_maps.push_back(det_res->saliency_map);
+        all_saliency_maps.push_back(result->detection_result->saliency_map);
     }
 
     ov::Tensor image_saliency_map;
@@ -219,7 +218,6 @@ ov::Tensor DetectionTiler::merge_saliency_maps(const std::vector<std::unique_ptr
     return merged_map;
 }
 
-std::unique_ptr<DetectionResult> DetectionTiler::run(const ImageInputData& inputData) {
-    auto result = this->run_impl(inputData);
-    return std::unique_ptr<DetectionResult>(static_cast<DetectionResult*>(result.release()));
+std::unique_ptr<Scene> DetectionTiler::run(const ImageInputData& inputData) {
+    return this->run_impl(inputData);
 }

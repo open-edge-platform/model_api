@@ -116,7 +116,7 @@ float getScore(const ov::Tensor& scoresTensor, size_t classInd, size_t boxInd) {
 }
 }  // namespace
 
-std::unique_ptr<ResultBase> ModelYoloV3ONNX::postprocess(InferenceResult& infResult) {
+std::unique_ptr<Scene> ModelYoloV3ONNX::postprocess(InferenceResult& infResult) {
     // Get info about input image
     const auto imgWidth = infResult.internalModelData->asRef<InternalImageModelData>().inputImgWidth;
     const auto imgHeight = infResult.internalModelData->asRef<InternalImageModelData>().inputImgHeight;
@@ -133,7 +133,8 @@ std::unique_ptr<ResultBase> ModelYoloV3ONNX::postprocess(InferenceResult& infRes
     const auto boxShape = boxes.get_shape();
 
     // Generate detection results
-    DetectionResult* result = new DetectionResult(infResult.frameId, infResult.metaData);
+    auto scene = std::make_unique<Scene>(infResult.frameId, infResult.metaData);
+    auto result = std::make_unique<DetectionResult>(infResult.frameId, infResult.metaData);
     size_t numberOfBoxes = indicesShape.size() == 3 ? indicesShape[1] : indicesShape[0];
     size_t indicesStride = indicesShape.size() == 3 ? indicesShape[2] : indicesShape[1];
 
@@ -170,5 +171,7 @@ std::unique_ptr<ResultBase> ModelYoloV3ONNX::postprocess(InferenceResult& infRes
         }
     }
 
-    return std::unique_ptr<ResultBase>(result);
+    scene->detection_result = std::move(result);
+
+    return scene;
 }

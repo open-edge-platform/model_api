@@ -38,7 +38,7 @@ public:
     BaseModel(std::shared_ptr<InferenceAdapter>& adapter, const ov::AnyMap& configuration = {});
 
     virtual std::shared_ptr<InternalModelData> preprocess(const InputData& inputData, InferenceInput& input);
-    virtual std::unique_ptr<ResultBase> postprocess(InferenceResult& infResult) = 0;
+    virtual std::unique_ptr<Scene> postprocess(InferenceResult& infResult) = 0;
 
     void load(ov::Core& core, const std::string& device, size_t num_infer_requests = 1);
 
@@ -49,7 +49,7 @@ public:
     virtual void awaitAll();
     virtual void awaitAny();
     virtual void setCallback(
-        std::function<void(std::unique_ptr<ResultBase>, const ov::AnyMap& callback_args)> callback);
+        std::function<void(std::unique_ptr<Scene>, const ov::AnyMap& callback_args)> callback);
 
     std::shared_ptr<ov::Model> getModel();
     std::shared_ptr<InferenceAdapter> getInferenceAdapter();
@@ -67,8 +67,8 @@ public:
                                                const std::vector<float>& scale,
                                                const std::type_info& dtype = typeid(int));
     virtual void inferAsync(const ImageInputData& inputData, const ov::AnyMap& callback_args = {});
-    std::unique_ptr<ResultBase> inferImage(const ImageInputData& inputData);
-    std::vector<std::unique_ptr<ResultBase>> inferBatchImage(const std::vector<ImageInputData>& inputData);
+    std::unique_ptr<Scene> inferImage(const ImageInputData& inputData);
+    std::vector<std::unique_ptr<Scene>> inferBatchImage(const std::vector<ImageInputData>& inputData);
 
 protected:
     RESIZE_MODE selectResizeMode(const std::string& resize_type);
@@ -104,5 +104,5 @@ protected:
     std::shared_ptr<InferenceAdapter> inferenceAdapter;
     std::map<std::string, ov::Layout> inputsLayouts;
     ov::Layout getInputLayout(const ov::Output<ov::Node>& input);
-    std::function<void(std::unique_ptr<ResultBase>, const ov::AnyMap&)> lastCallback;
+    std::function<void(std::unique_ptr<Scene>, const ov::AnyMap&)> lastCallback;
 };

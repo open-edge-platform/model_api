@@ -99,10 +99,10 @@ public:
                                                              const std::string& device = "AUTO");
     static std::unique_ptr<ClassificationModel> create_model(std::shared_ptr<InferenceAdapter>& adapter);
 
-    std::unique_ptr<ResultBase> postprocess(InferenceResult& infResult) override;
+    std::unique_ptr<Scene> postprocess(InferenceResult& infResult) override;
 
-    virtual std::unique_ptr<ClassificationResult> infer(const ImageInputData& inputData);
-    virtual std::vector<std::unique_ptr<ClassificationResult>> inferBatch(const std::vector<ImageInputData>& inputImgs);
+    virtual std::unique_ptr<Scene> infer(const ImageInputData& inputData);
+    virtual std::vector<std::unique_ptr<Scene>> inferBatch(const std::vector<ImageInputData>& inputImgs);
     static std::string ModelType;
 
 protected:
@@ -119,8 +119,8 @@ protected:
     void init_from_config(const ov::AnyMap& top_priority, const ov::AnyMap& mid_priority);
     void prepareInputsOutputs(std::shared_ptr<ov::Model>& model) override;
     void updateModelInfo() override;
-    std::unique_ptr<ResultBase> get_multilabel_predictions(InferenceResult& infResult, bool add_raw_scores);
-    std::unique_ptr<ResultBase> get_multiclass_predictions(InferenceResult& infResult, bool add_raw_scores);
-    std::unique_ptr<ResultBase> get_hierarchical_predictions(InferenceResult& infResult, bool add_raw_scores);
+    std::unique_ptr<Scene> get_multilabel_predictions(InferenceResult& infResult, bool add_raw_scores);
+    std::unique_ptr<Scene> get_multiclass_predictions(InferenceResult& infResult, bool add_raw_scores);
+    std::unique_ptr<Scene> get_hierarchical_predictions(InferenceResult& infResult, bool add_raw_scores);
     ov::Tensor reorder_saliency_maps(const ov::Tensor&);
 };

@@ -17,7 +17,7 @@ public:
     ModelYoloX(std::shared_ptr<InferenceAdapter>& adapter);
     using DetectionModelExt::DetectionModelExt;
 
-    std::unique_ptr<ResultBase> postprocess(InferenceResult& infResult) override;
+    std::unique_ptr<Scene> postprocess(InferenceResult& infResult) override;
     std::shared_ptr<InternalModelData> preprocess(const InputData& inputData, InferenceInput& input) override;
     static std::string ModelType;
 

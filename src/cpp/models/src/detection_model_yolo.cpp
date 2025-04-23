@@ -257,8 +257,9 @@ void ModelYolo::prepareInputsOutputs(std::shared_ptr<ov::Model>& model) {
     }
 }
 
-std::unique_ptr<ResultBase> ModelYolo::postprocess(InferenceResult& infResult) {
-    DetectionResult* result = new DetectionResult(infResult.frameId, infResult.metaData);
+std::unique_ptr<Scene> ModelYolo::postprocess(InferenceResult& infResult) {
+    auto scene = std::make_unique<Scene>(infResult.frameId, infResult.metaData);
+    auto result = std::make_unique<DetectionResult>(infResult.frameId, infResult.metaData);
     std::vector<DetectedObject> objects;
 
     // Parsing outputs
@@ -308,7 +309,9 @@ std::unique_ptr<ResultBase> ModelYolo::postprocess(InferenceResult& infResult) {
         }
     }
 
-    return std::unique_ptr<ResultBase>(result);
+    scene->detection_result = std::move(result);
+
+    return scene;
 }
 
 void ModelYolo::parseYOLOOutput(const std::string& output_name,
@@ -566,7 +569,7 @@ YOLOv5::YOLOv5(std::shared_ptr<InferenceAdapter>& adapter) : DetectionModelExt(a
     init_from_config(adapter->getModelConfig(), ov::AnyMap{});
 }
 
-std::unique_ptr<ResultBase> YOLOv5::postprocess(InferenceResult& infResult) {
+std::unique_ptr<Scene> YOLOv5::postprocess(InferenceResult& infResult) {
     if (1 != infResult.outputsData.size()) {
         throw std::runtime_error("YOLO: expect 1 output");
     }
@@ -609,8 +612,9 @@ std::unique_ptr<ResultBase> YOLOv5::postprocess(InferenceResult& infResult) {
     } else {
         keep = multiclass_nms(boxes_with_class, confidences, iou_threshold, includeBoundaries, keep_top_k);
     }
-    DetectionResult* result = new DetectionResult(infResult.frameId, infResult.metaData);
-    auto base = std::unique_ptr<ResultBase>(result);
+    auto scene = std::make_unique<Scene>(infResult.frameId, infResult.metaData);
+    auto result = std::make_unique<DetectionResult>(infResult.frameId, infResult.metaData);
+
     const auto& internalData = infResult.internalModelData->asRef<InternalImageModelData>();
     float floatInputImgWidth = float(internalData.inputImgWidth),
           floatInputImgHeight = float(internalData.inputImgHeight);
@@ -636,7 +640,9 @@ std::unique_ptr<ResultBase> YOLOv5::postprocess(InferenceResult& infResult) {
         desc.label = getLabelName(desc.labelID);
         result->objects.push_back(desc);
     }
-    return base;
+    scene->detection_result = std::move(result);
+
+    return scene;
 }
 
 std::string YOLOv8::ModelType = "YOLOv8";

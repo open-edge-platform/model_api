@@ -18,7 +18,6 @@
 
 struct DetectedObject;
 struct InferenceResult;
-struct ResultBase;
 
 class ModelYolo : public DetectionModelExt {
 protected:
@@ -46,7 +45,7 @@ public:
     ModelYolo(std::shared_ptr<ov::Model>& model, const ov::AnyMap& configuration);
     ModelYolo(std::shared_ptr<InferenceAdapter>& adapter);
 
-    std::unique_ptr<ResultBase> postprocess(InferenceResult& infResult) override;
+    std::unique_ptr<Scene> postprocess(InferenceResult& infResult) override;
 
 protected:
     void prepareInputsOutputs(std::shared_ptr<ov::Model>& model) override;
@@ -82,7 +81,7 @@ class YOLOv5 : public DetectionModelExt {
 public:
     YOLOv5(std::shared_ptr<ov::Model>& model, const ov::AnyMap& configuration);
     YOLOv5(std::shared_ptr<InferenceAdapter>& adapter);
-    std::unique_ptr<ResultBase> postprocess(InferenceResult& infResult) override;
+    std::unique_ptr<Scene> postprocess(InferenceResult& infResult) override;
     static std::string ModelType;
 };
 

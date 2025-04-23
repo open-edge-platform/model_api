@@ -293,8 +293,8 @@ std::unique_ptr<ClassificationModel> ClassificationModel::create_model(std::shar
     return classifier;
 }
 
-std::unique_ptr<ResultBase> ClassificationModel::postprocess(InferenceResult& infResult) {
-    std::unique_ptr<ResultBase> result;
+std::unique_ptr<Scene> ClassificationModel::postprocess(InferenceResult& infResult) {
+    std::unique_ptr<Scene> result;
     if (multilabel) {
         result = get_multilabel_predictions(infResult, output_raw_scores);
     } else if (hierarchical) {
@@ -303,7 +303,7 @@ std::unique_ptr<ResultBase> ClassificationModel::postprocess(InferenceResult& in
         result = get_multiclass_predictions(infResult, output_raw_scores);
     }
 
-    ClassificationResult* cls_res = static_cast<ClassificationResult*>(result.get());
+    auto& cls_res = result->classification_result;
     auto saliency_map_iter = infResult.outputsData.find(saliency_map_name);
     if (saliency_map_iter != infResult.outputsData.end()) {
         cls_res->saliency_map = std::move(saliency_map_iter->second);
@@ -313,16 +313,17 @@ std::unique_ptr<ResultBase> ClassificationModel::postprocess(InferenceResult& in
     if (feature_vector_iter != infResult.outputsData.end()) {
         cls_res->feature_vector = std::move(feature_vector_iter->second);
     }
+
     return result;
 }
 
-std::unique_ptr<ResultBase> ClassificationModel::get_multilabel_predictions(InferenceResult& infResult,
+std::unique_ptr<Scene> ClassificationModel::get_multilabel_predictions(InferenceResult& infResult,
                                                                             bool add_raw_scores) {
     const ov::Tensor& logitsTensor = infResult.outputsData.find(outputNames[0])->second;
     const float* logitsPtr = logitsTensor.data<float>();
 
-    ClassificationResult* result = new ClassificationResult(infResult.frameId, infResult.metaData);
-    auto retVal = std::unique_ptr<ResultBase>(result);
+    auto scene = std::make_unique<Scene>(infResult.frameId, infResult.metaData);
+    auto result = std::make_unique<ClassificationResult>(infResult.frameId, infResult.metaData);
 
     auto raw_scores = ov::Tensor();
     float* raw_scoresPtr = nullptr;
@@ -343,12 +344,14 @@ std::unique_ptr<ResultBase> ClassificationModel::get_multilabel_predictions(Infe
         }
     }
 
-    return retVal;
+    scene->classification_result = std::move(result);
+    return scene;
 }
 
-std::unique_ptr<ResultBase> ClassificationModel::get_hierarchical_predictions(InferenceResult& infResult,
+std::unique_ptr<Scene> ClassificationModel::get_hierarchical_predictions(InferenceResult& infResult,
                                                                               bool add_raw_scores) {
-    ClassificationResult* result = new ClassificationResult(infResult.frameId, infResult.metaData);
+    auto scene = std::make_unique<Scene>(infResult.frameId, infResult.metaData);
+    auto result = std::make_unique<ClassificationResult>(infResult.frameId, infResult.metaData);
 
     const ov::Tensor& logitsTensor = infResult.outputsData.find(outputNames[0])->second;
     float* logitsPtr = logitsTensor.data<float>();
@@ -396,13 +399,13 @@ std::unique_ptr<ResultBase> ClassificationModel::get_hierarchical_predictions(In
 
     auto resolved_labels = resolver->resolve_labels(predicted_labels, predicted_scores);
 
-    auto retVal = std::unique_ptr<ResultBase>(result);
     result->topLabels.reserve(resolved_labels.size());
     for (const auto& label : resolved_labels) {
         result->topLabels.emplace_back(hierarchical_info.label_to_idx[label.first], label.first, label.second);
     }
 
-    return retVal;
+    scene->classification_result = std::move(result);
+    return scene;
 }
 
 ov::Tensor ClassificationModel::reorder_saliency_maps(const ov::Tensor& source_maps) {
@@ -426,16 +429,15 @@ ov::Tensor ClassificationModel::reorder_saliency_maps(const ov::Tensor& source_m
     return reordered_maps;
 }
 
-std::unique_ptr<ResultBase> ClassificationModel::get_multiclass_predictions(InferenceResult& infResult,
+std::unique_ptr<Scene> ClassificationModel::get_multiclass_predictions(InferenceResult& infResult,
                                                                             bool add_raw_scores) {
     const ov::Tensor& indicesTensor = infResult.outputsData.find(indices_name)->second;
     const int* indicesPtr = indicesTensor.data<int>();
     const ov::Tensor& scoresTensor = infResult.outputsData.find(scores_name)->second;
     const float* scoresPtr = scoresTensor.data<float>();
 
-    ClassificationResult* result = new ClassificationResult(infResult.frameId, infResult.metaData);
-    auto retVal = std::unique_ptr<ResultBase>(result);
-
+    auto scene = std::make_unique<Scene>(infResult.frameId, infResult.metaData);
+    auto result = std::make_unique<ClassificationResult>(infResult.frameId, infResult.metaData);
     if (add_raw_scores) {
         const ov::Tensor& logitsTensor = infResult.outputsData.find(raw_scores_name)->second;
         result->raw_scores = ov::Tensor(logitsTensor.get_element_type(), logitsTensor.get_shape());
@@ -452,7 +454,8 @@ std::unique_ptr<ResultBase> ClassificationModel::get_multiclass_predictions(Infe
         result->topLabels.emplace_back(ind, labels[ind], scoresPtr[i]);
     }
 
-    return retVal;
+    scene->classification_result = std::move(result);
+    return scene;
 }
 
 void ClassificationModel::prepareInputsOutputs(std::shared_ptr<ov::Model>& model) {
@@ -535,20 +538,13 @@ void ClassificationModel::prepareInputsOutputs(std::shared_ptr<ov::Model>& model
     append_xai_names(model->outputs(), outputNames);
 }
 
-std::unique_ptr<ClassificationResult> ClassificationModel::infer(const ImageInputData& inputData) {
-    auto result = BaseModel::inferImage(inputData);
-    return std::unique_ptr<ClassificationResult>(static_cast<ClassificationResult*>(result.release()));
+std::unique_ptr<Scene> ClassificationModel::infer(const ImageInputData& inputData) {
+    return BaseModel::inferImage(inputData);
 }
 
-std::vector<std::unique_ptr<ClassificationResult>> ClassificationModel::inferBatch(
+std::vector<std::unique_ptr<Scene>> ClassificationModel::inferBatch(
     const std::vector<ImageInputData>& inputImgs) {
-    auto results = BaseModel::inferBatchImage(inputImgs);
-    std::vector<std::unique_ptr<ClassificationResult>> clsResults;
-    clsResults.reserve(results.size());
-    for (auto& result : results) {
-        clsResults.emplace_back(static_cast<ClassificationResult*>(result.release()));
-    }
-    return clsResults;
+    return BaseModel::inferBatchImage(inputImgs);
 }
 
 HierarchicalConfig::HierarchicalConfig(const std::string& json_repr) {

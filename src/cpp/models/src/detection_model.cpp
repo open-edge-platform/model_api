@@ -102,17 +102,10 @@ std::unique_ptr<DetectionModel> DetectionModel::create_model(std::shared_ptr<Inf
     return detectionModel;
 }
 
-std::unique_ptr<DetectionResult> DetectionModel::infer(const ImageInputData& inputData) {
-    auto result = BaseModel::inferImage(inputData);
-    return std::unique_ptr<DetectionResult>(static_cast<DetectionResult*>(result.release()));
+std::unique_ptr<Scene> DetectionModel::infer(const ImageInputData& inputData) {
+    return BaseModel::inferImage(inputData);
 }
 
-std::vector<std::unique_ptr<DetectionResult>> DetectionModel::inferBatch(const std::vector<ImageInputData>& inputImgs) {
-    auto results = BaseModel::inferBatchImage(inputImgs);
-    std::vector<std::unique_ptr<DetectionResult>> detResults;
-    detResults.reserve(results.size());
-    for (auto& result : results) {
-        detResults.emplace_back(static_cast<DetectionResult*>(result.release()));
-    }
-    return detResults;
+std::vector<std::unique_ptr<Scene>> DetectionModel::inferBatch(const std::vector<ImageInputData>& inputImgs) {
+    return BaseModel::inferBatchImage(inputImgs);
 }

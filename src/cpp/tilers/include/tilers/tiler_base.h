@@ -27,14 +27,14 @@ public:
     virtual ~TilerBase() = default;
 
 protected:
-    virtual std::unique_ptr<ResultBase> run_impl(const ImageInputData& inputData);
+    virtual std::unique_ptr<Scene> run_impl(const ImageInputData& inputData);
     std::vector<cv::Rect> tile(const cv::Size&);
     std::vector<cv::Rect> filter_tiles(const cv::Mat&, const std::vector<cv::Rect>&);
-    std::unique_ptr<ResultBase> predict_sync(const cv::Mat&, const std::vector<cv::Rect>&);
-    std::unique_ptr<ResultBase> predict_async(const cv::Mat&, const std::vector<cv::Rect>&);
+    std::unique_ptr<Scene> predict_sync(const cv::Mat&, const std::vector<cv::Rect>&);
+    std::unique_ptr<Scene> predict_async(const cv::Mat&, const std::vector<cv::Rect>&);
     cv::Mat crop_tile(const cv::Mat&, const cv::Rect&);
-    virtual std::unique_ptr<ResultBase> postprocess_tile(std::unique_ptr<ResultBase>, const cv::Rect&) = 0;
-    virtual std::unique_ptr<ResultBase> merge_results(const std::vector<std::unique_ptr<ResultBase>>&,
+    virtual std::unique_ptr<Scene> postprocess_tile(std::unique_ptr<Scene>, const cv::Rect&) = 0;
+    virtual std::unique_ptr<Scene> merge_results(const std::vector<std::unique_ptr<Scene>>&,
                                                       const cv::Size&,
                                                       const std::vector<cv::Rect>&) = 0;
 

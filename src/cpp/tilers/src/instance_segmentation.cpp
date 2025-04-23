@@ -49,15 +49,14 @@ InstanceSegmentationTiler::InstanceSegmentationTiler(std::shared_ptr<BaseModel> 
     max_pred_number = get_from_any_maps("max_pred_number", configuration, extra_config, max_pred_number);
 }
 
-std::unique_ptr<InstanceSegmentationResult> InstanceSegmentationTiler::run(const ImageInputData& inputData) {
+std::unique_ptr<Scene> InstanceSegmentationTiler::run(const ImageInputData& inputData) {
     auto setter = MaskRCNNModelParamsSetter(model);
-    auto result = this->run_impl(inputData);
-    return std::unique_ptr<InstanceSegmentationResult>(static_cast<InstanceSegmentationResult*>(result.release()));
+    return this->run_impl(inputData);
 }
 
-std::unique_ptr<ResultBase> InstanceSegmentationTiler::postprocess_tile(std::unique_ptr<ResultBase> tile_result,
+std::unique_ptr<Scene> InstanceSegmentationTiler::postprocess_tile(std::unique_ptr<Scene> tile_result,
                                                                         const cv::Rect& coord) {
-    auto* iseg_res = static_cast<InstanceSegmentationResult*>(tile_result.get());
+    auto& iseg_res = tile_result->instance_segmentation_result;
     for (auto& det : iseg_res->segmentedObjects) {
         det.x += coord.x;
         det.y += coord.y;
@@ -73,20 +72,19 @@ std::unique_ptr<ResultBase> InstanceSegmentationTiler::postprocess_tile(std::uni
     return tile_result;
 }
 
-std::unique_ptr<ResultBase> InstanceSegmentationTiler::merge_results(
-    const std::vector<std::unique_ptr<ResultBase>>& tiles_results,
+std::unique_ptr<Scene> InstanceSegmentationTiler::merge_results(
+    const std::vector<std::unique_ptr<Scene>>& tiles_results,
     const cv::Size& image_size,
     const std::vector<cv::Rect>& tile_coords) {
-    auto* result = new InstanceSegmentationResult();
-    auto retVal = std::unique_ptr<ResultBase>(result);
+    auto scene = std::make_unique<Scene>();
+    auto result = std::make_unique<InstanceSegmentationResult>();
 
     std::vector<AnchorLabeled> all_detections;
     std::vector<std::reference_wrapper<SegmentedObject>> all_detections_ptrs;
     std::vector<float> all_scores;
 
     for (const auto& result : tiles_results) {
-        auto* iseg_res = static_cast<InstanceSegmentationResult*>(result.get());
-        for (auto& det : iseg_res->segmentedObjects) {
+        for (auto& det : result->instance_segmentation_result->segmentedObjects) {
             all_detections.emplace_back(det.x, det.y, det.x + det.width, det.y + det.height, det.labelID);
             all_scores.push_back(det.confidence);
             all_detections_ptrs.push_back(det);
@@ -107,7 +105,7 @@ std::unique_ptr<ResultBase> InstanceSegmentationTiler::merge_results(
     }
 
     if (tiles_results.size()) {
-        auto* iseg_res = static_cast<InstanceSegmentationResult*>(tiles_results.begin()->get());
+        auto& iseg_res = tiles_results.begin()->get()->instance_segmentation_result;
         if (iseg_res->feature_vector) {
             result->feature_vector =
                 ov::Tensor(iseg_res->feature_vector.get_element_type(), iseg_res->feature_vector.get_shape());
@@ -121,7 +119,7 @@ std::unique_ptr<ResultBase> InstanceSegmentationTiler::merge_results(
         std::fill(feature_ptr, feature_ptr + feature_size, 0.f);
 
         for (const auto& result : tiles_results) {
-            auto* iseg_res = static_cast<InstanceSegmentationResult*>(result.get());
+            auto& iseg_res = result->instance_segmentation_result;
             const float* current_feature_ptr = iseg_res->feature_vector.data<float>();
 
             for (size_t i = 0; i < feature_size; ++i) {
@@ -136,17 +134,18 @@ std::unique_ptr<ResultBase> InstanceSegmentationTiler::merge_results(
 
     result->saliency_map = merge_saliency_maps(tiles_results, image_size, tile_coords);
 
-    return retVal;
+    scene->instance_segmentation_result = std::move(result);
+    return scene;
 }
 
 std::vector<cv::Mat_<std::uint8_t>> InstanceSegmentationTiler::merge_saliency_maps(
-    const std::vector<std::unique_ptr<ResultBase>>& tiles_results,
+    const std::vector<std::unique_ptr<Scene>>& tiles_results,
     const cv::Size& image_size,
     const std::vector<cv::Rect>& tile_coords) {
     std::vector<std::vector<cv::Mat_<std::uint8_t>>> all_saliecy_maps;
     all_saliecy_maps.reserve(tiles_results.size());
     for (const auto& result : tiles_results) {
-        auto det_res = static_cast<InstanceSegmentationResult*>(result.get());
+        auto& det_res = result->instance_segmentation_result;
         all_saliecy_maps.push_back(det_res->saliency_map);
     }
 

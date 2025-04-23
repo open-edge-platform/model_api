@@ -281,7 +281,7 @@ void MaskRCNNModel::prepareInputsOutputs(std::shared_ptr<ov::Model>& model) {
     append_xai_names(model->outputs(), outputNames);
 }
 
-std::unique_ptr<ResultBase> MaskRCNNModel::postprocess(InferenceResult& infResult) {
+std::unique_ptr<Scene> MaskRCNNModel::postprocess(InferenceResult& infResult) {
     const auto& internalData = infResult.internalModelData->asRef<InternalImageModelData>();
     float floatInputImgWidth = float(internalData.inputImgWidth),
           floatInputImgHeight = float(internalData.inputImgHeight);
@@ -300,8 +300,10 @@ std::unique_ptr<ResultBase> MaskRCNNModel::postprocess(InferenceResult& infResul
     size_t objectSize = lbm.boxes.get_shape().back();
     float* const masks = lbm.masks.data<float>();
     const cv::Size& masks_size{int(lbm.masks.get_shape()[3]), int(lbm.masks.get_shape()[2])};
-    InstanceSegmentationResult* result = new InstanceSegmentationResult(infResult.frameId, infResult.metaData);
-    auto retVal = std::unique_ptr<ResultBase>(result);
+
+    auto scene = std::make_unique<Scene>(infResult.frameId, infResult.metaData);
+    auto result = std::make_unique<InstanceSegmentationResult>(infResult.frameId, infResult.metaData);
+
     std::vector<std::vector<cv::Mat>> saliency_maps;
     bool has_feature_vector_name =
         std::find(outputNames.begin(), outputNames.end(), feature_vector_name) != outputNames.end();
@@ -355,21 +357,16 @@ std::unique_ptr<ResultBase> MaskRCNNModel::postprocess(InferenceResult& infResul
     if (has_feature_vector_name) {
         result->feature_vector = std::move(infResult.outputsData[feature_vector_name]);
     }
-    return retVal;
+
+    scene->instance_segmentation_result = std::move(result);
+    return scene;
 }
 
-std::unique_ptr<InstanceSegmentationResult> MaskRCNNModel::infer(const ImageInputData& inputData) {
-    auto result = BaseModel::inferImage(inputData);
-    return std::unique_ptr<InstanceSegmentationResult>(static_cast<InstanceSegmentationResult*>(result.release()));
+std::unique_ptr<Scene> MaskRCNNModel::infer(const ImageInputData& inputData) {
+    return BaseModel::inferImage(inputData);
 }
 
-std::vector<std::unique_ptr<InstanceSegmentationResult>> MaskRCNNModel::inferBatch(
+std::vector<std::unique_ptr<Scene>> MaskRCNNModel::inferBatch(
     const std::vector<ImageInputData>& inputImgs) {
-    auto results = BaseModel::inferBatchImage(inputImgs);
-    std::vector<std::unique_ptr<InstanceSegmentationResult>> isegResults;
-    isegResults.reserve(results.size());
-    for (auto& result : results) {
-        isegResults.emplace_back(static_cast<InstanceSegmentationResult*>(result.release()));
-    }
-    return isegResults;
+    return BaseModel::inferBatchImage(inputImgs);
 }

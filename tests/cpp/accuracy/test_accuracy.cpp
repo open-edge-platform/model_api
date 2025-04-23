@@ -159,7 +159,7 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
                         throw std::runtime_error{"Failed to read the image"};
                     }
 
-                    std::unique_ptr<DetectionResult> result;
+                    std::unique_ptr<Scene> result;
                     if (modelData.tiler == "DetectionTiler") {
                         auto tiler = DetectionTiler(std::move(model), {});
                         if (modelData.input_res.height > 0 && modelData.input_res.width > 0) {
@@ -169,7 +169,7 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
                     } else {
                         result = model->infer(image);
                     }
-                    EXPECT_EQ(std::string{*result}, modelData.testData[i].reference[0]);
+                    EXPECT_EQ(std::string{*result->detection_result}, modelData.testData[i].reference[0]);
                 }
             }
         } else if (modelData.type == "ClassificationModel") {
@@ -183,7 +183,7 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
                         throw std::runtime_error{"Failed to read the image"};
                     }
                     auto result = model->infer(image);
-                    EXPECT_EQ(std::string{*result}, modelData.testData[i].reference[0]);
+                    EXPECT_EQ(std::string{*result->classification_result}, modelData.testData[i].reference[0]);
                 }
             }
         } else if (modelData.type == "SegmentationModel") {
@@ -197,7 +197,7 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
                         throw std::runtime_error{"Failed to read the image"};
                     }
 
-                    std::unique_ptr<ImageResult> pred;
+                    std::unique_ptr<Scene> pred;
                     if (modelData.tiler == "SemanticSegmentationTiler") {
                         auto tiler = SemanticSegmentationTiler(std::move(model), {});
                         if (modelData.input_res.height > 0 && modelData.input_res.width > 0) {
@@ -208,7 +208,7 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
                         pred = model->infer(image);
                     }
 
-                    ImageResultWithSoftPrediction* soft = dynamic_cast<ImageResultWithSoftPrediction*>(pred.get());
+                    ImageResultWithSoftPrediction* soft = dynamic_cast<ImageResultWithSoftPrediction*>(pred->image_result.get());
                     if (soft) {
                         const std::vector<Contour>& contours = model->getContours(*soft);
                         std::stringstream ss;
@@ -218,7 +218,7 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
                         }
                         ASSERT_EQ(ss.str(), modelData.testData[i].reference[0]);
                     } else {
-                        ASSERT_EQ(std::string{*pred}, modelData.testData[i].reference[0]);
+                        ASSERT_EQ(std::string{*pred->image_result}, modelData.testData[i].reference[0]);
                     }
                 }
             }
@@ -233,7 +233,7 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
                         throw std::runtime_error{"Failed to read the image"};
                     }
 
-                    std::unique_ptr<InstanceSegmentationResult> result;
+                    std::unique_ptr<Scene> result;
                     if (modelData.tiler == "InstanceSegmentationTiler") {
                         auto tiler = InstanceSegmentationTiler(std::move(model), {});
                         if (modelData.input_res.height > 0 && modelData.input_res.width > 0) {
@@ -245,20 +245,20 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
                     }
 
                     const std::vector<SegmentedObjectWithRects>& withRects =
-                        add_rotated_rects(result->segmentedObjects);
+                        add_rotated_rects(result->instance_segmentation_result->segmentedObjects);
                     std::stringstream ss;
                     for (const SegmentedObjectWithRects& obj : withRects) {
                         ss << obj << "; ";
                     }
                     size_t filled = 0;
-                    for (const cv::Mat_<std::uint8_t>& cls_map : result->saliency_map) {
+                    for (const cv::Mat_<std::uint8_t>& cls_map : result->instance_segmentation_result->saliency_map) {
                         if (cls_map.data) {
                             ++filled;
                         }
                     }
                     ss << filled << "; ";
                     try {
-                        ss << result->feature_vector.get_shape();
+                        ss << result->instance_segmentation_result->feature_vector.get_shape();
                     } catch (ov::Exception&) {
                         ss << "[0]";
                     }
@@ -266,7 +266,7 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
                     try {
                         // getContours() assumes each instance generates only one contour.
                         // That doesn't hold for some models
-                        for (const Contour& contour : getContours(result->segmentedObjects)) {
+                        for (const Contour& contour : getContours(result->instance_segmentation_result->segmentedObjects)) {
                             ss << contour << "; ";
                         }
                     } catch (const std::runtime_error&) {
@@ -285,7 +285,7 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
                         throw std::runtime_error{"Failed to read the image"};
                     }
                     auto result = model->infer(image);
-                    EXPECT_EQ(std::string{*result}, modelData.testData[i].reference[0]);
+                    EXPECT_EQ(std::string{*result->anomaly_result}, modelData.testData[i].reference[0]);
                 }
             }
         } else if (modelData.type == "KeypointDetectionModel") {
@@ -303,7 +303,7 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
                         throw std::runtime_error{"Failed to read the image"};
                     }
                     auto result = model->infer(image);
-                    EXPECT_EQ(std::string{(*result).poses[0]}, modelData.testData[i].reference[0]);
+                    EXPECT_EQ(std::string{(*result->keypoint_detection_result).poses[0]}, modelData.testData[i].reference[0]);
                 }
             }
         }
