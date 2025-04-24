@@ -169,7 +169,7 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
                     } else {
                         result = model->infer(image);
                     }
-                    EXPECT_EQ(std::string{*result->detection_result}, modelData.testData[i].reference[0]);
+                    EXPECT_EQ(std::string{*result}, modelData.testData[i].reference[0]);
                 }
             }
         } else if (modelData.type == "ClassificationModel") {

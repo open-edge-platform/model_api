@@ -137,7 +137,6 @@ std::unique_ptr<Scene> ModelYoloX::postprocess(InferenceResult& infResult) {
 
     // Generate detection results
     auto scene = std::make_unique<Scene>(infResult.frameId, infResult.metaData);
-    auto result = std::make_unique<DetectionResult>(infResult.frameId, infResult.metaData);
 
     // Update coordinates according to strides
     for (size_t box_index = 0; box_index < expandedStrides.size(); ++box_index) {
@@ -188,19 +187,16 @@ std::unique_ptr<Scene> ModelYoloX::postprocess(InferenceResult& infResult) {
     const std::vector<size_t>& keep = nms(validBoxes, scores, iou_threshold, true);
     for (size_t index : keep) {
         // Create new detected box
-        DetectedObject obj;
+        cv::Rect obj;
         obj.x = clamp(validBoxes[index].left, 0.f, static_cast<float>(scale.inputImgWidth));
         obj.y = clamp(validBoxes[index].top, 0.f, static_cast<float>(scale.inputImgHeight));
         obj.height =
             clamp(validBoxes[index].bottom - validBoxes[index].top, 0.f, static_cast<float>(scale.inputImgHeight));
         obj.width =
             clamp(validBoxes[index].right - validBoxes[index].left, 0.f, static_cast<float>(scale.inputImgWidth));
-        obj.confidence = scores[index];
-        obj.labelID = classes[index];
-        obj.label = getLabelName(classes[index]);
-        result->objects.push_back(obj);
+        scene->boxes.push_back(
+            Box(obj, {Label(std::to_string(classes[index]), getLabelName(classes[index]), scores[index])})
+        );
     }
-
-    scene->detection_result = std::move(result);
     return scene;
 }

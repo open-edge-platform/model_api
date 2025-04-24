@@ -22,7 +22,7 @@ protected:
     virtual std::unique_ptr<Scene> merge_results(const std::vector<std::unique_ptr<Scene>>&,
                                                       const cv::Size&,
                                                       const std::vector<cv::Rect>&);
-    ov::Tensor merge_saliency_maps(const std::vector<std::unique_ptr<Scene>>&,
+    std::vector<cv::Mat> merge_saliency_maps(const std::vector<std::unique_ptr<Scene>>&,
                                    const cv::Size&,
                                    const std::vector<cv::Rect>&);
 

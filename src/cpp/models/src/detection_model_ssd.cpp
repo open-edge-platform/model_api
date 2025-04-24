@@ -98,11 +98,15 @@ std::unique_ptr<Scene> ModelSSD::postprocess(InferenceResult& infResult) {
                                                                               : postprocessSingleOutput(infResult);
     auto saliency_map_iter = infResult.outputsData.find(saliency_map_name);
     if (saliency_map_iter != infResult.outputsData.end()) {
-        result->detection_result->saliency_map = std::move(saliency_map_iter->second);
+        size_t shape_shift = (saliency_map_iter->second.get_shape().size() > 3) ? 1 : 0;
+        for (size_t i = 0; i < labels.size(); i++){
+            result->saliency_maps.push_back(wrap_saliency_map_tensor_to_mat(saliency_map_iter->second, shape_shift, i).clone());
+
+        }
     }
     auto feature_vector_iter = infResult.outputsData.find(feature_vector_name);
     if (feature_vector_iter != infResult.outputsData.end()) {
-        result->detection_result->feature_vector = std::move(feature_vector_iter->second);
+        result->feature_vectors.push_back(std::move(feature_vector_iter->second));
     }
     return result;
 }
@@ -115,7 +119,6 @@ std::unique_ptr<Scene> ModelSSD::postprocessSingleOutput(InferenceResult& infRes
     const float* detections = detectionsTensor.data<float>();
 
     auto scene = std::make_unique<Scene>(infResult.frameId, infResult.metaData);
-    auto result = std::make_unique<DetectionResult>(infResult.frameId, infResult.metaData);
 
     const auto& internalData = infResult.internalModelData->asRef<InternalImageModelData>();
     float floatInputImgWidth = float(internalData.inputImgWidth),
@@ -140,34 +143,30 @@ std::unique_ptr<Scene> ModelSSD::postprocessSingleOutput(InferenceResult& infRes
 
         /** Filtering out objects with confidence < confidence_threshold probability **/
         if (confidence > confidence_threshold) {
-            DetectedObject desc;
-
-            desc.confidence = confidence;
-            desc.labelID = static_cast<size_t>(detections[i * numAndStep.objectSize + 1]);
-            desc.label = getLabelName(desc.labelID);
-            desc.x =
-                clamp(round((detections[i * numAndStep.objectSize + 3] * netInputWidth - padLeft) * invertedScaleX),
+            float x = clamp(round((detections[i * numAndStep.objectSize + 3] * netInputWidth - padLeft) * invertedScaleX),
                       0.f,
                       floatInputImgWidth);
-            desc.y =
-                clamp(round((detections[i * numAndStep.objectSize + 4] * netInputHeight - padTop) * invertedScaleY),
+            float y = clamp(round((detections[i * numAndStep.objectSize + 4] * netInputHeight - padTop) * invertedScaleY),
                       0.f,
                       floatInputImgHeight);
-            desc.width =
-                clamp(round((detections[i * numAndStep.objectSize + 5] * netInputWidth - padLeft) * invertedScaleX),
-                      0.f,
-                      floatInputImgWidth) -
-                desc.x;
-            desc.height =
-                clamp(round((detections[i * numAndStep.objectSize + 6] * netInputHeight - padTop) * invertedScaleY),
-                      0.f,
-                      floatInputImgHeight) -
-                desc.y;
-            result->objects.push_back(desc);
+            size_t labelID = static_cast<size_t>(detections[i * numAndStep.objectSize + 1]);
+            Box box(
+                cv::Rect(
+                    x,
+                    y,
+                    clamp(round((detections[i * numAndStep.objectSize + 5] * netInputWidth - padLeft) * invertedScaleX),
+                        0.f,
+                        floatInputImgWidth) - x,
+
+                    clamp(round((detections[i * numAndStep.objectSize + 6] * netInputHeight - padTop) * invertedScaleY),
+                        0.f,
+                        floatInputImgHeight) - y
+                ),
+                {Label(std::to_string(labelID), getLabelName(labelID), confidence)}
+            );
+            scene->boxes.push_back(box);
         }
     }
-
-    scene->detection_result = std::move(result);
     return scene;
 }
 
@@ -205,34 +204,31 @@ std::unique_ptr<Scene> ModelSSD::postprocessMultipleOutputs(InferenceResult& inf
 
         /** Filtering out objects with confidence < confidence_threshold probability **/
         if (confidence > confidence_threshold) {
-            DetectedObject desc;
-
-            desc.confidence = confidence;
-            desc.labelID = labels[i];
-            desc.label = getLabelName(desc.labelID);
-            desc.x = clamp_and_round((boxes[i * numAndStep.objectSize] * widthScale - padLeft) * invertedScaleX,
+            auto x = clamp_and_round((boxes[i * numAndStep.objectSize] * widthScale - padLeft) * invertedScaleX,
                                      0.f,
                                      floatInputImgWidth);
-            desc.y = clamp_and_round((boxes[i * numAndStep.objectSize + 1] * heightScale - padTop) * invertedScaleY,
+            auto y = clamp_and_round((boxes[i * numAndStep.objectSize + 1] * heightScale - padTop) * invertedScaleY,
                                      0.f,
                                      floatInputImgHeight);
-            desc.width = clamp_and_round((boxes[i * numAndStep.objectSize + 2] * widthScale - padLeft) * invertedScaleX,
+            auto width = clamp_and_round((boxes[i * numAndStep.objectSize + 2] * widthScale - padLeft) * invertedScaleX,
                                          0.f,
-                                         floatInputImgWidth) -
-                         desc.x;
-            desc.height =
+                                         floatInputImgWidth) - x;
+            auto height =
                 clamp_and_round((boxes[i * numAndStep.objectSize + 3] * heightScale - padTop) * invertedScaleY,
                                 0.f,
-                                floatInputImgHeight) -
-                desc.y;
+                                floatInputImgHeight) - y;
 
-            if (desc.width * desc.height >= box_area_threshold) {
-                result->objects.push_back(desc);
+
+            if (width * height >= box_area_threshold) {
+                scene->boxes.push_back(Box(
+                  cv::Rect(x, y, width, height),
+                  {Label(std::to_string(labels[i]), getLabelName(labels[i]), confidence)}
+                ));
             }
         }
     }
 
-    scene->detection_result = std::move(result);
+    //scene->detection_result = std::move(result);
     return scene;
 }
 

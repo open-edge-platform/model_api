@@ -16,7 +16,6 @@
 
 #include "models/detection_model_ext.h"
 
-struct DetectedObject;
 struct InferenceResult;
 
 class ModelYolo : public DetectionModelExt {
@@ -56,10 +55,10 @@ protected:
                          const unsigned long resized_im_w,
                          const unsigned long original_im_h,
                          const unsigned long original_im_w,
-                         std::vector<DetectedObject>& objects);
+                         std::vector<Box>& objects);
 
     static int calculateEntryIndex(int entriesNum, int lcoords, size_t lclasses, int location, int entry);
-    static double intersectionOverUnion(const DetectedObject& o1, const DetectedObject& o2);
+    static double intersectionOverUnion(const Box& o1, const Box& o2);
 
     std::map<std::string, Region> regions;
     float iou_threshold;

@@ -150,7 +150,7 @@ std::unique_ptr<Scene> ModelYoloV3ONNX::postprocess(InferenceResult& infResult) 
         float score = getScore(scores, classInd, boxInd);
 
         if (score > confidence_threshold) {
-            DetectedObject obj;
+            cv::Rect obj;
             size_t startPos = boxShape[2] * boxInd;
 
             auto x = boxesPtr[startPos + 1];
@@ -163,15 +163,9 @@ std::unique_ptr<Scene> ModelYoloV3ONNX::postprocess(InferenceResult& infResult) 
             obj.y = clamp(y, 0.f, static_cast<float>(imgHeight));
             obj.height = clamp(height, 0.f, static_cast<float>(imgHeight));
             obj.width = clamp(width, 0.f, static_cast<float>(imgWidth));
-            obj.confidence = score;
-            obj.labelID = classInd;
-            obj.label = getLabelName(classInd);
 
-            result->objects.push_back(obj);
+            scene->boxes.push_back(Box(obj, {Label(std::to_string(classInd), getLabelName(classInd), score)}));
         }
     }
-
-    scene->detection_result = std::move(result);
-
     return scene;
 }

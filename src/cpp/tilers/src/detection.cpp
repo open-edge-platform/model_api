@@ -16,12 +16,16 @@ namespace {
 
 cv::Mat non_linear_normalization(cv::Mat& class_map) {
     double min_soft_score, max_soft_score;
-    cv::minMaxLoc(class_map, &min_soft_score);
-    cv::pow(class_map - min_soft_score, 1.5, class_map);
+    cv::Mat tmp;
 
-    cv::minMaxLoc(class_map, &min_soft_score, &max_soft_score);
-    class_map = 255.0 / (max_soft_score + 1e-12) * class_map;
+    class_map.convertTo(tmp, CV_32F);
+    cv::minMaxLoc(tmp, &min_soft_score);
+    cv::pow(tmp - min_soft_score, 1.5, tmp);
 
+    cv::minMaxLoc(tmp, &min_soft_score, &max_soft_score);
+    tmp = 255.0 / (max_soft_score + 1e-12) * tmp;
+
+    tmp.convertTo(class_map, class_map.type());
     return class_map;
 }
 
@@ -44,129 +48,99 @@ DetectionTiler::DetectionTiler(const std::shared_ptr<BaseModel>& _model,
 
 std::unique_ptr<Scene> DetectionTiler::postprocess_tile(std::unique_ptr<Scene> tile_result,
                                                              const cv::Rect& coord) {
-    auto& det_res = tile_result->detection_result;
-    for (auto& det : det_res->objects) {
-        det.x += coord.x;
-        det.y += coord.y;
+    for (auto& det : tile_result->boxes) {
+        det.shape.x += coord.x;
+        det.shape.y += coord.y;
     }
-
-    if (det_res->feature_vector) {
-        auto tmp_feature_vector =
-            ov::Tensor(det_res->feature_vector.get_element_type(), det_res->feature_vector.get_shape());
-        det_res->feature_vector.copy_to(tmp_feature_vector);
-        det_res->feature_vector = tmp_feature_vector;
-    }
-
-    if (det_res->saliency_map) {
-        auto tmp_saliency_map = ov::Tensor(det_res->saliency_map.get_element_type(), det_res->saliency_map.get_shape());
-        det_res->saliency_map.copy_to(tmp_saliency_map);
-        det_res->saliency_map = tmp_saliency_map;
-    }
-
     return tile_result;
 }
 
 std::unique_ptr<Scene> DetectionTiler::merge_results(const std::vector<std::unique_ptr<Scene>>& tiles_results,
                                                           const cv::Size& image_size,
                                                           const std::vector<cv::Rect>& tile_coords) {
-    auto result = std::make_unique<DetectionResult>();
     auto scene = std::make_unique<Scene>();
 
     std::vector<AnchorLabeled> all_detections;
-    std::vector<std::reference_wrapper<DetectedObject>> all_detections_refs;
+    std::vector<std::reference_wrapper<Box>> all_detections_refs;
     std::vector<float> all_scores;
 
     for (const auto& result : tiles_results) {
-        for (auto& det : result->detection_result->objects) {
-            all_detections.emplace_back(det.x, det.y, det.x + det.width, det.y + det.height, det.labelID);
-            all_scores.push_back(det.confidence);
+        for (auto& det : result->boxes) {
+            size_t id;
+            sscanf(det.labels[0].id.c_str(), "%zu", &id);
+            all_detections.emplace_back(det.shape.x, det.shape.y, det.shape.x + det.shape.width, det.shape.y + det.shape.height, id);
+            all_scores.push_back(det.labels[0].score);
             all_detections_refs.push_back(det);
         }
     }
 
     auto keep_idx = multiclass_nms(all_detections, all_scores, iou_threshold, false, max_pred_number);
 
-    result->objects.reserve(keep_idx.size());
+    scene->boxes.reserve(keep_idx.size());
     for (auto idx : keep_idx) {
-        result->objects.push_back(all_detections_refs[idx]);
+        scene->boxes.push_back(all_detections_refs[idx]);
     }
 
-    if (tiles_results.size()) {
-        auto& det_res = tiles_results.begin()->get()->detection_result;
-        if (det_res->feature_vector) {
-            result->feature_vector =
-                ov::Tensor(det_res->feature_vector.get_element_type(), det_res->feature_vector.get_shape());
-        }
-        if (det_res->saliency_map) {
-            result->saliency_map = merge_saliency_maps(tiles_results, image_size, tile_coords);
-        }
-    }
+    if (!tiles_results.empty()) {
+        auto& feature_vectors = tiles_results.begin()->get()->feature_vectors;
+        if (!feature_vectors.empty()) {
+            auto tensor = ov::Tensor(feature_vectors[0].get_element_type(), feature_vectors[0].get_shape());
 
-    if (result->feature_vector) {
-        float* feature_ptr = result->feature_vector.data<float>();
-        size_t feature_size = result->feature_vector.get_size();
+            float* feature_ptr = tensor.data<float>();
+            size_t feature_size = tensor.get_size();
 
-        std::fill(feature_ptr, feature_ptr + feature_size, 0.f);
+            std::fill(feature_ptr, feature_ptr + feature_size, 0.f);
 
-        for (const auto& result : tiles_results) {
-            const float* current_feature_ptr = result->detection_result->feature_vector.data<float>();
+            for (const auto& result : tiles_results) {
+                const float* current_feature_ptr = result->feature_vectors[0].data<float>();
+
+                for (size_t i = 0; i < feature_size; ++i) {
+                    feature_ptr[i] += current_feature_ptr[i];
+                }
+            }
 
             for (size_t i = 0; i < feature_size; ++i) {
-                feature_ptr[i] += current_feature_ptr[i];
+                feature_ptr[i] /= tiles_results.size();
             }
+
+            scene->feature_vectors.push_back(tensor);
         }
 
-        for (size_t i = 0; i < feature_size; ++i) {
-            feature_ptr[i] /= tiles_results.size();
-        }
+        scene->saliency_maps = merge_saliency_maps(tiles_results, image_size, tile_coords);
     }
-
-    scene->detection_result = std::move(result);
 
     return scene;
 }
 
-ov::Tensor DetectionTiler::merge_saliency_maps(const std::vector<std::unique_ptr<Scene>>& tiles_results,
+std::vector<cv::Mat> DetectionTiler::merge_saliency_maps(const std::vector<std::unique_ptr<Scene>>& tiles_results,
                                                const cv::Size& image_size,
                                                const std::vector<cv::Rect>& tile_coords) {
-    std::vector<ov::Tensor> all_saliency_maps;
-    all_saliency_maps.reserve(tiles_results.size());
-    for (const auto& result : tiles_results) {
-        all_saliency_maps.push_back(result->detection_result->saliency_map);
-    }
 
-    ov::Tensor image_saliency_map;
-    if (all_saliency_maps.size()) {
-        image_saliency_map = all_saliency_maps[0];
-    }
+    auto map_size = tiles_results[0]->saliency_maps[0].size();
 
-    if ((image_saliency_map.get_size() == 1) || (all_saliency_maps.size() == 1)) {
-        return image_saliency_map;
-    }
-
-    size_t shape_shift = (image_saliency_map.get_shape().size() > 3) ? 1 : 0;
-    size_t num_classes = image_saliency_map.get_shape()[shape_shift];
-    size_t map_h = image_saliency_map.get_shape()[shape_shift + 1];
-    size_t map_w = image_saliency_map.get_shape()[shape_shift + 2];
+    auto dtype = tiles_results[0]->saliency_maps[0].type();
+    auto num_classes = tiles_results[0]->saliency_maps.size();
+    size_t map_h = map_size.height;
+    size_t map_w = map_size.width;
 
     float ratio_h = static_cast<float>(map_h) / std::min(tile_size, static_cast<size_t>(image_size.height));
     float ratio_w = static_cast<float>(map_w) / std::min(tile_size, static_cast<size_t>(image_size.width));
 
+    cv::Size ratio(ratio_w, ratio_h);
+
+
     size_t image_map_h = static_cast<size_t>(image_size.height * ratio_h);
     size_t image_map_w = static_cast<size_t>(image_size.width * ratio_w);
 
-    std::vector<cv::Mat_<float>> merged_map_mat(num_classes);
-    for (auto& class_map : merged_map_mat) {
-        class_map = cv::Mat_<float>(cv::Size{int(image_map_w), int(image_map_h)}, 0.f);
-    }
+    cv::Size merged_map_size(image_map_w, image_map_h);
 
-    size_t start_idx = tile_with_full_img ? 1 : 0;
-    for (size_t i = start_idx; i < all_saliency_maps.size(); ++i) {
-        for (size_t class_idx = 0; class_idx < num_classes; ++class_idx) {
-            auto current_cls_map_mat = wrap_saliency_map_tensor_to_mat(all_saliency_maps[i], shape_shift, class_idx);
-            cv::Mat current_cls_map_mat_float;
-            current_cls_map_mat.convertTo(current_cls_map_mat_float, CV_32F);
+    std::vector<cv::Mat> saliency_maps(num_classes);
 
+    size_t start_index = (tile_with_full_img ? 1 : 0);
+    for (size_t class_index = 0; class_index < saliency_maps.size(); class_index++) {
+        saliency_maps[class_index] = cv::Mat(merged_map_size, dtype, 0.f);
+
+        for (size_t i = start_index; i < tiles_results.size(); i++) {
             cv::Rect map_location(
                 static_cast<int>(tile_coords[i].x * ratio_w),
                 static_cast<int>(tile_coords[i].y * ratio_h),
@@ -174,48 +148,17 @@ ov::Tensor DetectionTiler::merge_saliency_maps(const std::vector<std::unique_ptr
                                  static_cast<int>(tile_coords[i].x * ratio_w)),
                 static_cast<int>(static_cast<int>(tile_coords[i].height + tile_coords[i].y) * ratio_h -
                                  static_cast<int>(tile_coords[i].y * ratio_h)));
-
-            if (current_cls_map_mat.rows > map_location.height && map_location.height > 0 &&
-                current_cls_map_mat.cols > map_location.width && map_location.width > 0) {
-                cv::resize(current_cls_map_mat_float,
-                           current_cls_map_mat_float,
-                           cv::Size(map_location.width, map_location.height));
-            }
-
-            auto class_map_roi = cv::Mat(merged_map_mat[class_idx], map_location);
-            for (int row_i = 0; row_i < map_location.height; ++row_i) {
-                for (int col_i = 0; col_i < map_location.width; ++col_i) {
-                    float merged_mixel = class_map_roi.at<float>(row_i, col_i);
-                    if (merged_mixel > 0) {
-                        class_map_roi.at<float>(row_i, col_i) =
-                            0.5f * (merged_mixel + current_cls_map_mat_float.at<float>(row_i, col_i));
-                    } else {
-                        class_map_roi.at<float>(row_i, col_i) = current_cls_map_mat_float.at<float>(row_i, col_i);
-                    }
-                }
-            }
+            saliency_maps[class_index](map_location) = tiles_results[i]->saliency_maps[class_index];
         }
-    }
 
-    ov::Tensor merged_map;
-    if (shape_shift) {
-        merged_map = ov::Tensor(ov::element::Type("u8"), {1, num_classes, image_map_h, image_map_w});
-    } else {
-        merged_map = ov::Tensor(ov::element::Type("u8"), {num_classes, image_map_h, image_map_w});
-    }
-
-    for (size_t class_idx = 0; class_idx < num_classes; ++class_idx) {
         if (tile_with_full_img) {
-            auto image_map_cls = wrap_saliency_map_tensor_to_mat(image_saliency_map, shape_shift, class_idx);
+            auto image_map_cls = tiles_results[0]->saliency_maps[class_index];
             cv::resize(image_map_cls, image_map_cls, cv::Size(image_map_w, image_map_h));
-            cv::addWeighted(merged_map_mat[class_idx], 1.0, image_map_cls, 0.5, 0., merged_map_mat[class_idx]);
+            cv::addWeighted(saliency_maps[class_index], 1.0, image_map_cls, 0.5, 0., saliency_maps[class_index]);
+            non_linear_normalization(saliency_maps[class_index]);
         }
-        merged_map_mat[class_idx] = non_linear_normalization(merged_map_mat[class_idx]);
-        auto merged_cls_map_mat = wrap_saliency_map_tensor_to_mat(merged_map, shape_shift, class_idx);
-        merged_map_mat[class_idx].convertTo(merged_cls_map_mat, merged_cls_map_mat.type());
     }
-
-    return merged_map;
+    return saliency_maps;
 }
 
 std::unique_ptr<Scene> DetectionTiler::run(const ImageInputData& inputData) {

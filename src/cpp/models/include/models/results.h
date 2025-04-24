@@ -379,6 +379,42 @@ struct KeypointDetectionResult : public ResultBase {
     std::vector<DetectedKeypoints> poses;
 };
 
+class Label {
+public:
+    Label(std::string id, std::string name, float score):  id(id), name(name), score(score) {}
+
+    std::string id;
+    std::string name;
+    float score;
+
+    friend std::ostream& operator<< (std::ostream& os, const Label& label) {
+        return os << label.id << " (" << label.name << "): " << std::fixed << std::setprecision(3) << label.score << "; ";
+    }
+};
+
+class Box {
+public:
+    Box(cv::Rect shape, std::vector<Label> labels): shape(shape), labels(labels) {}
+    cv::Rect shape;
+    std::vector<Label> labels;
+
+    friend std::ostream& operator<< (std::ostream& os, const Box& box) {
+
+        os << int(box.shape.x) << ", " << int(box.shape.y) << ", " << int(box.shape.x + box.shape.width) << ", "
+                  << int(box.shape.y + box.shape.height) << ", ";
+        for (auto& label: box.labels) {
+            os << label;
+        }
+
+        return os;
+    }
+
+    explicit operator std::string() {
+        std::stringstream ss;
+        ss << *this;
+        return ss.str();
+    }
+};
 
 class Scene {
 public:
@@ -389,10 +425,38 @@ public:
     int64_t frameId;
     std::shared_ptr<MetaData> metaData;
 
-    std::unique_ptr<DetectionResult> detection_result;
     std::unique_ptr<ClassificationResult> classification_result;
     std::unique_ptr<KeypointDetectionResult> keypoint_detection_result;
     std::unique_ptr<AnomalyResult> anomaly_result;
     std::unique_ptr<InstanceSegmentationResult> instance_segmentation_result;
     std::unique_ptr<ImageResult> image_result;
+
+    std::vector<Box> boxes;
+    std::vector<cv::Mat> saliency_maps;
+    std::vector<ov::Tensor> feature_vectors;
+
+    friend std::ostream& operator<<(std::ostream& os, const Scene& scene) {
+        for (auto& box: scene.boxes) {
+            os << box;
+        }
+
+        if (scene.saliency_maps.empty()){
+            os << "[0]; ";
+        } else {
+            os << "[1," << scene.saliency_maps.size() << "," << scene.saliency_maps[0].rows << "," << scene.saliency_maps[0].cols << "]; ";
+        }
+
+        if (scene.feature_vectors.empty()){
+            os << "[0]";
+        } else {
+            os << scene.feature_vectors[0].get_shape();
+        }
+        return os;
+    }
+
+    explicit operator std::string() {
+        std::stringstream ss;
+        ss << *this;
+        return ss.str();
+    }
 };

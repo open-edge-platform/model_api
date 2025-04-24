@@ -259,8 +259,7 @@ void ModelYolo::prepareInputsOutputs(std::shared_ptr<ov::Model>& model) {
 
 std::unique_ptr<Scene> ModelYolo::postprocess(InferenceResult& infResult) {
     auto scene = std::make_unique<Scene>(infResult.frameId, infResult.metaData);
-    auto result = std::make_unique<DetectionResult>(infResult.frameId, infResult.metaData);
-    std::vector<DetectedObject> objects;
+    std::vector<Box> objects;
 
     // Parsing outputs
     const auto& internalData = infResult.internalModelData->asRef<InternalImageModelData>();
@@ -283,7 +282,7 @@ std::unique_ptr<Scene> ModelYolo::postprocess(InferenceResult& infResult) {
         for (const auto& obj1 : objects) {
             bool isGoodResult = true;
             for (const auto& obj2 : objects) {
-                if (obj1.labelID == obj2.labelID && obj1.confidence < obj2.confidence &&
+                if (obj1.labels[0].id == obj2.labels[0].id && obj1.labels[0].score < obj2.labels[0].score &&
                     intersectionOverUnion(obj1, obj2) >= iou_threshold) {  // if obj1 is the same as obj2, condition
                                                                            // expression will evaluate to false anyway
                     isGoodResult = false;
@@ -291,25 +290,23 @@ std::unique_ptr<Scene> ModelYolo::postprocess(InferenceResult& infResult) {
                 }
             }
             if (isGoodResult) {
-                result->objects.push_back(obj1);
+                scene->boxes.push_back(obj1);
             }
         }
     } else {
         // Classic postprocessing
-        std::sort(objects.begin(), objects.end(), [](const DetectedObject& x, const DetectedObject& y) {
-            return x.confidence > y.confidence;
+        std::sort(objects.begin(), objects.end(), [](const Box& x, const Box& y) {
+            return x.labels[0].score > y.labels[0].score;
         });
         for (size_t i = 0; i < objects.size(); ++i) {
-            if (objects[i].confidence == 0)
+            if (objects[i].labels[0].score == 0)
                 continue;
             for (size_t j = i + 1; j < objects.size(); ++j)
                 if (intersectionOverUnion(objects[i], objects[j]) >= iou_threshold)
-                    objects[j].confidence = 0;
-            result->objects.push_back(objects[i]);
+                    objects[j].labels[0].score = 0;
+            scene->boxes.push_back(objects[i]);
         }
     }
-
-    scene->detection_result = std::move(result);
 
     return scene;
 }
@@ -320,7 +317,7 @@ void ModelYolo::parseYOLOOutput(const std::string& output_name,
                                 const unsigned long resized_im_w,
                                 const unsigned long original_im_h,
                                 const unsigned long original_im_w,
-                                std::vector<DetectedObject>& objects) {
+                                std::vector<Box>& objects) {
     // --------------------------- Extracting layer parameters -------------------------------------
     auto it = regions.find(output_name);
     if (it == regions.end()) {
@@ -397,7 +394,7 @@ void ModelYolo::parseYOLOOutput(const std::string& output_name,
                 float width = static_cast<float>(std::exp(outData[box_index + 2 * entriesNum]) * region.anchors[2 * n] *
                                                  original_im_w / scaleW);
 
-                DetectedObject obj;
+                cv::Rect obj;
                 obj.x = clamp(x - width / 2, 0.f, static_cast<float>(original_im_w));
                 obj.y = clamp(y - height / 2, 0.f, static_cast<float>(original_im_h));
                 obj.width = clamp(width, 0.f, static_cast<float>(original_im_w - obj.x));
@@ -413,10 +410,7 @@ void ModelYolo::parseYOLOOutput(const std::string& output_name,
 
                     //--- Checking confidence threshold conformance and adding region to the list
                     if (prob >= confidence_threshold) {
-                        obj.confidence = prob;
-                        obj.labelID = j;
-                        obj.label = getLabelName(obj.labelID);
-                        objects.push_back(obj);
+                        objects.push_back(Box(obj, {Label(std::to_string(j), getLabelName(j), prob)}));
                     }
                 }
             }
@@ -430,7 +424,9 @@ int ModelYolo::calculateEntryIndex(int totalCells, int lcoords, size_t lclasses,
     return (n * (lcoords + lclasses) + entry) * totalCells + loc;
 }
 
-double ModelYolo::intersectionOverUnion(const DetectedObject& o1, const DetectedObject& o2) {
+double ModelYolo::intersectionOverUnion(const Box& o1Box, const Box& o2Box) {
+    auto& o1 = o1Box.shape;
+    auto& o2 = o2Box.shape;
     double overlappingWidth = fmin(o1.x + o1.width, o2.x + o2.width) - fmax(o1.x, o2.x);
     double overlappingHeight = fmin(o1.y + o1.height, o2.y + o2.height) - fmax(o1.y, o2.y);
     double intersectionArea =
@@ -613,7 +609,6 @@ std::unique_ptr<Scene> YOLOv5::postprocess(InferenceResult& infResult) {
         keep = multiclass_nms(boxes_with_class, confidences, iou_threshold, includeBoundaries, keep_top_k);
     }
     auto scene = std::make_unique<Scene>(infResult.frameId, infResult.metaData);
-    auto result = std::make_unique<DetectionResult>(infResult.frameId, infResult.metaData);
 
     const auto& internalData = infResult.internalModelData->asRef<InternalImageModelData>();
     float floatInputImgWidth = float(internalData.inputImgWidth),
@@ -628,19 +623,21 @@ std::unique_ptr<Scene> YOLOv5::postprocess(InferenceResult& infResult) {
         }
     }
     for (size_t idx : keep) {
-        DetectedObject desc;
-        desc.x = clamp(round((boxes_with_class[idx].left - padLeft) * invertedScaleX), 0.f, floatInputImgWidth);
-        desc.y = clamp(round((boxes_with_class[idx].top - padTop) * invertedScaleY), 0.f, floatInputImgHeight);
-        desc.width =
-            clamp(round((boxes_with_class[idx].right - padLeft) * invertedScaleX), 0.f, floatInputImgWidth) - desc.x;
-        desc.height =
-            clamp(round((boxes_with_class[idx].bottom - padTop) * invertedScaleY), 0.f, floatInputImgHeight) - desc.y;
-        desc.confidence = confidences[idx];
-        desc.labelID = static_cast<size_t>(boxes_with_class[idx].labelID);
-        desc.label = getLabelName(desc.labelID);
-        result->objects.push_back(desc);
+        auto x = clamp(round((boxes_with_class[idx].left - padLeft) * invertedScaleX), 0.f, floatInputImgWidth);
+        auto y = clamp(round((boxes_with_class[idx].top - padTop) * invertedScaleY), 0.f, floatInputImgHeight);
+        auto width =
+            clamp(round((boxes_with_class[idx].right - padLeft) * invertedScaleX), 0.f, floatInputImgWidth) - x;
+        auto height =
+            clamp(round((boxes_with_class[idx].bottom - padTop) * invertedScaleY), 0.f, floatInputImgHeight) - y;
+        auto confidence = confidences[idx];
+        auto labelID = static_cast<size_t>(boxes_with_class[idx].labelID);
+        auto label = getLabelName(labelID);
+
+        scene->boxes.push_back(Box(
+            cv::Rect(x, y, width, height),
+            {Label(std::to_string(labelID), label, confidence)}
+        ));
     }
-    scene->detection_result = std::move(result);
 
     return scene;
 }
