@@ -388,7 +388,7 @@ public:
     float score;
 
     friend std::ostream& operator<< (std::ostream& os, const Label& label) {
-        return os << label.id << " (" << label.name << "): " << std::fixed << std::setprecision(3) << label.score << "; ";
+        return os << label.id << " (" << label.name << "): " << std::fixed << std::setprecision(3) << label.score;
     }
 };
 
@@ -402,9 +402,15 @@ public:
 
         os << int(box.shape.x) << ", " << int(box.shape.y) << ", " << int(box.shape.x + box.shape.width) << ", "
                   << int(box.shape.y + box.shape.height) << ", ";
-        for (auto& label: box.labels) {
-            os << label;
+        for (size_t i = 0; i < box.labels.size(); i++) {
+            os << box.labels[i];
+            if (i == box.labels.size() - 1)  {
+                os << "; ";
+            } else {
+                os << ", ";
+            }
         }
+
 
         return os;
     }
@@ -425,7 +431,7 @@ public:
     int64_t frameId;
     std::shared_ptr<MetaData> metaData;
 
-    std::unique_ptr<ClassificationResult> classification_result;
+    //std::unique_ptr<ClassificationResult> classification_result;
     std::unique_ptr<KeypointDetectionResult> keypoint_detection_result;
     std::unique_ptr<AnomalyResult> anomaly_result;
     std::unique_ptr<InstanceSegmentationResult> instance_segmentation_result;
@@ -434,6 +440,8 @@ public:
     std::vector<Box> boxes;
     std::vector<cv::Mat> saliency_maps;
     std::vector<ov::Tensor> feature_vectors;
+
+    std::map<std::string, ov::Tensor> additional_tensors;
 
     friend std::ostream& operator<<(std::ostream& os, const Scene& scene) {
         for (auto& box: scene.boxes) {
@@ -449,8 +457,16 @@ public:
         if (scene.feature_vectors.empty()){
             os << "[0]";
         } else {
-            os << scene.feature_vectors[0].get_shape();
+            for (auto& feature_vector: scene.feature_vectors){
+                os << feature_vector.get_shape();
+            }
         }
+
+        for (auto& v: scene.additional_tensors) {
+            os << ", " << v.second.get_shape();
+        }
+
+
         return os;
     }
 

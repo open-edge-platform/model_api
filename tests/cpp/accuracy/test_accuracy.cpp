@@ -183,7 +183,7 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
                         throw std::runtime_error{"Failed to read the image"};
                     }
                     auto result = model->infer(image);
-                    EXPECT_EQ(std::string{*result->classification_result}, modelData.testData[i].reference[0]);
+                    EXPECT_EQ(std::string{*result}, modelData.testData[i].reference[0]);
                 }
             }
         } else if (modelData.type == "SegmentationModel") {

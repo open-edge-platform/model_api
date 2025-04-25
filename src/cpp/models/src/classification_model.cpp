@@ -295,6 +295,7 @@ std::unique_ptr<ClassificationModel> ClassificationModel::create_model(std::shar
 
 std::unique_ptr<Scene> ClassificationModel::postprocess(InferenceResult& infResult) {
     std::unique_ptr<Scene> result;
+
     if (multilabel) {
         result = get_multilabel_predictions(infResult, output_raw_scores);
     } else if (hierarchical) {
@@ -303,15 +304,18 @@ std::unique_ptr<Scene> ClassificationModel::postprocess(InferenceResult& infResu
         result = get_multiclass_predictions(infResult, output_raw_scores);
     }
 
-    auto& cls_res = result->classification_result;
     auto saliency_map_iter = infResult.outputsData.find(saliency_map_name);
     if (saliency_map_iter != infResult.outputsData.end()) {
-        cls_res->saliency_map = std::move(saliency_map_iter->second);
-        cls_res->saliency_map = reorder_saliency_maps(cls_res->saliency_map);
+        size_t shape_shift = (saliency_map_iter->second.get_shape().size() > 3) ? 1 : 0;
+        auto tensor = reorder_saliency_maps(saliency_map_iter->second);
+        for (size_t i = 0; i < labels.size(); i++){
+            result->saliency_maps.push_back(wrap_saliency_map_tensor_to_mat(tensor, shape_shift, i).clone());
+
+        }
     }
     auto feature_vector_iter = infResult.outputsData.find(feature_vector_name);
     if (feature_vector_iter != infResult.outputsData.end()) {
-        cls_res->feature_vector = std::move(feature_vector_iter->second);
+        result->feature_vectors.push_back(std::move(feature_vector_iter->second));
     }
 
     return result;
@@ -323,38 +327,37 @@ std::unique_ptr<Scene> ClassificationModel::get_multilabel_predictions(Inference
     const float* logitsPtr = logitsTensor.data<float>();
 
     auto scene = std::make_unique<Scene>(infResult.frameId, infResult.metaData);
-    auto result = std::make_unique<ClassificationResult>(infResult.frameId, infResult.metaData);
-
     auto raw_scores = ov::Tensor();
+    std::vector<Label> result;
     float* raw_scoresPtr = nullptr;
     if (add_raw_scores) {
         raw_scores = ov::Tensor(logitsTensor.get_element_type(), logitsTensor.get_shape());
         raw_scoresPtr = raw_scores.data<float>();
-        result->raw_scores = raw_scores;
+        scene->additional_tensors["raw_scores"] = raw_scores;
     }
 
-    result->topLabels.reserve(labels.size());
     for (size_t i = 0; i < labels.size(); ++i) {
         float score = sigmoid(logitsPtr[i]);
         if (score > confidence_threshold) {
-            result->topLabels.emplace_back(i, labels[i], score);
+            result.emplace_back(std::to_string(i), labels[i], score);
         }
         if (add_raw_scores) {
             raw_scoresPtr[i] = score;
         }
     }
 
-    scene->classification_result = std::move(result);
+    const auto& internalData = infResult.internalModelData->asRef<InternalImageModelData>();
+    cv::Rect shape(0, 0, internalData.inputImgWidth, internalData.inputImgHeight);
+    scene->boxes.push_back(Box(shape, result));
     return scene;
 }
 
 std::unique_ptr<Scene> ClassificationModel::get_hierarchical_predictions(InferenceResult& infResult,
                                                                               bool add_raw_scores) {
-    auto scene = std::make_unique<Scene>(infResult.frameId, infResult.metaData);
-    auto result = std::make_unique<ClassificationResult>(infResult.frameId, infResult.metaData);
 
     const ov::Tensor& logitsTensor = infResult.outputsData.find(outputNames[0])->second;
     float* logitsPtr = logitsTensor.data<float>();
+    auto scene = std::make_unique<Scene>(infResult.frameId, infResult.metaData);
 
     auto raw_scores = ov::Tensor();
     float* raw_scoresPtr = nullptr;
@@ -362,7 +365,7 @@ std::unique_ptr<Scene> ClassificationModel::get_hierarchical_predictions(Inferen
         raw_scores = ov::Tensor(logitsTensor.get_element_type(), logitsTensor.get_shape());
         logitsTensor.copy_to(raw_scores);
         raw_scoresPtr = raw_scores.data<float>();
-        result->raw_scores = raw_scores;
+        scene->additional_tensors["raw_scores"] = raw_scores;
     }
 
     std::vector<std::reference_wrapper<std::string>> predicted_labels;
@@ -398,13 +401,13 @@ std::unique_ptr<Scene> ClassificationModel::get_hierarchical_predictions(Inferen
     }
 
     auto resolved_labels = resolver->resolve_labels(predicted_labels, predicted_scores);
-
-    result->topLabels.reserve(resolved_labels.size());
+    std::vector<Label> result;
     for (const auto& label : resolved_labels) {
-        result->topLabels.emplace_back(hierarchical_info.label_to_idx[label.first], label.first, label.second);
+        result.push_back(Label(std::to_string(hierarchical_info.label_to_idx[label.first]), label.first, label.second));
     }
-
-    scene->classification_result = std::move(result);
+    const auto& internalData = infResult.internalModelData->asRef<InternalImageModelData>();
+    cv::Rect shape(0, 0, internalData.inputImgWidth, internalData.inputImgHeight);
+    scene->boxes.push_back(Box(shape, result));
     return scene;
 }
 
@@ -431,30 +434,33 @@ ov::Tensor ClassificationModel::reorder_saliency_maps(const ov::Tensor& source_m
 
 std::unique_ptr<Scene> ClassificationModel::get_multiclass_predictions(InferenceResult& infResult,
                                                                             bool add_raw_scores) {
+
     const ov::Tensor& indicesTensor = infResult.outputsData.find(indices_name)->second;
     const int* indicesPtr = indicesTensor.data<int>();
     const ov::Tensor& scoresTensor = infResult.outputsData.find(scores_name)->second;
     const float* scoresPtr = scoresTensor.data<float>();
 
     auto scene = std::make_unique<Scene>(infResult.frameId, infResult.metaData);
-    auto result = std::make_unique<ClassificationResult>(infResult.frameId, infResult.metaData);
     if (add_raw_scores) {
         const ov::Tensor& logitsTensor = infResult.outputsData.find(raw_scores_name)->second;
-        result->raw_scores = ov::Tensor(logitsTensor.get_element_type(), logitsTensor.get_shape());
-        logitsTensor.copy_to(result->raw_scores);
-        result->raw_scores.set_shape(ov::Shape({result->raw_scores.get_size()}));
+        auto raw_scores = ov::Tensor(logitsTensor.get_element_type(), logitsTensor.get_shape());
+        logitsTensor.copy_to(raw_scores);
+        raw_scores.set_shape(ov::Shape({raw_scores.get_size()}));
+        scene->additional_tensors["raw_scores"] = raw_scores;
     }
 
-    result->topLabels.reserve(scoresTensor.get_size());
+    std::vector<Label> result;
     for (size_t i = 0; i < scoresTensor.get_size(); ++i) {
         int ind = indicesPtr[i];
         if (ind < 0 || ind >= static_cast<int>(labels.size())) {
             throw std::runtime_error("Invalid index for the class label is found during postprocessing");
         }
-        result->topLabels.emplace_back(ind, labels[ind], scoresPtr[i]);
+        result.emplace_back(std::to_string(ind), labels[ind], scoresPtr[i]);
     }
 
-    scene->classification_result = std::move(result);
+    const auto& internalData = infResult.internalModelData->asRef<InternalImageModelData>();
+    cv::Rect shape(0, 0, internalData.inputImgWidth, internalData.inputImgHeight);
+    scene->boxes.push_back(Box(shape, result));
     return scene;
 }
 
