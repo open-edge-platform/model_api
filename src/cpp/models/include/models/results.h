@@ -442,6 +442,7 @@ public:
     std::vector<ov::Tensor> feature_vectors;
 
     std::map<std::string, ov::Tensor> additional_tensors;
+    std::map<std::string, cv::Mat> masks;
 
     friend std::ostream& operator<<(std::ostream& os, const Scene& scene) {
         for (auto& box: scene.boxes) {
