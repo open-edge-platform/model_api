@@ -53,8 +53,8 @@ int main(int argc, char* argv[]) try {
 
     std::cout << "Batch mode inference results:\n";
     for (const auto& result : results) {
-        for (auto& obj : result->objects) {
-            std::cout << " " << std::left << std::setw(9) << obj.confidence << " " << obj.label << "\n";
+        for (auto& obj : result->boxes) {
+            std::cout << obj << std::endl;
         }
         std::cout << std::string(10, '-') << "\n";
     }
@@ -62,15 +62,14 @@ int main(int argc, char* argv[]) try {
     std::cout << "Async mode inference results:\n";
 
     // Set callback to grab results once the inference is done
-    model->setCallback([](std::unique_ptr<ResultBase> result, const ov::AnyMap& callback_args) {
-        auto det_result = std::unique_ptr<DetectionResult>(static_cast<DetectionResult*>(result.release()));
+    model->setCallback([](std::unique_ptr<Scene> result, const ov::AnyMap& callback_args) {
 
         // callback_args can contain arbitrary data
         size_t id = callback_args.find("id")->second.as<size_t>();
 
         std::cout << "Request with id " << id << " is finished\n";
-        for (auto& obj : det_result->objects) {
-            std::cout << " " << std::left << std::setw(9) << obj.confidence << " " << obj.label << "\n";
+        for (auto& obj : result->boxes) {
+            std::cout << " " << obj << std::endl;
         }
         std::cout << std::string(10, '-') << "\n";
     });
