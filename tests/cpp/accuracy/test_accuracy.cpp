@@ -303,7 +303,7 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
                         throw std::runtime_error{"Failed to read the image"};
                     }
                     auto result = model->infer(image);
-                    EXPECT_EQ(std::string{(*result->keypoint_detection_result).poses[0]}, modelData.testData[i].reference[0]);
+                    EXPECT_EQ(std::string{(*result).poses[0]}, modelData.testData[i].reference[0]);
                 }
             }
         }

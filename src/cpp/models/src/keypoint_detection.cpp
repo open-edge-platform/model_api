@@ -209,7 +209,6 @@ void KeypointDetectionModel::prepareInputsOutputs(std::shared_ptr<ov::Model>& mo
 
 std::unique_ptr<Scene> KeypointDetectionModel::postprocess(InferenceResult& infResult) {
     auto scene = std::make_unique<Scene>(infResult.frameId, infResult.metaData);
-    auto result = std::make_unique<KeypointDetectionResult>(infResult.frameId, infResult.metaData);
 
     const ov::Tensor& pred_x_tensor = infResult.outputsData.find(outputNames[0])->second;
     size_t shape_offset = pred_x_tensor.get_shape().size() == 3 ? 1 : 0;
@@ -244,10 +243,9 @@ std::unique_ptr<Scene> KeypointDetectionModel::postprocess(InferenceResult& infR
         }
     }
 
-    result->poses.emplace_back(
+    scene->poses.emplace_back(
         decode_simcc(pred_x_mat, pred_y_mat, {inverted_scale_x, inverted_scale_y}, {pad_left, pad_top}, apply_softmax));
 
-    scene->keypoint_detection_result = std::move(result);
     return scene;
 }
 

@@ -432,11 +432,12 @@ public:
     std::shared_ptr<MetaData> metaData;
 
     //std::unique_ptr<ClassificationResult> classification_result;
-    std::unique_ptr<KeypointDetectionResult> keypoint_detection_result;
     std::unique_ptr<InstanceSegmentationResult> instance_segmentation_result;
     std::unique_ptr<ImageResult> image_result;
 
     std::vector<Box> boxes;
+    std::vector<DetectedKeypoints> poses;
+
     std::vector<cv::Mat> saliency_maps;
     std::vector<ov::Tensor> feature_vectors;
 
@@ -446,6 +447,10 @@ public:
     friend std::ostream& operator<<(std::ostream& os, const Scene& scene) {
         for (auto& box: scene.boxes) {
             os << box;
+        }
+
+        for (auto& pose: scene.poses) {
+            os << pose;
         }
 
         if (scene.saliency_maps.empty()){
