@@ -433,7 +433,6 @@ public:
 
     //std::unique_ptr<ClassificationResult> classification_result;
     std::unique_ptr<KeypointDetectionResult> keypoint_detection_result;
-    std::unique_ptr<AnomalyResult> anomaly_result;
     std::unique_ptr<InstanceSegmentationResult> instance_segmentation_result;
     std::unique_ptr<ImageResult> image_result;
 
@@ -455,6 +454,12 @@ public:
             os << "[1," << scene.saliency_maps.size() << "," << scene.saliency_maps[0].rows << "," << scene.saliency_maps[0].cols << "]; ";
         }
 
+        for (auto& m: scene.masks) {
+            double min_mask, max_mask;
+            cv::minMaxLoc(m.second, &min_mask, &max_mask);
+            os << m.first << " min:" << min_mask << " max:" << max_mask << ";";
+        }
+
         if (scene.feature_vectors.empty()){
             os << "[0]";
         } else {
@@ -466,6 +471,8 @@ public:
         for (auto& v: scene.additional_tensors) {
             os << ", " << v.second.get_shape();
         }
+
+
 
 
         return os;

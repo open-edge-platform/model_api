@@ -351,7 +351,7 @@
       {
         "image": "coco128/images/train2017/000000000074.jpg",
         "reference": [
-          "anomaly_map min:151 max:255;pred_score:1.0;pred_label:Anomaly;pred_mask min:1 max:1;"
+          "0, 0, 640, 426, 1 (Anomaly): 0.854; [1,1,426,640]; pred_mask min:0.000 max:1.000;[0]"
         ]
       }
     ]
@@ -363,7 +363,7 @@
       {
         "image": "coco128/images/train2017/000000000074.jpg",
         "reference": [
-          "anomaly_map min:124 max:225;pred_score:0.9;pred_label:Anomaly;pred_mask min:0 max:1;"
+          "0, 0, 640, 426, 1 (Anomaly): 0.854; [1,1,426,640]; pred_mask min:0.000 max:1.000;[0]"
         ]
       }
     ]
