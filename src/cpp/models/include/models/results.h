@@ -433,7 +433,6 @@ public:
 
     //std::unique_ptr<ClassificationResult> classification_result;
     std::unique_ptr<InstanceSegmentationResult> instance_segmentation_result;
-    std::unique_ptr<ImageResult> image_result;
 
     std::vector<Box> boxes;
     std::vector<DetectedKeypoints> poses;

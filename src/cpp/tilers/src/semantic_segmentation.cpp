@@ -56,8 +56,7 @@ std::unique_ptr<Scene> SemanticSegmentationTiler::run(const ImageInputData& inpu
 
 std::unique_ptr<Scene> SemanticSegmentationTiler::postprocess_tile(std::unique_ptr<Scene> tile_result,
                                                                         const cv::Rect&) {
-    ImageResultWithSoftPrediction* soft = dynamic_cast<ImageResultWithSoftPrediction*>(tile_result->image_result.get());
-    if (!soft) {
+    if (tile_result->masks.find("soft_prediction") == tile_result->masks.end()){
         throw std::runtime_error(
             "SemanticSegmentationTiler requires the underlying model to return ImageResultWithSoftPrediction");
     }
@@ -73,15 +72,15 @@ std::unique_ptr<Scene> SemanticSegmentationTiler::merge_results(
     }
 
     cv::Mat voting_mask(cv::Size(image_size.width, image_size.height), CV_32SC1, cv::Scalar(0));
-    auto* sseg_res = static_cast<ImageResultWithSoftPrediction*>(tiles_results[0]->image_result.get());
+    auto first_soft_prediction = tiles_results[0]->masks["soft_prediction"];
     cv::Mat merged_soft_prediction(cv::Size(image_size.width, image_size.height),
-                                   CV_32FC(sseg_res->soft_prediction.channels()),
+                                   CV_32FC(first_soft_prediction.channels()),
                                    cv::Scalar(0));
 
     for (size_t i = 0; i < tiles_results.size(); ++i) {
-        auto* sseg_res = static_cast<ImageResultWithSoftPrediction*>(tiles_results[i]->image_result.get());
+        auto soft_prediction = tiles_results[i]->masks["soft_prediction"];
         voting_mask(tile_coords[i]) += 1;
-        merged_soft_prediction(tile_coords[i]) += sseg_res->soft_prediction;
+        merged_soft_prediction(tile_coords[i]) += soft_prediction;
     }
 
     normalize_soft_prediction(merged_soft_prediction, voting_mask);
@@ -90,11 +89,7 @@ std::unique_ptr<Scene> SemanticSegmentationTiler::merge_results(
         create_hard_prediction_from_soft_prediction(merged_soft_prediction, soft_threshold, blur_strength);
 
     auto scene = std::make_unique<Scene>();
-    auto result = std::make_unique<ImageResultWithSoftPrediction>();
-    result->resultImage = hard_prediction;
-    if (return_soft_prediction) {
-        result->soft_prediction = merged_soft_prediction;
-    }
-    scene->image_result = std::move(result);
+    scene->masks["hard_prediction"] = hard_prediction;
+    scene->masks["soft_prediction"] = merged_soft_prediction;
     return scene;
 }

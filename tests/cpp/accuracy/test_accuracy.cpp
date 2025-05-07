@@ -208,17 +208,16 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
                         pred = model->infer(image);
                     }
 
-                    ImageResultWithSoftPrediction* soft = dynamic_cast<ImageResultWithSoftPrediction*>(pred->image_result.get());
-                    if (soft) {
-                        const std::vector<Contour>& contours = model->getContours(*soft);
+                    if (pred->masks.find("soft_prediction") != pred->masks.end()) {
+                        cv::Mat soft = pred->masks["soft_prediction"];
+                        const std::vector<Contour>& contours = model->getContours(pred);
                         std::stringstream ss;
-                        ss << *soft << "; ";
                         for (const Contour& contour : contours) {
                             ss << contour << ", ";
                         }
                         ASSERT_EQ(ss.str(), modelData.testData[i].reference[0]);
                     } else {
-                        ASSERT_EQ(std::string{*pred->image_result}, modelData.testData[i].reference[0]);
+                        ASSERT_EQ(std::string{*pred}, modelData.testData[i].reference[0]);
                     }
                 }
             }
