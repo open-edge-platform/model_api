@@ -66,9 +66,7 @@ std::unique_ptr<Scene> DetectionTiler::merge_results(const std::vector<std::uniq
 
     for (const auto& result : tiles_results) {
         for (auto& det : result->boxes) {
-            size_t id;
-            sscanf(det.labels[0].id.c_str(), "%zu", &id);
-            all_detections.emplace_back(det.shape.x, det.shape.y, det.shape.x + det.shape.width, det.shape.y + det.shape.height, id);
+            all_detections.emplace_back(det.shape.x, det.shape.y, det.shape.x + det.shape.width, det.shape.y + det.shape.height, det.labels[0].label.id);
             all_scores.push_back(det.labels[0].score);
             all_detections_refs.push_back(det);
         }

@@ -164,7 +164,7 @@ std::unique_ptr<Scene> ModelYoloV3ONNX::postprocess(InferenceResult& infResult) 
             obj.height = clamp(height, 0.f, static_cast<float>(imgHeight));
             obj.width = clamp(width, 0.f, static_cast<float>(imgWidth));
 
-            scene->boxes.push_back(Box(obj, {Label(std::to_string(classInd), getLabelName(classInd), score)}));
+            scene->boxes.push_back(Box(obj, {LabelScore(classInd, getLabelName(classInd), score)}));
         }
     }
     return scene;

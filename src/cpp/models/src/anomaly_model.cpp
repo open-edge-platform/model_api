@@ -90,7 +90,7 @@ std::unique_ptr<Scene> AnomalyModel::postprocess(InferenceResult& infResult) {
     scene->boxes.push_back(
         Box(
             cv::Rect(0, 0, inputImgSize.inputImgWidth, inputImgSize.inputImgHeight),
-            {Label(std::to_string(label_id), pred_label, pred_score)}
+            {LabelScore(label_id, pred_label, pred_score)}
         )
     );
 
@@ -103,7 +103,7 @@ std::unique_ptr<Scene> AnomalyModel::postprocess(InferenceResult& infResult) {
             scene->boxes.push_back(
                 Box(
                     rect,
-                    {Label(std::to_string(label_id), pred_label, box_score)}
+                    {LabelScore(label_id, pred_label, box_score)}
                 )
             );
 

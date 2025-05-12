@@ -49,4 +49,4 @@ protected:
     float confidence_threshold = 0.5f;
 };
 
-cv::Mat segm_postprocess(const SegmentedObject& box, const cv::Mat& unpadded, int im_h, int im_w);
+cv::Mat segm_postprocess(const Mask& box, const cv::Mat& unpadded, int im_h, int im_w);

@@ -328,7 +328,7 @@ std::unique_ptr<Scene> ClassificationModel::get_multilabel_predictions(Inference
 
     auto scene = std::make_unique<Scene>(infResult.frameId, infResult.metaData);
     auto raw_scores = ov::Tensor();
-    std::vector<Label> result;
+    std::vector<LabelScore> result;
     float* raw_scoresPtr = nullptr;
     if (add_raw_scores) {
         raw_scores = ov::Tensor(logitsTensor.get_element_type(), logitsTensor.get_shape());
@@ -339,7 +339,7 @@ std::unique_ptr<Scene> ClassificationModel::get_multilabel_predictions(Inference
     for (size_t i = 0; i < labels.size(); ++i) {
         float score = sigmoid(logitsPtr[i]);
         if (score > confidence_threshold) {
-            result.emplace_back(std::to_string(i), labels[i], score);
+            result.emplace_back(i, labels[i], score);
         }
         if (add_raw_scores) {
             raw_scoresPtr[i] = score;
@@ -401,9 +401,9 @@ std::unique_ptr<Scene> ClassificationModel::get_hierarchical_predictions(Inferen
     }
 
     auto resolved_labels = resolver->resolve_labels(predicted_labels, predicted_scores);
-    std::vector<Label> result;
+    std::vector<LabelScore> result;
     for (const auto& label : resolved_labels) {
-        result.push_back(Label(std::to_string(hierarchical_info.label_to_idx[label.first]), label.first, label.second));
+        result.push_back(LabelScore(hierarchical_info.label_to_idx[label.first], label.first, label.second));
     }
     const auto& internalData = infResult.internalModelData->asRef<InternalImageModelData>();
     cv::Rect shape(0, 0, internalData.inputImgWidth, internalData.inputImgHeight);
@@ -449,13 +449,13 @@ std::unique_ptr<Scene> ClassificationModel::get_multiclass_predictions(Inference
         scene->additional_tensors["raw_scores"] = raw_scores;
     }
 
-    std::vector<Label> result;
+    std::vector<LabelScore> result;
     for (size_t i = 0; i < scoresTensor.get_size(); ++i) {
         int ind = indicesPtr[i];
         if (ind < 0 || ind >= static_cast<int>(labels.size())) {
             throw std::runtime_error("Invalid index for the class label is found during postprocessing");
         }
-        result.emplace_back(std::to_string(ind), labels[ind], scoresPtr[i]);
+        result.emplace_back(ind, labels[ind], scoresPtr[i]);
     }
 
     const auto& internalData = infResult.internalModelData->asRef<InternalImageModelData>();

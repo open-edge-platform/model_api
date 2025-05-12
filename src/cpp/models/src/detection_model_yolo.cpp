@@ -282,7 +282,7 @@ std::unique_ptr<Scene> ModelYolo::postprocess(InferenceResult& infResult) {
         for (const auto& obj1 : objects) {
             bool isGoodResult = true;
             for (const auto& obj2 : objects) {
-                if (obj1.labels[0].id == obj2.labels[0].id && obj1.labels[0].score < obj2.labels[0].score &&
+                if (obj1.labels[0].label.id == obj2.labels[0].label.id && obj1.labels[0].score < obj2.labels[0].score &&
                     intersectionOverUnion(obj1, obj2) >= iou_threshold) {  // if obj1 is the same as obj2, condition
                                                                            // expression will evaluate to false anyway
                     isGoodResult = false;
@@ -410,7 +410,7 @@ void ModelYolo::parseYOLOOutput(const std::string& output_name,
 
                     //--- Checking confidence threshold conformance and adding region to the list
                     if (prob >= confidence_threshold) {
-                        objects.push_back(Box(obj, {Label(std::to_string(j), getLabelName(j), prob)}));
+                        objects.push_back(Box(obj, {LabelScore(j, getLabelName(j), prob)}));
                     }
                 }
             }
@@ -635,7 +635,7 @@ std::unique_ptr<Scene> YOLOv5::postprocess(InferenceResult& infResult) {
 
         scene->boxes.push_back(Box(
             cv::Rect(x, y, width, height),
-            {Label(std::to_string(labelID), label, confidence)}
+            {LabelScore(labelID, label, confidence)}
         ));
     }
 

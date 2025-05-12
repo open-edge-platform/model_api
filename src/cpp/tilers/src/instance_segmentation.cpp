@@ -56,17 +56,9 @@ std::unique_ptr<Scene> InstanceSegmentationTiler::run(const ImageInputData& inpu
 
 std::unique_ptr<Scene> InstanceSegmentationTiler::postprocess_tile(std::unique_ptr<Scene> tile_result,
                                                                         const cv::Rect& coord) {
-    auto& iseg_res = tile_result->instance_segmentation_result;
-    for (auto& det : iseg_res->segmentedObjects) {
-        det.x += coord.x;
-        det.y += coord.y;
-    }
-
-    if (iseg_res->feature_vector) {
-        auto tmp_feature_vector =
-            ov::Tensor(iseg_res->feature_vector.get_element_type(), iseg_res->feature_vector.get_shape());
-        iseg_res->feature_vector.copy_to(tmp_feature_vector);
-        iseg_res->feature_vector = tmp_feature_vector;
+    for (auto& det : tile_result->new_masks) {
+        det.roi.x += coord.x;
+        det.roi.y += coord.y;
     }
 
     return tile_result;
@@ -77,23 +69,22 @@ std::unique_ptr<Scene> InstanceSegmentationTiler::merge_results(
     const cv::Size& image_size,
     const std::vector<cv::Rect>& tile_coords) {
     auto scene = std::make_unique<Scene>();
-    auto result = std::make_unique<InstanceSegmentationResult>();
 
     std::vector<AnchorLabeled> all_detections;
-    std::vector<std::reference_wrapper<SegmentedObject>> all_detections_ptrs;
+    std::vector<std::reference_wrapper<Mask>> all_detections_ptrs;
     std::vector<float> all_scores;
 
     for (const auto& result : tiles_results) {
-        for (auto& det : result->instance_segmentation_result->segmentedObjects) {
-            all_detections.emplace_back(det.x, det.y, det.x + det.width, det.y + det.height, det.labelID);
-            all_scores.push_back(det.confidence);
+        for (auto& det : result->new_masks) {
+            all_detections.emplace_back(det.roi.x, det.roi.y, det.roi.x + det.roi.width, det.roi.y + det.roi.height, det.label.label.id);
+            all_scores.push_back(det.label.score);
             all_detections_ptrs.push_back(det);
         }
     }
 
     auto keep_idx = multiclass_nms(all_detections, all_scores, iou_threshold, false, max_pred_number);
 
-    result->segmentedObjects.reserve(keep_idx.size());
+    scene->new_masks.reserve(keep_idx.size());
     for (auto idx : keep_idx) {
         if (postprocess_semantic_masks) {
             all_detections_ptrs[idx].get().mask = segm_postprocess(all_detections_ptrs[idx],
@@ -101,26 +92,25 @@ std::unique_ptr<Scene> InstanceSegmentationTiler::merge_results(
                                                                    image_size.height,
                                                                    image_size.width);
         }
-        result->segmentedObjects.push_back(all_detections_ptrs[idx]);
+        scene->new_masks.push_back(all_detections_ptrs[idx]);
     }
 
     if (tiles_results.size()) {
-        auto& iseg_res = tiles_results.begin()->get()->instance_segmentation_result;
-        if (iseg_res->feature_vector) {
-            result->feature_vector =
-                ov::Tensor(iseg_res->feature_vector.get_element_type(), iseg_res->feature_vector.get_shape());
+        auto& feature_vectors = tiles_results.begin()->get()->feature_vectors;
+        if (!feature_vectors.empty()) {
+            scene->feature_vectors.push_back(ov::Tensor(feature_vectors[0].get_element_type(), feature_vectors[0].get_shape()));
         }
     }
 
-    if (result->feature_vector) {
-        float* feature_ptr = result->feature_vector.data<float>();
-        size_t feature_size = result->feature_vector.get_size();
+    if (!scene->feature_vectors.empty()) {
+        auto feature_vector = scene->feature_vectors[0];
+        float* feature_ptr = feature_vector.data<float>();
+        size_t feature_size = feature_vector.get_size();
 
         std::fill(feature_ptr, feature_ptr + feature_size, 0.f);
 
         for (const auto& result : tiles_results) {
-            auto& iseg_res = result->instance_segmentation_result;
-            const float* current_feature_ptr = iseg_res->feature_vector.data<float>();
+            const float* current_feature_ptr = result->feature_vectors[0].data<float>();
 
             for (size_t i = 0; i < feature_size; ++i) {
                 feature_ptr[i] += current_feature_ptr[i];
@@ -132,24 +122,23 @@ std::unique_ptr<Scene> InstanceSegmentationTiler::merge_results(
         }
     }
 
-    result->saliency_map = merge_saliency_maps(tiles_results, image_size, tile_coords);
-
-    scene->instance_segmentation_result = std::move(result);
+    scene->saliency_maps = merge_saliency_maps(tiles_results, image_size, tile_coords);
     return scene;
 }
 
-std::vector<cv::Mat_<std::uint8_t>> InstanceSegmentationTiler::merge_saliency_maps(
+std::vector<cv::Mat> InstanceSegmentationTiler::merge_saliency_maps(
     const std::vector<std::unique_ptr<Scene>>& tiles_results,
     const cv::Size& image_size,
     const std::vector<cv::Rect>& tile_coords) {
-    std::vector<std::vector<cv::Mat_<std::uint8_t>>> all_saliecy_maps;
+    std::vector<std::vector<cv::Mat>> all_saliecy_maps;
     all_saliecy_maps.reserve(tiles_results.size());
+
+
     for (const auto& result : tiles_results) {
-        auto& det_res = result->instance_segmentation_result;
-        all_saliecy_maps.push_back(det_res->saliency_map);
+        all_saliecy_maps.push_back(result->saliency_maps);
     }
 
-    std::vector<cv::Mat_<std::uint8_t>> image_saliency_map;
+    std::vector<cv::Mat> image_saliency_map;
     if (all_saliecy_maps.size()) {
         image_saliency_map = all_saliecy_maps[0];
     }
@@ -158,10 +147,11 @@ std::vector<cv::Mat_<std::uint8_t>> InstanceSegmentationTiler::merge_saliency_ma
         return image_saliency_map;
     }
 
+
     size_t num_classes = image_saliency_map.size();
-    std::vector<cv::Mat_<std::uint8_t>> merged_map(num_classes);
+    std::vector<cv::Mat> merged_map(num_classes);
     for (auto& map : merged_map) {
-        map = cv::Mat_<std::uint8_t>(image_size, 0);
+        map = cv::Mat(image_size, 0);
     }
 
     size_t start_idx = tile_with_full_img ? 1 : 0;
@@ -180,10 +170,10 @@ std::vector<cv::Mat_<std::uint8_t>> InstanceSegmentationTiler::merge_saliency_ma
     }
 
     for (size_t class_idx = 0; class_idx < num_classes; ++class_idx) {
-        auto image_map_cls = tile_with_full_img ? image_saliency_map[class_idx] : cv::Mat_<std::uint8_t>();
+        auto image_map_cls = tile_with_full_img ? image_saliency_map[class_idx] : cv::Mat();
         if (image_map_cls.empty()) {
             if (cv::sum(merged_map[class_idx]) == cv::Scalar(0.)) {
-                merged_map[class_idx] = cv::Mat_<std::uint8_t>();
+                merged_map[class_idx] = cv::Mat();
             }
         } else {
             cv::resize(image_map_cls, image_map_cls, image_size);

@@ -24,7 +24,7 @@ protected:
                                                       const cv::Size&,
                                                       const std::vector<cv::Rect>&);
 
-    std::vector<cv::Mat_<std::uint8_t>> merge_saliency_maps(const std::vector<std::unique_ptr<Scene>>&,
+    std::vector<cv::Mat> merge_saliency_maps(const std::vector<std::unique_ptr<Scene>>&,
                                                             const cv::Size&,
                                                             const std::vector<cv::Rect>&);
 

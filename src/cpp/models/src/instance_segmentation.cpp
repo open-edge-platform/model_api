@@ -43,8 +43,8 @@ cv::Rect expand_box(const cv::Rect2f& box, float scale) {
             cv::Point(int(center.x + w_half), int(center.y + h_half))};
 }
 
-std::vector<cv::Mat_<std::uint8_t>> average_and_normalize(const std::vector<std::vector<cv::Mat>>& saliency_maps) {
-    std::vector<cv::Mat_<std::uint8_t>> aggregated;
+std::vector<cv::Mat> average_and_normalize(const std::vector<std::vector<cv::Mat>>& saliency_maps) {
+    std::vector<cv::Mat> aggregated;
     aggregated.reserve(saliency_maps.size());
     for (const std::vector<cv::Mat>& per_object_maps : saliency_maps) {
         if (per_object_maps.empty()) {
@@ -111,11 +111,11 @@ Lbm filterTensors(const std::map<std::string, ov::Tensor>& infResult) {
 }
 }  // namespace
 
-cv::Mat segm_postprocess(const SegmentedObject& box, const cv::Mat& unpadded, int im_h, int im_w) {
+cv::Mat segm_postprocess(const Mask& box, const cv::Mat& unpadded, int im_h, int im_w) {
     // Add zero border to prevent upsampling artifacts on segment borders.
     cv::Mat raw_cls_mask;
     cv::copyMakeBorder(unpadded, raw_cls_mask, 1, 1, 1, 1, cv::BORDER_CONSTANT, {0});
-    cv::Rect extended_box = expand_box(box, float(raw_cls_mask.cols) / (raw_cls_mask.cols - 2));
+    cv::Rect extended_box = expand_box(box.roi, float(raw_cls_mask.cols) / (raw_cls_mask.cols - 2));
 
     int w = std::max(extended_box.width + 1, 1);
     int h = std::max(extended_box.height + 1, 1);
@@ -302,7 +302,6 @@ std::unique_ptr<Scene> MaskRCNNModel::postprocess(InferenceResult& infResult) {
     const cv::Size& masks_size{int(lbm.masks.get_shape()[3]), int(lbm.masks.get_shape()[2])};
 
     auto scene = std::make_unique<Scene>(infResult.frameId, infResult.metaData);
-    auto result = std::make_unique<InstanceSegmentationResult>(infResult.frameId, infResult.metaData);
 
     std::vector<std::vector<cv::Mat>> saliency_maps;
     bool has_feature_vector_name =
@@ -318,47 +317,48 @@ std::unique_ptr<Scene> MaskRCNNModel::postprocess(InferenceResult& infResult) {
         if (confidence <= confidence_threshold && !has_feature_vector_name) {
             continue;
         }
-        SegmentedObject obj;
-
-        obj.confidence = confidence;
-        obj.labelID = labels_tensor_ptr[i] + 1;
-        if (!labels.empty() && obj.labelID >= labels.size()) {
+        size_t labelID = labels_tensor_ptr[i] + 1;
+        if (!labels.empty() && labelID >= labels.size()) {
             continue;
         }
-        obj.label = getLabelName(obj.labelID);
 
-        obj.x = clamp(round((boxes[i * objectSize + 0] - padLeft) * invertedScaleX), 0.f, floatInputImgWidth);
-        obj.y = clamp(round((boxes[i * objectSize + 1] - padTop) * invertedScaleY), 0.f, floatInputImgHeight);
-        obj.width =
-            clamp(round((boxes[i * objectSize + 2] - padLeft) * invertedScaleX - obj.x), 0.f, floatInputImgWidth);
-        obj.height =
-            clamp(round((boxes[i * objectSize + 3] - padTop) * invertedScaleY - obj.y), 0.f, floatInputImgHeight);
+        LabelScore label(labelID, getLabelName(labelID), confidence);
 
-        if (obj.height * obj.width <= 1) {
+        cv::Rect roi;
+
+        roi.x = clamp(round((boxes[i * objectSize + 0] - padLeft) * invertedScaleX), 0.f, floatInputImgWidth);
+        roi.y = clamp(round((boxes[i * objectSize + 1] - padTop) * invertedScaleY), 0.f, floatInputImgHeight);
+        roi.width =
+            clamp(round((boxes[i * objectSize + 2] - padLeft) * invertedScaleX - roi.x), 0.f, floatInputImgWidth);
+        roi.height =
+            clamp(round((boxes[i * objectSize + 3] - padTop) * invertedScaleY - roi.y), 0.f, floatInputImgHeight);
+
+        if (roi.height * roi.width <= 1) {
             continue;
         }
+
+        Mask mask(label, roi, cv::Mat());
 
         cv::Mat raw_cls_mask{masks_size, CV_32F, masks + masks_size.area() * i};
         cv::Mat resized_mask;
         if (postprocess_semantic_masks || has_feature_vector_name) {
-            resized_mask = segm_postprocess(obj, raw_cls_mask, internalData.inputImgHeight, internalData.inputImgWidth);
+            resized_mask = segm_postprocess(mask, raw_cls_mask, internalData.inputImgHeight, internalData.inputImgWidth);
         } else {
             resized_mask = raw_cls_mask;
         }
-        obj.mask = postprocess_semantic_masks ? resized_mask : raw_cls_mask.clone();
+        mask.mask = postprocess_semantic_masks ? resized_mask : raw_cls_mask.clone();
         if (confidence > confidence_threshold) {
-            result->segmentedObjects.push_back(obj);
+            scene->new_masks.push_back(mask);
         }
         if (has_feature_vector_name && confidence > confidence_threshold) {
-            saliency_maps[obj.labelID - 1].push_back(resized_mask);
+            saliency_maps[labelID - 1].push_back(resized_mask);
         }
     }
-    result->saliency_map = average_and_normalize(saliency_maps);
+    scene->saliency_maps = average_and_normalize(saliency_maps);
     if (has_feature_vector_name) {
-        result->feature_vector = std::move(infResult.outputsData[feature_vector_name]);
+        scene->feature_vectors.push_back(std::move(infResult.outputsData[feature_vector_name]));
     }
 
-    scene->instance_segmentation_result = std::move(result);
     return scene;
 }
 

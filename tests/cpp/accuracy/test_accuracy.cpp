@@ -168,6 +168,7 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
                         result = tiler.run(image);
                     } else {
                         result = model->infer(image);
+
                     }
                     EXPECT_EQ(std::string{*result}, modelData.testData[i].reference[0]);
                 }
@@ -243,29 +244,28 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
                         result = model->infer(image);
                     }
 
-                    const std::vector<SegmentedObjectWithRects>& withRects =
-                        add_rotated_rects(result->instance_segmentation_result->segmentedObjects);
+                    auto rotated_rects = get_rotated_rects(result->new_masks);
                     std::stringstream ss;
-                    for (const SegmentedObjectWithRects& obj : withRects) {
+                    for (auto& obj : rotated_rects) {
                         ss << obj << "; ";
                     }
                     size_t filled = 0;
-                    for (const cv::Mat_<std::uint8_t>& cls_map : result->instance_segmentation_result->saliency_map) {
+                    for (const cv::Mat& cls_map : result->saliency_maps) {
                         if (cls_map.data) {
                             ++filled;
                         }
                     }
                     ss << filled << "; ";
-                    try {
-                        ss << result->instance_segmentation_result->feature_vector.get_shape();
-                    } catch (ov::Exception&) {
+                    if (result->feature_vectors.empty()) {
                         ss << "[0]";
+                    } else {
+                        ss << result->feature_vectors[0].get_shape();
                     }
                     ss << "; ";
                     try {
                         // getContours() assumes each instance generates only one contour.
                         // That doesn't hold for some models
-                        for (const Contour& contour : getContours(result->instance_segmentation_result->segmentedObjects)) {
+                        for (const Contour& contour : getContours(result->new_masks)) {
                             ss << contour << "; ";
                         }
                     } catch (const std::runtime_error&) {
@@ -313,7 +313,9 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
     }
 }
 
-INSTANTIATE_TEST_SUITE_P(TestAccuracyPublic, ModelParameterizedTest, testing::ValuesIn(GetTestData(PUBLIC_SCOPE_PATH)));
+INSTANTIATE_TEST_SUITE_P(TestAccuracyPublic, ModelParameterizedTest, testing::ValuesIn(GetTestData(PUBLIC_SCOPE_PATH)), [](const testing::TestParamInfo<ModelData>& info) {
+    return std::to_string(info.index) + "_" + info.param.type;
+});
 
 class InputParser {
 public:

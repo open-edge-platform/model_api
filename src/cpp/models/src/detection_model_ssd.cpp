@@ -108,6 +108,7 @@ std::unique_ptr<Scene> ModelSSD::postprocess(InferenceResult& infResult) {
     if (feature_vector_iter != infResult.outputsData.end()) {
         result->feature_vectors.push_back(std::move(feature_vector_iter->second));
     }
+
     return result;
 }
 
@@ -162,7 +163,7 @@ std::unique_ptr<Scene> ModelSSD::postprocessSingleOutput(InferenceResult& infRes
                         0.f,
                         floatInputImgHeight) - y
                 ),
-                {Label(std::to_string(labelID), getLabelName(labelID), confidence)}
+                {LabelScore(labelID, getLabelName(labelID), confidence)}
             );
             scene->boxes.push_back(box);
         }
@@ -199,6 +200,7 @@ std::unique_ptr<Scene> ModelSSD::postprocessMultipleOutputs(InferenceResult& inf
     float widthScale = scores ? netInputWidth : 1.0f;
     float heightScale = scores ? netInputHeight : 1.0f;
 
+
     for (size_t i = 0; i < numAndStep.detectionsNum; i++) {
         float confidence = scores ? scores[i] : boxes[i * numAndStep.objectSize + 4];
 
@@ -222,7 +224,7 @@ std::unique_ptr<Scene> ModelSSD::postprocessMultipleOutputs(InferenceResult& inf
             if (width * height >= box_area_threshold) {
                 scene->boxes.push_back(Box(
                   cv::Rect(x, y, width, height),
-                  {Label(std::to_string(labels[i]), getLabelName(labels[i]), confidence)}
+                  {LabelScore(labels[i], getLabelName(labels[i]), confidence)}
                 ));
             }
         }

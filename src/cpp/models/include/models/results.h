@@ -381,22 +381,58 @@ struct KeypointDetectionResult : public ResultBase {
 
 class Label {
 public:
-    Label(std::string id, std::string name, float score):  id(id), name(name), score(score) {}
+    Label(int id, std::string name):  id(id), name(name) {}
 
-    std::string id;
+    int id;
     std::string name;
-    float score;
 
     friend std::ostream& operator<< (std::ostream& os, const Label& label) {
-        return os << label.id << " (" << label.name << "): " << std::fixed << std::setprecision(3) << label.score;
+        return os << label.id << " (" << label.name << ")";
     }
 };
 
+class LabelScore {
+public:
+    LabelScore(int id, std::string name, float score): label(Label(id, name)), score(score) {}
+    LabelScore(Label label, float score):  label(label), score(score) {}
+
+    Label label;
+    float score;
+
+    friend std::ostream& operator<< (std::ostream& os, const LabelScore& label) {
+        return os << label.label << ": " << std::fixed << std::setprecision(3) << label.score;
+    }
+};
+
+class Mask {
+public:
+    Mask(LabelScore label, cv::Rect roi, cv::Mat mask): label(label), roi(roi), mask(mask) {}
+
+    LabelScore label;
+    cv::Rect roi;
+    cv::Mat mask;
+};
+
+static inline std::vector<Contour> getContours(const std::vector<Mask>& segmentedObjects) {
+    std::vector<Contour> combined_contours;
+    std::vector<std::vector<cv::Point>> contours;
+    for (const Mask& obj : segmentedObjects) {
+        cv::findContours(obj.mask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
+        // Assuming one contour output for findContours. Based on OTX this is a safe
+        // assumption
+        if (contours.size() != 1) {
+            throw std::runtime_error("findContours() must have returned only one contour");
+        }
+        combined_contours.push_back({obj.label.label.name, obj.label.score, contours[0]});
+    }
+    return combined_contours;
+}
+
 class Box {
 public:
-    Box(cv::Rect shape, std::vector<Label> labels): shape(shape), labels(labels) {}
+    Box(cv::Rect shape, std::vector<LabelScore> labels): shape(shape), labels(labels) {}
     cv::Rect shape;
-    std::vector<Label> labels;
+    std::vector<LabelScore> labels;
 
     friend std::ostream& operator<< (std::ostream& os, const Box& box) {
 
@@ -422,6 +458,51 @@ public:
     }
 };
 
+class RotatedRect {
+public:
+    LabelScore label;
+    cv::RotatedRect shape;
+
+    friend std::ostream& operator<< (std::ostream& os, const RotatedRect& box) {
+
+        os << "RotatedRect: ";
+        os << std::fixed << std::setprecision(3);
+        os << box.shape.center.x << ", " << box.shape.center.y << ", " << box.shape.size.width << ", "
+                  << box.shape.size.height << ", " << box.shape.angle;
+        os << box.label << "; ";
+        return os;
+    }
+
+    explicit operator std::string() {
+        std::stringstream ss;
+        ss << *this;
+        return ss.str();
+    }
+};
+
+static inline std::vector<RotatedRect> get_rotated_rects(std::vector<Mask> masks) {
+    std::vector<RotatedRect> result;
+    result.reserve(masks.size());
+    for (const Mask& m : masks) {
+        cv::Mat mask;
+        m.mask.convertTo(mask, CV_8UC1);
+        std::vector<std::vector<cv::Point>> contours;
+        cv::findContours(mask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+
+        std::vector<cv::Point> contour = {};
+        for (size_t i = 0; i < contours.size(); i++) {
+            contour.insert(contour.end(), contours[i].begin(), contours[i].end());
+        }
+        if (contour.size() > 0) {
+            std::vector<cv::Point> hull;
+            cv::convexHull(contour, hull);
+
+            result.push_back(RotatedRect{m.label, cv::minAreaRect(hull)});
+        }
+    }
+    return result;
+}
+
 class Scene {
 public:
     Scene(int64_t frameId = -1, const std::shared_ptr<MetaData>& metaData = nullptr)
@@ -432,13 +513,15 @@ public:
     std::shared_ptr<MetaData> metaData;
 
     //std::unique_ptr<ClassificationResult> classification_result;
-    std::unique_ptr<InstanceSegmentationResult> instance_segmentation_result;
+    //std::unique_ptr<InstanceSegmentationResult> instance_segmentation_result;
 
     std::vector<Box> boxes;
     std::vector<DetectedKeypoints> poses;
 
     std::vector<cv::Mat> saliency_maps;
     std::vector<ov::Tensor> feature_vectors;
+
+    std::vector<Mask> new_masks;
 
     std::map<std::string, ov::Tensor> additional_tensors;
     std::map<std::string, cv::Mat> masks;
