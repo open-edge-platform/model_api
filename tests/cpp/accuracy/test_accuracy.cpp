@@ -209,8 +209,8 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
                         pred = model->infer(image);
                     }
 
-                    if (pred->new_masks.size() == 2) {
-                        cv::Mat soft = pred->new_masks[1].mask;
+                    if (pred->masks.size() == 2) {
+                        cv::Mat soft = pred->masks[1].mask;
                         const std::vector<Contour>& contours = model->getContours(pred);
                         std::stringstream ss;
                         for (const Contour& contour : contours) {
@@ -244,7 +244,7 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
                         result = model->infer(image);
                     }
 
-                    auto rotated_rects = get_rotated_rects(result->new_masks);
+                    auto rotated_rects = get_rotated_rects(result->masks);
                     std::stringstream ss;
                     for (auto& obj : rotated_rects) {
                         ss << obj << "; ";
@@ -265,7 +265,7 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
                     try {
                         // getContours() assumes each instance generates only one contour.
                         // That doesn't hold for some models
-                        for (const Contour& contour : getContours(result->new_masks)) {
+                        for (const Contour& contour : getContours(result->masks)) {
                             ss << contour << "; ";
                         }
                     } catch (const std::runtime_error&) {

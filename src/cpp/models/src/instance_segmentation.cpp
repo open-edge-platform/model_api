@@ -348,7 +348,7 @@ std::unique_ptr<Scene> MaskRCNNModel::postprocess(InferenceResult& infResult) {
         }
         mask.mask = postprocess_semantic_masks ? resized_mask : raw_cls_mask.clone();
         if (confidence > confidence_threshold) {
-            scene->new_masks.push_back(mask);
+            scene->masks.push_back(mask);
         }
         if (has_feature_vector_name && confidence > confidence_threshold) {
             saliency_maps[labelID - 1].push_back(resized_mask);

@@ -529,10 +529,9 @@ public:
     std::vector<cv::Mat> saliency_maps;
     std::vector<ov::Tensor> feature_vectors;
 
-    std::vector<Mask> new_masks;
+    std::vector<Mask> masks;
 
     std::map<std::string, ov::Tensor> additional_tensors;
-    //std::map<std::string, cv::Mat> masks;
 
     friend std::ostream& operator<<(std::ostream& os, const Scene& scene) {
         for (auto& box: scene.boxes) {
@@ -549,7 +548,7 @@ public:
             os << "[1," << scene.saliency_maps.size() << "," << scene.saliency_maps[0].rows << "," << scene.saliency_maps[0].cols << "]; ";
         }
 
-        for (auto& m: scene.new_masks) {
+        for (auto& m: scene.masks) {
             os << m;
         }
 

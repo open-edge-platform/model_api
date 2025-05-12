@@ -56,7 +56,7 @@ std::unique_ptr<Scene> InstanceSegmentationTiler::run(const ImageInputData& inpu
 
 std::unique_ptr<Scene> InstanceSegmentationTiler::postprocess_tile(std::unique_ptr<Scene> tile_result,
                                                                         const cv::Rect& coord) {
-    for (auto& det : tile_result->new_masks) {
+    for (auto& det : tile_result->masks) {
         det.roi.x += coord.x;
         det.roi.y += coord.y;
     }
@@ -75,7 +75,7 @@ std::unique_ptr<Scene> InstanceSegmentationTiler::merge_results(
     std::vector<float> all_scores;
 
     for (const auto& result : tiles_results) {
-        for (auto& det : result->new_masks) {
+        for (auto& det : result->masks) {
             all_detections.emplace_back(det.roi.x, det.roi.y, det.roi.x + det.roi.width, det.roi.y + det.roi.height, det.label.label.id);
             all_scores.push_back(det.label.score);
             all_detections_ptrs.push_back(det);
@@ -84,7 +84,7 @@ std::unique_ptr<Scene> InstanceSegmentationTiler::merge_results(
 
     auto keep_idx = multiclass_nms(all_detections, all_scores, iou_threshold, false, max_pred_number);
 
-    scene->new_masks.reserve(keep_idx.size());
+    scene->masks.reserve(keep_idx.size());
     for (auto idx : keep_idx) {
         if (postprocess_semantic_masks) {
             all_detections_ptrs[idx].get().mask = segm_postprocess(all_detections_ptrs[idx],
@@ -92,7 +92,7 @@ std::unique_ptr<Scene> InstanceSegmentationTiler::merge_results(
                                                                    image_size.height,
                                                                    image_size.width);
         }
-        scene->new_masks.push_back(all_detections_ptrs[idx]);
+        scene->masks.push_back(all_detections_ptrs[idx]);
     }
 
     if (tiles_results.size()) {
