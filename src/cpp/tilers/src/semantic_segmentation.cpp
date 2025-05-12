@@ -56,7 +56,7 @@ std::unique_ptr<Scene> SemanticSegmentationTiler::run(const ImageInputData& inpu
 
 std::unique_ptr<Scene> SemanticSegmentationTiler::postprocess_tile(std::unique_ptr<Scene> tile_result,
                                                                         const cv::Rect&) {
-    if (tile_result->masks.find("soft_prediction") == tile_result->masks.end()){
+    if (tile_result->new_masks.size() < 2){
         throw std::runtime_error(
             "SemanticSegmentationTiler requires the underlying model to return ImageResultWithSoftPrediction");
     }
@@ -72,13 +72,13 @@ std::unique_ptr<Scene> SemanticSegmentationTiler::merge_results(
     }
 
     cv::Mat voting_mask(cv::Size(image_size.width, image_size.height), CV_32SC1, cv::Scalar(0));
-    auto first_soft_prediction = tiles_results[0]->masks["soft_prediction"];
+    auto first_soft_prediction = tiles_results[0]->new_masks[1].mask;
     cv::Mat merged_soft_prediction(cv::Size(image_size.width, image_size.height),
                                    CV_32FC(first_soft_prediction.channels()),
                                    cv::Scalar(0));
 
     for (size_t i = 0; i < tiles_results.size(); ++i) {
-        auto soft_prediction = tiles_results[i]->masks["soft_prediction"];
+        auto soft_prediction = tiles_results[i]->new_masks[1].mask;
         voting_mask(tile_coords[i]) += 1;
         merged_soft_prediction(tile_coords[i]) += soft_prediction;
     }
@@ -89,7 +89,8 @@ std::unique_ptr<Scene> SemanticSegmentationTiler::merge_results(
         create_hard_prediction_from_soft_prediction(merged_soft_prediction, soft_threshold, blur_strength);
 
     auto scene = std::make_unique<Scene>();
-    scene->masks["hard_prediction"] = hard_prediction;
-    scene->masks["soft_prediction"] = merged_soft_prediction;
+    auto roi = cv::Rect(0, 0, image_size.width, image_size.height);
+    scene->new_masks.push_back(Mask(LabelScore(0, "hard_prediction", 0), roi, hard_prediction));
+    scene->new_masks.push_back(Mask(LabelScore(0, "soft_prediction", 0), roi, merged_soft_prediction));
     return scene;
 }

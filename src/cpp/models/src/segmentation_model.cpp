@@ -260,7 +260,8 @@ std::unique_ptr<Scene> SegmentationModel::postprocess(InferenceResult& infResult
                cv::INTER_NEAREST);
 
     auto scene = std::make_unique<Scene>(infResult.frameId, infResult.metaData);
-    scene->masks["hard_prediction"] = hard_prediction;
+    auto roi = cv::Rect(0, 0, inputImgSize.inputImgWidth, inputImgSize.inputImgHeight);
+    scene->new_masks.push_back(Mask(LabelScore(0, "hard_prediction", 0), roi, hard_prediction));
     if (return_soft_prediction) {
         cv::resize(soft_prediction,
                    soft_prediction,
@@ -268,19 +269,24 @@ std::unique_ptr<Scene> SegmentationModel::postprocess(InferenceResult& infResult
                    0.0,
                    0.0,
                    cv::INTER_NEAREST);
-        scene->masks["soft_prediction"] = soft_prediction;
+
+        scene->new_masks.push_back(Mask(LabelScore(1, "soft_prediction", 0), roi, soft_prediction));
         auto iter = infResult.outputsData.find(feature_vector_name);
         if (infResult.outputsData.end() != iter) {
             scene->saliency_maps.push_back(get_activation_map(soft_prediction));
             scene->feature_vectors.push_back(iter->second);
         }
     }
+
+    if (return_contours) {
+
+    }
     return scene;
 }
 
 std::vector<Contour> SegmentationModel::getContours(const std::unique_ptr<Scene>& scene) {
-    auto soft_prediction = scene->masks["soft_prediction"];
-    auto hard_prediction = scene->masks["hard_prediction"];
+    auto hard_prediction = scene->new_masks[0].mask;
+    auto soft_prediction = scene->new_masks[1].mask;
     if (soft_prediction.channels() == 1) {
         throw std::runtime_error{"Cannot get contours from soft prediction with 1 layer"};
     }

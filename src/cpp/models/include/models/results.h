@@ -381,6 +381,7 @@ struct KeypointDetectionResult : public ResultBase {
 
 class Label {
 public:
+    Label() {}
     Label(int id, std::string name):  id(id), name(name) {}
 
     int id;
@@ -393,6 +394,7 @@ public:
 
 class LabelScore {
 public:
+    LabelScore() {}
     LabelScore(int id, std::string name, float score): label(Label(id, name)), score(score) {}
     LabelScore(Label label, float score):  label(label), score(score) {}
 
@@ -411,6 +413,15 @@ public:
     LabelScore label;
     cv::Rect roi;
     cv::Mat mask;
+
+    friend std::ostream& operator<< (std::ostream& os, const Mask& mask) {
+
+        double min_mask, max_mask;
+        cv::minMaxLoc(mask.mask, &min_mask, &max_mask);
+        os << mask.label << mask.roi << " min:" << min_mask << " max:" << max_mask << ";";
+        return os;
+    }
+
 };
 
 static inline std::vector<Contour> getContours(const std::vector<Mask>& segmentedObjects) {
@@ -512,9 +523,6 @@ public:
     int64_t frameId;
     std::shared_ptr<MetaData> metaData;
 
-    //std::unique_ptr<ClassificationResult> classification_result;
-    //std::unique_ptr<InstanceSegmentationResult> instance_segmentation_result;
-
     std::vector<Box> boxes;
     std::vector<DetectedKeypoints> poses;
 
@@ -524,7 +532,7 @@ public:
     std::vector<Mask> new_masks;
 
     std::map<std::string, ov::Tensor> additional_tensors;
-    std::map<std::string, cv::Mat> masks;
+    //std::map<std::string, cv::Mat> masks;
 
     friend std::ostream& operator<<(std::ostream& os, const Scene& scene) {
         for (auto& box: scene.boxes) {
@@ -541,10 +549,8 @@ public:
             os << "[1," << scene.saliency_maps.size() << "," << scene.saliency_maps[0].rows << "," << scene.saliency_maps[0].cols << "]; ";
         }
 
-        for (auto& m: scene.masks) {
-            double min_mask, max_mask;
-            cv::minMaxLoc(m.second, &min_mask, &max_mask);
-            os << m.first << " min:" << min_mask << " max:" << max_mask << ";";
+        for (auto& m: scene.new_masks) {
+            os << m;
         }
 
         if (scene.feature_vectors.empty()){

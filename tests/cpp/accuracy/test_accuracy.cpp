@@ -209,8 +209,8 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
                         pred = model->infer(image);
                     }
 
-                    if (pred->masks.find("soft_prediction") != pred->masks.end()) {
-                        cv::Mat soft = pred->masks["soft_prediction"];
+                    if (pred->new_masks.size() == 2) {
+                        cv::Mat soft = pred->new_masks[1].mask;
                         const std::vector<Contour>& contours = model->getContours(pred);
                         std::stringstream ss;
                         for (const Contour& contour : contours) {
