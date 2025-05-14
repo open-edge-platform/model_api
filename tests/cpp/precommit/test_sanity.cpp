@@ -73,17 +73,17 @@ TEST_P(ModelParameterizedTest, SynchronousInference) {
         bool preload = true;
         auto model = DetectionModel::create_model(DATA_DIR + "/" + model_path, {}, "", preload, "CPU");
         auto result = model->infer(image);
-        EXPECT_GT(result->objects.size(), 0);
+        EXPECT_GT(result->boxes.size(), 0);
     } else if ("ClassificationModel" == GetParam().type) {
         bool preload = true;
         auto model = ClassificationModel::create_model(DATA_DIR + "/" + model_path, {}, preload, "CPU");
-        std::unique_ptr<ClassificationResult> result = model->infer(image);
-        ASSERT_GT(result->topLabels.size(), 0);
-        EXPECT_GT(result->topLabels.front().score, 0.0f);
+        auto result = model->infer(image);
+        ASSERT_GT(result->boxes.size(), 0);
+        EXPECT_GT(result->boxes.front().labels.front().score, 0.0f);
     } else if ("SegmentationModel" == GetParam().type) {
         bool preload = true;
         auto model = SegmentationModel::create_model(DATA_DIR + "/" + model_path, {}, preload, "CPU");
-        auto result = model->infer(image)->asRef<ImageResultWithSoftPrediction>();
+        auto result = model->infer(image);
         ASSERT_GT(model->getContours(result).size(), 0);
     }
 }

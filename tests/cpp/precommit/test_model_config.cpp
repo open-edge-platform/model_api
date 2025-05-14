@@ -122,14 +122,14 @@ TEST_P(ClassificationModelParameterizedTestSaveLoad, TestClassificationCorrectne
     auto ov_model = model->getModel();
     ov::serialize(ov_model, TMP_MODEL_FILE);
 
-    auto result = model->infer(image)->topLabels;
+    auto result = model->infer(image)->boxes;
 
     auto model_restored = ClassificationModel::create_model(TMP_MODEL_FILE, {}, preload, "CPU");
     auto result_data = model_restored->infer(image);
-    auto result_restored = result_data->topLabels;
+    auto result_restored = result_data->boxes;
 
-    EXPECT_EQ(result_restored[0].id, result[0].id);
-    EXPECT_EQ(result_restored[0].score, result[0].score);
+    EXPECT_EQ(result_restored[0].labels[0].label.id, result[0].labels[0].label.id);
+    EXPECT_EQ(result_restored[0].labels[0].score, result[0].labels[0].score);
 }
 
 TEST_P(ClassificationModelParameterizedTestSaveLoad, TestClassificationCorrectnessAfterSaveLoadWithAdapter) {
@@ -143,15 +143,15 @@ TEST_P(ClassificationModelParameterizedTestSaveLoad, TestClassificationCorrectne
     auto model = ClassificationModel::create_model(DATA_DIR + "/" + model_path, {}, preload, "CPU");
     auto ov_model = model->getModel();
     ov::serialize(ov_model, TMP_MODEL_FILE);
-    auto result = model->infer(image)->topLabels;
+    auto result = model->infer(image)->boxes;
 
     std::shared_ptr<InferenceAdapter> adapter = std::make_shared<MockAdapter>(TMP_MODEL_FILE);
     auto model_restored = ClassificationModel::create_model(adapter);
     auto result_data = model_restored->infer(image);
-    auto result_restored = result_data->topLabels;
+    auto result_restored = result_data->boxes;
 
-    EXPECT_EQ(result_restored[0].id, result[0].id);
-    EXPECT_EQ(result_restored[0].score, result[0].score);
+    EXPECT_EQ(result_restored[0].labels[0].label.id, result[0].labels[0].label.id);
+    EXPECT_EQ(result_restored[0].labels[0].score, result[0].labels[0].score);
 }
 
 TEST_P(SSDModelParameterizedTest, TestDetectionDefaultConfig) {
@@ -206,7 +206,7 @@ TEST_P(DetectionModelParameterizedTestSaveLoad, TestDetctionCorrectnessAfterSave
     auto ov_model = model->getModel();
     ov::serialize(ov_model, TMP_MODEL_FILE);
 
-    auto result = model->infer(image)->objects;
+    auto result = model->infer(image)->boxes;
 
     image = cv::imread(DATA_DIR + "/" + IMAGE_PATH);
     if (!image.data) {
@@ -214,15 +214,15 @@ TEST_P(DetectionModelParameterizedTestSaveLoad, TestDetctionCorrectnessAfterSave
     }
     auto model_restored = DetectionModel::create_model(TMP_MODEL_FILE, {}, "", preload, "CPU");
     auto result_data = model_restored->infer(image);
-    auto result_restored = result_data->objects;
+    auto result_restored = result_data->boxes;
 
     ASSERT_EQ(result.size(), result_restored.size());
 
     for (size_t i = 0; i < result.size(); i++) {
-        ASSERT_EQ(result[i].x, result_restored[i].x);
-        ASSERT_EQ(result[i].y, result_restored[i].y);
-        ASSERT_EQ(result[i].width, result_restored[i].width);
-        ASSERT_EQ(result[i].height, result_restored[i].height);
+        ASSERT_EQ(result[i].shape.x, result_restored[i].shape.x);
+        ASSERT_EQ(result[i].shape.y, result_restored[i].shape.y);
+        ASSERT_EQ(result[i].shape.width, result_restored[i].shape.width);
+        ASSERT_EQ(result[i].shape.height, result_restored[i].shape.height);
     }
 }
 
@@ -237,7 +237,7 @@ TEST_P(DetectionModelParameterizedTestSaveLoad, TestDetctionCorrectnessAfterSave
     auto model = DetectionModel::create_model(DATA_DIR + "/" + model_path, {}, "", preload, "CPU");
     auto ov_model = model->getModel();
     ov::serialize(ov_model, TMP_MODEL_FILE);
-    auto result = model->infer(image)->objects;
+    auto result = model->infer(image)->boxes;
 
     image = cv::imread(DATA_DIR + "/" + IMAGE_PATH);
     if (!image.data) {
@@ -247,15 +247,15 @@ TEST_P(DetectionModelParameterizedTestSaveLoad, TestDetctionCorrectnessAfterSave
     std::shared_ptr<InferenceAdapter> adapter = std::make_shared<MockAdapter>(TMP_MODEL_FILE);
     auto model_restored = DetectionModel::create_model(adapter);
     auto result_data = model_restored->infer(image);
-    auto result_restored = result_data->objects;
+    auto result_restored = result_data->boxes;
 
     ASSERT_EQ(result.size(), result_restored.size());
 
     for (size_t i = 0; i < result.size(); i++) {
-        ASSERT_EQ(result[i].x, result_restored[i].x);
-        ASSERT_EQ(result[i].y, result_restored[i].y);
-        ASSERT_EQ(result[i].width, result_restored[i].width);
-        ASSERT_EQ(result[i].height, result_restored[i].height);
+        ASSERT_EQ(result[i].shape.x, result_restored[i].shape.x);
+        ASSERT_EQ(result[i].shape.y, result_restored[i].shape.y);
+        ASSERT_EQ(result[i].shape.width, result_restored[i].shape.width);
+        ASSERT_EQ(result[i].shape.height, result_restored[i].shape.height);
     }
 }
 
