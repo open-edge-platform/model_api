@@ -180,7 +180,6 @@ std::unique_ptr<Scene> ModelSSD::postprocessMultipleOutputs(InferenceResult& inf
         namesWithoutXai.size() > 2 ? infResult.outputsData[namesWithoutXai[2]].data<float>() : nullptr;
 
     auto scene = std::make_unique<Scene>(infResult.frameId, infResult.metaData);
-    auto result = std::make_unique<DetectionResult>(infResult.frameId, infResult.metaData);
 
     const auto& internalData = infResult.internalModelData->asRef<InternalImageModelData>();
     float floatInputImgWidth = float(internalData.inputImgWidth),
@@ -230,7 +229,6 @@ std::unique_ptr<Scene> ModelSSD::postprocessMultipleOutputs(InferenceResult& inf
         }
     }
 
-    //scene->detection_result = std::move(result);
     return scene;
 }
 

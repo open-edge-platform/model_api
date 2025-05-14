@@ -134,7 +134,6 @@ std::unique_ptr<Scene> ModelYoloV3ONNX::postprocess(InferenceResult& infResult) 
 
     // Generate detection results
     auto scene = std::make_unique<Scene>(infResult.frameId, infResult.metaData);
-    auto result = std::make_unique<DetectionResult>(infResult.frameId, infResult.metaData);
     size_t numberOfBoxes = indicesShape.size() == 3 ? indicesShape[1] : indicesShape[0];
     size_t indicesStride = indicesShape.size() == 3 ? indicesShape[2] : indicesShape[1];
 
