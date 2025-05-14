@@ -278,9 +278,6 @@ std::unique_ptr<Scene> SegmentationModel::postprocess(InferenceResult& infResult
         }
     }
 
-    if (return_contours) {
-
-    }
     return scene;
 }
 
