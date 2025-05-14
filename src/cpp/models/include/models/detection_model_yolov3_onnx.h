@@ -17,7 +17,7 @@ public:
     ModelYoloV3ONNX(std::shared_ptr<InferenceAdapter>& adapter);
     using DetectionModel::DetectionModel;
 
-    std::unique_ptr<ResultBase> postprocess(InferenceResult& infResult) override;
+    std::unique_ptr<Scene> postprocess(InferenceResult& infResult) override;
     std::shared_ptr<InternalModelData> preprocess(const InputData& inputData, InferenceInput& input) override;
 
 protected:

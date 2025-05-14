@@ -29,10 +29,10 @@ public:
                                                                 const std::string& device = "AUTO");
     static std::unique_ptr<KeypointDetectionModel> create_model(std::shared_ptr<InferenceAdapter>& adapter);
 
-    std::unique_ptr<ResultBase> postprocess(InferenceResult& infResult) override;
+    std::unique_ptr<Scene> postprocess(InferenceResult& infResult) override;
 
-    virtual std::unique_ptr<KeypointDetectionResult> infer(const ImageInputData& inputData);
-    virtual std::vector<std::unique_ptr<KeypointDetectionResult>> inferBatch(
+    virtual std::unique_ptr<Scene> infer(const ImageInputData& inputData);
+    virtual std::vector<std::unique_ptr<Scene>> inferBatch(
         const std::vector<ImageInputData>& inputImgs);
 
     static std::string ModelType;

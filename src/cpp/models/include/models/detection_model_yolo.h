@@ -16,9 +16,7 @@
 
 #include "models/detection_model_ext.h"
 
-struct DetectedObject;
 struct InferenceResult;
-struct ResultBase;
 
 class ModelYolo : public DetectionModelExt {
 protected:
@@ -46,7 +44,7 @@ public:
     ModelYolo(std::shared_ptr<ov::Model>& model, const ov::AnyMap& configuration);
     ModelYolo(std::shared_ptr<InferenceAdapter>& adapter);
 
-    std::unique_ptr<ResultBase> postprocess(InferenceResult& infResult) override;
+    std::unique_ptr<Scene> postprocess(InferenceResult& infResult) override;
 
 protected:
     void prepareInputsOutputs(std::shared_ptr<ov::Model>& model) override;
@@ -57,10 +55,10 @@ protected:
                          const unsigned long resized_im_w,
                          const unsigned long original_im_h,
                          const unsigned long original_im_w,
-                         std::vector<DetectedObject>& objects);
+                         std::vector<Box>& objects);
 
     static int calculateEntryIndex(int entriesNum, int lcoords, size_t lclasses, int location, int entry);
-    static double intersectionOverUnion(const DetectedObject& o1, const DetectedObject& o2);
+    static double intersectionOverUnion(const Box& o1, const Box& o2);
 
     std::map<std::string, Region> regions;
     float iou_threshold;
@@ -82,7 +80,7 @@ class YOLOv5 : public DetectionModelExt {
 public:
     YOLOv5(std::shared_ptr<ov::Model>& model, const ov::AnyMap& configuration);
     YOLOv5(std::shared_ptr<InferenceAdapter>& adapter);
-    std::unique_ptr<ResultBase> postprocess(InferenceResult& infResult) override;
+    std::unique_ptr<Scene> postprocess(InferenceResult& infResult) override;
     static std::string ModelType;
 };
 

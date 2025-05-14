@@ -219,7 +219,7 @@ void SegmentationModel::prepareInputsOutputs(std::shared_ptr<ov::Model>& model) 
     }
 }
 
-std::unique_ptr<ResultBase> SegmentationModel::postprocess(InferenceResult& infResult) {
+std::unique_ptr<Scene> SegmentationModel::postprocess(InferenceResult& infResult) {
     const auto& inputImgSize = infResult.internalModelData->asRef<InternalImageModelData>();
     const auto& outputName = outputNames[0] == feature_vector_name ? outputNames[1] : outputNames[0];
     const auto& outTensor = infResult.outputsData[outputName];
@@ -259,41 +259,41 @@ std::unique_ptr<ResultBase> SegmentationModel::postprocess(InferenceResult& infR
                0.0,
                cv::INTER_NEAREST);
 
+    auto scene = std::make_unique<Scene>(infResult.frameId, infResult.metaData);
+    auto roi = cv::Rect(0, 0, inputImgSize.inputImgWidth, inputImgSize.inputImgHeight);
+    scene->masks.push_back(Mask(LabelScore(0, "hard_prediction", 0), roi, hard_prediction));
     if (return_soft_prediction) {
-        ImageResultWithSoftPrediction* result =
-            new ImageResultWithSoftPrediction(infResult.frameId, infResult.metaData);
-        result->resultImage = hard_prediction;
         cv::resize(soft_prediction,
                    soft_prediction,
                    {inputImgSize.inputImgWidth, inputImgSize.inputImgHeight},
                    0.0,
                    0.0,
                    cv::INTER_NEAREST);
-        result->soft_prediction = soft_prediction;
+
+        scene->masks.push_back(Mask(LabelScore(1, "soft_prediction", 0), roi, soft_prediction));
         auto iter = infResult.outputsData.find(feature_vector_name);
         if (infResult.outputsData.end() != iter) {
-            result->saliency_map = get_activation_map(soft_prediction);
-            result->feature_vector = iter->second;
+            scene->saliency_maps.push_back(get_activation_map(soft_prediction));
+            scene->feature_vectors.push_back(iter->second);
         }
-        return std::unique_ptr<ResultBase>(result);
     }
 
-    ImageResult* result = new ImageResult(infResult.frameId, infResult.metaData);
-    result->resultImage = hard_prediction;
-    return std::unique_ptr<ResultBase>(result);
+    return scene;
 }
 
-std::vector<Contour> SegmentationModel::getContours(const ImageResultWithSoftPrediction& imageResult) {
-    if (imageResult.soft_prediction.channels() == 1) {
+std::vector<Contour> SegmentationModel::getContours(const std::unique_ptr<Scene>& scene) {
+    auto hard_prediction = scene->masks[0].mask;
+    auto soft_prediction = scene->masks[1].mask;
+    if (soft_prediction.channels() == 1) {
         throw std::runtime_error{"Cannot get contours from soft prediction with 1 layer"};
     }
 
     std::vector<Contour> combined_contours = {};
     cv::Mat label_index_map;
     cv::Mat current_label_soft_prediction;
-    for (int index = 1; index < imageResult.soft_prediction.channels(); index++) {
-        cv::extractChannel(imageResult.soft_prediction, current_label_soft_prediction, index);
-        cv::inRange(imageResult.resultImage,
+    for (int index = 1; index < soft_prediction.channels(); index++) {
+        cv::extractChannel(soft_prediction, current_label_soft_prediction, index);
+        cv::inRange(hard_prediction,
                     cv::Scalar(index, index, index),
                     cv::Scalar(index, index, index),
                     label_index_map);
@@ -303,9 +303,9 @@ std::vector<Contour> SegmentationModel::getContours(const ImageResultWithSoftPre
         std::string label = getLabelName(index - 1);
 
         for (unsigned int i = 0; i < contours.size(); i++) {
-            cv::Mat mask = cv::Mat::zeros(imageResult.resultImage.rows,
-                                          imageResult.resultImage.cols,
-                                          imageResult.resultImage.type());
+            cv::Mat mask = cv::Mat::zeros(hard_prediction.rows,
+                                          hard_prediction.cols,
+                                          hard_prediction.type());
             cv::drawContours(mask, contours, i, 255, -1);
             float probability = (float)cv::mean(current_label_soft_prediction, mask)[0];
             combined_contours.push_back({label, probability, contours[i]});
@@ -315,17 +315,10 @@ std::vector<Contour> SegmentationModel::getContours(const ImageResultWithSoftPre
     return combined_contours;
 }
 
-std::unique_ptr<ImageResult> SegmentationModel::infer(const ImageInputData& inputData) {
-    auto result = BaseModel::inferImage(inputData);
-    return std::unique_ptr<ImageResult>(static_cast<ImageResult*>(result.release()));
+std::unique_ptr<Scene> SegmentationModel::infer(const ImageInputData& inputData) {
+    return BaseModel::inferImage(inputData);
 }
 
-std::vector<std::unique_ptr<ImageResult>> SegmentationModel::inferBatch(const std::vector<ImageInputData>& inputImgs) {
-    auto results = BaseModel::inferBatchImage(inputImgs);
-    std::vector<std::unique_ptr<ImageResult>> segResults;
-    segResults.reserve(results.size());
-    for (auto& result : results) {
-        segResults.emplace_back(static_cast<ImageResult*>(result.release()));
-    }
-    return segResults;
+std::vector<std::unique_ptr<Scene>> SegmentationModel::inferBatch(const std::vector<ImageInputData>& inputImgs) {
+    return BaseModel::inferBatchImage(inputImgs);
 }

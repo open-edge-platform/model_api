@@ -159,7 +159,7 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
                         throw std::runtime_error{"Failed to read the image"};
                     }
 
-                    std::unique_ptr<DetectionResult> result;
+                    std::unique_ptr<Scene> result;
                     if (modelData.tiler == "DetectionTiler") {
                         auto tiler = DetectionTiler(std::move(model), {});
                         if (modelData.input_res.height > 0 && modelData.input_res.width > 0) {
@@ -168,6 +168,7 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
                         result = tiler.run(image);
                     } else {
                         result = model->infer(image);
+
                     }
                     EXPECT_EQ(std::string{*result}, modelData.testData[i].reference[0]);
                 }
@@ -197,7 +198,7 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
                         throw std::runtime_error{"Failed to read the image"};
                     }
 
-                    std::unique_ptr<ImageResult> pred;
+                    std::unique_ptr<Scene> pred;
                     if (modelData.tiler == "SemanticSegmentationTiler") {
                         auto tiler = SemanticSegmentationTiler(std::move(model), {});
                         if (modelData.input_res.height > 0 && modelData.input_res.width > 0) {
@@ -208,11 +209,10 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
                         pred = model->infer(image);
                     }
 
-                    ImageResultWithSoftPrediction* soft = dynamic_cast<ImageResultWithSoftPrediction*>(pred.get());
-                    if (soft) {
-                        const std::vector<Contour>& contours = model->getContours(*soft);
+                    if (pred->masks.size() == 2) {
+                        cv::Mat soft = pred->masks[1].mask;
+                        const std::vector<Contour>& contours = model->getContours(pred);
                         std::stringstream ss;
-                        ss << *soft << "; ";
                         for (const Contour& contour : contours) {
                             ss << contour << ", ";
                         }
@@ -233,7 +233,7 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
                         throw std::runtime_error{"Failed to read the image"};
                     }
 
-                    std::unique_ptr<InstanceSegmentationResult> result;
+                    std::unique_ptr<Scene> result;
                     if (modelData.tiler == "InstanceSegmentationTiler") {
                         auto tiler = InstanceSegmentationTiler(std::move(model), {});
                         if (modelData.input_res.height > 0 && modelData.input_res.width > 0) {
@@ -244,29 +244,28 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
                         result = model->infer(image);
                     }
 
-                    const std::vector<SegmentedObjectWithRects>& withRects =
-                        add_rotated_rects(result->segmentedObjects);
+                    auto rotated_rects = get_rotated_rects(result->masks);
                     std::stringstream ss;
-                    for (const SegmentedObjectWithRects& obj : withRects) {
+                    for (auto& obj : rotated_rects) {
                         ss << obj << "; ";
                     }
                     size_t filled = 0;
-                    for (const cv::Mat_<std::uint8_t>& cls_map : result->saliency_map) {
+                    for (const cv::Mat& cls_map : result->saliency_maps) {
                         if (cls_map.data) {
                             ++filled;
                         }
                     }
                     ss << filled << "; ";
-                    try {
-                        ss << result->feature_vector.get_shape();
-                    } catch (ov::Exception&) {
+                    if (result->feature_vectors.empty()) {
                         ss << "[0]";
+                    } else {
+                        ss << result->feature_vectors[0].get_shape();
                     }
                     ss << "; ";
                     try {
                         // getContours() assumes each instance generates only one contour.
                         // That doesn't hold for some models
-                        for (const Contour& contour : getContours(result->segmentedObjects)) {
+                        for (const Contour& contour : getContours(result->masks)) {
                             ss << contour << "; ";
                         }
                     } catch (const std::runtime_error&) {
@@ -314,7 +313,9 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
     }
 }
 
-INSTANTIATE_TEST_SUITE_P(TestAccuracyPublic, ModelParameterizedTest, testing::ValuesIn(GetTestData(PUBLIC_SCOPE_PATH)));
+INSTANTIATE_TEST_SUITE_P(TestAccuracyPublic, ModelParameterizedTest, testing::ValuesIn(GetTestData(PUBLIC_SCOPE_PATH)), [](const testing::TestParamInfo<ModelData>& info) {
+    return std::to_string(info.index) + "_" + info.param.type;
+});
 
 class InputParser {
 public:

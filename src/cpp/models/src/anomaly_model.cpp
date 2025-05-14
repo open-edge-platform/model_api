@@ -14,7 +14,6 @@
 #include "models/input_data.h"
 #include "models/internal_model_data.h"
 #include "models/results.h"
-#include "utils/slog.hpp"
 
 std::string AnomalyModel::ModelType = "AnomalyDetection";
 
@@ -38,23 +37,15 @@ AnomalyModel::AnomalyModel(std::shared_ptr<InferenceAdapter>& adapter, const ov:
     init_from_config(configuration, adapter->getModelConfig());
 }
 
-std::unique_ptr<AnomalyResult> AnomalyModel::infer(const ImageInputData& inputData) {
-    auto result = BaseModel::inferImage(inputData);
-
-    return std::unique_ptr<AnomalyResult>(static_cast<AnomalyResult*>(result.release()));
+std::unique_ptr<Scene> AnomalyModel::infer(const ImageInputData& inputData) {
+    return BaseModel::inferImage(inputData);
 }
 
-std::vector<std::unique_ptr<AnomalyResult>> AnomalyModel::inferBatch(const std::vector<ImageInputData>& inputImgs) {
-    auto results = BaseModel::inferBatchImage(inputImgs);
-    std::vector<std::unique_ptr<AnomalyResult>> anoResults;
-    anoResults.reserve(results.size());
-    for (auto& result : results) {
-        anoResults.emplace_back(static_cast<AnomalyResult*>(result.release()));
-    }
-    return anoResults;
+std::vector<std::unique_ptr<Scene>> AnomalyModel::inferBatch(const std::vector<ImageInputData>& inputImgs) {
+    return BaseModel::inferBatchImage(inputImgs);
 }
 
-std::unique_ptr<ResultBase> AnomalyModel::postprocess(InferenceResult& infResult) {
+std::unique_ptr<Scene> AnomalyModel::postprocess(InferenceResult& infResult) {
     ov::Tensor predictions = infResult.outputsData[outputNames[0]];
     const auto& inputImgSize = infResult.internalModelData->asRef<InternalImageModelData>();
 
@@ -75,7 +66,8 @@ std::unique_ptr<ResultBase> AnomalyModel::postprocess(InferenceResult& infResult
         // find the max predicted score
         cv::minMaxLoc(anomaly_map, NULL, &pred_score);
     }
-    pred_label = labels[pred_score > imageThreshold ? 1 : 0];
+    auto label_id = pred_score > imageThreshold ? 1 : 0;
+    pred_label = labels[label_id];
 
     pred_mask = anomaly_map >= pixelThreshold;
     pred_mask.convertTo(pred_mask, CV_8UC1, 1 / 255.);
@@ -91,17 +83,31 @@ std::unique_ptr<ResultBase> AnomalyModel::postprocess(InferenceResult& infResult
     if (!anomaly_map.empty()) {
         cv::resize(anomaly_map, anomaly_map, cv::Size{inputImgSize.inputImgWidth, inputImgSize.inputImgHeight});
     }
+    auto scene = std::make_unique<Scene>(infResult.frameId, infResult.metaData);
+
+    scene->saliency_maps.push_back(anomaly_map);
+    auto label = LabelScore(label_id, pred_label, pred_score);
+    auto roi = cv::Rect(0, 0, inputImgSize.inputImgWidth, inputImgSize.inputImgHeight);
+    scene->masks.push_back(Mask(label, roi, pred_mask));
+    scene->boxes.push_back(Box(roi, {label}));
+
     if (task == "detection") {
         pred_boxes = getBoxes(pred_mask);
+
+        for (auto& rect: pred_boxes) {
+            double box_score;
+            cv::minMaxLoc(anomaly_map(rect), NULL, &box_score);
+            scene->boxes.push_back(
+                Box(
+                    rect,
+                    {LabelScore(label_id, pred_label, box_score)}
+                )
+            );
+
+        }
     }
 
-    AnomalyResult* result = new AnomalyResult(infResult.frameId, infResult.metaData);
-    result->anomaly_map = std::move(anomaly_map);
-    result->pred_score = pred_score;
-    result->pred_label = std::move(pred_label);
-    result->pred_mask = std::move(pred_mask);
-    result->pred_boxes = std::move(pred_boxes);
-    return std::unique_ptr<ResultBase>(result);
+    return scene;
 }
 
 cv::Mat AnomalyModel::normalize(cv::Mat& tensor, float threshold) {

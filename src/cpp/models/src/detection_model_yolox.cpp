@@ -126,7 +126,7 @@ std::shared_ptr<InternalModelData> ModelYoloX::preprocess(const InputData& input
     return std::make_shared<InternalScaleData>(origImg.cols, origImg.rows, scale, scale);
 }
 
-std::unique_ptr<ResultBase> ModelYoloX::postprocess(InferenceResult& infResult) {
+std::unique_ptr<Scene> ModelYoloX::postprocess(InferenceResult& infResult) {
     // Get metadata about input image shape and scale
     const auto& scale = infResult.internalModelData->asRef<InternalScaleData>();
 
@@ -136,7 +136,7 @@ std::unique_ptr<ResultBase> ModelYoloX::postprocess(InferenceResult& infResult) 
     float* outputPtr = output.data<float>();
 
     // Generate detection results
-    DetectionResult* result = new DetectionResult(infResult.frameId, infResult.metaData);
+    auto scene = std::make_unique<Scene>(infResult.frameId, infResult.metaData);
 
     // Update coordinates according to strides
     for (size_t box_index = 0; box_index < expandedStrides.size(); ++box_index) {
@@ -187,18 +187,16 @@ std::unique_ptr<ResultBase> ModelYoloX::postprocess(InferenceResult& infResult) 
     const std::vector<size_t>& keep = nms(validBoxes, scores, iou_threshold, true);
     for (size_t index : keep) {
         // Create new detected box
-        DetectedObject obj;
+        cv::Rect obj;
         obj.x = clamp(validBoxes[index].left, 0.f, static_cast<float>(scale.inputImgWidth));
         obj.y = clamp(validBoxes[index].top, 0.f, static_cast<float>(scale.inputImgHeight));
         obj.height =
             clamp(validBoxes[index].bottom - validBoxes[index].top, 0.f, static_cast<float>(scale.inputImgHeight));
         obj.width =
             clamp(validBoxes[index].right - validBoxes[index].left, 0.f, static_cast<float>(scale.inputImgWidth));
-        obj.confidence = scores[index];
-        obj.labelID = classes[index];
-        obj.label = getLabelName(classes[index]);
-        result->objects.push_back(obj);
+        scene->boxes.push_back(
+            Box(obj, {LabelScore(classes[index], getLabelName(classes[index]), scores[index])})
+        );
     }
-
-    return std::unique_ptr<ResultBase>(result);
+    return scene;
 }

@@ -14,12 +14,12 @@ public:
     SemanticSegmentationTiler(std::shared_ptr<BaseModel> model,
                               const ov::AnyMap& configuration,
                               ExecutionMode exec_mode = ExecutionMode::sync);
-    virtual std::unique_ptr<ImageResultWithSoftPrediction> run(const ImageInputData& inputData);
+    virtual std::unique_ptr<Scene> run(const ImageInputData& inputData);
     virtual ~SemanticSegmentationTiler() = default;
 
 protected:
-    virtual std::unique_ptr<ResultBase> postprocess_tile(std::unique_ptr<ResultBase>, const cv::Rect&);
-    virtual std::unique_ptr<ResultBase> merge_results(const std::vector<std::unique_ptr<ResultBase>>&,
+    virtual std::unique_ptr<Scene> postprocess_tile(std::unique_ptr<Scene>, const cv::Rect&);
+    virtual std::unique_ptr<Scene> merge_results(const std::vector<std::unique_ptr<Scene>>&,
                                                       const cv::Size&,
                                                       const std::vector<cv::Rect>&);
 

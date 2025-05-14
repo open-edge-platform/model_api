@@ -93,30 +93,33 @@ std::shared_ptr<InternalModelData> ModelSSD::preprocess(const InputData& inputDa
     return DetectionModel::preprocess(inputData, input);
 }
 
-std::unique_ptr<ResultBase> ModelSSD::postprocess(InferenceResult& infResult) {
-    std::unique_ptr<ResultBase> result = filterOutXai(outputNames).size() > 1 ? postprocessMultipleOutputs(infResult)
+std::unique_ptr<Scene> ModelSSD::postprocess(InferenceResult& infResult) {
+    std::unique_ptr<Scene> result = filterOutXai(outputNames).size() > 1 ? postprocessMultipleOutputs(infResult)
                                                                               : postprocessSingleOutput(infResult);
-    DetectionResult* cls_res = static_cast<DetectionResult*>(result.get());
     auto saliency_map_iter = infResult.outputsData.find(saliency_map_name);
     if (saliency_map_iter != infResult.outputsData.end()) {
-        cls_res->saliency_map = std::move(saliency_map_iter->second);
+        size_t shape_shift = (saliency_map_iter->second.get_shape().size() > 3) ? 1 : 0;
+        for (size_t i = 0; i < labels.size(); i++){
+            result->saliency_maps.push_back(wrap_saliency_map_tensor_to_mat(saliency_map_iter->second, shape_shift, i).clone());
+
+        }
     }
     auto feature_vector_iter = infResult.outputsData.find(feature_vector_name);
     if (feature_vector_iter != infResult.outputsData.end()) {
-        cls_res->feature_vector = std::move(feature_vector_iter->second);
+        result->feature_vectors.push_back(std::move(feature_vector_iter->second));
     }
+
     return result;
 }
 
-std::unique_ptr<ResultBase> ModelSSD::postprocessSingleOutput(InferenceResult& infResult) {
+std::unique_ptr<Scene> ModelSSD::postprocessSingleOutput(InferenceResult& infResult) {
     const std::vector<std::string> namesWithoutXai = filterOutXai(outputNames);
     assert(namesWithoutXai.size() == 1);
     const ov::Tensor& detectionsTensor = infResult.outputsData[namesWithoutXai[0]];
     NumAndStep numAndStep = fromSingleOutput(detectionsTensor.get_shape());
     const float* detections = detectionsTensor.data<float>();
 
-    DetectionResult* result = new DetectionResult(infResult.frameId, infResult.metaData);
-    auto retVal = std::unique_ptr<ResultBase>(result);
+    auto scene = std::make_unique<Scene>(infResult.frameId, infResult.metaData);
 
     const auto& internalData = infResult.internalModelData->asRef<InternalImageModelData>();
     float floatInputImgWidth = float(internalData.inputImgWidth),
@@ -141,37 +144,34 @@ std::unique_ptr<ResultBase> ModelSSD::postprocessSingleOutput(InferenceResult& i
 
         /** Filtering out objects with confidence < confidence_threshold probability **/
         if (confidence > confidence_threshold) {
-            DetectedObject desc;
-
-            desc.confidence = confidence;
-            desc.labelID = static_cast<size_t>(detections[i * numAndStep.objectSize + 1]);
-            desc.label = getLabelName(desc.labelID);
-            desc.x =
-                clamp(round((detections[i * numAndStep.objectSize + 3] * netInputWidth - padLeft) * invertedScaleX),
+            float x = clamp(round((detections[i * numAndStep.objectSize + 3] * netInputWidth - padLeft) * invertedScaleX),
                       0.f,
                       floatInputImgWidth);
-            desc.y =
-                clamp(round((detections[i * numAndStep.objectSize + 4] * netInputHeight - padTop) * invertedScaleY),
+            float y = clamp(round((detections[i * numAndStep.objectSize + 4] * netInputHeight - padTop) * invertedScaleY),
                       0.f,
                       floatInputImgHeight);
-            desc.width =
-                clamp(round((detections[i * numAndStep.objectSize + 5] * netInputWidth - padLeft) * invertedScaleX),
-                      0.f,
-                      floatInputImgWidth) -
-                desc.x;
-            desc.height =
-                clamp(round((detections[i * numAndStep.objectSize + 6] * netInputHeight - padTop) * invertedScaleY),
-                      0.f,
-                      floatInputImgHeight) -
-                desc.y;
-            result->objects.push_back(desc);
+            size_t labelID = static_cast<size_t>(detections[i * numAndStep.objectSize + 1]);
+            Box box(
+                cv::Rect(
+                    x,
+                    y,
+                    clamp(round((detections[i * numAndStep.objectSize + 5] * netInputWidth - padLeft) * invertedScaleX),
+                        0.f,
+                        floatInputImgWidth) - x,
+
+                    clamp(round((detections[i * numAndStep.objectSize + 6] * netInputHeight - padTop) * invertedScaleY),
+                        0.f,
+                        floatInputImgHeight) - y
+                ),
+                {LabelScore(labelID, getLabelName(labelID), confidence)}
+            );
+            scene->boxes.push_back(box);
         }
     }
-
-    return retVal;
+    return scene;
 }
 
-std::unique_ptr<ResultBase> ModelSSD::postprocessMultipleOutputs(InferenceResult& infResult) {
+std::unique_ptr<Scene> ModelSSD::postprocessMultipleOutputs(InferenceResult& infResult) {
     const std::vector<std::string> namesWithoutXai = filterOutXai(outputNames);
     const float* boxes = infResult.outputsData[namesWithoutXai[0]].data<float>();
     NumAndStep numAndStep = fromMultipleOutputs(infResult.outputsData[namesWithoutXai[0]].get_shape());
@@ -179,8 +179,7 @@ std::unique_ptr<ResultBase> ModelSSD::postprocessMultipleOutputs(InferenceResult
     const float* scores =
         namesWithoutXai.size() > 2 ? infResult.outputsData[namesWithoutXai[2]].data<float>() : nullptr;
 
-    DetectionResult* result = new DetectionResult(infResult.frameId, infResult.metaData);
-    auto retVal = std::unique_ptr<ResultBase>(result);
+    auto scene = std::make_unique<Scene>(infResult.frameId, infResult.metaData);
 
     const auto& internalData = infResult.internalModelData->asRef<InternalImageModelData>();
     float floatInputImgWidth = float(internalData.inputImgWidth),
@@ -200,39 +199,37 @@ std::unique_ptr<ResultBase> ModelSSD::postprocessMultipleOutputs(InferenceResult
     float widthScale = scores ? netInputWidth : 1.0f;
     float heightScale = scores ? netInputHeight : 1.0f;
 
+
     for (size_t i = 0; i < numAndStep.detectionsNum; i++) {
         float confidence = scores ? scores[i] : boxes[i * numAndStep.objectSize + 4];
 
         /** Filtering out objects with confidence < confidence_threshold probability **/
         if (confidence > confidence_threshold) {
-            DetectedObject desc;
-
-            desc.confidence = confidence;
-            desc.labelID = labels[i];
-            desc.label = getLabelName(desc.labelID);
-            desc.x = clamp_and_round((boxes[i * numAndStep.objectSize] * widthScale - padLeft) * invertedScaleX,
+            auto x = clamp_and_round((boxes[i * numAndStep.objectSize] * widthScale - padLeft) * invertedScaleX,
                                      0.f,
                                      floatInputImgWidth);
-            desc.y = clamp_and_round((boxes[i * numAndStep.objectSize + 1] * heightScale - padTop) * invertedScaleY,
+            auto y = clamp_and_round((boxes[i * numAndStep.objectSize + 1] * heightScale - padTop) * invertedScaleY,
                                      0.f,
                                      floatInputImgHeight);
-            desc.width = clamp_and_round((boxes[i * numAndStep.objectSize + 2] * widthScale - padLeft) * invertedScaleX,
+            auto width = clamp_and_round((boxes[i * numAndStep.objectSize + 2] * widthScale - padLeft) * invertedScaleX,
                                          0.f,
-                                         floatInputImgWidth) -
-                         desc.x;
-            desc.height =
+                                         floatInputImgWidth) - x;
+            auto height =
                 clamp_and_round((boxes[i * numAndStep.objectSize + 3] * heightScale - padTop) * invertedScaleY,
                                 0.f,
-                                floatInputImgHeight) -
-                desc.y;
+                                floatInputImgHeight) - y;
 
-            if (desc.width * desc.height >= box_area_threshold) {
-                result->objects.push_back(desc);
+
+            if (width * height >= box_area_threshold) {
+                scene->boxes.push_back(Box(
+                  cv::Rect(x, y, width, height),
+                  {LabelScore(labels[i], getLabelName(labels[i]), confidence)}
+                ));
             }
         }
     }
 
-    return retVal;
+    return scene;
 }
 
 void ModelSSD::prepareInputsOutputs(std::shared_ptr<ov::Model>& model) {
