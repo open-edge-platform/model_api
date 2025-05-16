@@ -29,7 +29,11 @@ message(INFO ${BINDINGS_SOURCES})
 nanobind_add_module(_vision_api NB_STATIC STABLE_ABI LTO ${BINDINGS_SOURCES} ${BINDINGS_HEADERS})
 
 set_target_properties(_vision_api PROPERTIES
-    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/src/vision_api"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
 )
 
 target_link_libraries(_vision_api PRIVATE model_api)
+
+install(TARGETS _vision_api
+    LIBRARY DESTINATION vision_api  # Same place relative to package
+)
