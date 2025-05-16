@@ -33,5 +33,3 @@ set_target_properties(_vision_api PROPERTIES
 )
 
 target_link_libraries(_vision_api PRIVATE model_api)
-
-include(opencv.cmake)
