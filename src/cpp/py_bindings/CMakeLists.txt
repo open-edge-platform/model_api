@@ -2,7 +2,17 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
+cmake_minimum_required(VERSION 3.26)
+
+if(WIN32)
+  set(CMAKE_GENERATOR_TOOLSET "v142")
+endif()
+
+
+add_subdirectory(../ model_api/cpp)
+
 set(Python_FIND_VIRTUALENV FIRST)
+project(_vision_api LANGUAGES CXX)
 find_package(Python COMPONENTS Interpreter Development REQUIRED)
 
 execute_process(
@@ -11,17 +21,19 @@ execute_process(
 find_package(nanobind CONFIG REQUIRED)
 
 
-file(GLOB BINDINGS_SOURCES ./*.cpp)
-file(GLOB BINDINGS_HEADERS ./*.hpp)
+file(GLOB BINDINGS_SOURCES src/vision_api/*.cpp)
+file(GLOB BINDINGS_HEADERS src/vision_api/*.hpp)
 
-nanobind_add_module(py_model_api NB_STATIC STABLE_ABI LTO ${BINDINGS_SOURCES} ${BINDINGS_HEADERS})
+message(INFO ${BINDINGS_SOURCES})
 
-target_link_libraries(py_model_api PRIVATE model_api)
+nanobind_add_module(_vision_api NB_STATIC STABLE_ABI LTO ${BINDINGS_SOURCES} ${BINDINGS_HEADERS})
 
-nanobind_add_stub(
-    py_model_api_stub
-    MODULE py_model_api
-    OUTPUT py_model_api.pyi
-    PYTHON_PATH $<TARGET_FILE_DIR:py_model_api>
-    DEPENDS py_model_api
+set_target_properties(_vision_api PROPERTIES
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+)
+
+target_link_libraries(_vision_api PRIVATE model_api)
+
+install(TARGETS _vision_api
+    LIBRARY DESTINATION vision_api  # Same place relative to package
 )

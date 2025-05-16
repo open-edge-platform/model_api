@@ -10,7 +10,7 @@ namespace nb = nanobind;
 void init_classification(nb::module_& m);
 void init_base_modules(nb::module_& m);
 
-NB_MODULE(py_model_api, m) {
+NB_MODULE(_vision_api, m) {
     m.doc() = "Nanobind binding for OpenVINO Vision API library";
     init_base_modules(m);
     init_classification(m);
