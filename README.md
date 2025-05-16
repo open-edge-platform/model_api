@@ -5,7 +5,7 @@
 
 <!-- markdownlint-disable MD042 -->
 
-[![openvino](https://img.shields.io/badge/openvino-2025.0-purple)]()
+[![openvino](https://img.shields.io/badge/openvino-2025.1-purple)]()
 
 <!-- markdownlint-enable  MD042 -->
 
