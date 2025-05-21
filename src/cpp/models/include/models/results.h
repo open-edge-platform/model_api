@@ -17,33 +17,16 @@
 
 struct MetaData;
 
-struct ResultBase {
-    ResultBase(int64_t frameId = -1, const std::shared_ptr<MetaData>& metaData = nullptr)
+struct InferenceResult {
+    InferenceResult(int64_t frameId = -1, const std::shared_ptr<MetaData>& metaData = nullptr)
         : frameId(frameId),
           metaData(metaData) {}
-    virtual ~ResultBase() {}
 
-    int64_t frameId;
-
-    std::shared_ptr<MetaData> metaData;
-    bool IsEmpty() {
-        return frameId < 0;
-    }
-
-    template <class T>
-    T& asRef() {
-        return dynamic_cast<T&>(*this);
-    }
-
-    template <class T>
-    const T& asRef() const {
-        return dynamic_cast<const T&>(*this);
-    }
-};
-
-struct InferenceResult : public ResultBase {
     std::shared_ptr<InternalModelData> internalModelData;
     std::map<std::string, ov::Tensor> outputsData;
+    int64_t frameId;
+    std::shared_ptr<MetaData> metaData;
+
 
     /// Returns the first output tensor
     /// This function is a useful addition to direct access to outputs list as many models have only one output
@@ -89,35 +72,22 @@ struct DetectedKeypoints {
 class Label {
 public:
     Label() {}
-    Label(int id, std::string name):  id(id), name(name) {}
+    Label(int id, std::string name, float score): id(id), name(name), score(score) {}
 
     int id;
     std::string name;
-
-    friend std::ostream& operator<< (std::ostream& os, const Label& label) {
-        return os << label.id << " (" << label.name << ")";
-    }
-};
-
-class LabelScore {
-public:
-    LabelScore() {}
-    LabelScore(int id, std::string name, float score): label(Label(id, name)), score(score) {}
-    LabelScore(Label label, float score):  label(label), score(score) {}
-
-    Label label;
     float score;
 
-    friend std::ostream& operator<< (std::ostream& os, const LabelScore& label) {
-        return os << label.label << ": " << std::fixed << std::setprecision(3) << label.score;
+    friend std::ostream& operator<< (std::ostream& os, const Label& label) {
+        return os << label.id << " (" << label.name << ")" << ": " << std::fixed << std::setprecision(3) << label.score;
     }
 };
 
 class Mask {
 public:
-    Mask(LabelScore label, cv::Rect roi, cv::Mat mask): label(label), roi(roi), mask(mask) {}
+    Mask(Label label, cv::Rect roi, cv::Mat mask): label(label), roi(roi), mask(mask) {}
 
-    LabelScore label;
+    Label label;
     cv::Rect roi;
     cv::Mat mask;
 
@@ -152,16 +122,16 @@ static inline std::vector<Contour> getContours(const std::vector<Mask>& segmente
         if (contours.size() != 1) {
             throw std::runtime_error("findContours() must have returned only one contour");
         }
-        combined_contours.push_back({obj.label.label.name, obj.label.score, contours[0]});
+        combined_contours.push_back({obj.label.name, obj.label.score, contours[0]});
     }
     return combined_contours;
 }
 
 class Box {
 public:
-    Box(cv::Rect shape, std::vector<LabelScore> labels): shape(shape), labels(labels) {}
+    Box(cv::Rect shape, std::vector<Label> labels): shape(shape), labels(labels) {}
     cv::Rect shape;
-    std::vector<LabelScore> labels;
+    std::vector<Label> labels;
 
     friend std::ostream& operator<< (std::ostream& os, const Box& box) {
 
@@ -189,7 +159,7 @@ public:
 
 class RotatedRect {
 public:
-    LabelScore label;
+    Label label;
     cv::RotatedRect shape;
 
     friend std::ostream& operator<< (std::ostream& os, const RotatedRect& box) {

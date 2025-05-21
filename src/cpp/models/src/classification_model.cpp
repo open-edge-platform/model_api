@@ -328,7 +328,7 @@ std::unique_ptr<Scene> ClassificationModel::get_multilabel_predictions(Inference
 
     auto scene = std::make_unique<Scene>(infResult.frameId, infResult.metaData);
     auto raw_scores = ov::Tensor();
-    std::vector<LabelScore> result;
+    std::vector<Label> result;
     float* raw_scoresPtr = nullptr;
     if (add_raw_scores) {
         raw_scores = ov::Tensor(logitsTensor.get_element_type(), logitsTensor.get_shape());
@@ -401,9 +401,9 @@ std::unique_ptr<Scene> ClassificationModel::get_hierarchical_predictions(Inferen
     }
 
     auto resolved_labels = resolver->resolve_labels(predicted_labels, predicted_scores);
-    std::vector<LabelScore> result;
+    std::vector<Label> result;
     for (const auto& label : resolved_labels) {
-        result.push_back(LabelScore(hierarchical_info.label_to_idx[label.first], label.first, label.second));
+        result.push_back(Label(hierarchical_info.label_to_idx[label.first], label.first, label.second));
     }
     const auto& internalData = infResult.internalModelData->asRef<InternalImageModelData>();
     cv::Rect shape(0, 0, internalData.inputImgWidth, internalData.inputImgHeight);
@@ -449,7 +449,7 @@ std::unique_ptr<Scene> ClassificationModel::get_multiclass_predictions(Inference
         scene->additional_tensors["raw_scores"] = raw_scores;
     }
 
-    std::vector<LabelScore> result;
+    std::vector<Label> result;
     for (size_t i = 0; i < scoresTensor.get_size(); ++i) {
         int ind = indicesPtr[i];
         if (ind < 0 || ind >= static_cast<int>(labels.size())) {

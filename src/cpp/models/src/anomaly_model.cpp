@@ -86,7 +86,7 @@ std::unique_ptr<Scene> AnomalyModel::postprocess(InferenceResult& infResult) {
     auto scene = std::make_unique<Scene>(infResult.frameId, infResult.metaData);
 
     scene->saliency_maps.push_back(anomaly_map);
-    auto label = LabelScore(label_id, pred_label, pred_score);
+    auto label = Label(label_id, pred_label, pred_score);
     auto roi = cv::Rect(0, 0, inputImgSize.inputImgWidth, inputImgSize.inputImgHeight);
     scene->masks.push_back(Mask(label, roi, pred_mask));
     scene->boxes.push_back(Box(roi, {label}));
@@ -100,7 +100,7 @@ std::unique_ptr<Scene> AnomalyModel::postprocess(InferenceResult& infResult) {
             scene->boxes.push_back(
                 Box(
                     rect,
-                    {LabelScore(label_id, pred_label, box_score)}
+                    {Label(label_id, pred_label, box_score)}
                 )
             );
 

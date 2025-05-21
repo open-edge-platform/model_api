@@ -195,7 +195,7 @@ std::unique_ptr<Scene> ModelYoloX::postprocess(InferenceResult& infResult) {
         obj.width =
             clamp(validBoxes[index].right - validBoxes[index].left, 0.f, static_cast<float>(scale.inputImgWidth));
         scene->boxes.push_back(
-            Box(obj, {LabelScore(classes[index], getLabelName(classes[index]), scores[index])})
+            Box(obj, {Label(classes[index], getLabelName(classes[index]), scores[index])})
         );
     }
     return scene;

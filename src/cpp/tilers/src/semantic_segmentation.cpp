@@ -90,7 +90,7 @@ std::unique_ptr<Scene> SemanticSegmentationTiler::merge_results(
 
     auto scene = std::make_unique<Scene>();
     auto roi = cv::Rect(0, 0, image_size.width, image_size.height);
-    scene->masks.push_back(Mask(LabelScore(0, "hard_prediction", 0), roi, hard_prediction));
-    scene->masks.push_back(Mask(LabelScore(0, "soft_prediction", 0), roi, merged_soft_prediction));
+    scene->masks.push_back(Mask(Label(0, "hard_prediction", 0), roi, hard_prediction));
+    scene->masks.push_back(Mask(Label(0, "soft_prediction", 0), roi, merged_soft_prediction));
     return scene;
 }

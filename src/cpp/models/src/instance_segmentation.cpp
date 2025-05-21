@@ -8,8 +8,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <fstream>
-#include <limits>
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <openvino/openvino.hpp>
@@ -322,7 +320,7 @@ std::unique_ptr<Scene> MaskRCNNModel::postprocess(InferenceResult& infResult) {
             continue;
         }
 
-        LabelScore label(labelID, getLabelName(labelID), confidence);
+        Label label(labelID, getLabelName(labelID), confidence);
 
         cv::Rect roi;
 

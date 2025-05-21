@@ -163,7 +163,7 @@ std::unique_ptr<Scene> ModelSSD::postprocessSingleOutput(InferenceResult& infRes
                         0.f,
                         floatInputImgHeight) - y
                 ),
-                {LabelScore(labelID, getLabelName(labelID), confidence)}
+                {Label(labelID, getLabelName(labelID), confidence)}
             );
             scene->boxes.push_back(box);
         }
@@ -223,7 +223,7 @@ std::unique_ptr<Scene> ModelSSD::postprocessMultipleOutputs(InferenceResult& inf
             if (width * height >= box_area_threshold) {
                 scene->boxes.push_back(Box(
                   cv::Rect(x, y, width, height),
-                  {LabelScore(labels[i], getLabelName(labels[i]), confidence)}
+                  {Label(labels[i], getLabelName(labels[i]), confidence)}
                 ));
             }
         }

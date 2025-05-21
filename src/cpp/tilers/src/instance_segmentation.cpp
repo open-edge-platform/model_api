@@ -13,8 +13,6 @@
 #include <utils/nms.hpp>
 #include <vector>
 
-#include "utils/common.hpp"
-
 namespace {
 class MaskRCNNModelParamsSetter {
 public:
@@ -76,7 +74,7 @@ std::unique_ptr<Scene> InstanceSegmentationTiler::merge_results(
 
     for (const auto& result : tiles_results) {
         for (auto& det : result->masks) {
-            all_detections.emplace_back(det.roi.x, det.roi.y, det.roi.x + det.roi.width, det.roi.y + det.roi.height, det.label.label.id);
+            all_detections.emplace_back(det.roi.x, det.roi.y, det.roi.x + det.roi.width, det.roi.y + det.roi.height, det.label.id);
             all_scores.push_back(det.label.score);
             all_detections_ptrs.push_back(det);
         }
