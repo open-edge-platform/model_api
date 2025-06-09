@@ -1,5 +1,4 @@
-
-[
+[ 
   {
     "name": "otx_models/Lite-hrnet-18.xml",
     "type": "SegmentationModel",
@@ -11,7 +10,7 @@
         ]
       }
     ]
-  },
+  }, 
   {
     "name": "otx_models/Lite-hrnet-18_mod2.xml",
     "type": "SegmentationModel",
@@ -47,7 +46,7 @@
         ]
       }
     ]
-  },
+  }, 
   {
     "name": "otx_models/is_resnet50_maskrcnn_coco_reduced.xml",
     "type": "MaskRCNNModel",

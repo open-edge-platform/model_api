@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 #include <adapters/openvino_adapter.h>
-#include <models/detection_model.h>
-#include <models/results.h>
+#include <tasks/detection.h>
+#include <tasks/results.h>
 #include <stddef.h>
 
 #include <cstdint>
@@ -30,55 +30,31 @@ int main(int argc, char* argv[]) try {
     }
 
     // Instantiate Object Detection model
-    auto model = DetectionModel::create_model(argv[1],
-                                              {},
-                                              "",
-                                              false);  // works with SSD models. Download it using Python Model API
-    // Define number of parallel infer requests. Is this number is set to 0, OpenVINO will determine it automatically to
-    // obtain optimal performance.
-    size_t num_requests = 0;
-    static ov::Core core;
-    model->load(core, "CPU", num_requests);
+    auto model = DetectionModel::load(argv[1], {});  // works with SSD models. Download it using Python Model API
+    //// Define number of parallel infer requests. Is this number is set to 0, OpenVINO will determine it automatically to
+    //// obtain optimal performance.
+    //size_t num_requests = 0;
+    //static ov::Core core;
+    //model->load(core, "CPU", num_requests);
 
-    std::cout << "Async inference will be carried out by " << model->getNumAsyncExecutors() << " parallel executors\n";
-    // Prepare batch data
-    std::vector<ImageInputData> data;
-    for (size_t i = 0; i < 3; i++) {
-        data.push_back(ImageInputData(image));
-    }
+    //std::cout << "Async inference will be carried out by " << model->getNumAsyncExecutors() << " parallel executors\n";
+    //// Prepare batch data
+    std::vector<cv::Mat> data = {image};
+    //for (size_t i = 0; i < 3; i++) {
+    //    data.push_back(ImageInputData(image));
+    //}
 
     // Batch inference is done by processing batch with num_requests parallel infer requests
     std::cout << "Starting batch inference\n";
-    auto results = model->inferBatch(data);
+    auto results = model.inferBatch(data);
 
     std::cout << "Batch mode inference results:\n";
     for (const auto& result : results) {
-        for (auto& obj : result->objects) {
+        for (auto& obj : result.objects) {
             std::cout << " " << std::left << std::setw(9) << obj.confidence << " " << obj.label << "\n";
         }
         std::cout << std::string(10, '-') << "\n";
     }
-    std::cout << "Batch mode inference done\n";
-    std::cout << "Async mode inference results:\n";
-
-    // Set callback to grab results once the inference is done
-    model->setCallback([](std::unique_ptr<ResultBase> result, const ov::AnyMap& callback_args) {
-        auto det_result = std::unique_ptr<DetectionResult>(static_cast<DetectionResult*>(result.release()));
-
-        // callback_args can contain arbitrary data
-        size_t id = callback_args.find("id")->second.as<size_t>();
-
-        std::cout << "Request with id " << id << " is finished\n";
-        for (auto& obj : det_result->objects) {
-            std::cout << " " << std::left << std::setw(9) << obj.confidence << " " << obj.label << "\n";
-        }
-        std::cout << std::string(10, '-') << "\n";
-    });
-
-    for (size_t i = 0; i < 3; i++) {
-        model->inferAsync(image, {{"id", i}});
-    }
-    model->awaitAll();
 } catch (const std::exception& error) {
     std::cerr << error.what() << '\n';
     return 1;

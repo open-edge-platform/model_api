@@ -1,0 +1,62 @@
+#pragma once
+
+#include <openvino/openvino.hpp>
+#include <opencv2/opencv.hpp>
+
+
+namespace utils {
+enum RESIZE_MODE {
+    RESIZE_FILL,
+    RESIZE_KEEP_ASPECT,
+    RESIZE_KEEP_ASPECT_LETTERBOX,
+    RESIZE_CROP,
+    NO_RESIZE,
+};
+
+std::shared_ptr<ov::Model> embedProcessing(std::shared_ptr<ov::Model>& model,
+                            const std::string& inputName,
+                            const ov::Layout&,
+                            RESIZE_MODE resize_mode,
+                            const cv::InterpolationFlags interpolationMode,
+                            const ov::Shape& targetShape,
+                            uint8_t pad_value,
+                            bool brg2rgb,
+                            const std::vector<float>& mean,
+                            const std::vector<float>& scale,
+                            const std::type_info& dtype = typeid(int));
+
+ov::preprocess::PostProcessSteps::CustomPostprocessOp createResizeGraph(RESIZE_MODE resizeMode,
+                                                                        const ov::Shape& size,
+                                                                        const cv::InterpolationFlags interpolationMode,
+                                                                        uint8_t pad_value);
+
+cv::Mat resizeImageExt(const cv::Mat& mat,
+                       int width,
+                       int height,
+                       RESIZE_MODE resizeMode = RESIZE_FILL,
+                       cv::InterpolationFlags interpolationMode = cv::INTER_LINEAR,
+                       cv::Rect* roi = nullptr,
+                       cv::Scalar BorderConstant = cv::Scalar(0, 0, 0));
+
+ov::Output<ov::Node> resizeImageGraph(const ov::Output<ov::Node>& input,
+                              const ov::Shape& size,
+                              bool keep_aspect_ratio,
+                              const cv::InterpolationFlags interpolationMode,
+                              uint8_t pad_value);
+
+ov::Output<ov::Node> fitToWindowLetterBoxGraph(const ov::Output<ov::Node>& input,
+                                       const ov::Shape& size,
+                                       const cv::InterpolationFlags interpolationMode,
+                                       uint8_t pad_value);
+
+ov::Output<ov::Node> fitToWindowLetterBoxGraph(const ov::Output<ov::Node>& input,
+                                       const ov::Shape& size,
+                                       const cv::InterpolationFlags interpolationMode,
+                                       uint8_t pad_value);
+
+ov::Output<ov::Node> cropResizeGraph(const ov::Output<ov::Node>& input,
+                             const ov::Shape& size,
+                             const cv::InterpolationFlags interpolationMode);
+ 
+
+}
