@@ -1,9 +1,10 @@
 #pragma once
 
-#include "tasks/semantic_segmentation.h"
 #include "tasks/instance_segmentation.h"
+#include "tasks/semantic_segmentation.h"
 
-inline std::string format_test_output_to_string(const InstanceSegmentation& model, const InstanceSegmentationResult& result) {
+inline std::string format_test_output_to_string(const InstanceSegmentation& model,
+                                                const InstanceSegmentationResult& result) {
     const std::vector<SegmentedObjectWithRects>& withRects = model.getRotatedRectangles(result);
     std::stringstream ss;
     for (const SegmentedObjectWithRects& obj : withRects) {
@@ -32,7 +33,6 @@ inline std::string format_test_output_to_string(const InstanceSegmentation& mode
     }
     return ss.str();
 }
-
 
 inline std::string format_test_output_to_string(SemanticSegmentation& model, const SemanticSegmentationResult& result) {
     const std::vector<Contour>& contours = model.getContours(result);

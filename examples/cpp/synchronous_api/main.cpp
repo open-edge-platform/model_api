@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <stddef.h>
 #include <tasks/detection.h>
 #include <tasks/results.h>
-#include <stddef.h>
 
 #include <cstdint>
 #include <exception>

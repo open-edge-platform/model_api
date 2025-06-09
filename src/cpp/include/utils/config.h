@@ -1,7 +1,7 @@
 #pragma once
 
-#include <openvino/openvino.hpp>
 #include <opencv2/opencv.hpp>
+#include <openvino/openvino.hpp>
 namespace utils {
 template <typename Type>
 Type get_from_any_maps(const std::string& key,
@@ -76,7 +76,6 @@ IntervalCondition makeCond(Args&&... args) {
 }
 using LayoutCondition = std::tuple<size_t /*dim index*/, IntervalCondition, std::string>;
 
-
 static inline std::tuple<bool, ov::Layout> makeGuesLayoutFrom4DShape(const ov::PartialShape& shape) {
     // at the moment we make assumption about NCHW & NHCW only
     // if hypothetical C value is less than hypothetical H and W - then
@@ -129,4 +128,4 @@ static inline ov::Layout getLayoutFromShape(const ov::PartialShape& shape) {
     throw std::runtime_error("Usupported " + std::to_string(shape.size()) + "D shape");
 }
 
-}
+}  // namespace utils

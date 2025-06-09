@@ -1,7 +1,7 @@
 #pragma once
 
-#include <cmath>
 #include <algorithm>
+#include <cmath>
 
 inline float clamp_and_round(float val, float min, float max) {
     return std::round(std::max(min, std::min(max, val)));

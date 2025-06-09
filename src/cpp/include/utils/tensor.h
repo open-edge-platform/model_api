@@ -1,7 +1,7 @@
 #pragma once
 
-#include <openvino/openvino.hpp>
 #include <opencv2/opencv.hpp>
+#include <openvino/openvino.hpp>
 
 namespace utils {
 static inline ov::Tensor wrapMat2Tensor(const cv::Mat& mat) {
@@ -38,4 +38,4 @@ static inline ov::Tensor wrapMat2Tensor(const cv::Mat& mat) {
     return ov::Tensor(precision, ov::Shape{1, height, width, channels}, SharedMatAllocator{mat});
 }
 
-}
+}  // namespace utils

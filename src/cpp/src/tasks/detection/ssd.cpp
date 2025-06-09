@@ -1,7 +1,8 @@
 #include "tasks/detection/ssd.h"
+
 #include "utils/config.h"
-#include "utils/tensor.h"
 #include "utils/math.h"
+#include "utils/tensor.h"
 
 constexpr char saliency_map_name[]{"saliency_map"};
 constexpr char feature_vector_name[]{"feature_vector"};
@@ -15,7 +16,7 @@ NumAndStep NumAndStep::fromSingleOutput(const ov::Shape& shape) {
     size_t objectSize = shape[ov::layout::width_idx(layout)];
     if (objectSize != 7) {
         throw std::logic_error("SSD single output must have 7 as a last dimension, but had " +
-                            std::to_string(objectSize));
+                               std::to_string(objectSize));
     }
     return {detectionsNum, objectSize};
 }
@@ -42,7 +43,7 @@ NumAndStep NumAndStep::fromMultipleOutputs(const ov::Shape& boxesShape) {
         return {detectionsNum, objectSize};
     }
     throw std::logic_error("Incorrect number of 'boxes' output dimensions, expected 2 or 3, but had " +
-                        std::to_string(boxesShape.size()));
+                           std::to_string(boxesShape.size()));
 }
 
 std::map<std::string, ov::Tensor> SSD::preprocess(cv::Mat image) {
@@ -78,7 +79,7 @@ cv::Size SSD::serialize(std::shared_ptr<ov::Model> ov_model) {
 
     auto input_shape = ov::Shape{shape[ov::layout::width_idx(layout)], shape[ov::layout::height_idx(layout)]};
     uint8_t pad_value = 0;
-    
+
     auto config = ov_model->has_rt_info("model_info") ? ov_model->get_rt_info<ov::AnyMap>("model_info") : ov::AnyMap{};
 
     std::vector<float> scale_values;
@@ -88,12 +89,21 @@ cv::Size SSD::serialize(std::shared_ptr<ov::Model> ov_model) {
 
     bool reverse_input_channels = false;
 
-    ov_model = utils::embedProcessing(ov_model, input_tensor.get_any_name(), layout, resize_mode, interpolation_mode, input_shape, pad_value, reverse_input_channels, mean_values, scale_values );
+    ov_model = utils::embedProcessing(ov_model,
+                                      input_tensor.get_any_name(),
+                                      layout,
+                                      resize_mode,
+                                      interpolation_mode,
+                                      input_shape,
+                                      pad_value,
+                                      reverse_input_channels,
+                                      mean_values,
+                                      scale_values);
 
     if (output_mode == SSDOutputMode::single) {
         prepareSingleOutput(ov_model);
     } else {
-        //prepareMultipleOutputs(ov_model); //This does nothing from what I can see.
+        // prepareMultipleOutputs(ov_model); //This does nothing from what I can see.
     }
 
     return cv::Size(input_shape[0], input_shape[1]);
@@ -130,18 +140,18 @@ void SSD::prepareMultipleOutputs(std::shared_ptr<ov::Model> ov_model) {
     }
     std::sort(output_names.begin(), output_names.end());
 
-    for(auto &name: output_names) {
+    for (auto& name : output_names) {
         std::cout << "output name: " << name << std::endl;
     }
 
-    //ov::preprocess::PrePostProcessor ppp(ov_model);
+    // ov::preprocess::PrePostProcessor ppp(ov_model);
 
-    //for (const auto& output_name : output_names) {
-    //    if (output_name != "labels") { //TODO: Discover why this isnt needed in original?
-    //        ppp.output(output_name).tensor().set_element_type(ov::element::f32);
-    //    }
-    //}
-    //ov_model = ppp.build();
+    // for (const auto& output_name : output_names) {
+    //     if (output_name != "labels") { //TODO: Discover why this isnt needed in original?
+    //         ppp.output(output_name).tensor().set_element_type(ov::element::f32);
+    //     }
+    // }
+    // ov_model = ppp.build();
 }
 
 std::vector<std::string> SSD::filterOutXai(const std::vector<std::string>& names) {
@@ -152,9 +162,9 @@ std::vector<std::string> SSD::filterOutXai(const std::vector<std::string>& names
     return filtered;
 }
 
-
 DetectionResult SSD::postprocess(InferenceResult& infResult) {
-    auto result = adapter->getOutputNames().size() > 1 ? postprocessMultipleOutputs(infResult) : postprocessSingleOutput(infResult);
+    auto result = adapter->getOutputNames().size() > 1 ? postprocessMultipleOutputs(infResult)
+                                                       : postprocessSingleOutput(infResult);
 
     {
         auto iter = infResult.data.find(feature_vector_name);
@@ -176,23 +186,21 @@ DetectionResult SSD::postprocess(InferenceResult& infResult) {
 DetectionResult SSD::postprocessSingleOutput(InferenceResult& infResult) {
     DetectionResult result;
 
-    //WIP
+    // WIP
 
     return result;
 }
 DetectionResult SSD::postprocessMultipleOutputs(InferenceResult& infResult) {
-
     const std::vector<std::string> namesWithoutXai = filterOutXai(adapter->getOutputNames());
     const float* boxes = infResult.data[namesWithoutXai[0]].data<float>();
     NumAndStep numAndStep = NumAndStep::fromMultipleOutputs(infResult.data[namesWithoutXai[0]].get_shape());
     const int64_t* labels = infResult.data[namesWithoutXai[1]].data<int64_t>();
-    const float* scores =
-        namesWithoutXai.size() > 2 ? infResult.data[namesWithoutXai[2]].data<float>() : nullptr;
-
+    const float* scores = namesWithoutXai.size() > 2 ? infResult.data[namesWithoutXai[2]].data<float>() : nullptr;
 
     float floatInputImgWidth = float(infResult.inputImageSize.width),
           floatInputImgHeight = float(infResult.inputImageSize.height);
-    float invertedScaleX = floatInputImgWidth / input_shape.width, invertedScaleY = floatInputImgHeight / input_shape.height;
+    float invertedScaleX = floatInputImgWidth / input_shape.width,
+          invertedScaleY = floatInputImgHeight / input_shape.height;
     int padLeft = 0, padTop = 0;
     if (utils::RESIZE_KEEP_ASPECT == resize_mode || utils::RESIZE_KEEP_ASPECT_LETTERBOX == resize_mode) {
         invertedScaleX = invertedScaleY = std::max(invertedScaleX, invertedScaleY);
@@ -206,7 +214,6 @@ DetectionResult SSD::postprocessMultipleOutputs(InferenceResult& infResult) {
     // In other multiple-outputs models coordinates are normalized to [0,netInputWidth] and [0,netInputHeight]
     float widthScale = scores ? input_shape.width : 1.0f;
     float heightScale = scores ? input_shape.height : 1.0f;
-
 
     DetectionResult result;
     for (size_t i = 0; i < numAndStep.detectionsNum; i++) {
@@ -222,12 +229,13 @@ DetectionResult SSD::postprocessMultipleOutputs(InferenceResult& infResult) {
                                      floatInputImgHeight);
             auto width = clamp_and_round((boxes[i * numAndStep.objectSize + 2] * widthScale - padLeft) * invertedScaleX,
                                          0.f,
-                                         floatInputImgWidth) - x;
+                                         floatInputImgWidth) -
+                         x;
             auto height =
                 clamp_and_round((boxes[i * numAndStep.objectSize + 3] * heightScale - padTop) * invertedScaleY,
                                 0.f,
-                                floatInputImgHeight) - y;
-
+                                floatInputImgHeight) -
+                y;
 
             if (width * height >= box_area_threshold) {
                 DetectedObject object;

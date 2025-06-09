@@ -1,7 +1,7 @@
 #pragma once
 
-#include <openvino/openvino.hpp>
 #include <opencv2/opencv.hpp>
+#include <openvino/openvino.hpp>
 
 namespace utils {
 
@@ -77,6 +77,4 @@ inline cv::Mat non_linear_normalization(cv::Mat& class_map) {
     return class_map;
 }
 
-
-
-}
+}  // namespace utils

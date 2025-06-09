@@ -2,6 +2,7 @@
 
 #include <opencv2/opencv.hpp>
 #include <openvino/openvino.hpp>
+
 #include "adapters/inference_adapter.h"
 #include "tasks/results.h"
 #include "utils/tiling.h"
@@ -16,19 +17,21 @@ public:
     virtual std::vector<ResultType> inferBatch(std::vector<cv::Mat> images) = 0;
 };
 
-template <typename ResultType> 
-class VisionPipeline: public Pipeline<ResultType> {
+template <typename ResultType>
+class VisionPipeline : public Pipeline<ResultType> {
 private:
     std::shared_ptr<InferenceAdapter> adapter;
     std::function<InferenceInput(cv::Mat)> preprocess;
     std::function<ResultType(InferenceResult)> postprocess;
+
 public:
     VisionPipeline() {}
-    VisionPipeline(
-        std::shared_ptr<InferenceAdapter> adapter, 
-        std::function<InferenceInput(cv::Mat)> preprocess,
-        std::function<ResultType(InferenceResult)> postprocess
-    ): adapter(adapter), preprocess(preprocess), postprocess(postprocess) {}
+    VisionPipeline(std::shared_ptr<InferenceAdapter> adapter,
+                   std::function<InferenceInput(cv::Mat)> preprocess,
+                   std::function<ResultType(InferenceResult)> postprocess)
+        : adapter(adapter),
+          preprocess(preprocess),
+          postprocess(postprocess) {}
 
     inline ResultType infer(cv::Mat image) {
         auto input = preprocess(image);
@@ -39,7 +42,7 @@ public:
     }
 
     inline void setCallback(std::function<void(ResultType, ov::AnyMap)> callback) {
-        adapter->setCallback([&](ov::InferRequest request, CallbackData additional_data){
+        adapter->setCallback([&](ov::InferRequest request, CallbackData additional_data) {
             InferenceResult result;
             size_t index = additional_data->at("index").as<size_t>();
             result.inputImageSize = additional_data->at("inputImageSize").as<cv::Size>();
@@ -61,7 +64,7 @@ public:
     inline std::vector<ResultType> inferBatch(std::vector<cv::Mat> images) {
         auto results = std::vector<ResultType>(images.size());
 
-        adapter->setCallback([&](ov::InferRequest request, CallbackData additional_data){
+        adapter->setCallback([&](ov::InferRequest request, CallbackData additional_data) {
             InferenceResult result;
             size_t index = additional_data->at("index").as<size_t>();
             result.inputImageSize = additional_data->at("inputImageSize").as<cv::Size>();
@@ -71,7 +74,7 @@ public:
             results[index] = postprocess(result);
         });
 
-        for(size_t i = 0; i < images.size(); i++) {
+        for (size_t i = 0; i < images.size(); i++) {
             auto input = preprocess(images[i]);
             auto additional_data = std::make_shared<ov::AnyMap>();
             additional_data->insert({"index", i});
@@ -83,36 +86,42 @@ public:
 
         return results;
     }
-
 };
 
 template <typename ResultType>
 
-class TilingPipeline: public Pipeline<ResultType> {
+class TilingPipeline : public Pipeline<ResultType> {
 private:
     std::shared_ptr<InferenceAdapter> adapter;
     utils::TilingInfo tiling_info;
     std::function<InferenceInput(cv::Mat)> preprocess;
     std::function<ResultType(InferenceResult)> postprocess;
     std::function<ResultType(ResultType&, const cv::Rect&)> postprocess_tile;
-    std::function<DetectionResult(const std::vector<DetectionResult>&, const cv::Size&, const std::vector<cv::Rect>&, const utils::TilingInfo&)> merge_tiling_results;
+    std::function<DetectionResult(const std::vector<DetectionResult>&,
+                                  const cv::Size&,
+                                  const std::vector<cv::Rect>&,
+                                  const utils::TilingInfo&)>
+        merge_tiling_results;
+
 public:
     TilingPipeline() {}
-    TilingPipeline(
-        std::shared_ptr<InferenceAdapter> adapter, 
-        utils::TilingInfo tiling_info,
-        std::function<InferenceInput(cv::Mat)> preprocess,
-        std::function<ResultType(InferenceResult)> postprocess,
-        std::function<ResultType(ResultType&, const cv::Rect&)> postprocess_tile,
-        std::function<DetectionResult(const std::vector<DetectionResult>&, const cv::Size&, const std::vector<cv::Rect>&, const utils::TilingInfo&)> merge_tiling_results
-    ):  adapter(adapter),
-        tiling_info(tiling_info),
-        preprocess(preprocess),
-        postprocess(postprocess),
-        postprocess_tile(postprocess_tile),
-        merge_tiling_results(merge_tiling_results) {}
+    TilingPipeline(std::shared_ptr<InferenceAdapter> adapter,
+                   utils::TilingInfo tiling_info,
+                   std::function<InferenceInput(cv::Mat)> preprocess,
+                   std::function<ResultType(InferenceResult)> postprocess,
+                   std::function<ResultType(ResultType&, const cv::Rect&)> postprocess_tile,
+                   std::function<DetectionResult(const std::vector<DetectionResult>&,
+                                                 const cv::Size&,
+                                                 const std::vector<cv::Rect>&,
+                                                 const utils::TilingInfo&)> merge_tiling_results)
+        : adapter(adapter),
+          tiling_info(tiling_info),
+          preprocess(preprocess),
+          postprocess(postprocess),
+          postprocess_tile(postprocess_tile),
+          merge_tiling_results(merge_tiling_results) {}
 
-   inline ResultType infer(cv::Mat image) {
+    inline ResultType infer(cv::Mat image) {
         std::vector<ResultType> tile_results;
         auto tile_coords = tile(image.size());
 
@@ -129,9 +138,7 @@ public:
         return merge_tiling_results(tile_results, image.size(), tile_coords, tiling_info);
     }
 
-    inline void setCallback(std::function<void(ResultType, ov::AnyMap)> callback) {
-
-    }
+    inline void setCallback(std::function<void(ResultType, ov::AnyMap)> callback) {}
 
     inline void inferAsync(cv::Mat image, ov::AnyMap user_data) {
         throw std::runtime_error("No inferAsync for tiling yet.");
@@ -142,9 +149,9 @@ public:
         std::vector<ResultType> output(images.size());
         std::vector<std::vector<cv::Rect>> tile_coordinates(images.size());
 
-        adapter->setCallback([&](ov::InferRequest request, CallbackData additional_data){
-           InferenceResult result;
-           size_t index = additional_data->at("index").as<size_t>();
+        adapter->setCallback([&](ov::InferRequest request, CallbackData additional_data) {
+            InferenceResult result;
+            size_t index = additional_data->at("index").as<size_t>();
             result.inputImageSize = additional_data->at("inputImageSize").as<cv::Size>();
             auto coord = additional_data->at("tileCoord").as<cv::Rect>();
             for (const auto& item : adapter->getOutputNames()) {
@@ -155,7 +162,7 @@ public:
             tile_coordinates[index].push_back(coord);
         });
 
-        for(size_t i = 0; i < images.size(); i++) {
+        for (size_t i = 0; i < images.size(); i++) {
             auto tile_coords = tile(images[i].size());
 
             for (const auto& coord : tile_coords) {
@@ -169,8 +176,11 @@ public:
             }
         }
         adapter->awaitAll();
-        for(size_t i = 0; i < images.size(); i++) {
-            output[i] = merge_tiling_results(tile_results_for_all_images[i], images[i].size(), tile_coordinates[i], tiling_info);
+        for (size_t i = 0; i < images.size(); i++) {
+            output[i] = merge_tiling_results(tile_results_for_all_images[i],
+                                             images[i].size(),
+                                             tile_coordinates[i],
+                                             tiling_info);
         }
 
         return output;
@@ -204,13 +214,13 @@ private:
                 int loc_h = static_cast<int>(j * tile_step);
                 int loc_w = static_cast<int>(i * tile_step);
 
-                coords.push_back(cv::Rect(loc_w,
-                                        loc_h,
-                                        std::min(static_cast<int>(tiling_info.tile_size), image_size.width - loc_w),
-                                        std::min(static_cast<int>(tiling_info.tile_size), image_size.height - loc_h)));
+                coords.push_back(
+                    cv::Rect(loc_w,
+                             loc_h,
+                             std::min(static_cast<int>(tiling_info.tile_size), image_size.width - loc_w),
+                             std::min(static_cast<int>(tiling_info.tile_size), image_size.height - loc_h)));
             }
         }
         return coords;
     }
-
 };

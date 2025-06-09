@@ -1,4 +1,5 @@
 #include "utils/preprocessing.h"
+
 #include <openvino/opsets/opset1.hpp>
 #include <openvino/opsets/opset10.hpp>
 #include <openvino/opsets/opset4.hpp>
@@ -7,16 +8,16 @@ using namespace ov;
 
 namespace utils {
 std::shared_ptr<ov::Model> embedProcessing(std::shared_ptr<ov::Model>& model,
-                                            const std::string& inputName,
-                                            const ov::Layout& layout,
-                                            const RESIZE_MODE resize_mode,
-                                            const cv::InterpolationFlags interpolationMode,
-                                            const ov::Shape& targetShape,
-                                            uint8_t pad_value,
-                                            bool brg2rgb,
-                                            const std::vector<float>& mean,
-                                            const std::vector<float>& scale,
-                                            const std::type_info& dtype) {
+                                           const std::string& inputName,
+                                           const ov::Layout& layout,
+                                           const RESIZE_MODE resize_mode,
+                                           const cv::InterpolationFlags interpolationMode,
+                                           const ov::Shape& targetShape,
+                                           uint8_t pad_value,
+                                           bool brg2rgb,
+                                           const std::vector<float>& mean,
+                                           const std::vector<float>& scale,
+                                           const std::type_info& dtype) {
     ov::preprocess::PrePostProcessor ppp(model);
     // Change the input type to the 8-bit image
     if (dtype == typeid(int)) {
@@ -49,13 +50,12 @@ std::shared_ptr<ov::Model> embedProcessing(std::shared_ptr<ov::Model>& model,
     }
 
     return ppp.build();
-
 }
 
 ov::preprocess::PostProcessSteps::CustomPostprocessOp createResizeGraph(RESIZE_MODE resizeMode,
-                                                                    const ov::Shape& size,
-                                                                    const cv::InterpolationFlags interpolationMode,
-                                                                    uint8_t pad_value) {
+                                                                        const ov::Shape& size,
+                                                                        const cv::InterpolationFlags interpolationMode,
+                                                                        uint8_t pad_value) {
     switch (resizeMode) {
     case RESIZE_FILL:
         return [=](const ov::Output<ov::Node>& node) {
@@ -351,4 +351,4 @@ Output<Node> cropResizeGraph(const ov::Output<ov::Node>& input,
     return std::make_shared<opset10::Interpolate>(cropped_frame, target_size, scales, axes, attrs);
 }
 
-}
+}  // namespace utils

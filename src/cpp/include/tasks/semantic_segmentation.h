@@ -1,6 +1,6 @@
 #pragma once
-#include <openvino/openvino.hpp>
 #include <opencv2/opencv.hpp>
+#include <openvino/openvino.hpp>
 
 #include "adapters/inference_adapter.h"
 #include "tasks/results.h"
@@ -11,11 +11,15 @@ class SemanticSegmentation {
 public:
     VisionPipeline<SemanticSegmentationResult> pipeline;
     std::shared_ptr<InferenceAdapter> adapter;
-    SemanticSegmentation(std::shared_ptr<InferenceAdapter> adapter): adapter(adapter) {
-        pipeline = VisionPipeline<SemanticSegmentationResult>(adapter, 
-            [&](cv::Mat image) { return preprocess(image);},
-            [&](InferenceResult result) { return postprocess(result);}
-        );
+    SemanticSegmentation(std::shared_ptr<InferenceAdapter> adapter) : adapter(adapter) {
+        pipeline = VisionPipeline<SemanticSegmentationResult>(
+            adapter,
+            [&](cv::Mat image) {
+                return preprocess(image);
+            },
+            [&](InferenceResult result) {
+                return postprocess(result);
+            });
 
         auto config = adapter->getModelConfig();
         auto iter = config.find("labels");
@@ -38,7 +42,6 @@ public:
                 blur_strength = iter->second.as<int>();
             }
         }
-
     }
 
     static cv::Size serialize(std::shared_ptr<ov::Model>& ov_model);
@@ -52,10 +55,11 @@ public:
     void inferAsync(cv::Mat image, ov::AnyMap user_data);
     void setCallback(std::function<void(SemanticSegmentationResult, ov::AnyMap)>);
     std::vector<SemanticSegmentationResult> inferBatch(std::vector<cv::Mat> image);
+
 private:
     cv::Mat create_hard_prediction_from_soft_prediction(cv::Mat, float threshold, int blur_strength);
 
-    //from config
+    // from config
     int blur_strength = -1;
     float soft_threshold = -std::numeric_limits<float>::infinity();
     bool return_soft_prediction = true;

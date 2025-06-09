@@ -1,17 +1,19 @@
 
 #include "tasks/detection.h"
+
+#include "adapters/openvino_adapter.h"
 #include "tasks/detection/ssd.h"
 #include "utils/config.h"
-#include "utils/tensor.h"
 #include "utils/nms.h"
-#include "adapters/openvino_adapter.h"
+#include "utils/tensor.h"
 
 DetectionModel DetectionModel::load(const std::string& model_path, const ov::AnyMap& configuration) {
     auto core = ov::Core();
     std::shared_ptr<ov::Model> model = core.read_model(model_path);
 
     if (model->has_rt_info("model_info", "model_type")) {
-        std::cout << "has model type in info: " << model->get_rt_info<std::string>("model_info", "model_type") << std::endl;
+        std::cout << "has model type in info: " << model->get_rt_info<std::string>("model_info", "model_type")
+                  << std::endl;
     } else {
         throw std::runtime_error("Incorrect or unsupported model_type");
     }
@@ -21,7 +23,7 @@ DetectionModel DetectionModel::load(const std::string& model_path, const ov::Any
         std::cout << "model already was serialized" << std::endl;
         origin_input_shape = utils::get_input_shape_from_model_info(model);
     } else {
-        origin_input_shape = SSD::serialize(model); 
+        origin_input_shape = SSD::serialize(model);
     }
     auto adapter = std::make_shared<OpenVINOInferenceAdapter>();
     adapter->loadModel(model, core, "AUTO");
@@ -36,7 +38,7 @@ DetectionResult DetectionModel::postprocess(InferenceResult result) {
     return algorithm->postprocess(result);
 }
 
-DetectionResult DetectionModel::postprocess_tile(DetectionResult& result, const cv::Rect& coord){
+DetectionResult DetectionModel::postprocess_tile(DetectionResult& result, const cv::Rect& coord) {
     for (auto& det : result.objects) {
         det.x += coord.x;
         det.y += coord.y;
@@ -45,7 +47,10 @@ DetectionResult DetectionModel::postprocess_tile(DetectionResult& result, const 
     return result;
 }
 
-DetectionResult DetectionModel::merge_tiling_results(const std::vector<DetectionResult>& tiles_results, const cv::Size& image_size, const std::vector<cv::Rect>& tile_coords, const utils::TilingInfo& tiling_info) {
+DetectionResult DetectionModel::merge_tiling_results(const std::vector<DetectionResult>& tiles_results,
+                                                     const cv::Size& image_size,
+                                                     const std::vector<cv::Rect>& tile_coords,
+                                                     const utils::TilingInfo& tiling_info) {
     size_t max_pred_number = 200;
 
     DetectionResult result;
@@ -100,9 +105,11 @@ DetectionResult DetectionModel::merge_tiling_results(const std::vector<Detection
     }
 
     return result;
-
 }
-ov::Tensor DetectionModel::merge_saliency_maps(const std::vector<DetectionResult>& tiles_results, const cv::Size& image_size, const std::vector<cv::Rect>& tile_coords, const utils::TilingInfo& tiling_info) {
+ov::Tensor DetectionModel::merge_saliency_maps(const std::vector<DetectionResult>& tiles_results,
+                                               const cv::Size& image_size,
+                                               const std::vector<cv::Rect>& tile_coords,
+                                               const utils::TilingInfo& tiling_info) {
     std::vector<ov::Tensor> all_saliency_maps;
     all_saliency_maps.reserve(tiles_results.size());
     for (const auto& result : tiles_results) {
@@ -137,7 +144,8 @@ ov::Tensor DetectionModel::merge_saliency_maps(const std::vector<DetectionResult
     size_t start_idx = tiling_info.tile_with_full_image ? 1 : 0;
     for (size_t i = start_idx; i < all_saliency_maps.size(); ++i) {
         for (size_t class_idx = 0; class_idx < num_classes; ++class_idx) {
-            auto current_cls_map_mat = utils::wrap_saliency_map_tensor_to_mat(all_saliency_maps[i], shape_shift, class_idx);
+            auto current_cls_map_mat =
+                utils::wrap_saliency_map_tensor_to_mat(all_saliency_maps[i], shape_shift, class_idx);
             cv::Mat current_cls_map_mat_float;
             current_cls_map_mat.convertTo(current_cls_map_mat_float, CV_32F);
 
@@ -191,7 +199,6 @@ ov::Tensor DetectionModel::merge_saliency_maps(const std::vector<DetectionResult
 
     return merged_map;
 }
-
 
 DetectionResult DetectionModel::infer(cv::Mat image) {
     return pipeline->infer(image);

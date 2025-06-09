@@ -1,9 +1,10 @@
 #include "tasks/instance_segmentation.h"
-#include "utils/tensor.h"
-#include "utils/preprocessing.h"
+
 #include "adapters/openvino_adapter.h"
-#include "utils/math.h"
 #include "utils/config.h"
+#include "utils/math.h"
+#include "utils/preprocessing.h"
+#include "utils/tensor.h"
 
 constexpr char saliency_map_name[]{"saliency_map"};
 constexpr char feature_vector_name[]{"feature_vector"};
@@ -116,7 +117,6 @@ cv::Mat segm_postprocess(const SegmentedObject& box, const cv::Mat& unpadded, in
 }
 
 cv::Size InstanceSegmentation::serialize(std::shared_ptr<ov::Model>& ov_model) {
-
     return {};
 }
 
@@ -125,7 +125,8 @@ InstanceSegmentation InstanceSegmentation::load(const std::string& model_path) {
     std::shared_ptr<ov::Model> model = core.read_model(model_path);
 
     if (model->has_rt_info("model_info", "model_type")) {
-        std::cout << "has model type in info: " << model->get_rt_info<std::string>("model_info", "model_type") << std::endl;
+        std::cout << "has model type in info: " << model->get_rt_info<std::string>("model_info", "model_type")
+                  << std::endl;
     } else {
         throw std::runtime_error("Incorrect or unsupported model_type");
     }
@@ -135,12 +136,11 @@ InstanceSegmentation InstanceSegmentation::load(const std::string& model_path) {
         std::cout << "model already was serialized" << std::endl;
         origin_input_shape = utils::get_input_shape_from_model_info(model);
     } else {
-        origin_input_shape = serialize(model); 
+        origin_input_shape = serialize(model);
     }
     auto adapter = std::make_shared<OpenVINOInferenceAdapter>();
     adapter->loadModel(model, core, "AUTO");
     return InstanceSegmentation(adapter, origin_input_shape);
-
 }
 
 InstanceSegmentationResult InstanceSegmentation::infer(cv::Mat image) {
@@ -168,7 +168,8 @@ std::map<std::string, ov::Tensor> InstanceSegmentation::preprocess(cv::Mat image
 InstanceSegmentationResult InstanceSegmentation::postprocess(InferenceResult& infResult) {
     float floatInputImgWidth = float(infResult.inputImageSize.width),
           floatInputImgHeight = float(infResult.inputImageSize.height);
-    float invertedScaleX = floatInputImgWidth / input_shape.width, invertedScaleY = floatInputImgHeight / input_shape.height;
+    float invertedScaleX = floatInputImgWidth / input_shape.width,
+          invertedScaleY = floatInputImgHeight / input_shape.height;
     int padLeft = 0, padTop = 0;
     auto resizeMode = utils::RESIZE_FILL;
     if (utils::RESIZE_KEEP_ASPECT == resizeMode || utils::RESIZE_KEEP_ASPECT_LETTERBOX == resizeMode) {
@@ -225,7 +226,8 @@ InstanceSegmentationResult InstanceSegmentation::postprocess(InferenceResult& in
         cv::Mat raw_cls_mask{masks_size, CV_32F, masks + masks_size.area() * i};
         cv::Mat resized_mask;
         if (postprocess_semantic_masks || has_feature_vector_name) {
-            resized_mask = segm_postprocess(obj, raw_cls_mask, infResult.inputImageSize.height, infResult.inputImageSize.width);
+            resized_mask =
+                segm_postprocess(obj, raw_cls_mask, infResult.inputImageSize.height, infResult.inputImageSize.width);
         } else {
             resized_mask = raw_cls_mask;
         }
@@ -244,7 +246,8 @@ InstanceSegmentationResult InstanceSegmentation::postprocess(InferenceResult& in
     return result;
 }
 
-std::vector<SegmentedObjectWithRects> InstanceSegmentation::getRotatedRectangles(const InstanceSegmentationResult& result) {
+std::vector<SegmentedObjectWithRects> InstanceSegmentation::getRotatedRectangles(
+    const InstanceSegmentationResult& result) {
     std::vector<SegmentedObjectWithRects> objects_with_rects;
     objects_with_rects.reserve(result.segmentedObjects.size());
     for (const SegmentedObject& segmented_object : result.segmentedObjects) {
@@ -267,7 +270,7 @@ std::vector<SegmentedObjectWithRects> InstanceSegmentation::getRotatedRectangles
     return objects_with_rects;
 }
 
-std::vector<Contour> InstanceSegmentation::getContours(const std::vector<SegmentedObject>& objects){
+std::vector<Contour> InstanceSegmentation::getContours(const std::vector<SegmentedObject>& objects) {
     std::vector<Contour> combined_contours;
     std::vector<std::vector<cv::Point>> contours;
     for (const SegmentedObject& obj : objects) {

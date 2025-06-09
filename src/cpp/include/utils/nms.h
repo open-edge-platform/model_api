@@ -94,10 +94,10 @@ std::vector<size_t> nms(const std::vector<Anchor>& boxes,
 }
 
 inline std::vector<size_t> multiclass_nms(const std::vector<AnchorLabeled>& boxes,
-                                   const std::vector<float>& scores,
-                                   const float iou_threshold = 0.45f,
-                                   bool includeBoundaries = false,
-                                   size_t maxNum = 200) {
+                                          const std::vector<float>& scores,
+                                          const float iou_threshold = 0.45f,
+                                          bool includeBoundaries = false,
+                                          size_t maxNum = 200) {
     std::vector<Anchor> boxes_copy;
     boxes_copy.reserve(boxes.size());
 

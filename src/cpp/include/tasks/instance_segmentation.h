@@ -1,9 +1,10 @@
 #pragma once
 
-#include <openvino/openvino.hpp>
 #include <opencv2/opencv.hpp>
-#include "tasks/results.h"
+#include <openvino/openvino.hpp>
+
 #include "adapters/inference_adapter.h"
+#include "tasks/results.h"
 #include "utils/vision_pipeline.h"
 
 class InstanceSegmentation {
@@ -11,11 +12,17 @@ public:
     std::shared_ptr<InferenceAdapter> adapter;
     VisionPipeline<InstanceSegmentationResult> pipeline;
 
-    InstanceSegmentation(std::shared_ptr<InferenceAdapter> adapter, cv::Size input_shape): adapter(adapter), input_shape(input_shape) {
-        pipeline = VisionPipeline<InstanceSegmentationResult>(adapter, 
-            [&](cv::Mat image) { return preprocess(image);},
-            [&](InferenceResult result) { return postprocess(result);}
-        );
+    InstanceSegmentation(std::shared_ptr<InferenceAdapter> adapter, cv::Size input_shape)
+        : adapter(adapter),
+          input_shape(input_shape) {
+        pipeline = VisionPipeline<InstanceSegmentationResult>(
+            adapter,
+            [&](cv::Mat image) {
+                return preprocess(image);
+            },
+            [&](InferenceResult result) {
+                return postprocess(result);
+            });
 
         auto config = adapter->getModelConfig();
         auto iter = config.find("labels");

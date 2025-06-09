@@ -1,14 +1,12 @@
 #pragma once
 
 #include <openvino/openvino.hpp>
-#include "adapters/inference_adapter.h"
-#include "utils/preprocessing.h"
-#include "tasks/results.h"
 
-enum SSDOutputMode { 
-    single,
-    multi
-};
+#include "adapters/inference_adapter.h"
+#include "tasks/results.h"
+#include "utils/preprocessing.h"
+
+enum SSDOutputMode { single, multi };
 
 class NumAndStep {
 public:
@@ -24,7 +22,7 @@ class SSD {
 public:
     std::shared_ptr<InferenceAdapter> adapter;
 
-    SSD(std::shared_ptr<InferenceAdapter> adapter, cv::Size input_shape): adapter(adapter), input_shape(input_shape) {
+    SSD(std::shared_ptr<InferenceAdapter> adapter, cv::Size input_shape) : adapter(adapter), input_shape(input_shape) {
         auto config = adapter->getModelConfig();
         {
             auto iter = config.find("labels");
@@ -47,6 +45,7 @@ public:
     static cv::Size serialize(std::shared_ptr<ov::Model> ov_model);
 
     SSDOutputMode output_mode;
+
 private:
     static void prepareSingleOutput(std::shared_ptr<ov::Model> ov_model);
     static void prepareMultipleOutputs(std::shared_ptr<ov::Model> ov_model);

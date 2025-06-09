@@ -1,13 +1,12 @@
 #pragma once
 
-#include <openvino/openvino.hpp>
 #include <opencv2/opencv.hpp>
+#include <openvino/openvino.hpp>
 
 class InferenceResult {
 public:
     std::map<std::string, ov::Tensor> data;
     cv::Size inputImageSize;
- 
 };
 
 struct DetectedObject : public cv::Rect2f {
@@ -62,7 +61,6 @@ struct Contour {
     }
 };
 
-
 struct SemanticSegmentationResult {
     SemanticSegmentationResult() {}
     cv::Mat resultImage;
@@ -108,7 +106,6 @@ struct SemanticSegmentationResult {
             os << "[0]";
         }
         return os;
-
     }
     explicit operator std::string() {
         std::stringstream ss;
@@ -138,7 +135,6 @@ struct SegmentedObjectWithRects : SegmentedObject {
         return os;
     }
 };
-
 
 struct InstanceSegmentationResult {
     std::vector<SegmentedObject> segmentedObjects;

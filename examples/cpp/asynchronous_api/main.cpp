@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 #include <adapters/openvino_adapter.h>
+#include <stddef.h>
 #include <tasks/detection.h>
 #include <tasks/results.h>
-#include <stddef.h>
 
 #include <cstdint>
 #include <exception>
@@ -31,20 +31,7 @@ int main(int argc, char* argv[]) try {
 
     // Instantiate Object Detection model
     auto model = DetectionModel::load(argv[1], {});  // works with SSD models. Download it using Python Model API
-    //// Define number of parallel infer requests. Is this number is set to 0, OpenVINO will determine it automatically to
-    //// obtain optimal performance.
-    //size_t num_requests = 0;
-    //static ov::Core core;
-    //model->load(core, "CPU", num_requests);
-
-    //std::cout << "Async inference will be carried out by " << model->getNumAsyncExecutors() << " parallel executors\n";
-    //// Prepare batch data
     std::vector<cv::Mat> data = {image};
-    //for (size_t i = 0; i < 3; i++) {
-    //    data.push_back(ImageInputData(image));
-    //}
-
-    // Batch inference is done by processing batch with num_requests parallel infer requests
     std::cout << "Starting batch inference\n";
     auto results = model.inferBatch(data);
 
