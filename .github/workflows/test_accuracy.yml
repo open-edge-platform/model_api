@@ -42,7 +42,7 @@ jobs:
           mkdir build && cd build
           pip install nanobind==2.4.0
           pip install typing_extensions==4.12.2
-          cmake ../tests/cpp/accuracy/
+          cmake ../tests/cpp
           make -j
       - name: Run CPP Test
         run: |
