@@ -209,9 +209,56 @@ INSTANTIATE_TEST_SUITE_P(TestAccuracy,
                              return std::to_string(info.index) + "_" + info.param.type;  // So test name will be "case1"
                          });
 
+class InputParser {
+public:
+    InputParser(int& argc, char** argv) {
+        for (int i = 1; i < argc; ++i)
+            this->tokens.push_back(std::string(argv[i]));
+    }
+
+    const std::string& getCmdOption(const std::string& option) const {
+        std::vector<std::string>::const_iterator itr;
+        itr = std::find(this->tokens.begin(), this->tokens.end(), option);
+        if (itr != this->tokens.end() && ++itr != this->tokens.end()) {
+            return *itr;
+        }
+        static const std::string empty_string("");
+        return empty_string;
+    }
+
+    bool cmdOptionExists(const std::string& option) const {
+        return std::find(this->tokens.begin(), this->tokens.end(), option) != this->tokens.end();
+    }
+
+private:
+    std::vector<std::string> tokens;
+};
+
+void print_help(const char* program_name) {
+    std::cout << "Usage: " << program_name << " -p <path_to_public_scope.json> -d <path_to_data>" << std::endl;
+}
+
 int main(int argc, char** argv) {
-    PUBLIC_SCOPE_PATH = argv[1];
-    DATA_DIR = argv[2];
+    InputParser input(argc, argv);
+
+    if (input.cmdOptionExists("-h")) {
+        print_help(argv[0]);
+        return 1;
+    }
+    const std::string& public_scope = input.getCmdOption("-p");
+    if (!public_scope.empty()) {
+        PUBLIC_SCOPE_PATH = public_scope;
+    } else {
+        print_help(argv[0]);
+        return 1;
+    }
+    const std::string& data_dir = input.getCmdOption("-d");
+    if (!data_dir.empty()) {
+        DATA_DIR = data_dir;
+    } else {
+        print_help(argv[0]);
+        return 1;
+    }
 
     testing::InitGoogleTest(&argc, argv);
 
