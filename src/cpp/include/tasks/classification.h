@@ -42,6 +42,7 @@ public:
         multilabel = utils::get_from_any_maps("multilabel", config, {}, multilabel);
         hierarchical = utils::get_from_any_maps("hierarchical", config, {}, hierarchical);
         output_raw_scores = utils::get_from_any_maps("output_raw_scores", config, {}, output_raw_scores);
+        confidence_threshold = utils::get_from_any_maps("confidence_threshold", config, {}, confidence_threshold);
 
         //{
         //    auto iter = config.find("confidence_threshold");
@@ -69,7 +70,7 @@ private:
 private:
     cv::Size input_shape;
     std::vector<std::string> labels;
-    //float confidence_threshold = 0.5f;
+    float confidence_threshold = 0.5f;
 
     bool multilabel = false;
     bool hierarchical = false;

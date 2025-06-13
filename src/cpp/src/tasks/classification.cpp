@@ -12,6 +12,10 @@ namespace {
     constexpr char indices_name[]{"indices"};
     constexpr char raw_scores_name[]{"raw_scores"};
     constexpr char scores_name[]{"scores"};
+    
+    float sigmoid(float x) noexcept {
+        return 1.0f / (1.0f + std::exp(-x));
+    }
 }
 
 cv::Size Classification::serialize(std::shared_ptr<ov::Model>& ov_model) {
@@ -71,6 +75,31 @@ ClassificationResult Classification::postprocess(InferenceResult& infResult) {
 
 
 ClassificationResult Classification::get_multilabel_predictions(InferenceResult& infResult, bool add_raw_scores) {
+    auto logitsTensorName = adapter->getOutputNames().front();
+    const ov::Tensor& logitsTensor = infResult.data.find(logitsTensorName)->second;
+    const float* logitsPtr = logitsTensor.data<float>();
+
+    ClassificationResult result;
+    auto raw_scores = ov::Tensor();
+    float* raw_scoresPtr = nullptr;
+    if (add_raw_scores) {
+        raw_scores = ov::Tensor(logitsTensor.get_element_type(), logitsTensor.get_shape());
+        raw_scoresPtr = raw_scores.data<float>();
+        result.raw_scores = raw_scores;
+    }
+
+    result.topLabels.reserve(labels.size());
+    for (size_t i = 0; i < labels.size(); ++i) {
+        float score = sigmoid(logitsPtr[i]);
+        if (score > confidence_threshold) {
+            result.topLabels.emplace_back(i, labels[i], score);
+        }
+        if (add_raw_scores) {
+            raw_scoresPtr[i] = score;
+        }
+    }
+
+    return result;
 
 }
 
@@ -103,5 +132,5 @@ ClassificationResult Classification::get_multiclass_predictions(InferenceResult&
 }
 
 ClassificationResult Classification::get_hierarchical_predictions(InferenceResult& infResult, bool add_raw_scores) {
-
+    return {};
 }
