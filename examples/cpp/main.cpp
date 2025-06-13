@@ -4,8 +4,8 @@
  */
 
 #include <stddef.h>
-#include <tasks/detection.h>
 #include <tasks/classification.h>
+#include <tasks/detection.h>
 #include <tasks/results.h>
 
 #include <cstdint>
@@ -38,4 +38,5 @@ int main(int argc, char* argv[]) {
 
     //// Process detections
     std::cout << result << std::endl;
+    std::cout << "expected: " << std::endl << "1 (bicycle): 0.825, 11 (dog): 0.873, 14 (person): 0.824, [0], [0], [0]" << std::endl;
 }

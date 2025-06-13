@@ -9,12 +9,10 @@
 #include <openvino/openvino.hpp>
 
 #include "adapters/inference_adapter.h"
-
-#include "tasks/results.h"
 #include "tasks/classification/resolvers.h"
-
-#include "utils/vision_pipeline.h"
+#include "tasks/results.h"
 #include "utils/config.h"
+#include "utils/vision_pipeline.h"
 
 class Classification {
 public:
@@ -35,13 +33,8 @@ public:
 
         auto config = adapter->getModelConfig();
         labels = utils::get_from_any_maps("labels", config, {}, labels);
-        //auto iter = config.find("labels");
-        //if (iter != config.end()) {
-        //    labels = iter->second.as<std::vector<std::string>>();
-        //} else {
-        //    std::cout << "could not find labels from model config" << std::endl;
-        //}
 
+        topk = utils::get_from_any_maps("topk", config, {}, topk);
         multilabel = utils::get_from_any_maps("multilabel", config, {}, multilabel);
         output_raw_scores = utils::get_from_any_maps("output_raw_scores", config, {}, output_raw_scores);
         confidence_threshold = utils::get_from_any_maps("confidence_threshold", config, {}, confidence_threshold);
@@ -61,16 +54,8 @@ public:
                 throw std::runtime_error("Wrong hierarchical labels postprocessing type");
             }
         }
-
-
-
-        //{
-        //    auto iter = config.find("confidence_threshold");
-        //    if (iter != config.end()) {
-        //        confidence_threshold = iter->second.as<float>();
-        //    }
-        //}
     }
+
     static cv::Size serialize(std::shared_ptr<ov::Model>& ov_model);
     static Classification load(const std::string& model_path);
 
@@ -89,6 +74,9 @@ private:
 
     ov::Tensor reorder_saliency_maps(const ov::Tensor& source_maps);
 
+    // multiclass serialization step
+    static void addOrFindSoftmaxAndTopkOutputs(std::shared_ptr<ov::Model>& model, size_t topk, bool add_raw_scores);
+
 private:
     cv::Size input_shape;
     std::vector<std::string> labels;
@@ -98,11 +86,10 @@ private:
     bool hierarchical = false;
     bool output_raw_scores = false;
 
-    //hierarchical
+    // hierarchical
+    size_t topk = 1;
     std::string hierarchical_config;
     std::string hierarchical_postproc = "greedy";
     HierarchicalConfig hierarchical_info;
     std::unique_ptr<GreedyLabelsResolver> resolver;
-
 };
-

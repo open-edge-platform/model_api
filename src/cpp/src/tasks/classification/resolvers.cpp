@@ -1,7 +1,7 @@
-#include <nlohmann/json.hpp>
-#include <deque>
-
 #include "tasks/classification/resolvers.h"
+
+#include <deque>
+#include <nlohmann/json.hpp>
 
 HierarchicalConfig::HierarchicalConfig(const std::string& json_repr) {
     nlohmann::json data = nlohmann::json::parse(json_repr);

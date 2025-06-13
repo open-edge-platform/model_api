@@ -4,8 +4,8 @@
  */
 #include <map>
 #include <string>
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
 struct HierarchicalConfig {
     std::map<std::string, int> label_to_idx;

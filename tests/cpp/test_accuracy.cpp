@@ -7,8 +7,8 @@
 #include <thread>
 
 #include "matchers.h"
-#include "tasks/detection.h"
 #include "tasks/classification.h"
+#include "tasks/detection.h"
 #include "tasks/instance_segmentation.h"
 #include "tasks/semantic_segmentation.h"
 
@@ -94,7 +94,7 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
                 cv::resize(image, image, data.input_res);
             }
             auto result = model.infer(image);
-            EXPECT_EQ(std::string{result}, test_data.reference[0]) << "hello world";
+            EXPECT_EQ(std::string{result}, test_data.reference[0]);
         }
 
     } else if (data.type == "SegmentationModel") {
@@ -103,7 +103,13 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
     } else if (data.type == "MaskRCNNModel") {
         GTEST_SKIP();
     } else if (data.type == "ClassificationModel") {
-        GTEST_SKIP();
+        auto model = Classification::load(model_path);
+        for (auto& test_data : data.test_data) {
+            std::string image_path = DATA_DIR + '/' + test_data.image;
+            cv::Mat image = cv::imread(image_path);
+            auto result = model.infer(image);
+            EXPECT_EQ(std::string{result}, test_data.reference[0]);
+        }
     } else {
         FAIL() << "No implementation for model type " << data.type;
     }
