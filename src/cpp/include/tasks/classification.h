@@ -75,7 +75,7 @@ public:
     static Classification load(const std::string& model_path);
 
     ClassificationResult infer(cv::Mat image);
-    std::vector<InstanceSegmentationResult> inferBatch(std::vector<cv::Mat> image);
+    std::vector<ClassificationResult> inferBatch(std::vector<cv::Mat> image);
 
     std::map<std::string, ov::Tensor> preprocess(cv::Mat);
     ClassificationResult postprocess(InferenceResult& infResult);
@@ -86,6 +86,8 @@ private:
     ClassificationResult get_multilabel_predictions(InferenceResult& infResult, bool add_raw_scores);
     ClassificationResult get_multiclass_predictions(InferenceResult& infResult, bool add_raw_scores);
     ClassificationResult get_hierarchical_predictions(InferenceResult& infResult, bool add_raw_scores);
+
+    ov::Tensor reorder_saliency_maps(const ov::Tensor& source_maps);
 
 private:
     cv::Size input_shape;
