@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
     }
 
     cv::Mat image = cv::imread(argv[2]);
-    cv::cvtColor(image, image, cv::COLOR_BGR2RGB);
+    //cv::cvtColor(image, image, cv::COLOR_BGR2RGB);
 
     if (!image.data) {
         throw std::runtime_error{"Failed to read the image"};

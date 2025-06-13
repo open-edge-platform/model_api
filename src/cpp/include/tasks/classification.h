@@ -9,7 +9,10 @@
 #include <openvino/openvino.hpp>
 
 #include "adapters/inference_adapter.h"
+
 #include "tasks/results.h"
+#include "tasks/classification/resolvers.h"
+
 #include "utils/vision_pipeline.h"
 #include "utils/config.h"
 
@@ -40,9 +43,26 @@ public:
         //}
 
         multilabel = utils::get_from_any_maps("multilabel", config, {}, multilabel);
-        hierarchical = utils::get_from_any_maps("hierarchical", config, {}, hierarchical);
         output_raw_scores = utils::get_from_any_maps("output_raw_scores", config, {}, output_raw_scores);
         confidence_threshold = utils::get_from_any_maps("confidence_threshold", config, {}, confidence_threshold);
+        hierarchical = utils::get_from_any_maps("hierarchical", config, {}, hierarchical);
+        hierarchical_config = utils::get_from_any_maps("hierarchical_config", config, {}, hierarchical_config);
+        hierarchical_postproc = utils::get_from_any_maps("hierarchical_postproc", config, {}, hierarchical_postproc);
+        if (hierarchical) {
+            if (hierarchical_config.empty()) {
+                throw std::runtime_error("Error: empty hierarchical classification config");
+            }
+            hierarchical_info = HierarchicalConfig(hierarchical_config);
+            if (hierarchical_postproc == "probabilistic") {
+                resolver = std::make_unique<ProbabilisticLabelsResolver>(hierarchical_info);
+            } else if (hierarchical_postproc == "greedy") {
+                resolver = std::make_unique<GreedyLabelsResolver>(hierarchical_info);
+            } else {
+                throw std::runtime_error("Wrong hierarchical labels postprocessing type");
+            }
+        }
+
+
 
         //{
         //    auto iter = config.find("confidence_threshold");
@@ -75,6 +95,12 @@ private:
     bool multilabel = false;
     bool hierarchical = false;
     bool output_raw_scores = false;
+
+    //hierarchical
+    std::string hierarchical_config;
+    std::string hierarchical_postproc = "greedy";
+    HierarchicalConfig hierarchical_info;
+    std::unique_ptr<GreedyLabelsResolver> resolver;
 
 };
 

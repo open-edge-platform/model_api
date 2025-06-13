@@ -16,6 +16,35 @@ namespace {
     float sigmoid(float x) noexcept {
         return 1.0f / (1.0f + std::exp(-x));
     }
+
+    size_t fargmax(const float* x_start, const float* x_end) noexcept {
+        size_t argmax = 0;
+
+        for (const float* iter = x_start; iter < x_end; ++iter) {
+            if (x_start[argmax] < *iter) {
+                argmax = iter - x_start;
+            }
+        }
+
+        return argmax;
+    }
+
+    void softmax(float* x_start, float* x_end, float eps = 1e-9) {
+        if (x_start == x_end) {
+            return;
+        }
+
+        float x_max = *std::max_element(x_start, x_end);
+        float x_sum = 0.f;
+        for (auto it = x_start; it < x_end; ++it) {
+            *it = exp(*it - x_max);
+            x_sum += *it;
+        }
+
+        for (auto it = x_start; it < x_end; ++it) {
+            *it /= x_sum + eps;
+        }
+    }
 }
 
 cv::Size Classification::serialize(std::shared_ptr<ov::Model>& ov_model) {
@@ -132,5 +161,60 @@ ClassificationResult Classification::get_multiclass_predictions(InferenceResult&
 }
 
 ClassificationResult Classification::get_hierarchical_predictions(InferenceResult& infResult, bool add_raw_scores) {
-    return {};
+    ClassificationResult result;
+
+    auto logitsTensorName = adapter->getOutputNames().front();
+    const ov::Tensor& logitsTensor = infResult.data.find(logitsTensorName)->second;
+    float* logitsPtr = logitsTensor.data<float>();
+
+    auto raw_scores = ov::Tensor();
+    float* raw_scoresPtr = nullptr;
+    if (add_raw_scores) {
+        raw_scores = ov::Tensor(logitsTensor.get_element_type(), logitsTensor.get_shape());
+        logitsTensor.copy_to(raw_scores);
+        raw_scoresPtr = raw_scores.data<float>();
+        result.raw_scores = raw_scores;
+    }
+
+    std::vector<std::reference_wrapper<std::string>> predicted_labels;
+    std::vector<float> predicted_scores;
+
+    predicted_labels.reserve(hierarchical_info.num_multiclass_heads + hierarchical_info.num_multilabel_heads);
+    predicted_scores.reserve(hierarchical_info.num_multiclass_heads + hierarchical_info.num_multilabel_heads);
+
+    for (size_t i = 0; i < hierarchical_info.num_multiclass_heads; ++i) {
+        const auto& logits_range = hierarchical_info.head_idx_to_logits_range[i];
+        softmax(logitsPtr + logits_range.first, logitsPtr + logits_range.second);
+        if (add_raw_scores) {
+            softmax(raw_scoresPtr + logits_range.first, raw_scoresPtr + logits_range.second);
+        }
+        size_t j = fargmax(logitsPtr + logits_range.first, logitsPtr + logits_range.second);
+        predicted_labels.push_back(hierarchical_info.all_groups[i][j]);
+        predicted_scores.push_back(logitsPtr[logits_range.first + j]);
+    }
+
+    if (hierarchical_info.num_multilabel_heads) {
+        const float* mlc_logitsPtr = logitsPtr + hierarchical_info.num_single_label_classes;
+
+        for (size_t i = 0; i < hierarchical_info.num_multilabel_heads; ++i) {
+            float score = sigmoid(mlc_logitsPtr[i]);
+            if (score > confidence_threshold) {
+                predicted_scores.push_back(score);
+                predicted_labels.push_back(hierarchical_info.all_groups[hierarchical_info.num_multiclass_heads + i][0]);
+            }
+            if (add_raw_scores) {
+                raw_scoresPtr[hierarchical_info.num_single_label_classes + i] = score;
+            }
+        }
+    }
+
+    auto resolved_labels = resolver->resolve_labels(predicted_labels, predicted_scores);
+
+    result.topLabels.reserve(resolved_labels.size());
+    for (const auto& label : resolved_labels) {
+        result.topLabels.emplace_back(hierarchical_info.label_to_idx[label.first], label.first, label.second);
+    }
+
+    return result;
+
 }
