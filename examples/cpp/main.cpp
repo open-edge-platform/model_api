@@ -19,7 +19,6 @@
 #include <string>
 
 int main(int argc, char* argv[]) {
-    std::cout << "wat" <<  argc << std::endl;
     if (argc != 3) {
         throw std::runtime_error(std::string{"Usage: "} + argv[0] + " <path_to_model> <path_to_image>");
     }
