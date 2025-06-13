@@ -72,7 +72,6 @@ public:
 };
 
 template <typename ResultType>
-
 class TilingPipeline : public Pipeline<ResultType> {
 private:
     std::shared_ptr<InferenceAdapter> adapter;
