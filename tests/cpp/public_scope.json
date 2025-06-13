@@ -1,0 +1,100 @@
+[
+  {
+    "name": "otx_models/Lite-hrnet-18.xml",
+    "type": "SegmentationModel",
+    "test_data": [
+      {
+        "image": "coco128/images/train2017/000000000074.jpg",
+        "reference": [
+          "0: 0.537, 1: 0.463, [426,640,2], [0], [0]; object: 0.675, 508, object: 0.527, 65, object: 0.507, 18, object: 0.624, 144, object: 0.538, 67, object: 0.507, 15, object: 0.518, 41, object: 0.507, 8, object: 0.505, 14, object: 0.885, 2138, "
+        ]
+      }
+    ]
+  },
+  {
+    "name": "otx_models/Lite-hrnet-18_mod2.xml",
+    "type": "SegmentationModel",
+    "test_data": [
+      {
+        "image": "coco128/images/train2017/000000000074.jpg",
+        "reference": [
+          "0: 0.992, 1: 0.008, [426,640,2], [0], [0]; object: 0.555, 112, object: 0.506, 17, object: 0.555, 154, object: 0.511, 19, object: 0.514, 52, "
+        ]
+      }
+    ]
+  },
+  {
+    "name": "otx_models/segmentation_model_with_xai_head.xml",
+    "type": "SegmentationModel",
+    "test_data": [
+      {
+        "image": "coco128/images/train2017/000000000074.jpg",
+        "reference": [
+          "0: 1.000, 1: 0.000, [426,640,3], [426,640,3], [1,600,1,1]; backpack: 0.505, 2, "
+        ]
+      }
+    ]
+  },
+  {
+    "name": "otx_models/maskrcnn_model_with_xai_head.xml",
+    "type": "MaskRCNNModel",
+    "test_data": [
+      {
+        "image": "coco128/images/train2017/000000000074.jpg",
+        "reference": [
+          "61, 277, 358, 382, 17 (horse): 0.998, 18312, RotatedRect: 212.000 327.000 290.000 100.000 0.000; 1, 14, 162, 321, 2 (car): 0.994, 25867, RotatedRect: 54.067 173.034 285.208 156.889 61.996; 327, 96, 341, 134, 1 (bicycle): 0.930, 279, RotatedRect: 333.500 114.000 36.000 13.000 90.000; 460, 106, 493, 148, 1 (bicycle): 0.898, 786, RotatedRect: 476.284 126.621 27.308 45.993 19.179; 294, 93, 315, 153, 1 (bicycle): 0.869, 789, RotatedRect: 304.000 124.000 58.000 18.000 90.000; 278, 109, 290, 152, 1 (bicycle): 0.817, 355, RotatedRect: 283.500 130.000 42.000 11.000 90.000; 4, 4, 102, 191, 2 (car): 0.701, 9658, RotatedRect: 51.806 97.259 184.445 95.281 89.246; 270, 93, 290, 152, 1 (bicycle): 0.660, 723, RotatedRect: 280.500 122.500 17.000 59.000 0.000; 322, 114, 343, 152, 18 (sheep): 0.520, 298, RotatedRect: 332.000 133.000 34.000 14.000 90.000; 4; [1,1280,1,1]; "
+        ]
+      }
+    ]
+  },
+  {
+    "name": "otx_models/is_resnet50_maskrcnn_coco_reduced.xml",
+    "type": "MaskRCNNModel",
+    "test_data": [
+      {
+        "image": "coco128/images/train2017/000000000074.jpg",
+        "reference": [
+          "59, 277, 360, 380, 16 (horse): 0.999, 19053, RotatedRect: 210.000 327.500 101.000 296.000 90.000; 2, 9, 162, 318, 2 (car): 0.999, 31153, RotatedRect: 82.086 163.312 307.394 156.997 89.669; 294, 94, 316, 153, 1 (bicycle): 0.985, 840, RotatedRect: 305.000 123.500 59.000 18.000 90.000; 326, 97, 341, 136, 1 (bicycle): 0.974, 397, RotatedRect: 332.500 116.000 38.000 13.000 90.000; 461, 105, 493, 150, 1 (bicycle): 0.918, 846, RotatedRect: 476.052 126.972 27.619 47.834 16.928; 350, 92, 386, 149, 1 (bicycle): 0.807, 1458, RotatedRect: 369.319 119.891 54.848 34.230 82.405; 279, 110, 291, 146, 1 (bicycle): 0.788, 312, RotatedRect: 284.000 127.500 35.000 10.000 90.000; 0; [0]; horse: 0.999, 668; car: 0.999, 782; bicycle: 0.985, 127; bicycle: 0.974, 87; bicycle: 0.918, 122; bicycle: 0.807, 140; bicycle: 0.788, 79; "
+        ]
+      }
+    ]
+  },
+  {
+    "name": "otx_models/det_mobilenetv2_atss_bccd.xml",
+    "type": "DetectionModel",
+    "test_data": [
+      {
+        "image": "BloodImage_00007.jpg",
+        "reference": [
+          "494, 159, 637, 308, 2 (WBC): 0.697; 28, 139, 135, 228, 1 (RBC): 0.628; 535, 375, 638, 479, 1 (RBC): 0.524; 513, 8, 633, 152, 1 (RBC): 0.430; 21, 291, 143, 399, 1 (RBC): 0.422; 196, 86, 410, 286, 1 (RBC): 0.422; [0]; [0]"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "otx_models/detection_model_with_xai_head.xml",
+    "type": "DetectionModel",
+    "test_data": [
+      {
+        "image": "coco128/images/train2017/000000000074.jpg",
+        "reference": [
+          "61, 277, 355, 379, 1 (person): 0.364; 461, 105, 495, 149, 1 (person): 0.305; [1,2,6,8]; [1,320,1,1]"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "otx_models/detection_model_with_xai_head.xml",
+    "type": "DetectionModel",
+    "tiler": "DetectionTiler",
+    "input_res": "(3500,3500)",
+    "test_data": [
+      {
+        "image": "coco128/images/train2017/000000000074.jpg",
+        "reference": [
+          "336, 2275, 1944, 3114, 1 (person): 0.361; 2523, 862, 2709, 1224, 1 (person): 0.313; [1,2,35,46]; [1,320,1,1]"
+        ]
+      }
+    ]
+  }
+]

@@ -148,15 +148,6 @@ void SSD::prepareMultipleOutputs(std::shared_ptr<ov::Model> ov_model) {
     for (auto& name : output_names) {
         std::cout << "output name: " << name << std::endl;
     }
-
-    // ov::preprocess::PrePostProcessor ppp(ov_model);
-
-    // for (const auto& output_name : output_names) {
-    //     if (output_name != "labels") { //TODO: Discover why this isnt needed in original?
-    //         ppp.output(output_name).tensor().set_element_type(ov::element::f32);
-    //     }
-    // }
-    // ov_model = ppp.build();
 }
 
 std::vector<std::string> SSD::filterOutXai(const std::vector<std::string>& names) {
