@@ -65,9 +65,6 @@ public:
     static DetectionModel load(const std::string& model_path, const ov::AnyMap& configuration = {});
 
     DetectionResult infer(cv::Mat image);
-    void inferAsync(cv::Mat image, ov::AnyMap user_data);
-    void setCallback(std::function<void(DetectionResult, ov::AnyMap)>);
-
     std::vector<DetectionResult> inferBatch(std::vector<cv::Mat> image);
 
 private:

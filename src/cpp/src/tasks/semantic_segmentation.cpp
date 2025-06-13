@@ -227,14 +227,6 @@ SemanticSegmentationResult SemanticSegmentation::infer(cv::Mat image) {
     return pipeline.infer(image);
 }
 
-void SemanticSegmentation::inferAsync(cv::Mat image, ov::AnyMap user_data) {
-    pipeline.inferAsync(image, user_data);
-}
-
-void SemanticSegmentation::setCallback(std::function<void(SemanticSegmentationResult, ov::AnyMap)> callback) {
-    pipeline.setCallback(callback);
-}
-
 std::vector<SemanticSegmentationResult> SemanticSegmentation::inferBatch(std::vector<cv::Mat> images) {
     return pipeline.inferBatch(images);
 }

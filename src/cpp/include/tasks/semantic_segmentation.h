@@ -52,8 +52,6 @@ public:
     std::vector<Contour> getContours(const SemanticSegmentationResult& result);
 
     SemanticSegmentationResult infer(cv::Mat image);
-    void inferAsync(cv::Mat image, ov::AnyMap user_data);
-    void setCallback(std::function<void(SemanticSegmentationResult, ov::AnyMap)>);
     std::vector<SemanticSegmentationResult> inferBatch(std::vector<cv::Mat> image);
 
 private:

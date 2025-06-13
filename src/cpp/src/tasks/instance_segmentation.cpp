@@ -147,14 +147,6 @@ InstanceSegmentationResult InstanceSegmentation::infer(cv::Mat image) {
     return pipeline.infer(image);
 }
 
-void InstanceSegmentation::inferAsync(cv::Mat image, ov::AnyMap user_data) {
-    pipeline.inferAsync(image, user_data);
-}
-
-void InstanceSegmentation::setCallback(std::function<void(InstanceSegmentationResult, ov::AnyMap)> callback) {
-    pipeline.setCallback(callback);
-}
-
 std::vector<InstanceSegmentationResult> InstanceSegmentation::inferBatch(std::vector<cv::Mat> images) {
     return pipeline.inferBatch(images);
 }

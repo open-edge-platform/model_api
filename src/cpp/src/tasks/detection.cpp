@@ -204,14 +204,6 @@ DetectionResult DetectionModel::infer(cv::Mat image) {
     return pipeline->infer(image);
 }
 
-void DetectionModel::inferAsync(cv::Mat image, ov::AnyMap user_data) {
-    pipeline->inferAsync(image, user_data);
-}
-
-void DetectionModel::setCallback(std::function<void(DetectionResult, ov::AnyMap)> callback) {
-    pipeline->setCallback(callback);
-}
-
 std::vector<DetectionResult> DetectionModel::inferBatch(std::vector<cv::Mat> images) {
     return pipeline->inferBatch(images);
 }

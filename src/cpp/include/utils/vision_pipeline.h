@@ -12,8 +12,6 @@ class Pipeline {
 public:
     Pipeline() {}
     virtual ResultType infer(cv::Mat image) = 0;
-    virtual void setCallback(std::function<void(ResultType, ov::AnyMap)> callback) = 0;
-    virtual void inferAsync(cv::Mat image, ov::AnyMap user_data) = 0;
     virtual std::vector<ResultType> inferBatch(std::vector<cv::Mat> images) = 0;
 };
 
@@ -39,26 +37,6 @@ public:
         result.inputImageSize = image.size();
         result.data = adapter->infer(input);
         return postprocess(result);
-    }
-
-    inline void setCallback(std::function<void(ResultType, ov::AnyMap)> callback) {
-        adapter->setCallback([&](ov::InferRequest request, CallbackData additional_data) {
-            InferenceResult result;
-            size_t index = additional_data->at("index").as<size_t>();
-            result.inputImageSize = additional_data->at("inputImageSize").as<cv::Size>();
-            auto user_data = additional_data->at("user_data").as<ov::AnyMap>();
-            for (const auto& item : adapter->getOutputNames()) {
-                result.data.emplace(item, request.get_tensor(item));
-            }
-            callback(postprocess(result), user_data);
-        });
-    }
-
-    inline void inferAsync(cv::Mat image, ov::AnyMap user_data) {
-        auto additional_data = std::make_shared<ov::AnyMap>();
-        additional_data->insert({"inputImageSize", image.size()});
-        additional_data->insert({"user_data", user_data});
-        adapter->inferAsync(preprocess(image), additional_data);
     }
 
     inline std::vector<ResultType> inferBatch(std::vector<cv::Mat> images) {
@@ -136,12 +114,6 @@ public:
         }
 
         return merge_tiling_results(tile_results, image.size(), tile_coords, tiling_info);
-    }
-
-    inline void setCallback(std::function<void(ResultType, ov::AnyMap)> callback) {}
-
-    inline void inferAsync(cv::Mat image, ov::AnyMap user_data) {
-        throw std::runtime_error("No inferAsync for tiling yet.");
     }
 
     inline std::vector<ResultType> inferBatch(std::vector<cv::Mat> images) {

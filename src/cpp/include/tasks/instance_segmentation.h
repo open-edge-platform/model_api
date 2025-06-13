@@ -43,8 +43,6 @@ public:
     static InstanceSegmentation load(const std::string& model_path);
 
     InstanceSegmentationResult infer(cv::Mat image);
-    void inferAsync(cv::Mat image, ov::AnyMap user_data);
-    void setCallback(std::function<void(InstanceSegmentationResult, ov::AnyMap)>);
     std::vector<InstanceSegmentationResult> inferBatch(std::vector<cv::Mat> image);
 
     std::map<std::string, ov::Tensor> preprocess(cv::Mat);
