@@ -1,3 +1,8 @@
+/*
+ * Copyright (C) 2020-2025 Intel Corporation
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #include "utils/async_infer_queue.h"
 
 AsyncInferQueue::AsyncInferQueue(ov::CompiledModel& model, size_t jobs) {

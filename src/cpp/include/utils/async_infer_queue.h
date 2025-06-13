@@ -1,3 +1,8 @@
+/*
+ * Copyright (C) 2020-2025 Intel Corporation
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #include <condition_variable>
 #include <functional>
 #include <openvino/openvino.hpp>

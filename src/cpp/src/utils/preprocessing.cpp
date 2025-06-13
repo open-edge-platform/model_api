@@ -1,3 +1,8 @@
+/*
+ * Copyright (C) 2020-2025 Intel Corporation
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #include "utils/preprocessing.h"
 
 #include <openvino/opsets/opset1.hpp>

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2024 Intel Corporation
+ * Copyright (C) 2020-2025 Intel Corporation
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -7,7 +7,6 @@
 
 #include <openvino/openvino.hpp>
 #include <stdexcept>
-//#include <utils/slog.hpp>
 #include <vector>
 
 void OpenVINOInferenceAdapter::loadModel(const std::shared_ptr<const ov::Model>& model,
