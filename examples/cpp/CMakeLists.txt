@@ -94,5 +94,4 @@ find_package(OpenCV REQUIRED COMPONENTS imgcodecs)
 
 add_subdirectory(../../src/cpp ${Samples_BINARY_DIR}/src/cpp)
 
-add_example(NAME asynchronous_api SOURCES ./asynchronous_api/main.cpp DEPENDENCIES model_api)
-add_example(NAME synchronous_api SOURCES ./synchronous_api/main.cpp DEPENDENCIES model_api)
+add_example(NAME synchronous_api SOURCES ./main.cpp DEPENDENCIES model_api)
