@@ -146,3 +146,50 @@ struct InstanceSegmentationResult {
     std::vector<cv::Mat_<std::uint8_t>> saliency_map;
     ov::Tensor feature_vector;
 };
+
+struct ClassificationResult {
+    friend std::ostream& operator<<(std::ostream& os, const ClassificationResult& prediction) {
+        for (const ClassificationResult::Classification& classification : prediction.topLabels) {
+            os << classification << ", ";
+        }
+        try {
+            os << prediction.saliency_map.get_shape() << ", ";
+        } catch (ov::Exception&) {
+            os << "[0], ";
+        }
+        try {
+            os << prediction.feature_vector.get_shape() << ", ";
+        } catch (ov::Exception&) {
+            os << "[0], ";
+        }
+        try {
+            os << prediction.raw_scores.get_shape();
+        } catch (ov::Exception&) {
+            os << "[0]";
+        }
+        return os;
+    }
+
+    explicit operator std::string() {
+        std::stringstream ss;
+        ss << *this;
+        return ss.str();
+    }
+
+    struct Classification {
+        size_t id;
+        std::string label;
+        float score;
+
+        Classification(size_t id, const std::string& label, float score) : id(id), label(label), score(score) {}
+
+        friend std::ostream& operator<<(std::ostream& os, const Classification& prediction) {
+            return os << prediction.id << " (" << prediction.label << "): " << std::fixed << std::setprecision(3)
+                      << prediction.score;
+        }
+    };
+
+    std::vector<Classification> topLabels;
+    ov::Tensor saliency_map, feature_vector,
+        raw_scores;  // Contains "raw_scores", "saliency_map" and "feature_vector" model outputs if such exist
+};
