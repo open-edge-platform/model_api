@@ -10,6 +10,7 @@
 
 #include "adapters/inference_adapter.h"
 #include "tasks/results.h"
+#include "utils/config.h"
 #include "utils/vision_pipeline.h"
 
 class InstanceSegmentation {
@@ -30,20 +31,10 @@ public:
             });
 
         auto config = adapter->getModelConfig();
-        auto iter = config.find("labels");
-        if (iter != config.end()) {
-            labels = iter->second.as<std::vector<std::string>>();
-        } else {
-            std::cout << "could not find labels from model config" << std::endl;
-        }
-
-        {
-            auto iter = config.find("confidence_threshold");
-            if (iter != config.end()) {
-                confidence_threshold = iter->second.as<float>();
-            }
-        }
+        labels = utils::get_from_any_maps("labels", config, {}, labels);
+        confidence_threshold = utils::get_from_any_maps("confidence_threshold", config, {}, confidence_threshold);
     }
+
     static cv::Size serialize(std::shared_ptr<ov::Model>& ov_model);
     static InstanceSegmentation load(const std::string& model_path);
 

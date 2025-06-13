@@ -9,6 +9,7 @@
 
 #include "adapters/inference_adapter.h"
 #include "tasks/results.h"
+#include "utils/config.h"
 #include "utils/preprocessing.h"
 
 enum SSDOutputMode { single, multi };
@@ -29,20 +30,8 @@ public:
 
     SSD(std::shared_ptr<InferenceAdapter> adapter, cv::Size input_shape) : adapter(adapter), input_shape(input_shape) {
         auto config = adapter->getModelConfig();
-        {
-            auto iter = config.find("labels");
-            if (iter != config.end()) {
-                labels = iter->second.as<std::vector<std::string>>();
-            } else {
-                std::cout << "could not find labels from model config" << std::endl;
-            }
-        }
-        {
-            auto iter = config.find("confidence_threshold");
-            if (iter != config.end()) {
-                confidence_threshold = iter->second.as<float>();
-            }
-        }
+        labels = utils::get_from_any_maps("labels", config, {}, labels);
+        confidence_threshold = utils::get_from_any_maps("confidence_threshold", config, {}, confidence_threshold);
     }
     std::map<std::string, ov::Tensor> preprocess(cv::Mat);
     DetectionResult postprocess(InferenceResult& infResult);

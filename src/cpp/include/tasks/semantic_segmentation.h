@@ -9,6 +9,7 @@
 
 #include "adapters/inference_adapter.h"
 #include "tasks/results.h"
+#include "utils/config.h"
 #include "utils/preprocessing.h"
 #include "utils/vision_pipeline.h"
 
@@ -27,26 +28,9 @@ public:
             });
 
         auto config = adapter->getModelConfig();
-        auto iter = config.find("labels");
-        if (iter != config.end()) {
-            labels = iter->second.as<std::vector<std::string>>();
-        } else {
-            std::cout << "could not find labels from model config" << std::endl;
-        }
-
-        {
-            auto iter = config.find("soft_threshold");
-            if (iter != config.end()) {
-                soft_threshold = iter->second.as<float>();
-            }
-        }
-
-        {
-            auto iter = config.find("blur_strength");
-            if (iter != config.end()) {
-                blur_strength = iter->second.as<int>();
-            }
-        }
+        labels = utils::get_from_any_maps("labels", config, {}, labels);
+        soft_threshold = utils::get_from_any_maps("soft_threshold", config, {}, soft_threshold);
+        blur_strength = utils::get_from_any_maps("blur_strength", config, {}, blur_strength);
     }
 
     static cv::Size serialize(std::shared_ptr<ov::Model>& ov_model);
