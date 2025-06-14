@@ -175,21 +175,38 @@ struct ClassificationResult {
         ss << *this;
         return ss.str();
     }
+};
 
-    struct Classification {
-        size_t id;
-        std::string label;
-        float score;
+struct AnomalyResult {
+    cv::Mat anomaly_map;
+    std::vector<cv::Rect> pred_boxes;
+    std::string pred_label;
+    cv::Mat pred_mask;
+    double pred_score;
 
-        Classification(size_t id, const std::string& label, float score) : id(id), label(label), score(score) {}
+    friend std::ostream& operator<<(std::ostream& os, const AnomalyResult& prediction) {
+        double min_anomaly_map, max_anomaly_map;
+        cv::minMaxLoc(prediction.anomaly_map, &min_anomaly_map, &max_anomaly_map);
+        double min_pred_mask, max_pred_mask;
+        cv::minMaxLoc(prediction.pred_mask, &min_pred_mask, &max_pred_mask);
+        os << "anomaly_map min:" << min_anomaly_map << " max:" << max_anomaly_map << ";";
+        os << "pred_score:" << std::fixed << std::setprecision(1) << prediction.pred_score << ";";
+        os << "pred_label:" << prediction.pred_label << ";";
+        os << std::fixed << std::setprecision(0) << "pred_mask min:" << min_pred_mask << " max:" << max_pred_mask
+           << ";";
 
-        friend std::ostream& operator<<(std::ostream& os, const Classification& prediction) {
-            return os << prediction.id << " (" << prediction.label << "): " << std::fixed << std::setprecision(3)
-                      << prediction.score;
+        if (!prediction.pred_boxes.empty()) {
+            os << "pred_boxes:";
+            for (const cv::Rect& box : prediction.pred_boxes) {
+                os << box << ",";
+            }
         }
-    };
 
-    std::vector<Classification> topLabels;
-    ov::Tensor saliency_map, feature_vector,
-        raw_scores;  // Contains "raw_scores", "saliency_map" and "feature_vector" model outputs if such exist
+        return os;
+    }
+    explicit operator std::string() {
+        std::stringstream ss;
+        ss << *this;
+        return ss.str();
+    }
 };
