@@ -1,8 +1,8 @@
 #include "tasks/anomaly.h"
-#include "adapters/openvino_adapter.h"
-#include "utils/tensor.h"
-#include "utils/preprocessing.h"
 
+#include "adapters/openvino_adapter.h"
+#include "utils/preprocessing.h"
+#include "utils/tensor.h"
 
 cv::Size Anomaly::serialize(std::shared_ptr<ov::Model>& ov_model) {
     auto input = ov_model->inputs().front();
@@ -19,28 +19,26 @@ cv::Size Anomaly::serialize(std::shared_ptr<ov::Model>& ov_model) {
     uint8_t pad_value = 0;
     bool reverse_input_channels = false;
 
-
     std::vector<float> scale_values;
     std::vector<float> mean_values;
     if (ov_model->has_rt_info("model_info")) {
-        auto config =  ov_model->get_rt_info<ov::AnyMap>("model_info");
+        auto config = ov_model->get_rt_info<ov::AnyMap>("model_info");
         scale_values = utils::get_from_any_maps("scale_values", config, ov::AnyMap{}, scale_values);
         mean_values = utils::get_from_any_maps("mean_values", config, ov::AnyMap{}, mean_values);
     }
 
     auto input_shape = ov::Shape{shape[ov::layout::width_idx(layout)], shape[ov::layout::height_idx(layout)]};
 
-    ov_model = utils::embedProcessing(
-        ov_model,
-        input.get_any_name(),
-        layout,
-        resize_mode,
-        interpolation_mode,
-        input_shape,
-        pad_value,
-        reverse_input_channels,
-        mean_values,
-        scale_values);
+    ov_model = utils::embedProcessing(ov_model,
+                                      input.get_any_name(),
+                                      layout,
+                                      resize_mode,
+                                      interpolation_mode,
+                                      input_shape,
+                                      pad_value,
+                                      reverse_input_channels,
+                                      mean_values,
+                                      scale_values);
 
     return cv::Size(input_shape[0], input_shape[1]);
 }
@@ -69,11 +67,11 @@ Anomaly Anomaly::load(const std::string& model_path) {
 }
 
 AnomalyResult Anomaly::infer(cv::Mat image) {
-  return pipeline.infer(image);
+    return pipeline.infer(image);
 }
 
 std::vector<AnomalyResult> Anomaly::inferBatch(std::vector<cv::Mat> images) {
-  return pipeline.inferBatch(images);
+    return pipeline.inferBatch(images);
 }
 
 std::map<std::string, ov::Tensor> Anomaly::preprocess(cv::Mat image) {

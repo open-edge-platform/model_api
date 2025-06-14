@@ -13,7 +13,6 @@
 #include "utils/config.h"
 #include "utils/vision_pipeline.h"
 
-
 class Anomaly {
 public:
     std::shared_ptr<InferenceAdapter> adapter;
@@ -38,8 +37,8 @@ public:
         task = utils::get_from_any_maps("pixel_threshold", config, {}, task);
         labels = utils::get_from_any_maps("labels", config, {}, labels);
 
-        //labels = utils::get_from_any_maps("labels", config, {}, labels);
-        //confidence_threshold = utils::get_from_any_maps("confidence_threshold", config, {}, confidence_threshold);
+        // labels = utils::get_from_any_maps("labels", config, {}, labels);
+        // confidence_threshold = utils::get_from_any_maps("confidence_threshold", config, {}, confidence_threshold);
     }
 
     static cv::Size serialize(std::shared_ptr<ov::Model>& ov_model);
@@ -55,7 +54,6 @@ private:
     cv::Mat normalize(cv::Mat& tensor, float threshold);
     double normalize(double& tensor, float threshold);
     std::vector<cv::Rect> getBoxes(cv::Mat& mask);
-
 
 private:
     cv::Size input_shape;
