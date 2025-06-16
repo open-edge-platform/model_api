@@ -85,6 +85,11 @@ std::vector<size_t> get_non_xai_output_indices(const std::vector<ov::Output<ov::
 cv::Size Classification::serialize(std::shared_ptr<ov::Model>& ov_model) {
     // --------------------------- Configure input & output -------------------------------------------------
     // --------------------------- Prepare input  ------------------------------------------------------
+    auto config = ov_model->has_rt_info("model_info") ? ov_model->get_rt_info<ov::AnyMap>("model_info") : ov::AnyMap{};
+    std::string layout = "";
+    layout = utils::get_from_any_maps("layout", config, {}, layout);
+    auto inputsLayouts = utils::parseLayoutString(layout);
+
     if (ov_model->inputs().size() != 1) {
         throw std::logic_error("Classification model wrapper supports topologies with only 1 input");
     }
@@ -93,9 +98,7 @@ cv::Size Classification::serialize(std::shared_ptr<ov::Model>& ov_model) {
     auto inputName = input.get_any_name();
 
     const ov::Shape& inputShape = input.get_partial_shape().get_max_shape();
-    const ov::Layout& inputLayout = utils::getLayoutFromShape(inputShape);
-
-    auto config = ov_model->has_rt_info("model_info") ? ov_model->get_rt_info<ov::AnyMap>("model_info") : ov::AnyMap{};
+    const ov::Layout& inputLayout = utils::getInputLayout(input, inputsLayouts);
 
     auto interpolation_mode = cv::INTER_LINEAR;
     utils::RESIZE_MODE resize_mode = utils::RESIZE_FILL;
@@ -120,9 +123,6 @@ cv::Size Classification::serialize(std::shared_ptr<ov::Model>& ov_model) {
                                       reverse_input_channels,
                                       mean_values,
                                       scale_values);
-
-    ov::preprocess::PrePostProcessor ppp = ov::preprocess::PrePostProcessor(ov_model);
-    ov_model = ppp.build();
 
     // --------------------------- Prepare output  -----------------------------------------------------
     if (ov_model->outputs().size() > 5) {
