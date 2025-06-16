@@ -24,6 +24,24 @@ Type get_from_any_maps(const std::string& key,
     return low_priority;
 }
 
+template <>
+inline bool get_from_any_maps(const std::string& key,
+                              const ov::AnyMap& top_priority,
+                              const ov::AnyMap& mid_priority,
+                              bool low_priority) {
+    auto topk_iter = top_priority.find(key);
+    if (topk_iter != top_priority.end()) {
+        const std::string& val = topk_iter->second.as<std::string>();
+        return val == "True" || val == "YES";
+    }
+    topk_iter = mid_priority.find(key);
+    if (topk_iter != mid_priority.end()) {
+        const std::string& val = topk_iter->second.as<std::string>();
+        return val == "True" || val == "YES";
+    }
+    return low_priority;
+}
+
 inline bool model_has_embedded_processing(std::shared_ptr<ov::Model> model) {
     if (model->has_rt_info("model_info")) {
         auto model_info = model->get_rt_info<ov::AnyMap>("model_info");
