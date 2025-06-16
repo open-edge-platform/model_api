@@ -122,7 +122,6 @@ static inline std::map<std::string, ov::Layout> parseLayoutString(const std::str
     return layouts;
 }
 
-
 static inline ov::Layout getLayoutFromShape(const ov::PartialShape& shape) {
     if (shape.size() == 2) {
         return "NC";
@@ -159,13 +158,14 @@ static inline ov::Layout getLayoutFromShape(const ov::PartialShape& shape) {
     throw std::runtime_error("Usupported " + std::to_string(shape.size()) + "D shape");
 }
 
-static inline ov::Layout getInputLayout(const ov::Output<ov::Node>& input, std::map<std::string, ov::Layout>& inputsLayouts) {
+static inline ov::Layout getInputLayout(const ov::Output<ov::Node>& input,
+                                        std::map<std::string, ov::Layout>& inputsLayouts) {
     ov::Layout layout = ov::layout::get_layout(input);
     if (layout.empty()) {
         if (inputsLayouts.empty()) {
             layout = getLayoutFromShape(input.get_partial_shape());
             std::cout << "Automatically detected layout '" << layout.to_string() << "' for input '"
-                       << input.get_any_name() << "' will be used." << std::endl;
+                      << input.get_any_name() << "' will be used." << std::endl;
         } else if (inputsLayouts.size() == 1) {
             layout = inputsLayouts.begin()->second;
         } else {

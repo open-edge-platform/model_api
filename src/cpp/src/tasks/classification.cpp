@@ -129,7 +129,6 @@ cv::Size Classification::serialize(std::shared_ptr<ov::Model>& ov_model) {
         throw std::logic_error("Classification model wrapper supports topologies with up to 4 outputs");
     }
 
-
     size_t topk = 1;
     topk = utils::get_from_any_maps("topk", config, {}, topk);
     std::vector<std::string> labels;

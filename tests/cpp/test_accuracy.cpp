@@ -98,10 +98,25 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
         }
 
     } else if (data.type == "SegmentationModel") {
-        GTEST_SKIP();  // Skip since serialization is broken for now.
-        // auto model = SemanticSegmentation::load(model_path);
+        auto model = SemanticSegmentation::load(model_path);
+
+        for (auto& test_data : data.test_data) {
+            std::string image_path = DATA_DIR + '/' + test_data.image;
+            cv::Mat image = cv::imread(image_path);
+            auto result = model.infer(image);
+
+            EXPECT_EQ(format_test_output_to_string(model, result), test_data.reference[0]);
+        }
     } else if (data.type == "MaskRCNNModel") {
-        GTEST_SKIP();
+        auto model = InstanceSegmentation::load(model_path);
+
+        for (auto& test_data : data.test_data) {
+            std::string image_path = DATA_DIR + '/' + test_data.image;
+            cv::Mat image = cv::imread(image_path);
+            auto result = model.infer(image);
+
+            EXPECT_EQ(format_test_output_to_string(model, result), test_data.reference[0]);
+        }
     } else if (data.type == "ClassificationModel") {
         auto model = Classification::load(model_path);
         for (auto& test_data : data.test_data) {

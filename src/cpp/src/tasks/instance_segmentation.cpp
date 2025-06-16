@@ -122,7 +122,65 @@ cv::Mat segm_postprocess(const SegmentedObject& box, const cv::Mat& unpadded, in
 }
 
 cv::Size InstanceSegmentation::serialize(std::shared_ptr<ov::Model>& ov_model) {
-    return {};
+    if (ov_model->inputs().size() != 1) {
+        throw std::logic_error("MaskRCNNModel model wrapper supports topologies with only 1 input");
+    }
+    const auto& input = ov_model->input();
+    auto config = ov_model->has_rt_info("model_info") ? ov_model->get_rt_info<ov::AnyMap>("model_info") : ov::AnyMap{};
+    std::string layout = "";
+    layout = utils::get_from_any_maps("layout", config, {}, layout);
+    auto inputsLayouts = utils::parseLayoutString(layout);
+    const ov::Layout& inputLayout = utils::getInputLayout(input, inputsLayouts);
+    const ov::Shape& inputShape = input.get_partial_shape().get_max_shape();
+    if (inputShape.size() != 4 || inputShape[ov::layout::channels_idx(inputLayout)] != 3) {
+        throw std::logic_error("3-channel 4-dimensional model's input is expected");
+    }
+
+    auto interpolation_mode = cv::INTER_LINEAR;
+    utils::RESIZE_MODE resize_mode = utils::RESIZE_FILL;
+
+    std::vector<float> scale_values;
+    std::vector<float> mean_values;
+    scale_values = utils::get_from_any_maps("scale_values", config, ov::AnyMap{}, scale_values);
+    mean_values = utils::get_from_any_maps("mean_values", config, ov::AnyMap{}, mean_values);
+    uint8_t pad_value = 0;
+    bool reverse_input_channels = false;
+
+    ov_model = utils::embedProcessing(
+        ov_model,
+        input.get_any_name(),
+        inputLayout,
+        resize_mode,
+        interpolation_mode,
+        ov::Shape{inputShape[ov::layout::width_idx(inputLayout)], inputShape[ov::layout::height_idx(inputLayout)]},
+        pad_value,
+        reverse_input_channels,
+        mean_values,
+        scale_values);
+
+    cv::Size input_shape(inputShape[ov::layout::width_idx(inputLayout)],
+                         inputShape[ov::layout::height_idx(inputLayout)]);
+
+    // --------------------------- Prepare output  -----------------------------------------------------
+    struct NameRank {
+        std::string name;
+        size_t rank;
+    };
+    std::vector<NameRank> filtered;
+    filtered.reserve(3);
+    for (ov::Output<ov::Node>& output : ov_model->outputs()) {
+        const std::unordered_set<std::string>& out_names = output.get_names();
+        if (out_names.find(saliency_map_name) == out_names.end() &&
+            out_names.find(feature_vector_name) == out_names.end()) {
+            filtered.push_back({output.get_any_name(), output.get_partial_shape().get_max_shape().size()});
+        }
+    }
+    if (filtered.size() != 3 && filtered.size() != 4) {
+        throw std::logic_error(std::string{"MaskRCNNModel model wrapper supports topologies with "} +
+                               saliency_map_name + ", " + feature_vector_name + " and 3 or 4 other outputs");
+    }
+
+    return input_shape;
 }
 
 InstanceSegmentation InstanceSegmentation::load(const std::string& model_path) {
