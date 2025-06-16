@@ -13,4 +13,4 @@ apt update
 apt-get install libopencv-dev
 
 # Install OpenVINO
-sudo apt install openvino-2025.0.0
+sudo apt install openvino-2025.1.0
