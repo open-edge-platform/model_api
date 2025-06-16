@@ -33,12 +33,9 @@ public:
         auto config = adapter->getModelConfig();
         image_threshold = utils::get_from_any_maps("image_threshold", config, {}, image_threshold);
         pixel_threshold = utils::get_from_any_maps("pixel_threshold", config, {}, pixel_threshold);
-        normalization_scale = utils::get_from_any_maps("pixel_threshold", config, {}, normalization_scale);
+        normalization_scale = utils::get_from_any_maps("normalization_scale", config, {}, normalization_scale);
         task = utils::get_from_any_maps("pixel_threshold", config, {}, task);
         labels = utils::get_from_any_maps("labels", config, {}, labels);
-
-        // labels = utils::get_from_any_maps("labels", config, {}, labels);
-        // confidence_threshold = utils::get_from_any_maps("confidence_threshold", config, {}, confidence_threshold);
     }
 
     static cv::Size serialize(std::shared_ptr<ov::Model>& ov_model);
