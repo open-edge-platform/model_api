@@ -145,7 +145,8 @@ void InstanceSegmentation::serialize(std::shared_ptr<ov::Model>& ov_model) {
     mean_values = utils::get_from_any_maps("mean_values", config, ov::AnyMap{}, mean_values);
     uint8_t pad_value = 0;
     bool reverse_input_channels = false;
-    reverse_input_channels = utils::get_from_any_maps("reverse_input_channels", config, ov::AnyMap{}, reverse_input_channels);
+    reverse_input_channels =
+        utils::get_from_any_maps("reverse_input_channels", config, ov::AnyMap{}, reverse_input_channels);
 
     ov_model = utils::embedProcessing(
         ov_model,

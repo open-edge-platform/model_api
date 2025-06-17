@@ -111,7 +111,6 @@ void SSD::serialize(std::shared_ptr<ov::Model> ov_model) {
         // prepareMultipleOutputs(ov_model); //This does nothing from what I can see.
     }
 
-    
     ov_model->set_rt_info(input_shape[0], "model_info", "orig_width");
     ov_model->set_rt_info(input_shape[1], "model_info", "orig_height");
 }

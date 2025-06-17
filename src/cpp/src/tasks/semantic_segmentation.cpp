@@ -88,17 +88,17 @@ void SemanticSegmentation::serialize(std::shared_ptr<ov::Model>& ov_model) {
     scale_values = utils::get_from_any_maps("scale_values", config, ov::AnyMap{}, scale_values);
     mean_values = utils::get_from_any_maps("mean_values", config, ov::AnyMap{}, mean_values);
 
-
-    ov_model = utils::embedProcessing(ov_model,
-                                      input.get_any_name(),
-                                      layout,
-                                      resize_mode,
-                                      interpolation_mode,
-                                      ov::Shape{shape[ov::layout::width_idx(layout)], shape[ov::layout::height_idx(layout)]},
-                                      pad_value,
-                                      reverse_input_channels,
-                                      mean_values,
-                                      scale_values);
+    ov_model =
+        utils::embedProcessing(ov_model,
+                               input.get_any_name(),
+                               layout,
+                               resize_mode,
+                               interpolation_mode,
+                               ov::Shape{shape[ov::layout::width_idx(layout)], shape[ov::layout::height_idx(layout)]},
+                               pad_value,
+                               reverse_input_channels,
+                               mean_values,
+                               scale_values);
 
     ov::preprocess::PrePostProcessor ppp = ov::preprocess::PrePostProcessor(ov_model);
     ov::Layout out_layout = utils::getLayoutFromShape(ov_model->output(out_name).get_partial_shape());
@@ -112,8 +112,7 @@ void SemanticSegmentation::serialize(std::shared_ptr<ov::Model>& ov_model) {
     }
     ov_model = ppp.build();
 
-    cv::Size input_shape(shape[ov::layout::width_idx(layout)],
-                         shape[ov::layout::height_idx(layout)]);
+    cv::Size input_shape(shape[ov::layout::width_idx(layout)], shape[ov::layout::height_idx(layout)]);
     ov_model->set_rt_info(input_shape.width, "model_info", "orig_width");
     ov_model->set_rt_info(input_shape.height, "model_info", "orig_height");
 }

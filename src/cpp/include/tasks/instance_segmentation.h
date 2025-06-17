@@ -18,8 +18,7 @@ public:
     std::shared_ptr<InferenceAdapter> adapter;
     VisionPipeline<InstanceSegmentationResult> pipeline;
 
-    InstanceSegmentation(std::shared_ptr<InferenceAdapter> adapter)
-        : adapter(adapter) {
+    InstanceSegmentation(std::shared_ptr<InferenceAdapter> adapter) : adapter(adapter) {
         pipeline = VisionPipeline<InstanceSegmentationResult>(
             adapter,
             [&](cv::Mat image) {

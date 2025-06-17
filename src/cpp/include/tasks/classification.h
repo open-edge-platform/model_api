@@ -19,8 +19,7 @@ public:
     std::shared_ptr<InferenceAdapter> adapter;
     VisionPipeline<ClassificationResult> pipeline;
 
-    Classification(std::shared_ptr<InferenceAdapter> adapter)
-        : adapter(adapter) {
+    Classification(std::shared_ptr<InferenceAdapter> adapter) : adapter(adapter) {
         pipeline = VisionPipeline<ClassificationResult>(
             adapter,
             [&](cv::Mat image) {

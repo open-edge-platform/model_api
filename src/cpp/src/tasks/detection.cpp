@@ -24,7 +24,6 @@ DetectionModel DetectionModel::load(const std::string& model_path, const ov::Any
 
     if (utils::model_has_embedded_processing(model)) {
         std::cout << "model already was serialized" << std::endl;
-        //utils::get_input_shape_from_model_info(model);
     } else {
         SSD::serialize(model);
     }
