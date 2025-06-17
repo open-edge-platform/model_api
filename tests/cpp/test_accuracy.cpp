@@ -7,6 +7,7 @@
 #include <thread>
 
 #include "matchers.h"
+#include "tasks/anomaly.h"
 #include "tasks/classification.h"
 #include "tasks/detection.h"
 #include "tasks/instance_segmentation.h"
@@ -128,6 +129,16 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
             auto result = model.infer(image);
             EXPECT_EQ(std::string{result}, test_data.reference[0]);
         }
+    } else if (data.type == "AnomalyDetection") {
+        auto model = Anomaly::load(model_path);
+
+        for (auto& test_data : data.test_data) {
+            std::string image_path = DATA_DIR + '/' + test_data.image;
+            cv::Mat image = cv::imread(image_path);
+            auto result = model.infer(image);
+
+            EXPECT_EQ(std::string{result}, test_data.reference[0]);
+        }
     } else {
         FAIL() << "No implementation for model type " << data.type;
     }
@@ -169,7 +180,15 @@ TEST_P(ModelParameterizedTest, SerializedAccuracyTest) {
         }
     } else if (data.type == "ClassificationModel") {
         auto model = Classification::load(model_path);
+        for (auto& test_data : data.test_data) {
+            std::string image_path = DATA_DIR + '/' + test_data.image;
+            cv::Mat image = cv::imread(image_path);
+            auto result = model.infer(image);
 
+            EXPECT_EQ(std::string{result}, test_data.reference[0]);
+        }
+    } else if (data.type == "AnomalyDetection") {
+        auto model = Anomaly::load(model_path);
         for (auto& test_data : data.test_data) {
             std::string image_path = DATA_DIR + '/' + test_data.image;
             auto image = load_image(image_path, use_tiling, data.input_res);
@@ -226,6 +245,17 @@ TEST_P(ModelParameterizedTest, AccuracyTestBatch) {
         for (auto& test_data : data.test_data) {
             std::string image_path = DATA_DIR + '/' + test_data.image;
             auto image = load_image(image_path, use_tiling, data.input_res);
+            auto result = model.inferBatch({image});
+
+            ASSERT_EQ(result.size(), 1);
+            EXPECT_EQ(std::string{result[0]}, test_data.reference[0]);
+        }
+    } else if (data.type == "AnomalyDetection") {
+        auto model = Anomaly::load(model_path);
+
+        for (auto& test_data : data.test_data) {
+            std::string image_path = DATA_DIR + '/' + test_data.image;
+            cv::Mat image = cv::imread(image_path);
             auto result = model.inferBatch({image});
 
             ASSERT_EQ(result.size(), 1);
