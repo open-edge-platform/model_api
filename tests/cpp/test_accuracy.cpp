@@ -22,7 +22,13 @@ struct TestData {
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(TestData, image, reference);
 
-namespace cv {}
+cv::Mat load_image(const std::string& path, bool use_tiling, cv::Size size) {
+    cv::Mat image = cv::imread(path);
+    if (use_tiling) {
+        cv::resize(image, image, size);
+    }
+    return image;
+}
 
 struct ModelData {
     std::string name;
@@ -83,26 +89,23 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
     auto data = GetParam();
     auto model_path = DATA_DIR + '/' + data.name;
 
+    auto use_tiling = !data.input_res.empty();
     if (data.type == "DetectionModel") {
-        auto use_tiling = !data.input_res.empty();
         auto model = DetectionModel::load(model_path, {{"tiling", use_tiling}});
 
         for (auto& test_data : data.test_data) {
             std::string image_path = DATA_DIR + '/' + test_data.image;
-            cv::Mat image = cv::imread(image_path);
-            if (use_tiling) {
-                cv::resize(image, image, data.input_res);
-            }
+            auto image = load_image(image_path, use_tiling, data.input_res);
             auto result = model.infer(image);
             EXPECT_EQ(std::string{result}, test_data.reference[0]);
         }
 
     } else if (data.type == "SegmentationModel") {
-        auto model = SemanticSegmentation::load(model_path);
+        auto model = SemanticSegmentation::load(model_path, {{"tiling", use_tiling}});
 
         for (auto& test_data : data.test_data) {
             std::string image_path = DATA_DIR + '/' + test_data.image;
-            cv::Mat image = cv::imread(image_path);
+            auto image = load_image(image_path, use_tiling, data.input_res);
             auto result = model.infer(image);
 
             EXPECT_EQ(format_test_output_to_string(model, result), test_data.reference[0]);
@@ -112,7 +115,7 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
 
         for (auto& test_data : data.test_data) {
             std::string image_path = DATA_DIR + '/' + test_data.image;
-            cv::Mat image = cv::imread(image_path);
+            auto image = load_image(image_path, use_tiling, data.input_res);
             auto result = model.infer(image);
 
             EXPECT_EQ(format_test_output_to_string(model, result), test_data.reference[0]);
@@ -121,7 +124,7 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
         auto model = Classification::load(model_path);
         for (auto& test_data : data.test_data) {
             std::string image_path = DATA_DIR + '/' + test_data.image;
-            cv::Mat image = cv::imread(image_path);
+            auto image = load_image(image_path, use_tiling, data.input_res);
             auto result = model.infer(image);
             EXPECT_EQ(std::string{result}, test_data.reference[0]);
         }
@@ -135,24 +138,21 @@ TEST_P(ModelParameterizedTest, SerializedAccuracyTest) {
 
     const std::string& basename = data.name.substr(data.name.find_last_of("/\\") + 1);
     auto model_path = DATA_DIR + "/serialized/" + basename;
+    auto use_tiling = !data.input_res.empty();
     if (data.type == "DetectionModel") {
-        auto use_tiling = !data.input_res.empty();
         auto model = DetectionModel::load(model_path, {{"tiling", use_tiling}});
         for (auto& test_data : data.test_data) {
             std::string image_path = DATA_DIR + '/' + test_data.image;
-            cv::Mat image = cv::imread(image_path);
-            if (use_tiling) {
-                cv::resize(image, image, data.input_res);
-            }
+            auto image = load_image(image_path, use_tiling, data.input_res);
             auto result = model.infer(image);
             EXPECT_EQ(std::string{result}, test_data.reference[0]);
         }
     } else if (data.type == "SegmentationModel") {
-        auto model = SemanticSegmentation::load(model_path);
+        auto model = SemanticSegmentation::load(model_path, {{"tiling", use_tiling}});
 
         for (auto& test_data : data.test_data) {
             std::string image_path = DATA_DIR + '/' + test_data.image;
-            cv::Mat image = cv::imread(image_path);
+            auto image = load_image(image_path, use_tiling, data.input_res);
             auto result = model.infer(image);
 
             EXPECT_EQ(format_test_output_to_string(model, result), test_data.reference[0]);
@@ -162,7 +162,7 @@ TEST_P(ModelParameterizedTest, SerializedAccuracyTest) {
 
         for (auto& test_data : data.test_data) {
             std::string image_path = DATA_DIR + '/' + test_data.image;
-            cv::Mat image = cv::imread(image_path);
+            auto image = load_image(image_path, use_tiling, data.input_res);
             auto result = model.infer(image);
 
             EXPECT_EQ(format_test_output_to_string(model, result), test_data.reference[0]);
@@ -172,7 +172,7 @@ TEST_P(ModelParameterizedTest, SerializedAccuracyTest) {
 
         for (auto& test_data : data.test_data) {
             std::string image_path = DATA_DIR + '/' + test_data.image;
-            cv::Mat image = cv::imread(image_path);
+            auto image = load_image(image_path, use_tiling, data.input_res);
             auto result = model.infer(image);
 
             EXPECT_EQ(std::string{result}, test_data.reference[0]);
@@ -188,26 +188,23 @@ TEST_P(ModelParameterizedTest, AccuracyTestBatch) {
     const std::string& basename = data.name.substr(data.name.find_last_of("/\\") + 1);
     auto model_path = DATA_DIR + "/serialized/" + basename;
 
+    auto use_tiling = !data.input_res.empty();
     if (data.type == "DetectionModel") {
-        auto use_tiling = !data.input_res.empty();
         auto model = DetectionModel::load(model_path, {{"tiling", use_tiling}});
 
         for (auto& test_data : data.test_data) {
             std::string image_path = DATA_DIR + '/' + test_data.image;
-            cv::Mat image = cv::imread(image_path);
-            if (use_tiling) {
-                cv::resize(image, image, data.input_res);
-            }
+            auto image = load_image(image_path, use_tiling, data.input_res);
             auto result = model.inferBatch({image});
             ASSERT_EQ(result.size(), 1);
             EXPECT_EQ(std::string{result[0]}, test_data.reference[0]);
         }
     } else if (data.type == "SegmentationModel") {
-        auto model = SemanticSegmentation::load(model_path);
+        auto model = SemanticSegmentation::load(model_path, {{"tiling", use_tiling}});
 
         for (auto& test_data : data.test_data) {
             std::string image_path = DATA_DIR + '/' + test_data.image;
-            cv::Mat image = cv::imread(image_path);
+            auto image = load_image(image_path, use_tiling, data.input_res);
             auto result = model.inferBatch({image});
 
             EXPECT_EQ(format_test_output_to_string(model, result[0]), test_data.reference[0]);
@@ -217,7 +214,7 @@ TEST_P(ModelParameterizedTest, AccuracyTestBatch) {
 
         for (auto& test_data : data.test_data) {
             std::string image_path = DATA_DIR + '/' + test_data.image;
-            cv::Mat image = cv::imread(image_path);
+            auto image = load_image(image_path, use_tiling, data.input_res);
             auto result = model.inferBatch({image});
 
             ASSERT_EQ(result.size(), 1);
@@ -228,7 +225,7 @@ TEST_P(ModelParameterizedTest, AccuracyTestBatch) {
 
         for (auto& test_data : data.test_data) {
             std::string image_path = DATA_DIR + '/' + test_data.image;
-            cv::Mat image = cv::imread(image_path);
+            auto image = load_image(image_path, use_tiling, data.input_res);
             auto result = model.inferBatch({image});
 
             ASSERT_EQ(result.size(), 1);

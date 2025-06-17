@@ -79,10 +79,10 @@ private:
     std::function<InferenceInput(cv::Mat)> preprocess;
     std::function<ResultType(InferenceResult)> postprocess;
     std::function<ResultType(ResultType&, const cv::Rect&)> postprocess_tile;
-    std::function<DetectionResult(const std::vector<DetectionResult>&,
-                                  const cv::Size&,
-                                  const std::vector<cv::Rect>&,
-                                  const utils::TilingInfo&)>
+    std::function<ResultType(const std::vector<ResultType>&,
+                             const cv::Size&,
+                             const std::vector<cv::Rect>&,
+                             const utils::TilingInfo&)>
         merge_tiling_results;
 
 public:
@@ -92,10 +92,10 @@ public:
                    std::function<InferenceInput(cv::Mat)> preprocess,
                    std::function<ResultType(InferenceResult)> postprocess,
                    std::function<ResultType(ResultType&, const cv::Rect&)> postprocess_tile,
-                   std::function<DetectionResult(const std::vector<DetectionResult>&,
-                                                 const cv::Size&,
-                                                 const std::vector<cv::Rect>&,
-                                                 const utils::TilingInfo&)> merge_tiling_results)
+                   std::function<ResultType(const std::vector<ResultType>&,
+                                            const cv::Size&,
+                                            const std::vector<cv::Rect>&,
+                                            const utils::TilingInfo&)> merge_tiling_results)
         : adapter(adapter),
           tiling_info(tiling_info),
           preprocess(preprocess),
@@ -111,7 +111,7 @@ public:
             auto tile_img = cv::Mat(image, coord);
             auto input = preprocess(tile_img.clone());
             InferenceResult result;
-            result.inputImageSize = image.size();
+            result.inputImageSize = coord.size();
             result.data = adapter->infer(input);
             auto tile_result = postprocess(result);
             tile_results.push_back(postprocess_tile(tile_result, coord));
@@ -146,7 +146,7 @@ public:
                 auto input = preprocess(tile_img.clone());
                 auto additional_data = std::make_shared<ov::AnyMap>();
                 additional_data->insert({"index", i});
-                additional_data->insert({"inputImageSize", images[i].size()});
+                additional_data->insert({"inputImageSize", coord.size()});
                 additional_data->insert({"tileCoord", coord});
                 adapter->inferAsync(input, additional_data);
             }

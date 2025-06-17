@@ -2,13 +2,15 @@
  * Copyright (C) 2020-2025 Intel Corporation
  * SPDX-License-Identifier: Apache-2.0
  */
-
 #include "tasks/semantic_segmentation.h"
+
+#include <opencv2/core.hpp>
 
 #include "adapters/openvino_adapter.h"
 #include "utils/config.h"
 #include "utils/tensor.h"
 
+namespace {
 constexpr char feature_vector_name[]{"feature_vector"};
 cv::Mat get_activation_map(const cv::Mat& features) {
     double min_soft_score, max_soft_score;
@@ -20,7 +22,26 @@ cv::Mat get_activation_map(const cv::Mat& features) {
     return int_act_map;
 }
 
-SemanticSegmentation SemanticSegmentation::load(const std::string& model_path) {
+void normalize_soft_prediction(cv::Mat& soft_prediction, const cv::Mat& normalize_factor) {
+    float* data = soft_prediction.ptr<float>(0);
+    const int num_classes = soft_prediction.channels();
+    const size_t step_rows = soft_prediction.step[0] / sizeof(float);
+    const size_t step_cols = soft_prediction.step[1] / sizeof(float);
+
+    for (int y = 0; y < soft_prediction.rows; ++y) {
+        for (int x = 0; x < soft_prediction.cols; ++x) {
+            int weight = normalize_factor.at<int>(y, x);
+            if (weight > 0) {
+                for (int c = 0; c < num_classes; ++c) {
+                    data[y * step_rows + x * step_cols + c] /= weight;
+                }
+            }
+        }
+    }
+}
+}  // namespace
+
+SemanticSegmentation SemanticSegmentation::load(const std::string& model_path, const ov::AnyMap& configuration) {
     auto core = ov::Core();
     std::shared_ptr<ov::Model> model = core.read_model(model_path);
 
@@ -38,7 +59,7 @@ SemanticSegmentation SemanticSegmentation::load(const std::string& model_path) {
     }
     auto adapter = std::make_shared<OpenVINOInferenceAdapter>();
     adapter->loadModel(model, core, "AUTO");
-    return SemanticSegmentation(adapter);
+    return SemanticSegmentation(adapter, configuration);
 }
 
 void SemanticSegmentation::serialize(std::shared_ptr<ov::Model>& ov_model) {
@@ -207,11 +228,11 @@ std::vector<Contour> SemanticSegmentation::getContours(const SemanticSegmentatio
 }
 
 SemanticSegmentationResult SemanticSegmentation::infer(cv::Mat image) {
-    return pipeline.infer(image);
+    return pipeline->infer(image);
 }
 
 std::vector<SemanticSegmentationResult> SemanticSegmentation::inferBatch(std::vector<cv::Mat> images) {
-    return pipeline.inferBatch(images);
+    return pipeline->inferBatch(images);
 }
 
 cv::Mat SemanticSegmentation::create_hard_prediction_from_soft_prediction(cv::Mat soft_prediction,
@@ -248,4 +269,36 @@ cv::Mat SemanticSegmentation::create_hard_prediction_from_soft_prediction(cv::Ma
         }
     }
     return hard_prediction;
+}
+
+SemanticSegmentationResult SemanticSegmentation::postprocess_tile(SemanticSegmentationResult tile, const cv::Rect&) {
+    return tile;
+}
+
+SemanticSegmentationResult SemanticSegmentation::merge_tiling_results(
+    const std::vector<SemanticSegmentationResult>& tiles_results,
+    const cv::Size& image_size,
+    const std::vector<cv::Rect>& tile_coords,
+    const utils::TilingInfo& tiling_info) {
+    auto first = tiles_results.front();
+    cv::Mat voting_mask(cv::Size(image_size.width, image_size.height), CV_32SC1, cv::Scalar(0));
+    cv::Mat merged_soft_prediction(cv::Size(image_size.width, image_size.height),
+                                   CV_32FC(first.soft_prediction.channels()),
+                                   cv::Scalar(0));
+
+    for (size_t i = 0; i < tiles_results.size(); ++i) {
+        voting_mask(tile_coords[i]) += 1;
+        merged_soft_prediction(tile_coords[i]) += tiles_results[i].soft_prediction;
+    }
+
+    normalize_soft_prediction(merged_soft_prediction, voting_mask);
+
+    SemanticSegmentationResult result;
+    result.resultImage =
+        create_hard_prediction_from_soft_prediction(merged_soft_prediction, soft_threshold, blur_strength);
+    ;
+    if (return_soft_prediction) {
+        result.soft_prediction = merged_soft_prediction;
+    }
+    return result;
 }

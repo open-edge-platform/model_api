@@ -36,6 +36,20 @@
     ]
   },
   {
+    "name": "otx_models/segnext_t_tiling.xml",
+    "type": "SegmentationModel",
+    "tiler": "SemanticSegmentationTiler",
+    "input_res": "(3500,3500)",
+    "test_data": [
+      {
+        "image": "coco128/images/train2017/000000000074.jpg",
+        "reference": [
+          "0: 0.272, 1: 0.728, [3500,3500,5], [0], [0]; background: 1.404, 311, background: 1.397, 44, background: 1.371, 34, background: 1.377, 12, background: 1.356, 155, background: 1.345, 12, background: 1.183, 219, background: 1.524, 8, background: 1.533, 4, background: 1.519, 2, background: 1.524, 4, background: 1.530, 6, background: 1.537, 2, background: 1.514, 4, background: 1.519, 8, background: 1.529, 6, background: 1.550, 6, background: 1.558, 4, background: 1.520, 2, background: 1.529, 4, background: 1.532, 6, background: 1.535, 6, background: 1.530, 2, background: 1.529, 50, background: 1.528, 22, background: 1.527, 38, background: 1.451, 1476, background: 1.345, 2743, background: 1.609, 2987, background: 1.636, 29909, "
+        ]
+      }
+    ]
+  },
+  {
     "name": "otx_models/maskrcnn_model_with_xai_head.xml",
     "type": "MaskRCNNModel",
     "test_data": [
