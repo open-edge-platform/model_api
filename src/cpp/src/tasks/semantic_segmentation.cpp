@@ -21,27 +21,26 @@ cv::Mat get_activation_map(const cv::Mat& features) {
 }
 
 SemanticSegmentation SemanticSegmentation::load(const std::string& model_path) {
-    auto core = ov::Core();
-    std::shared_ptr<ov::Model> model = core.read_model(model_path);
-
-    if (model->has_rt_info("model_info", "model_type")) {
-        std::cout << "has model type in info: " << model->get_rt_info<std::string>("model_info", "model_type")
-                  << std::endl;
-    } else {
-        throw std::runtime_error("Incorrect or unsupported model_type");
-    }
-
-    if (utils::model_has_embedded_processing(model)) {
-        std::cout << "model already was serialized" << std::endl;
-    } else {
-        SemanticSegmentation::serialize(model);
-    }
     auto adapter = std::make_shared<OpenVINOInferenceAdapter>();
-    adapter->loadModel(model, core, "AUTO");
+    adapter->loadModelFile(model_path, "", {}, false);
+
+    std::string model_type;
+    model_type = utils::get_from_any_maps("model_type", adapter->getModelConfig(), {}, model_type);
+
+    if (model_type.empty() || model_type != "Segmentation") {
+        throw std::runtime_error("Incorrect or unsupported model_type, expected: Segmentation");
+    }
+    adapter->applyModelTransform(SemanticSegmentation::serialize);
+    adapter->compileModel("AUTO", {});
+
     return SemanticSegmentation(adapter);
 }
 
 void SemanticSegmentation::serialize(std::shared_ptr<ov::Model>& ov_model) {
+    if (utils::model_has_embedded_processing(ov_model)) {
+        std::cout << "model already was serialized" << std::endl;
+        return;
+    }
     if (ov_model->inputs().size() != 1) {
         throw std::logic_error("Segmentation model wrapper supports topologies with only 1 input");
     }
