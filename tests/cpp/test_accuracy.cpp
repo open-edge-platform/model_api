@@ -127,7 +127,15 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
             EXPECT_EQ(std::string{result}, test_data.reference[0]);
         }
     } else if (data.type == "AnomalyDetection") {
-        GTEST_SKIP();
+        auto model = Anomaly::load(model_path);
+
+        for (auto& test_data : data.test_data) {
+            std::string image_path = DATA_DIR + '/' + test_data.image;
+            cv::Mat image = cv::imread(image_path);
+            auto result = model.infer(image);
+
+            EXPECT_EQ(std::string{result}, test_data.reference[0]);
+        }
     } else {
         FAIL() << "No implementation for model type " << data.type;
     }

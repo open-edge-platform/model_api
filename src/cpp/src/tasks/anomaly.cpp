@@ -23,6 +23,7 @@ cv::Size Anomaly::serialize(std::shared_ptr<ov::Model>& ov_model) {
     std::vector<float> mean_values;
     if (ov_model->has_rt_info("model_info")) {
         auto config = ov_model->get_rt_info<ov::AnyMap>("model_info");
+        reverse_input_channels = utils::get_from_any_maps("reverse_input_channels", config, ov::AnyMap{}, reverse_input_channels);
         scale_values = utils::get_from_any_maps("scale_values", config, ov::AnyMap{}, scale_values);
         mean_values = utils::get_from_any_maps("mean_values", config, ov::AnyMap{}, mean_values);
     }
