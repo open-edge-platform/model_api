@@ -24,6 +24,24 @@ Type get_from_any_maps(const std::string& key,
     return low_priority;
 }
 
+template <>
+inline bool get_from_any_maps(const std::string& key,
+                              const ov::AnyMap& top_priority,
+                              const ov::AnyMap& mid_priority,
+                              bool low_priority) {
+    auto topk_iter = top_priority.find(key);
+    if (topk_iter != top_priority.end()) {
+        const std::string& val = topk_iter->second.as<std::string>();
+        return val == "True" || val == "YES";
+    }
+    topk_iter = mid_priority.find(key);
+    if (topk_iter != mid_priority.end()) {
+        const std::string& val = topk_iter->second.as<std::string>();
+        return val == "True" || val == "YES";
+    }
+    return low_priority;
+}
+
 inline bool model_has_embedded_processing(std::shared_ptr<ov::Model> model) {
     if (model->has_rt_info("model_info")) {
         auto model_info = model->get_rt_info<ov::AnyMap>("model_info");
@@ -97,6 +115,31 @@ static inline std::tuple<bool, ov::Layout> makeGuesLayoutFrom4DShape(const ov::P
     return {false, ov::Layout{}};
 }
 
+static inline std::map<std::string, ov::Layout> parseLayoutString(const std::string& layout_string) {
+    // Parse parameter string like "input0:NCHW,input1:NC" or "NCHW" (applied to all
+    // inputs)
+    std::map<std::string, ov::Layout> layouts;
+    std::string searchStr =
+        (layout_string.find_last_of(':') == std::string::npos && !layout_string.empty() ? ":" : "") + layout_string;
+    auto colonPos = searchStr.find_last_of(':');
+    while (colonPos != std::string::npos) {
+        auto startPos = searchStr.find_last_of(',');
+        auto inputName = searchStr.substr(startPos + 1, colonPos - startPos - 1);
+        auto inputLayout = searchStr.substr(colonPos + 1);
+        layouts[inputName] = ov::Layout(inputLayout);
+        searchStr.resize(startPos + 1);
+        if (searchStr.empty() || searchStr.back() != ',') {
+            break;
+        }
+        searchStr.pop_back();
+        colonPos = searchStr.find_last_of(':');
+    }
+    if (!searchStr.empty()) {
+        throw std::invalid_argument("Can't parse input layout string: " + layout_string);
+    }
+    return layouts;
+}
+
 static inline ov::Layout getLayoutFromShape(const ov::PartialShape& shape) {
     if (shape.size() == 2) {
         return "NC";
@@ -131,6 +174,24 @@ static inline ov::Layout getLayoutFromShape(const ov::PartialShape& shape) {
         }
     }
     throw std::runtime_error("Usupported " + std::to_string(shape.size()) + "D shape");
+}
+
+static inline ov::Layout getInputLayout(const ov::Output<ov::Node>& input,
+                                        std::map<std::string, ov::Layout>& inputsLayouts) {
+    ov::Layout layout = ov::layout::get_layout(input);
+    if (layout.empty()) {
+        if (inputsLayouts.empty()) {
+            layout = getLayoutFromShape(input.get_partial_shape());
+            std::cout << "Automatically detected layout '" << layout.to_string() << "' for input '"
+                      << input.get_any_name() << "' will be used." << std::endl;
+        } else if (inputsLayouts.size() == 1) {
+            layout = inputsLayouts.begin()->second;
+        } else {
+            layout = inputsLayouts[input.get_any_name()];
+        }
+    }
+
+    return layout;
 }
 
 }  // namespace utils

@@ -31,19 +31,17 @@ SemanticSegmentation SemanticSegmentation::load(const std::string& model_path) {
         throw std::runtime_error("Incorrect or unsupported model_type");
     }
 
-    cv::Size origin_input_shape;
     if (utils::model_has_embedded_processing(model)) {
         std::cout << "model already was serialized" << std::endl;
-        origin_input_shape = utils::get_input_shape_from_model_info(model);
     } else {
-        origin_input_shape = SemanticSegmentation::serialize(model);
+        SemanticSegmentation::serialize(model);
     }
     auto adapter = std::make_shared<OpenVINOInferenceAdapter>();
     adapter->loadModel(model, core, "AUTO");
     return SemanticSegmentation(adapter);
 }
 
-cv::Size SemanticSegmentation::serialize(std::shared_ptr<ov::Model>& ov_model) {
+void SemanticSegmentation::serialize(std::shared_ptr<ov::Model>& ov_model) {
     if (ov_model->inputs().size() != 1) {
         throw std::logic_error("Segmentation model wrapper supports topologies with only 1 input");
     }
@@ -54,8 +52,8 @@ cv::Size SemanticSegmentation::serialize(std::shared_ptr<ov::Model>& ov_model) {
     if (layout.empty()) {
         layout = utils::getLayoutFromShape(input.get_partial_shape());
     }
-    const ov::Shape& inputShape = input.get_partial_shape().get_max_shape();
-    if (inputShape.size() != 4 || inputShape[ov::layout::channels_idx(layout)] != 3) {
+    const ov::Shape& shape = input.get_partial_shape().get_max_shape();
+    if (shape.size() != 4 || shape[ov::layout::channels_idx(layout)] != 3) {
         throw std::logic_error("3-channel 4-dimensional model's input is expected");
     }
     if (ov_model->outputs().size() > 2) {
@@ -90,29 +88,17 @@ cv::Size SemanticSegmentation::serialize(std::shared_ptr<ov::Model>& ov_model) {
     scale_values = utils::get_from_any_maps("scale_values", config, ov::AnyMap{}, scale_values);
     mean_values = utils::get_from_any_maps("mean_values", config, ov::AnyMap{}, mean_values);
 
-    std::cout << "inputNames: " << input.get_any_name() << std::endl;
-    std::cout << "inputLayout: " << layout.to_string() << std::endl;
-    std::cout << "resize_mode: " << resize_mode << std::endl;
-    std::cout << "interpolationMode" << interpolation_mode << std::endl;
-    std::cout << "shape"
-              << ov::Shape{inputShape[ov::layout::width_idx(layout)], inputShape[ov::layout::height_idx(layout)]}
-              << std::endl;
-    std::cout << "pad_value" << pad_value << std::endl;
-    std::cout << "reverse_input_channels" << reverse_input_channels << std::endl;
-    std::cout << "mean_values" << mean_values.size() << std::endl;
-    std::cout << "scale_values" << scale_values.size() << std::endl;
-
-    ov_model = utils::embedProcessing(
-        ov_model,
-        input.get_any_name(),
-        layout,
-        resize_mode,
-        interpolation_mode,
-        ov::Shape{inputShape[ov::layout::width_idx(layout)], inputShape[ov::layout::height_idx(layout)]},
-        pad_value,
-        reverse_input_channels,
-        mean_values,
-        scale_values);
+    ov_model =
+        utils::embedProcessing(ov_model,
+                               input.get_any_name(),
+                               layout,
+                               resize_mode,
+                               interpolation_mode,
+                               ov::Shape{shape[ov::layout::width_idx(layout)], shape[ov::layout::height_idx(layout)]},
+                               pad_value,
+                               reverse_input_channels,
+                               mean_values,
+                               scale_values);
 
     ov::preprocess::PrePostProcessor ppp = ov::preprocess::PrePostProcessor(ov_model);
     ov::Layout out_layout = utils::getLayoutFromShape(ov_model->output(out_name).get_partial_shape());
@@ -126,16 +112,9 @@ cv::Size SemanticSegmentation::serialize(std::shared_ptr<ov::Model>& ov_model) {
     }
     ov_model = ppp.build();
 
-    // outputNames.push_back(out_name);
-    // for (ov::Output<ov::Node>& output : model->outputs()) {
-    //     const std::unordered_set<std::string>& out_names = output.get_names();
-    //     if (out_names.find(feature_vector_name) == out_names.end()) {
-    //         outputNames.emplace_back(feature_vector_name);
-    //         return;
-    //     }
-    // }
-
-    return cv::Size{};
+    cv::Size input_shape(shape[ov::layout::width_idx(layout)], shape[ov::layout::height_idx(layout)]);
+    ov_model->set_rt_info(input_shape.width, "model_info", "orig_width");
+    ov_model->set_rt_info(input_shape.height, "model_info", "orig_height");
 }
 
 std::map<std::string, ov::Tensor> SemanticSegmentation::preprocess(cv::Mat image) {
@@ -182,7 +161,6 @@ SemanticSegmentationResult SemanticSegmentation::postprocess(InferenceResult& in
     SemanticSegmentationResult result;
     result.resultImage = hard_prediction;
     if (return_soft_prediction) {
-        std::cout << " got a soft prediction..." << std::endl;
         cv::resize(soft_prediction, soft_prediction, infResult.inputImageSize, 0.0, 0.0, cv::INTER_NEAREST);
         result.soft_prediction = soft_prediction;
         auto iter = infResult.data.find(feature_vector_name);
@@ -247,7 +225,6 @@ cv::Mat SemanticSegmentation::create_hard_prediction_from_soft_prediction(cv::Ma
 
     bool applyBlurAndSoftThreshold = (blur_strength > -1 && soft_threshold < std::numeric_limits<float>::infinity());
     if (applyBlurAndSoftThreshold) {
-        std::cout << "applying blur and soft threshold:  " << blur_strength << std::endl;
         cv::blur(soft_prediction_blurred, soft_prediction_blurred, cv::Size{blur_strength, blur_strength});
     }
 

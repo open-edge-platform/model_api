@@ -96,5 +96,82 @@
         ]
       }
     ]
+  },
+  {
+    "name": "otx_models/mlc_mobilenetv3_large_voc.xml",
+    "type": "ClassificationModel",
+    "test_data": [
+      {
+        "image": "coco128/images/train2017/000000000081.jpg",
+        "reference": ["0 (aeroplane): 0.943, [0], [0], [0]"]
+      }
+    ]
+  },
+  {
+    "name": "otx_models/mlc_efficient_b0_voc.xml",
+    "type": "ClassificationModel",
+    "test_data": [
+      {
+        "image": "coco128/images/train2017/000000000074.jpg",
+        "reference": [
+          "1 (bicycle): 0.768, 11 (dog): 0.876, 14 (person): 0.922, [0], [0], [0]"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "otx_models/mlc_efficient_v2s_voc.xml",
+    "type": "ClassificationModel",
+    "test_data": [
+      {
+        "image": "coco128/images/train2017/000000000074.jpg",
+        "reference": [
+          "1 (bicycle): 0.825, 11 (dog): 0.873, 14 (person): 0.824, [0], [0], [0]"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "otx_models/cls_mobilenetv3_large_cars.xml",
+    "type": "ClassificationModel",
+    "check_extra_rt_info": "True",
+    "test_data": [
+      {
+        "image": "coco128/images/train2017/000000000471.jpg",
+        "reference": ["105 (194): 0.456, [0], [0], [0]"]
+      }
+    ]
+  },
+  {
+    "name": "otx_models/cls_efficient_b0_cars.xml",
+    "type": "ClassificationModel",
+    "test_data": [
+      {
+        "image": "coco128/images/train2017/000000000471.jpg",
+        "reference": ["0 (1): 0.838, [0], [0], [0]"]
+      }
+    ]
+  },
+  {
+    "name": "otx_models/cls_efficient_b0_shuffled_outputs.xml",
+    "type": "ClassificationModel",
+    "test_data": [
+      {
+        "image": "coco128/images/train2017/000000000471.jpg",
+        "reference": [
+          "4 (Circle): 0.943, 5 (Lion): 0.969, 3 (Non-Rigid): 0.503, 6 (Panda): 0.988, [1,7,7,7], [1,7], [0]"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "otx_models/cls_efficient_v2s_cars.xml",
+    "type": "ClassificationModel",
+    "test_data": [
+      {
+        "image": "coco128/images/train2017/000000000471.jpg",
+        "reference": ["0 (1): 0.849, [0], [0], [0]"]
+      }
+    ]
   }
 ]

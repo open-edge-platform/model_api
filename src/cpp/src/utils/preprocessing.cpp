@@ -24,6 +24,7 @@ std::shared_ptr<ov::Model> embedProcessing(std::shared_ptr<ov::Model>& model,
                                            const std::vector<float>& scale,
                                            const std::type_info& dtype) {
     ov::preprocess::PrePostProcessor ppp(model);
+
     // Change the input type to the 8-bit image
     if (dtype == typeid(int)) {
         ppp.input(inputName).tensor().set_element_type(ov::element::u8);
@@ -54,7 +55,9 @@ std::shared_ptr<ov::Model> embedProcessing(std::shared_ptr<ov::Model>& model,
         ppp.input(inputName).preprocess().scale(scale);
     }
 
-    return ppp.build();
+    auto ov_model = ppp.build();
+    ov::set_batch(ov_model, 1);
+    return ov_model;
 }
 
 ov::preprocess::PostProcessSteps::CustomPostprocessOp createResizeGraph(RESIZE_MODE resizeMode,

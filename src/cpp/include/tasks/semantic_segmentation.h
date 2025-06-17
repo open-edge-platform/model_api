@@ -33,7 +33,7 @@ public:
         blur_strength = utils::get_from_any_maps("blur_strength", config, {}, blur_strength);
     }
 
-    static cv::Size serialize(std::shared_ptr<ov::Model>& ov_model);
+    static void serialize(std::shared_ptr<ov::Model>& ov_model);
     static SemanticSegmentation load(const std::string& model_path);
 
     std::map<std::string, ov::Tensor> preprocess(cv::Mat);

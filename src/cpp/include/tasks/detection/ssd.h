@@ -28,15 +28,17 @@ class SSD {
 public:
     std::shared_ptr<InferenceAdapter> adapter;
 
-    SSD(std::shared_ptr<InferenceAdapter> adapter, cv::Size input_shape) : adapter(adapter), input_shape(input_shape) {
+    SSD(std::shared_ptr<InferenceAdapter> adapter) : adapter(adapter), input_shape(input_shape) {
         auto config = adapter->getModelConfig();
         labels = utils::get_from_any_maps("labels", config, {}, labels);
         confidence_threshold = utils::get_from_any_maps("confidence_threshold", config, {}, confidence_threshold);
+        input_shape.width = utils::get_from_any_maps("orig_width", config, {}, input_shape.width);
+        input_shape.height = utils::get_from_any_maps("orig_height", config, {}, input_shape.height);
     }
     std::map<std::string, ov::Tensor> preprocess(cv::Mat);
     DetectionResult postprocess(InferenceResult& infResult);
 
-    static cv::Size serialize(std::shared_ptr<ov::Model> ov_model);
+    static void serialize(std::shared_ptr<ov::Model> ov_model);
 
     SSDOutputMode output_mode;
 
