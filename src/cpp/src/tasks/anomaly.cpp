@@ -4,7 +4,7 @@
 #include "utils/preprocessing.h"
 #include "utils/tensor.h"
 
-cv::Size Anomaly::serialize(std::shared_ptr<ov::Model>& ov_model) {
+void Anomaly::serialize(std::shared_ptr<ov::Model>& ov_model) {
     auto input = ov_model->inputs().front();
 
     auto layout = ov::layout::get_layout(input);
@@ -42,7 +42,8 @@ cv::Size Anomaly::serialize(std::shared_ptr<ov::Model>& ov_model) {
                                       mean_values,
                                       scale_values);
 
-    return cv::Size(input_shape[0], input_shape[1]);
+    ov_model->set_rt_info(input_shape[0], "model_info", "orig_width");
+    ov_model->set_rt_info(input_shape[1], "model_info", "orig_height");
 }
 
 Anomaly Anomaly::load(const std::string& model_path) {
@@ -56,16 +57,14 @@ Anomaly Anomaly::load(const std::string& model_path) {
         throw std::runtime_error("Incorrect or unsupported model_type");
     }
 
-    cv::Size origin_input_shape;
     if (utils::model_has_embedded_processing(model)) {
         std::cout << "model already was serialized" << std::endl;
-        origin_input_shape = utils::get_input_shape_from_model_info(model);
     } else {
-        origin_input_shape = serialize(model);
+        serialize(model);
     }
     auto adapter = std::make_shared<OpenVINOInferenceAdapter>();
     adapter->loadModel(model, core, "AUTO");
-    return Anomaly(adapter, origin_input_shape);
+    return Anomaly(adapter);
 }
 
 AnomalyResult Anomaly::infer(cv::Mat image) {

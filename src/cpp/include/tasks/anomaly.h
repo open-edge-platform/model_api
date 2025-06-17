@@ -18,9 +18,7 @@ public:
     std::shared_ptr<InferenceAdapter> adapter;
     VisionPipeline<AnomalyResult> pipeline;
 
-    Anomaly(std::shared_ptr<InferenceAdapter> adapter, cv::Size input_shape)
-        : adapter(adapter),
-          input_shape(input_shape) {
+    Anomaly(std::shared_ptr<InferenceAdapter> adapter) : adapter(adapter) {
         pipeline = VisionPipeline<AnomalyResult>(
             adapter,
             [&](cv::Mat image) {
@@ -36,9 +34,11 @@ public:
         normalization_scale = utils::get_from_any_maps("normalization_scale", config, {}, normalization_scale);
         task = utils::get_from_any_maps("pixel_threshold", config, {}, task);
         labels = utils::get_from_any_maps("labels", config, {}, labels);
+        input_shape.width = utils::get_from_any_maps("orig_width", config, {}, input_shape.width);
+        input_shape.height = utils::get_from_any_maps("orig_height", config, {}, input_shape.height);
     }
 
-    static cv::Size serialize(std::shared_ptr<ov::Model>& ov_model);
+    static void serialize(std::shared_ptr<ov::Model>& ov_model);
     static Anomaly load(const std::string& model_path);
 
     AnomalyResult infer(cv::Mat image);
