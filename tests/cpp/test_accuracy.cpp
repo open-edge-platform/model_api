@@ -7,8 +7,8 @@
 #include <thread>
 
 #include "matchers.h"
-#include "tasks/classification.h"
 #include "tasks/anomaly.h"
+#include "tasks/classification.h"
 #include "tasks/detection.h"
 #include "tasks/instance_segmentation.h"
 #include "tasks/semantic_segmentation.h"

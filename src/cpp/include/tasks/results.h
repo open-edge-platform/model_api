@@ -175,6 +175,23 @@ struct ClassificationResult {
         ss << *this;
         return ss.str();
     }
+
+    struct Classification {
+        size_t id;
+        std::string label;
+        float score;
+
+        Classification(size_t id, const std::string& label, float score) : id(id), label(label), score(score) {}
+
+        friend std::ostream& operator<<(std::ostream& os, const Classification& prediction) {
+            return os << prediction.id << " (" << prediction.label << "): " << std::fixed << std::setprecision(3)
+                      << prediction.score;
+        }
+    };
+
+    std::vector<Classification> topLabels;
+    ov::Tensor saliency_map, feature_vector,
+        raw_scores;  // Contains "raw_scores", "saliency_map" and "feature_vector" model outputs if such exist
 };
 
 struct AnomalyResult {
