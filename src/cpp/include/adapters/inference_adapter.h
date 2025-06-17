@@ -36,6 +36,11 @@ public:
                            const std::string& device = "",
                            const ov::AnyMap& compilationConfig = {},
                            size_t max_num_requests = 0) = 0;
+    virtual void loadModelFile(const std::string& modelPath,
+                               const std::string& device = "",
+                               const ov::AnyMap& adapterConfig = {},
+                               bool preCompile = true) = 0;
+    virtual void compileModel(const std::string& device = "", const ov::AnyMap& adapterConfig = {}) = 0;
     virtual ov::PartialShape getInputShape(const std::string& inputName) const = 0;
     virtual ov::PartialShape getOutputShape(const std::string& inputName) const = 0;
     virtual ov::element::Type_t getInputDatatype(const std::string& inputName) const = 0;
