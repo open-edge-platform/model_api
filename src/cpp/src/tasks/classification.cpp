@@ -82,7 +82,7 @@ std::vector<size_t> get_non_xai_output_indices(const std::vector<ov::Output<ov::
 }
 }  // namespace
 
-cv::Size Classification::serialize(std::shared_ptr<ov::Model>& ov_model) {
+void Classification::serialize(std::shared_ptr<ov::Model>& ov_model) {
     // --------------------------- Configure input & output -------------------------------------------------
     // --------------------------- Prepare input  ------------------------------------------------------
     auto config = ov_model->has_rt_info("model_info") ? ov_model->get_rt_info<ov::AnyMap>("model_info") : ov::AnyMap{};
@@ -171,7 +171,9 @@ cv::Size Classification::serialize(std::shared_ptr<ov::Model>& ov_model) {
     if (multiclass) {
         addOrFindSoftmaxAndTopkOutputs(ov_model, topk, output_raw_scores);
     }
-    return cv::Size(input_shape[0], input_shape[1]);
+
+    ov_model->set_rt_info(input_shape[0], "model_info", "orig_width");
+    ov_model->set_rt_info(input_shape[1], "model_info", "orig_height");
 }
 
 Classification Classification::load(const std::string& model_path) {
@@ -185,16 +187,14 @@ Classification Classification::load(const std::string& model_path) {
         throw std::runtime_error("Incorrect or unsupported model_type");
     }
 
-    cv::Size origin_input_shape;
     if (utils::model_has_embedded_processing(model)) {
         std::cout << "model already was serialized" << std::endl;
-        origin_input_shape = utils::get_input_shape_from_model_info(model);
     } else {
-        origin_input_shape = Classification::serialize(model);
+        Classification::serialize(model);
     }
     auto adapter = std::make_shared<OpenVINOInferenceAdapter>();
     adapter->loadModel(model, core, "AUTO");
-    return Classification(adapter, origin_input_shape);
+    return Classification(adapter);
 }
 
 ClassificationResult Classification::infer(cv::Mat image) {

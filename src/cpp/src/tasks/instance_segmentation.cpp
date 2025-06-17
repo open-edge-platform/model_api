@@ -121,7 +121,7 @@ cv::Mat segm_postprocess(const SegmentedObject& box, const cv::Mat& unpadded, in
     return im_mask;
 }
 
-cv::Size InstanceSegmentation::serialize(std::shared_ptr<ov::Model>& ov_model) {
+void InstanceSegmentation::serialize(std::shared_ptr<ov::Model>& ov_model) {
     if (ov_model->inputs().size() != 1) {
         throw std::logic_error("MaskRCNNModel model wrapper supports topologies with only 1 input");
     }
@@ -145,6 +145,7 @@ cv::Size InstanceSegmentation::serialize(std::shared_ptr<ov::Model>& ov_model) {
     mean_values = utils::get_from_any_maps("mean_values", config, ov::AnyMap{}, mean_values);
     uint8_t pad_value = 0;
     bool reverse_input_channels = false;
+    reverse_input_channels = utils::get_from_any_maps("reverse_input_channels", config, ov::AnyMap{}, reverse_input_channels);
 
     ov_model = utils::embedProcessing(
         ov_model,
@@ -180,7 +181,8 @@ cv::Size InstanceSegmentation::serialize(std::shared_ptr<ov::Model>& ov_model) {
                                saliency_map_name + ", " + feature_vector_name + " and 3 or 4 other outputs");
     }
 
-    return input_shape;
+    ov_model->set_rt_info(input_shape.width, "model_info", "orig_width");
+    ov_model->set_rt_info(input_shape.height, "model_info", "orig_height");
 }
 
 InstanceSegmentation InstanceSegmentation::load(const std::string& model_path) {
@@ -194,16 +196,14 @@ InstanceSegmentation InstanceSegmentation::load(const std::string& model_path) {
         throw std::runtime_error("Incorrect or unsupported model_type");
     }
 
-    cv::Size origin_input_shape;
     if (utils::model_has_embedded_processing(model)) {
         std::cout << "model already was serialized" << std::endl;
-        origin_input_shape = utils::get_input_shape_from_model_info(model);
     } else {
-        origin_input_shape = serialize(model);
+        serialize(model);
     }
     auto adapter = std::make_shared<OpenVINOInferenceAdapter>();
     adapter->loadModel(model, core, "AUTO");
-    return InstanceSegmentation(adapter, origin_input_shape);
+    return InstanceSegmentation(adapter);
 }
 
 InstanceSegmentationResult InstanceSegmentation::infer(cv::Mat image) {

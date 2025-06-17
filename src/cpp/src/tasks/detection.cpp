@@ -22,16 +22,15 @@ DetectionModel DetectionModel::load(const std::string& model_path, const ov::Any
         throw std::runtime_error("Incorrect or unsupported model_type");
     }
 
-    cv::Size origin_input_shape;
     if (utils::model_has_embedded_processing(model)) {
         std::cout << "model already was serialized" << std::endl;
-        origin_input_shape = utils::get_input_shape_from_model_info(model);
+        //utils::get_input_shape_from_model_info(model);
     } else {
-        origin_input_shape = SSD::serialize(model);
+        SSD::serialize(model);
     }
     auto adapter = std::make_shared<OpenVINOInferenceAdapter>();
     adapter->loadModel(model, core, "AUTO");
-    return DetectionModel(std::make_unique<SSD>(adapter, origin_input_shape), configuration);
+    return DetectionModel(std::make_unique<SSD>(adapter), configuration);
 }
 
 InferenceInput DetectionModel::preprocess(cv::Mat image) {

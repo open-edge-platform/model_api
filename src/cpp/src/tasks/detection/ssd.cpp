@@ -67,7 +67,7 @@ std::map<std::string, ov::Tensor> SSD::preprocess(cv::Mat image) {
     return input;
 }
 
-cv::Size SSD::serialize(std::shared_ptr<ov::Model> ov_model) {
+void SSD::serialize(std::shared_ptr<ov::Model> ov_model) {
     auto output_mode = ov_model->outputs().size() > 1 ? SSDOutputMode::multi : SSDOutputMode::single;
 
     auto input_tensor = ov_model->inputs()[0];
@@ -111,7 +111,9 @@ cv::Size SSD::serialize(std::shared_ptr<ov::Model> ov_model) {
         // prepareMultipleOutputs(ov_model); //This does nothing from what I can see.
     }
 
-    return cv::Size(input_shape[0], input_shape[1]);
+    
+    ov_model->set_rt_info(input_shape[0], "model_info", "orig_width");
+    ov_model->set_rt_info(input_shape[1], "model_info", "orig_height");
 }
 
 void SSD::prepareSingleOutput(std::shared_ptr<ov::Model> ov_model) {

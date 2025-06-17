@@ -19,9 +19,8 @@ public:
     std::shared_ptr<InferenceAdapter> adapter;
     VisionPipeline<ClassificationResult> pipeline;
 
-    Classification(std::shared_ptr<InferenceAdapter> adapter, cv::Size input_shape)
-        : adapter(adapter),
-          input_shape(input_shape) {
+    Classification(std::shared_ptr<InferenceAdapter> adapter)
+        : adapter(adapter) {
         pipeline = VisionPipeline<ClassificationResult>(
             adapter,
             [&](cv::Mat image) {
@@ -56,7 +55,7 @@ public:
         }
     }
 
-    static cv::Size serialize(std::shared_ptr<ov::Model>& ov_model);
+    static void serialize(std::shared_ptr<ov::Model>& ov_model);
     static Classification load(const std::string& model_path);
 
     ClassificationResult infer(cv::Mat image);
