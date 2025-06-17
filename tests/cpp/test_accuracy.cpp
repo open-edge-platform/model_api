@@ -134,7 +134,7 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
 
         for (auto& test_data : data.test_data) {
             std::string image_path = DATA_DIR + '/' + test_data.image;
-            cv::Mat image = cv::imread(image_path);
+            auto image = load_image(image_path, use_tiling, data.input_res);
             auto result = model.infer(image);
 
             EXPECT_EQ(std::string{result}, test_data.reference[0]);
@@ -182,7 +182,7 @@ TEST_P(ModelParameterizedTest, SerializedAccuracyTest) {
         auto model = Classification::load(model_path);
         for (auto& test_data : data.test_data) {
             std::string image_path = DATA_DIR + '/' + test_data.image;
-            cv::Mat image = cv::imread(image_path);
+            auto image = load_image(image_path, use_tiling, data.input_res);
             auto result = model.infer(image);
 
             EXPECT_EQ(std::string{result}, test_data.reference[0]);
@@ -255,7 +255,7 @@ TEST_P(ModelParameterizedTest, AccuracyTestBatch) {
 
         for (auto& test_data : data.test_data) {
             std::string image_path = DATA_DIR + '/' + test_data.image;
-            cv::Mat image = cv::imread(image_path);
+            auto image = load_image(image_path, use_tiling, data.input_res);
             auto result = model.inferBatch({image});
 
             ASSERT_EQ(result.size(), 1);
