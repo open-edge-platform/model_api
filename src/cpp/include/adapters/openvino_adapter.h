@@ -25,15 +25,10 @@ public:
     virtual bool isReady();
     virtual void awaitAll();
     virtual void awaitAny();
-    virtual void loadModel(const std::shared_ptr<const ov::Model>& model,
-                           ov::Core& core,
+    virtual void loadModel(const std::string& modelPath,
                            const std::string& device = "",
-                           const ov::AnyMap& compilationConfig = {},
-                           size_t max_num_requests = 1) override;
-    virtual void loadModelFile(const std::string& modelPath,
-                               const std::string& device = "",
-                               const ov::AnyMap& adapterConfig = {},
-                               bool preCompile = true) override;
+                           const ov::AnyMap& adapterConfig = {},
+                           bool preCompile = true) override;
     virtual void compileModel(const std::string& device = "", const ov::AnyMap& adapterConfig = {}) override;
     virtual size_t getNumAsyncExecutors() const;
     virtual ov::PartialShape getInputShape(const std::string& inputName) const override;
@@ -44,7 +39,7 @@ public:
     virtual std::vector<std::string> getOutputNames() const override;
     virtual const ov::AnyMap& getModelConfig() const override;
 
-    void applyModelTransform(std::function<void(std::shared_ptr<ov::Model>&)> func);
+    void applyModelTransform(std::function<void(std::shared_ptr<ov::Model>&)> t);
 
 protected:
     void initInputsOutputs();

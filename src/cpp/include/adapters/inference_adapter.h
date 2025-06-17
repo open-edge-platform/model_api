@@ -31,15 +31,10 @@ public:
     virtual void awaitAll() = 0;
     virtual void awaitAny() = 0;
     virtual size_t getNumAsyncExecutors() const = 0;
-    virtual void loadModel(const std::shared_ptr<const ov::Model>& model,
-                           ov::Core& core,
+    virtual void loadModel(const std::string& modelPath,
                            const std::string& device = "",
-                           const ov::AnyMap& compilationConfig = {},
-                           size_t max_num_requests = 0) = 0;
-    virtual void loadModelFile(const std::string& modelPath,
-                               const std::string& device = "",
-                               const ov::AnyMap& adapterConfig = {},
-                               bool preCompile = true) = 0;
+                           const ov::AnyMap& adapterConfig = {},
+                           bool preCompile = true) = 0;
     virtual void compileModel(const std::string& device = "", const ov::AnyMap& adapterConfig = {}) = 0;
     virtual ov::PartialShape getInputShape(const std::string& inputName) const = 0;
     virtual ov::PartialShape getOutputShape(const std::string& inputName) const = 0;

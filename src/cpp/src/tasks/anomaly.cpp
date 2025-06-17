@@ -53,7 +53,7 @@ void Anomaly::serialize(std::shared_ptr<ov::Model>& ov_model) {
 
 Anomaly Anomaly::load(const std::string& model_path) {
     auto adapter = std::make_shared<OpenVINOInferenceAdapter>();
-    adapter->loadModelFile(model_path, "", {}, false);
+    adapter->loadModel(model_path, "", {}, false);
 
     std::string model_type;
     model_type = utils::get_from_any_maps("model_type", adapter->getModelConfig(), {}, model_type);
