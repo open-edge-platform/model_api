@@ -82,14 +82,14 @@ std::vector<size_t> get_non_xai_output_indices(const std::vector<ov::Output<ov::
 }
 }  // namespace
 
-void Classification::serialize(std::shared_ptr<ov::Model>& ov_model) {
+ov::AnyMap Classification::serialize(std::shared_ptr<ov::Model>& ov_model, const ov::AnyMap& input_config) {
     if (utils::model_has_embedded_processing(ov_model)) {
         std::cout << "model already was serialized" << std::endl;
-        return;
+        return {};
     }
     // --------------------------- Configure input & output -------------------------------------------------
     // --------------------------- Prepare input  ------------------------------------------------------
-    auto config = ov_model->has_rt_info("model_info") ? ov_model->get_rt_info<ov::AnyMap>("model_info") : ov::AnyMap{};
+    auto config(input_config);
     std::string layout = "";
     layout = utils::get_from_any_maps("layout", config, {}, layout);
     auto inputsLayouts = utils::parseLayoutString(layout);
@@ -176,8 +176,10 @@ void Classification::serialize(std::shared_ptr<ov::Model>& ov_model) {
         addOrFindSoftmaxAndTopkOutputs(ov_model, topk, output_raw_scores);
     }
 
-    ov_model->set_rt_info(input_shape[0], "model_info", "orig_width");
-    ov_model->set_rt_info(input_shape[1], "model_info", "orig_height");
+    config["orig_width"] = std::to_string(input_shape[0]);
+    config["orig_height"] = std::to_string(input_shape[1]);
+
+    return config;
 }
 
 Classification Classification::load(const std::string& model_path) {

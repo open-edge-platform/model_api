@@ -67,10 +67,10 @@ std::map<std::string, ov::Tensor> SSD::preprocess(cv::Mat image) {
     return input;
 }
 
-void SSD::serialize(std::shared_ptr<ov::Model> ov_model) {
+ov::AnyMap SSD::serialize(std::shared_ptr<ov::Model>& ov_model, const ov::AnyMap& input_config) {
     if (utils::model_has_embedded_processing(ov_model)) {
         std::cout << "model already was serialized" << std::endl;
-        return;
+        return {};
     }
     auto output_mode = ov_model->outputs().size() > 1 ? SSDOutputMode::multi : SSDOutputMode::single;
 
@@ -115,8 +115,10 @@ void SSD::serialize(std::shared_ptr<ov::Model> ov_model) {
         // prepareMultipleOutputs(ov_model); //This does nothing from what I can see.
     }
 
-    ov_model->set_rt_info(input_shape[0], "model_info", "orig_width");
-    ov_model->set_rt_info(input_shape[1], "model_info", "orig_height");
+    config["orig_width"] = std::to_string(input_shape[0]);
+    config["orig_height"] = std::to_string(input_shape[1]);
+
+    return config;
 }
 
 void SSD::prepareSingleOutput(std::shared_ptr<ov::Model> ov_model) {

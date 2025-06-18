@@ -38,7 +38,7 @@ public:
     std::map<std::string, ov::Tensor> preprocess(cv::Mat);
     DetectionResult postprocess(InferenceResult& infResult);
 
-    static void serialize(std::shared_ptr<ov::Model> ov_model);
+    static ov::AnyMap serialize(std::shared_ptr<ov::Model>& ov_model, const ov::AnyMap& input_config);
 
     SSDOutputMode output_mode;
 

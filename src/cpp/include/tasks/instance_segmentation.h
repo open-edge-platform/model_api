@@ -35,7 +35,7 @@ public:
         input_shape.height = utils::get_from_any_maps("orig_height", config, {}, input_shape.width);
     }
 
-    static void serialize(std::shared_ptr<ov::Model>& ov_model);
+    static ov::AnyMap serialize(std::shared_ptr<ov::Model>& ov_model, const ov::AnyMap& input_config);
     static InstanceSegmentation load(const std::string& model_path);
 
     InstanceSegmentationResult infer(cv::Mat image);
