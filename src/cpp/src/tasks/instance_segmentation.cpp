@@ -122,6 +122,10 @@ cv::Mat segm_postprocess(const SegmentedObject& box, const cv::Mat& unpadded, in
 }
 
 void InstanceSegmentation::serialize(std::shared_ptr<ov::Model>& ov_model) {
+    if (utils::model_has_embedded_processing(ov_model)) {
+        std::cout << "model already was serialized" << std::endl;
+        return;
+    }
     if (ov_model->inputs().size() != 1) {
         throw std::logic_error("MaskRCNNModel model wrapper supports topologies with only 1 input");
     }
@@ -187,23 +191,18 @@ void InstanceSegmentation::serialize(std::shared_ptr<ov::Model>& ov_model) {
 }
 
 InstanceSegmentation InstanceSegmentation::load(const std::string& model_path) {
-    auto core = ov::Core();
-    std::shared_ptr<ov::Model> model = core.read_model(model_path);
-
-    if (model->has_rt_info("model_info", "model_type")) {
-        std::cout << "has model type in info: " << model->get_rt_info<std::string>("model_info", "model_type")
-                  << std::endl;
-    } else {
-        throw std::runtime_error("Incorrect or unsupported model_type");
-    }
-
-    if (utils::model_has_embedded_processing(model)) {
-        std::cout << "model already was serialized" << std::endl;
-    } else {
-        serialize(model);
-    }
     auto adapter = std::make_shared<OpenVINOInferenceAdapter>();
-    adapter->loadModel(model, core, "AUTO");
+    adapter->loadModel(model_path, "", {}, false);
+
+    std::string model_type;
+    model_type = utils::get_from_any_maps("model_type", adapter->getModelConfig(), {}, model_type);
+
+    if (model_type.empty() || model_type != "MaskRCNN") {
+        throw std::runtime_error("Incorrect or unsupported model_type, expected: MaskRCNN");
+    }
+    adapter->applyModelTransform(InstanceSegmentation::serialize);
+    adapter->compileModel("AUTO", {});
+
     return InstanceSegmentation(adapter);
 }
 

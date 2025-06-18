@@ -5,6 +5,11 @@
 #include "utils/tensor.h"
 
 void Anomaly::serialize(std::shared_ptr<ov::Model>& ov_model) {
+    if (utils::model_has_embedded_processing(ov_model)) {
+        std::cout << "model already was serialized" << std::endl;
+        return;
+    }
+
     auto input = ov_model->inputs().front();
 
     auto layout = ov::layout::get_layout(input);
@@ -47,23 +52,21 @@ void Anomaly::serialize(std::shared_ptr<ov::Model>& ov_model) {
 }
 
 Anomaly Anomaly::load(const std::string& model_path) {
-    auto core = ov::Core();
-    std::shared_ptr<ov::Model> model = core.read_model(model_path);
+    auto adapter = std::make_shared<OpenVINOInferenceAdapter>();
+    adapter->loadModel(model_path, "", {}, false);
 
-    if (model->has_rt_info("model_info", "model_type")) {
-        std::cout << "has model type in info: " << model->get_rt_info<std::string>("model_info", "model_type")
-                  << std::endl;
+    std::string model_type;
+    model_type = utils::get_from_any_maps("model_type", adapter->getModelConfig(), {}, model_type);
+
+    if (!model_type.empty()) {
+        std::cout << "has model type in info: " << model_type << std::endl;
     } else {
         throw std::runtime_error("Incorrect or unsupported model_type");
     }
 
-    if (utils::model_has_embedded_processing(model)) {
-        std::cout << "model already was serialized" << std::endl;
-    } else {
-        serialize(model);
-    }
-    auto adapter = std::make_shared<OpenVINOInferenceAdapter>();
-    adapter->loadModel(model, core, "AUTO");
+    adapter->applyModelTransform(Anomaly::serialize);
+    adapter->compileModel("AUTO", {});
+
     return Anomaly(adapter);
 }
 

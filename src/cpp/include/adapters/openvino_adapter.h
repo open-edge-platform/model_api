@@ -25,11 +25,11 @@ public:
     virtual bool isReady();
     virtual void awaitAll();
     virtual void awaitAny();
-    virtual void loadModel(const std::shared_ptr<const ov::Model>& model,
-                           ov::Core& core,
+    virtual void loadModel(const std::string& modelPath,
                            const std::string& device = "",
-                           const ov::AnyMap& compilationConfig = {},
-                           size_t max_num_requests = 1) override;
+                           const ov::AnyMap& adapterConfig = {},
+                           bool preCompile = true) override;
+    virtual void compileModel(const std::string& device = "", const ov::AnyMap& adapterConfig = {}) override;
     virtual size_t getNumAsyncExecutors() const;
     virtual ov::PartialShape getInputShape(const std::string& inputName) const override;
     virtual ov::PartialShape getOutputShape(const std::string& outputName) const override;
@@ -38,6 +38,8 @@ public:
     virtual std::vector<std::string> getInputNames() const override;
     virtual std::vector<std::string> getOutputNames() const override;
     virtual const ov::AnyMap& getModelConfig() const override;
+
+    void applyModelTransform(std::function<void(std::shared_ptr<ov::Model>&)> t);
 
 protected:
     void initInputsOutputs();
@@ -48,7 +50,6 @@ protected:
     std::vector<std::string> outputNames;
     std::unique_ptr<AsyncInferQueue> asyncQueue;
     ov::AnyMap modelConfig;  // the content of model_info section of rt_info
-
-public:
+    std::shared_ptr<ov::Model> model;
     ov::CompiledModel compiledModel;
 };
