@@ -85,7 +85,7 @@ std::vector<size_t> get_non_xai_output_indices(const std::vector<ov::Output<ov::
 ov::AnyMap Classification::serialize(std::shared_ptr<ov::Model>& ov_model, const ov::AnyMap& input_config) {
     if (utils::model_has_embedded_processing(ov_model)) {
         std::cout << "model already was serialized" << std::endl;
-        return {};
+        return input_config;
     }
     // --------------------------- Configure input & output -------------------------------------------------
     // --------------------------- Prepare input  ------------------------------------------------------

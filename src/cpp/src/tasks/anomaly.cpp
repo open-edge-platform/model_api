@@ -7,7 +7,7 @@
 ov::AnyMap Anomaly::serialize(std::shared_ptr<ov::Model>& ov_model, const ov::AnyMap& input_config) {
     if (utils::model_has_embedded_processing(ov_model)) {
         std::cout << "model already was serialized" << std::endl;
-        return {};
+        return input_config;
     }
 
     auto input = ov_model->inputs().front();

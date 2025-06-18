@@ -124,7 +124,7 @@ cv::Mat segm_postprocess(const SegmentedObject& box, const cv::Mat& unpadded, in
 ov::AnyMap InstanceSegmentation::serialize(std::shared_ptr<ov::Model>& ov_model, const ov::AnyMap& input_config) {
     if (utils::model_has_embedded_processing(ov_model)) {
         std::cout << "model already was serialized" << std::endl;
-        return {};
+        return input_config;
     }
     if (ov_model->inputs().size() != 1) {
         throw std::logic_error("MaskRCNNModel model wrapper supports topologies with only 1 input");

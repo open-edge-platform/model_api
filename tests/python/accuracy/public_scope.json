@@ -24,6 +24,18 @@
     ]
   },
   {
+    "name": "otx_models/Lite-hrnet-s_mod2.onnx",
+    "type": "SegmentationModel",
+    "test_data": [
+      {
+        "image": "coco128/images/train2017/000000000074.jpg",
+        "reference": [
+          "0: 0.563, 1: 0.437, [426,640,2], [0], [0]; object: 0.520, 26, object: 0.530, 42, object: 0.501, 4, object: 0.507, 27, object: 0.503, 8, object: 0.502, 6, object: 0.505, 18, object: 0.504, 13, object: 0.524, 87, object: 0.521, 89, object: 0.757, 2706, "
+        ]
+      }
+    ]
+  },
+  {
     "name": "otx_models/segmentation_model_with_xai_head.xml",
     "type": "SegmentationModel",
     "test_data": [
@@ -48,6 +60,18 @@
     ]
   },
   {
+    "name": "otx_models/is_efficientnetb2b_maskrcnn_coco_reduced_onnx.onnx",
+    "type": "MaskRCNNModel",
+    "test_data": [
+      {
+        "image": "coco128/images/train2017/000000000074.jpg",
+        "reference": [
+          "458, 106, 495, 150, 1 (person): 0.818, 852, RotatedRect: 478.119 130.332 28.677 46.408 46.637; 0, 30, 178, 323, 2 (bicycle): 0.753, 26728, RotatedRect: 79.739 177.262 251.785 156.656 87.397; 0; [0]; person: 0.818, 139; bicycle: 0.753, 622; "
+        ]
+      }
+    ]
+  },
+  {
     "name": "otx_models/is_resnet50_maskrcnn_coco_reduced.xml",
     "type": "MaskRCNNModel",
     "test_data": [
@@ -61,6 +85,18 @@
   },
   {
     "name": "otx_models/det_mobilenetv2_atss_bccd.xml",
+    "type": "DetectionModel",
+    "test_data": [
+      {
+        "image": "BloodImage_00007.jpg",
+        "reference": [
+          "494, 159, 637, 308, 2 (WBC): 0.697; 28, 139, 135, 228, 1 (RBC): 0.628; 535, 375, 638, 479, 1 (RBC): 0.524; 513, 8, 633, 152, 1 (RBC): 0.430; 21, 291, 143, 399, 1 (RBC): 0.422; 196, 86, 410, 286, 1 (RBC): 0.422; [0]; [0]"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "otx_models/det_mobilenetv2_atss_bccd_onnx.onnx",
     "type": "DetectionModel",
     "test_data": [
       {
@@ -139,6 +175,16 @@
       {
         "image": "coco128/images/train2017/000000000471.jpg",
         "reference": ["105 (194): 0.456, [0], [0], [0]"]
+      }
+    ]
+  },
+  {
+    "name": "otx_models/cls_mobilenetv3_large_cars.onnx",
+    "type": "ClassificationModel",
+    "test_data": [
+      {
+        "image": "coco128/images/train2017/000000000471.jpg",
+        "reference": ["105 (194): 0.456, [0], [0], [196]"]
       }
     ]
   },
