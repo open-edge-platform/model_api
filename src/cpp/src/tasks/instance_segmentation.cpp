@@ -8,9 +8,9 @@
 #include "adapters/openvino_adapter.h"
 #include "utils/config.h"
 #include "utils/math.h"
+#include "utils/nms.h"
 #include "utils/preprocessing.h"
 #include "utils/tensor.h"
-#include "utils/nms.h"
 
 constexpr char saliency_map_name[]{"saliency_map"};
 constexpr char feature_vector_name[]{"feature_vector"};
@@ -232,7 +232,7 @@ InstanceSegmentationResult InstanceSegmentation::postprocess(InferenceResult& in
     std::cout << "resize mode: " << resize_mode << std::endl;
     int padLeft = 0, padTop = 0;
     if (utils::RESIZE_KEEP_ASPECT == resize_mode || utils::RESIZE_KEEP_ASPECT_LETTERBOX == resize_mode) {
-        std::cout << "using some other resize mode..."  << std::endl;
+        std::cout << "using some other resize mode..." << std::endl;
         invertedScaleX = invertedScaleY = std::max(invertedScaleX, invertedScaleY);
         if (utils::RESIZE_KEEP_ASPECT_LETTERBOX == resize_mode) {
             padLeft = (input_shape.width - int(std::round(floatInputImgWidth / invertedScaleX))) / 2;
@@ -306,7 +306,8 @@ InstanceSegmentationResult InstanceSegmentation::postprocess(InferenceResult& in
     return result;
 }
 
-InstanceSegmentationResult InstanceSegmentation::postprocess_tile(InstanceSegmentationResult result, const cv::Rect& coord) {
+InstanceSegmentationResult InstanceSegmentation::postprocess_tile(InstanceSegmentationResult result,
+                                                                  const cv::Rect& coord) {
     for (auto& det : result.segmentedObjects) {
         det.x += coord.x;
         det.y += coord.y;
@@ -322,11 +323,12 @@ InstanceSegmentationResult InstanceSegmentation::postprocess_tile(InstanceSegmen
     return result;
 }
 
-InstanceSegmentationResult InstanceSegmentation::merge_tiling_results(const std::vector<InstanceSegmentationResult>& tiles_results,
-                                                const cv::Size& image_size,
-                                                const std::vector<cv::Rect>& tile_coords,
-                                                const utils::TilingInfo& tiling_info) {
-    size_t max_pred_number = 200; //TODO: Actually get this from config!
+InstanceSegmentationResult InstanceSegmentation::merge_tiling_results(
+    const std::vector<InstanceSegmentationResult>& tiles_results,
+    const cv::Size& image_size,
+    const std::vector<cv::Rect>& tile_coords,
+    const utils::TilingInfo& tiling_info) {
+    size_t max_pred_number = 200;  // TODO: Actually get this from config!
 
     InstanceSegmentationResult output;
     std::vector<AnchorLabeled> all_detections;
@@ -346,15 +348,15 @@ InstanceSegmentationResult InstanceSegmentation::merge_tiling_results(const std:
     output.segmentedObjects.reserve(keep_idx.size());
     for (auto idx : keep_idx) {
         if (postprocess_semantic_masks) {
-            //why does this happen again?
-            //all_detections_ptrs[idx].get().mask = ;
-            //SegmentedObject obj = all_detections_ptrs[idx]; //copy
-            //std::cout << "Mask size before: " << obj.mask.size() << std::endl;
-            //std::cout << static_cast<cv::Rect>(obj) << std::endl;
-            //obj.mask = segm_postprocess(all_detections_ptrs[idx],
-            //                                                       obj.mask,
-            //                                                       image_size.height,
-            //                                                       image_size.width);
+            // why does this happen again?
+            // all_detections_ptrs[idx].get().mask = ;
+            // SegmentedObject obj = all_detections_ptrs[idx]; //copy
+            // std::cout << "Mask size before: " << obj.mask.size() << std::endl;
+            // std::cout << static_cast<cv::Rect>(obj) << std::endl;
+            // obj.mask = segm_postprocess(all_detections_ptrs[idx],
+            //                                                        obj.mask,
+            //                                                        image_size.height,
+            //                                                        image_size.width);
         }
 
         output.segmentedObjects.push_back(all_detections_ptrs[idx]);
@@ -390,14 +392,13 @@ InstanceSegmentationResult InstanceSegmentation::merge_tiling_results(const std:
     output.saliency_map = merge_saliency_maps(tiles_results, image_size, tile_coords, tiling_info);
 
     return output;
-
 }
 
-
-std::vector<cv::Mat_<std::uint8_t>> InstanceSegmentation::merge_saliency_maps(const std::vector<InstanceSegmentationResult>& tiles_results,
-                                                        const cv::Size& image_size,
-                                                        const std::vector<cv::Rect>& tile_coords,
-                                                        const utils::TilingInfo& tiling_info ) {
+std::vector<cv::Mat_<std::uint8_t>> InstanceSegmentation::merge_saliency_maps(
+    const std::vector<InstanceSegmentationResult>& tiles_results,
+    const cv::Size& image_size,
+    const std::vector<cv::Rect>& tile_coords,
+    const utils::TilingInfo& tiling_info) {
     std::vector<std::vector<cv::Mat_<std::uint8_t>>> all_saliency_maps;
     all_saliency_maps.reserve(tiles_results.size());
     for (const auto& result : tiles_results) {
@@ -435,7 +436,8 @@ std::vector<cv::Mat_<std::uint8_t>> InstanceSegmentation::merge_saliency_maps(co
     }
 
     for (size_t class_idx = 0; class_idx < num_classes; ++class_idx) {
-        auto image_map_cls = tiling_info.tile_with_full_image ? image_saliency_map[class_idx] : cv::Mat_<std::uint8_t>();
+        auto image_map_cls =
+            tiling_info.tile_with_full_image ? image_saliency_map[class_idx] : cv::Mat_<std::uint8_t>();
         if (image_map_cls.empty()) {
             if (cv::sum(merged_map[class_idx]) == cv::Scalar(0.)) {
                 merged_map[class_idx] = cv::Mat_<std::uint8_t>();

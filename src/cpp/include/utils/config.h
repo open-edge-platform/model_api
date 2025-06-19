@@ -16,7 +16,6 @@ enum RESIZE_MODE {
     NO_RESIZE,
 };
 
-
 template <typename Type>
 Type get_from_any_maps(const std::string& key,
                        const ov::AnyMap& top_priority,
@@ -51,12 +50,11 @@ inline bool get_from_any_maps(const std::string& key,
     return low_priority;
 }
 
-template<>
+template <>
 inline RESIZE_MODE get_from_any_maps(const std::string& key,
-                              const ov::AnyMap& top_priority,
-                              const ov::AnyMap& mid_priority,
-                              RESIZE_MODE low_priority) {
-
+                                     const ov::AnyMap& top_priority,
+                                     const ov::AnyMap& mid_priority,
+                                     RESIZE_MODE low_priority) {
     std::string resize_type = "standard";
     resize_type = utils::get_from_any_maps("resize_type", top_priority, mid_priority, resize_type);
     RESIZE_MODE resize = RESIZE_FILL;
@@ -74,8 +72,6 @@ inline RESIZE_MODE get_from_any_maps(const std::string& key,
 
     return resize;
 }
-
-
 
 inline bool model_has_embedded_processing(std::shared_ptr<ov::Model> model) {
     if (model->has_rt_info("model_info")) {

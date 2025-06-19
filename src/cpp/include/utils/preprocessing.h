@@ -7,6 +7,7 @@
 
 #include <opencv2/opencv.hpp>
 #include <openvino/openvino.hpp>
+
 #include "utils/config.h"
 
 namespace utils {

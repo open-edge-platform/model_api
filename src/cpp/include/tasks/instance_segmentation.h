@@ -18,7 +18,8 @@ public:
     std::shared_ptr<InferenceAdapter> adapter;
     std::unique_ptr<Pipeline<InstanceSegmentationResult>> pipeline;
 
-    InstanceSegmentation(std::shared_ptr<InferenceAdapter> adapter, const ov::AnyMap& configuration) : adapter(adapter) {
+    InstanceSegmentation(std::shared_ptr<InferenceAdapter> adapter, const ov::AnyMap& configuration)
+        : adapter(adapter) {
         auto config = adapter->getModelConfig();
         tiling = utils::get_from_any_maps("tiling", configuration, config, tiling);
         if (tiling) {
@@ -75,14 +76,12 @@ public:
                                                             const std::vector<cv::Rect>&,
                                                             const utils::TilingInfo&);
 
-    
     static std::vector<SegmentedObjectWithRects> getRotatedRectangles(const InstanceSegmentationResult& result);
     static std::vector<Contour> getContours(const std::vector<SegmentedObject>& objects);
 
     bool postprocess_semantic_masks = true;
 
 private:
-
     bool tiling;
 
     utils::RESIZE_MODE resize_mode;
