@@ -8,6 +8,8 @@
 #include <opencv2/opencv.hpp>
 #include <openvino/openvino.hpp>
 
+#include "utils/config.h"
+
 namespace utils {
 
 struct TilingInfo {
@@ -24,30 +26,10 @@ inline bool config_contains_tiling_info(const ov::AnyMap& config) {
 
 inline TilingInfo get_tiling_info_from_config(const ov::AnyMap& config) {
     TilingInfo info;
-    {
-        auto iter = config.find("tile_size");
-        if (iter != config.end()) {
-            info.tile_size = iter->second.as<size_t>();
-        }
-    }
-    {
-        auto iter = config.find("tiles_overlap");
-        if (iter != config.end()) {
-            info.tiles_overlap = iter->second.as<float>();
-        }
-    }
-    {
-        auto iter = config.find("iou_threshold");
-        if (iter != config.end()) {
-            info.iou_threshold = iter->second.as<float>();
-        }
-    }
-    {
-        auto iter = config.find("tile_with_full_img");
-        if (iter != config.end()) {
-            info.tile_with_full_image = iter->second.as<bool>();
-        }
-    }
+    info.tile_size = utils::get_from_any_maps("tile_size", config, {}, info.tile_size);
+    info.tiles_overlap = utils::get_from_any_maps("tiles_overlap", config, {}, info.tiles_overlap);
+    info.iou_threshold = utils::get_from_any_maps("iou_threshold", config, {}, info.iou_threshold);
+    info.tile_with_full_image = utils::get_from_any_maps("tile_with_full_image", config, {}, info.tile_with_full_image);
     return info;
 }
 
