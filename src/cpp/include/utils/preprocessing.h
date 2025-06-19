@@ -7,16 +7,9 @@
 
 #include <opencv2/opencv.hpp>
 #include <openvino/openvino.hpp>
+#include "utils/config.h"
 
 namespace utils {
-enum RESIZE_MODE {
-    RESIZE_FILL,
-    RESIZE_KEEP_ASPECT,
-    RESIZE_KEEP_ASPECT_LETTERBOX,
-    RESIZE_CROP,
-    NO_RESIZE,
-};
-
 std::shared_ptr<ov::Model> embedProcessing(std::shared_ptr<ov::Model>& model,
                                            const std::string& inputName,
                                            const ov::Layout&,

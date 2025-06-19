@@ -112,7 +112,7 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
             EXPECT_EQ(format_test_output_to_string(model, result), test_data.reference[0]);
         }
     } else if (data.type == "MaskRCNNModel") {
-        auto model = InstanceSegmentation::load(model_path);
+        auto model = InstanceSegmentation::load(model_path, {{"tiling", use_tiling}});
 
         for (auto& test_data : data.test_data) {
             std::string image_path = DATA_DIR + '/' + test_data.image;
@@ -169,7 +169,7 @@ TEST_P(ModelParameterizedTest, SerializedAccuracyTest) {
             EXPECT_EQ(format_test_output_to_string(model, result), test_data.reference[0]);
         }
     } else if (data.type == "MaskRCNNModel") {
-        auto model = InstanceSegmentation::load(model_path);
+        auto model = InstanceSegmentation::load(model_path, {{"tiling", use_tiling}});
 
         for (auto& test_data : data.test_data) {
             std::string image_path = DATA_DIR + '/' + test_data.image;
@@ -229,7 +229,7 @@ TEST_P(ModelParameterizedTest, AccuracyTestBatch) {
             EXPECT_EQ(format_test_output_to_string(model, result[0]), test_data.reference[0]);
         }
     } else if (data.type == "MaskRCNNModel") {
-        auto model = InstanceSegmentation::load(model_path);
+        auto model = InstanceSegmentation::load(model_path, {{"tiling", use_tiling}});
 
         for (auto& test_data : data.test_data) {
             std::string image_path = DATA_DIR + '/' + test_data.image;

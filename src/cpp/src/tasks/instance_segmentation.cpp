@@ -10,6 +10,7 @@
 #include "utils/math.h"
 #include "utils/preprocessing.h"
 #include "utils/tensor.h"
+#include "utils/nms.h"
 
 constexpr char saliency_map_name[]{"saliency_map"};
 constexpr char feature_vector_name[]{"feature_vector"};
@@ -99,7 +100,6 @@ Lbm filterTensors(const std::map<std::string, ov::Tensor>& infResult) {
 }
 
 cv::Mat segm_postprocess(const SegmentedObject& box, const cv::Mat& unpadded, int im_h, int im_w) {
-    // Add zero border to prevent upsampling artifacts on segment borders.
     cv::Mat raw_cls_mask;
     cv::copyMakeBorder(unpadded, raw_cls_mask, 1, 1, 1, 1, cv::BORDER_CONSTANT, {0});
     cv::Rect extended_box = expand_box(box, float(raw_cls_mask.cols) / (raw_cls_mask.cols - 2));
@@ -137,7 +137,8 @@ void InstanceSegmentation::serialize(std::shared_ptr<ov::Model>& ov_model) {
     }
 
     auto interpolation_mode = cv::INTER_LINEAR;
-    utils::RESIZE_MODE resize_mode = utils::RESIZE_FILL;
+    utils::RESIZE_MODE resize_mode;
+    resize_mode = utils::get_from_any_maps("resize_type", config, ov::AnyMap{}, resize_mode);
 
     std::vector<float> scale_values;
     std::vector<float> mean_values;
@@ -186,7 +187,7 @@ void InstanceSegmentation::serialize(std::shared_ptr<ov::Model>& ov_model) {
     ov_model->set_rt_info(input_shape.height, "model_info", "orig_height");
 }
 
-InstanceSegmentation InstanceSegmentation::load(const std::string& model_path) {
+InstanceSegmentation InstanceSegmentation::load(const std::string& model_path, const ov::AnyMap& configuration) {
     auto core = ov::Core();
     std::shared_ptr<ov::Model> model = core.read_model(model_path);
 
@@ -204,15 +205,15 @@ InstanceSegmentation InstanceSegmentation::load(const std::string& model_path) {
     }
     auto adapter = std::make_shared<OpenVINOInferenceAdapter>();
     adapter->loadModel(model, core, "AUTO");
-    return InstanceSegmentation(adapter);
+    return InstanceSegmentation(adapter, configuration);
 }
 
 InstanceSegmentationResult InstanceSegmentation::infer(cv::Mat image) {
-    return pipeline.infer(image);
+    return pipeline->infer(image);
 }
 
 std::vector<InstanceSegmentationResult> InstanceSegmentation::inferBatch(std::vector<cv::Mat> images) {
-    return pipeline.inferBatch(images);
+    return pipeline->inferBatch(images);
 }
 
 std::map<std::string, ov::Tensor> InstanceSegmentation::preprocess(cv::Mat image) {
@@ -226,11 +227,14 @@ InstanceSegmentationResult InstanceSegmentation::postprocess(InferenceResult& in
           floatInputImgHeight = float(infResult.inputImageSize.height);
     float invertedScaleX = floatInputImgWidth / input_shape.width,
           invertedScaleY = floatInputImgHeight / input_shape.height;
+
+    std::cout << "got an inf result with image: " << infResult.inputImageSize << std::endl;
+    std::cout << "resize mode: " << resize_mode << std::endl;
     int padLeft = 0, padTop = 0;
-    auto resizeMode = utils::RESIZE_FILL;
-    if (utils::RESIZE_KEEP_ASPECT == resizeMode || utils::RESIZE_KEEP_ASPECT_LETTERBOX == resizeMode) {
+    if (utils::RESIZE_KEEP_ASPECT == resize_mode || utils::RESIZE_KEEP_ASPECT_LETTERBOX == resize_mode) {
+        std::cout << "using some other resize mode..."  << std::endl;
         invertedScaleX = invertedScaleY = std::max(invertedScaleX, invertedScaleY);
-        if (utils::RESIZE_KEEP_ASPECT_LETTERBOX == resizeMode) {
+        if (utils::RESIZE_KEEP_ASPECT_LETTERBOX == resize_mode) {
             padLeft = (input_shape.width - int(std::round(floatInputImgWidth / invertedScaleX))) / 2;
             padTop = (input_shape.height - int(std::round(floatInputImgHeight / invertedScaleY))) / 2;
         }
@@ -300,6 +304,149 @@ InstanceSegmentationResult InstanceSegmentation::postprocess(InferenceResult& in
         result.feature_vector = std::move(infResult.data[feature_vector_name]);
     }
     return result;
+}
+
+InstanceSegmentationResult InstanceSegmentation::postprocess_tile(InstanceSegmentationResult result, const cv::Rect& coord) {
+    for (auto& det : result.segmentedObjects) {
+        det.x += coord.x;
+        det.y += coord.y;
+    }
+
+    if (result.feature_vector) {
+        auto tmp_feature_vector =
+            ov::Tensor(result.feature_vector.get_element_type(), result.feature_vector.get_shape());
+        result.feature_vector.copy_to(tmp_feature_vector);
+        result.feature_vector = tmp_feature_vector;
+    }
+
+    return result;
+}
+
+InstanceSegmentationResult InstanceSegmentation::merge_tiling_results(const std::vector<InstanceSegmentationResult>& tiles_results,
+                                                const cv::Size& image_size,
+                                                const std::vector<cv::Rect>& tile_coords,
+                                                const utils::TilingInfo& tiling_info) {
+    size_t max_pred_number = 200; //TODO: Actually get this from config!
+
+    InstanceSegmentationResult output;
+    std::vector<AnchorLabeled> all_detections;
+    std::vector<std::reference_wrapper<const SegmentedObject>> all_detections_ptrs;
+    std::vector<float> all_scores;
+
+    for (auto& result : tiles_results) {
+        for (auto& det : result.segmentedObjects) {
+            all_detections.emplace_back(det.x, det.y, det.x + det.width, det.y + det.height, det.labelID);
+            all_scores.push_back(det.confidence);
+            all_detections_ptrs.push_back(det);
+        }
+    }
+
+    auto keep_idx = multiclass_nms(all_detections, all_scores, tiling_info.iou_threshold, false, max_pred_number);
+
+    output.segmentedObjects.reserve(keep_idx.size());
+    for (auto idx : keep_idx) {
+        if (postprocess_semantic_masks) {
+            //why does this happen again?
+            //all_detections_ptrs[idx].get().mask = ;
+            //SegmentedObject obj = all_detections_ptrs[idx]; //copy
+            //std::cout << "Mask size before: " << obj.mask.size() << std::endl;
+            //std::cout << static_cast<cv::Rect>(obj) << std::endl;
+            //obj.mask = segm_postprocess(all_detections_ptrs[idx],
+            //                                                       obj.mask,
+            //                                                       image_size.height,
+            //                                                       image_size.width);
+        }
+
+        output.segmentedObjects.push_back(all_detections_ptrs[idx]);
+    }
+
+    if (tiles_results.size()) {
+        auto first = tiles_results.front();
+        if (first.feature_vector) {
+            output.feature_vector =
+                ov::Tensor(first.feature_vector.get_element_type(), first.feature_vector.get_shape());
+        }
+    }
+
+    if (output.feature_vector) {
+        float* feature_ptr = output.feature_vector.data<float>();
+        size_t feature_size = output.feature_vector.get_size();
+
+        std::fill(feature_ptr, feature_ptr + feature_size, 0.f);
+
+        for (const auto& result : tiles_results) {
+            const float* current_feature_ptr = result.feature_vector.data<float>();
+
+            for (size_t i = 0; i < feature_size; ++i) {
+                feature_ptr[i] += current_feature_ptr[i];
+            }
+        }
+
+        for (size_t i = 0; i < feature_size; ++i) {
+            feature_ptr[i] /= tiles_results.size();
+        }
+    }
+
+    output.saliency_map = merge_saliency_maps(tiles_results, image_size, tile_coords, tiling_info);
+
+    return output;
+
+}
+
+
+std::vector<cv::Mat_<std::uint8_t>> InstanceSegmentation::merge_saliency_maps(const std::vector<InstanceSegmentationResult>& tiles_results,
+                                                        const cv::Size& image_size,
+                                                        const std::vector<cv::Rect>& tile_coords,
+                                                        const utils::TilingInfo& tiling_info ) {
+    std::vector<std::vector<cv::Mat_<std::uint8_t>>> all_saliency_maps;
+    all_saliency_maps.reserve(tiles_results.size());
+    for (const auto& result : tiles_results) {
+        all_saliency_maps.push_back(result.saliency_map);
+    }
+
+    std::vector<cv::Mat_<std::uint8_t>> image_saliency_map;
+    if (all_saliency_maps.size()) {
+        image_saliency_map = all_saliency_maps[0];
+    }
+
+    if (image_saliency_map.empty()) {
+        return image_saliency_map;
+    }
+
+    size_t num_classes = image_saliency_map.size();
+    std::vector<cv::Mat_<std::uint8_t>> merged_map(num_classes);
+    for (auto& map : merged_map) {
+        map = cv::Mat_<std::uint8_t>(image_size, 0);
+    }
+
+    size_t start_idx = tiling_info.tile_with_full_image ? 1 : 0;
+    for (size_t i = start_idx; i < all_saliency_maps.size(); ++i) {
+        for (size_t class_idx = 0; class_idx < num_classes; ++class_idx) {
+            auto current_cls_map_mat = all_saliency_maps[i][class_idx];
+            if (current_cls_map_mat.empty()) {
+                continue;
+            }
+            const auto& tile = tile_coords[i];
+            cv::Mat tile_map;
+            cv::resize(current_cls_map_mat, tile_map, tile.size());
+            auto tile_map_merged = cv::Mat(merged_map[class_idx], tile);
+            cv::Mat(cv::max(tile_map, tile_map_merged)).copyTo(tile_map_merged);
+        }
+    }
+
+    for (size_t class_idx = 0; class_idx < num_classes; ++class_idx) {
+        auto image_map_cls = tiling_info.tile_with_full_image ? image_saliency_map[class_idx] : cv::Mat_<std::uint8_t>();
+        if (image_map_cls.empty()) {
+            if (cv::sum(merged_map[class_idx]) == cv::Scalar(0.)) {
+                merged_map[class_idx] = cv::Mat_<std::uint8_t>();
+            }
+        } else {
+            cv::resize(image_map_cls, image_map_cls, image_size);
+            cv::Mat(cv::max(merged_map[class_idx], image_map_cls)).copyTo(merged_map[class_idx]);
+        }
+    }
+
+    return merged_map;
 }
 
 std::vector<SegmentedObjectWithRects> InstanceSegmentation::getRotatedRectangles(
