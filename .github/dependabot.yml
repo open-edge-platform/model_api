@@ -1,0 +1,17 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: /
+    schedule:
+      interval: "weekly"
+    target-branch: "master"
+    groups:
+      github-actions-dependency:
+        applies-to: version-updates
+        patterns:
+          - "*"
+  - package-ecosystem: pip
+    directory: /src/python
+    schedule:
+      interval: weekly
+    target-branch: "master"
