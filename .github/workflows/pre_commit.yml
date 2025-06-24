@@ -81,5 +81,5 @@ jobs:
           scan-scope: "changed"
           severity-level: "LOW"
           confidence-level: "LOW"
-          config_file: ".github/bandit_config.yml"
+          config_file: "src/python/pyproject.toml"
           fail-on-findings: true

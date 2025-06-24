@@ -62,7 +62,7 @@ repos:
         args:
           [
             "-c",
-            "pyproject.toml",
+            "src/python/pyproject.toml",
             "--severity-level",
             "all",
             "--confidence-level",
