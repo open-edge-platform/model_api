@@ -92,7 +92,6 @@ endmacro()
 
 find_package(OpenCV REQUIRED COMPONENTS imgcodecs)
 
-set (ENABLE_PY_BINDINGS OFF)
 add_subdirectory(../../src/cpp ${Samples_BINARY_DIR}/src/cpp)
 
 add_example(NAME asynchronous_api SOURCES ./asynchronous_api/main.cpp DEPENDENCIES model_api)
