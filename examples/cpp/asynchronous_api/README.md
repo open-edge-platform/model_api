@@ -18,19 +18,16 @@ This example demonstrates how to use a C++ API of OpenVINO Model API for asynchr
   ```
 
 - Build example:
-
   - Create `build` folder and navigate into it:
 
   ```bash
   mkdir build && cd build
   ```
-
   - Run cmake:
 
   ```bash
   cmake ../
   ```
-
   - Build:
 
   ```bash

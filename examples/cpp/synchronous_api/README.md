@@ -16,19 +16,16 @@ This example demonstrates how to use a C++ API of OpenVINO Model API for synchro
   ```
 
 - Build example:
-
   - Create `build` folder and navigate into it:
 
   ```bash
   mkdir build && cd build
   ```
-
   - Run cmake:
 
   ```bash
   cmake ../
   ```
-
   - Build:
 
   ```bash
