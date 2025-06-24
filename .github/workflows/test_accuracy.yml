@@ -1,5 +1,5 @@
 name: test_accuracy
-permissions: { } # No permissions by default on workflow level
+permissions: {} # No permissions by default on workflow level
 on:
   pull_request:
   merge_group:

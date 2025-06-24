@@ -1,5 +1,5 @@
 name: Build Docs
-permissions: { } # No permissions by default on workflow level
+permissions: {} # No permissions by default on workflow level
 
 on:
   workflow_dispatch: # run on request (no need for PR)

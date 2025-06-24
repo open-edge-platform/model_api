@@ -5,7 +5,7 @@ on:
   release:
     types: [published]
 
-permissions: { } # No permissions by default on workflow level
+permissions: {} # No permissions by default on workflow level
 
 jobs:
   build:
