@@ -1,5 +1,5 @@
 name: Pre-Commit Checks
-permissions: { } # No permissions by default on workflow level
+permissions: {} # No permissions by default on workflow level
 
 on:
   push:
@@ -50,3 +50,36 @@ jobs:
         run: pip install 'src/python/.[tests,ovms]'
       - name: Run python unit tests
         run: pytest tests/python/unit
+  Zizmor-Scan-PR:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Run Zizmor scan
+        uses: open-edge-platform/anomalib/.github/actions/security/zizmor@f60dd31a53407496508aa2db3165c8e8cd121a14
+        with:
+          scan-scope: "changed"
+          severity-level: "MEDIUM"
+          confidence-level: "HIGH"
+          fail-on-findings: true
+  Bandit-Scan-PR:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Run Bandit scan
+        uses: open-edge-platform/anomalib/.github/actions/security/bandit@f60dd31a53407496508aa2db3165c8e8cd121a14
+        with:
+          scan-scope: "changed"
+          severity-level: "LOW"
+          confidence-level: "LOW"
+          config_file: ".github/bandit_config.yml"
+          fail-on-findings: true
