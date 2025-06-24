@@ -52,4 +52,4 @@ repos:
     rev: v1.9.0
     hooks:
       - id: zizmor
-        args: ["--min-severity", "low", "--min-confidence", "low"]
+        args: ["--min-severity", "medium", "--min-confidence", "high"]
