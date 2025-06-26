@@ -39,7 +39,7 @@ public:
     virtual std::vector<std::string> getOutputNames() const override;
     virtual const ov::AnyMap& getModelConfig() const override;
 
-    void applyModelTransform(std::function<ov::AnyMap(std::shared_ptr<ov::Model>&, const ov::AnyMap&)> t);
+    void applyModelTransform(std::function<void(std::shared_ptr<ov::Model>&)> t);
 
 protected:
     void initInputsOutputs();

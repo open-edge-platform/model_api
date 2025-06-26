@@ -121,16 +121,16 @@ cv::Mat segm_postprocess(const SegmentedObject& box, const cv::Mat& unpadded, in
     return im_mask;
 }
 
-ov::AnyMap InstanceSegmentation::serialize(std::shared_ptr<ov::Model>& ov_model, const ov::AnyMap& input_config) {
+void InstanceSegmentation::serialize(std::shared_ptr<ov::Model>& ov_model) {
     if (utils::model_has_embedded_processing(ov_model)) {
         std::cout << "model already was serialized" << std::endl;
-        return input_config;
+        return;
     }
     if (ov_model->inputs().size() != 1) {
         throw std::logic_error("MaskRCNNModel model wrapper supports topologies with only 1 input");
     }
     const auto& input = ov_model->input();
-    auto config(input_config);
+    auto config = ov_model->has_rt_info("model_info") ? ov_model->get_rt_info<ov::AnyMap>("model_info") : ov::AnyMap{};
     std::string layout = "";
     layout = utils::get_from_any_maps("layout", config, {}, layout);
     auto inputsLayouts = utils::parseLayoutString(layout);
@@ -186,10 +186,8 @@ ov::AnyMap InstanceSegmentation::serialize(std::shared_ptr<ov::Model>& ov_model,
                                saliency_map_name + ", " + feature_vector_name + " and 3 or 4 other outputs");
     }
 
-    config["orig_width"] = std::to_string(input_shape.width);
-    config["orig_height"] = std::to_string(input_shape.height);
-
-    return config;
+    ov_model->set_rt_info(input_shape.width, "model_info", "orig_width");
+    ov_model->set_rt_info(input_shape.height, "model_info", "orig_height");
 }
 
 InstanceSegmentation InstanceSegmentation::load(const std::string& model_path) {

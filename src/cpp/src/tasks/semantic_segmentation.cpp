@@ -36,10 +36,10 @@ SemanticSegmentation SemanticSegmentation::load(const std::string& model_path) {
     return SemanticSegmentation(adapter);
 }
 
-ov::AnyMap SemanticSegmentation::serialize(std::shared_ptr<ov::Model>& ov_model, const ov::AnyMap& input_config) {
+void SemanticSegmentation::serialize(std::shared_ptr<ov::Model>& ov_model) {
     if (utils::model_has_embedded_processing(ov_model)) {
         std::cout << "model already was serialized" << std::endl;
-        return input_config;
+        return;
     }
     if (ov_model->inputs().size() != 1) {
         throw std::logic_error("Segmentation model wrapper supports topologies with only 1 input");
@@ -80,7 +80,7 @@ ov::AnyMap SemanticSegmentation::serialize(std::shared_ptr<ov::Model>& ov_model,
     uint8_t pad_value = 0;
     bool reverse_input_channels = false;
 
-    auto config(input_config);
+    auto config = ov_model->has_rt_info("model_info") ? ov_model->get_rt_info<ov::AnyMap>("model_info") : ov::AnyMap{};
 
     std::vector<float> scale_values;
     std::vector<float> mean_values;
@@ -112,10 +112,8 @@ ov::AnyMap SemanticSegmentation::serialize(std::shared_ptr<ov::Model>& ov_model,
     ov_model = ppp.build();
 
     cv::Size input_shape(shape[ov::layout::width_idx(layout)], shape[ov::layout::height_idx(layout)]);
-    config["orig_width"] = std::to_string(input_shape.width);
-    config["orig_height"] = std::to_string(input_shape.height);
-
-    return config;
+    ov_model->set_rt_info(input_shape.width, "model_info", "orig_width");
+    ov_model->set_rt_info(input_shape.height, "model_info", "orig_height");
 }
 
 std::map<std::string, ov::Tensor> SemanticSegmentation::preprocess(cv::Mat image) {

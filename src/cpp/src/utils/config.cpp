@@ -52,3 +52,9 @@ ov::AnyMap utils::get_config_from_onnx(const std::string& model_path) {
     }
     return config;
 }
+
+void utils::add_ov_model_info(std::shared_ptr<ov::Model> model, const ov::AnyMap& config) {
+    for (const auto& k : config) {
+        model->set_rt_info(k.second, "model_info", k.first);
+    }
+}

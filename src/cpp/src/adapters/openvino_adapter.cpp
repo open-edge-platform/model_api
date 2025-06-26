@@ -50,18 +50,18 @@ void OpenVINOInferenceAdapter::loadModel(const std::string& modelPath,
         modelConfig = model->get_rt_info<ov::AnyMap>("model_info");
     } else if (modelPath.find("onnx") != std::string::npos || modelPath.find("ONNX") != std::string::npos) {
         modelConfig = utils::get_config_from_onnx(modelPath);
+        utils::add_ov_model_info(model, modelConfig);
     }
     if (preCompile) {
         compileModel(device, adapterConfig);
     }
 }
 
-void OpenVINOInferenceAdapter::applyModelTransform(
-    std::function<ov::AnyMap(std::shared_ptr<ov::Model>&, const ov::AnyMap&)> t) {
+void OpenVINOInferenceAdapter::applyModelTransform(std::function<void(std::shared_ptr<ov::Model>&)> t) {
     if (!model) {
         throw std::runtime_error("Model is not loaded");
     }
-    modelConfig = t(model, modelConfig);
+    t(model);
 }
 
 void OpenVINOInferenceAdapter::infer(const InferenceInput& input, InferenceOutput& output) {

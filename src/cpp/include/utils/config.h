@@ -44,6 +44,8 @@ inline bool get_from_any_maps(const std::string& key,
 
 ov::AnyMap get_config_from_onnx(const std::string& model_path);
 
+void add_ov_model_info(std::shared_ptr<ov::Model> model, const ov::AnyMap& config);
+
 inline bool model_has_embedded_processing(std::shared_ptr<ov::Model> model) {
     if (model->has_rt_info("model_info")) {
         auto model_info = model->get_rt_info<ov::AnyMap>("model_info");

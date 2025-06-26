@@ -4,10 +4,10 @@
 #include "utils/preprocessing.h"
 #include "utils/tensor.h"
 
-ov::AnyMap Anomaly::serialize(std::shared_ptr<ov::Model>& ov_model, const ov::AnyMap& input_config) {
+void Anomaly::serialize(std::shared_ptr<ov::Model>& ov_model) {
     if (utils::model_has_embedded_processing(ov_model)) {
         std::cout << "model already was serialized" << std::endl;
-        return input_config;
+        return;
     }
 
     auto input = ov_model->inputs().front();
@@ -26,13 +26,13 @@ ov::AnyMap Anomaly::serialize(std::shared_ptr<ov::Model>& ov_model, const ov::An
 
     std::vector<float> scale_values;
     std::vector<float> mean_values;
-
-    auto config(input_config);
-
-    reverse_input_channels =
-        utils::get_from_any_maps("reverse_input_channels", config, ov::AnyMap{}, reverse_input_channels);
-    scale_values = utils::get_from_any_maps("scale_values", config, ov::AnyMap{}, scale_values);
-    mean_values = utils::get_from_any_maps("mean_values", config, ov::AnyMap{}, mean_values);
+    if (ov_model->has_rt_info("model_info")) {
+        auto config = ov_model->get_rt_info<ov::AnyMap>("model_info");
+        reverse_input_channels =
+            utils::get_from_any_maps("reverse_input_channels", config, ov::AnyMap{}, reverse_input_channels);
+        scale_values = utils::get_from_any_maps("scale_values", config, ov::AnyMap{}, scale_values);
+        mean_values = utils::get_from_any_maps("mean_values", config, ov::AnyMap{}, mean_values);
+    }
 
     auto input_shape = ov::Shape{shape[ov::layout::width_idx(layout)], shape[ov::layout::height_idx(layout)]};
 
@@ -47,10 +47,8 @@ ov::AnyMap Anomaly::serialize(std::shared_ptr<ov::Model>& ov_model, const ov::An
                                       mean_values,
                                       scale_values);
 
-    config["orig_width"] = std::to_string(input_shape[0]);
-    config["orig_height"] = std::to_string(input_shape[1]);
-
-    return config;
+    ov_model->set_rt_info(input_shape[0], "model_info", "orig_width");
+    ov_model->set_rt_info(input_shape[1], "model_info", "orig_height");
 }
 
 Anomaly Anomaly::load(const std::string& model_path) {
