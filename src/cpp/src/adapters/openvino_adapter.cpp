@@ -62,6 +62,9 @@ void OpenVINOInferenceAdapter::applyModelTransform(std::function<void(std::share
         throw std::runtime_error("Model is not loaded");
     }
     t(model);
+    if (model->has_rt_info({"model_info"})) {
+        modelConfig = model->get_rt_info<ov::AnyMap>("model_info");
+    }
 }
 
 void OpenVINOInferenceAdapter::infer(const InferenceInput& input, InferenceOutput& output) {
