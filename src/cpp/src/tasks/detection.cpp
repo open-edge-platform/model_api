@@ -5,6 +5,8 @@
 
 #include "tasks/detection.h"
 
+#include <algorithm>
+
 #include "adapters/openvino_adapter.h"
 #include "tasks/detection/ssd.h"
 #include "utils/config.h"
@@ -17,7 +19,7 @@ DetectionModel DetectionModel::load(const std::string& model_path, const ov::Any
 
     std::string model_type;
     model_type = utils::get_from_any_maps("model_type", adapter->getModelConfig(), {}, model_type);
-    transform(model_type.begin(), model_type.end(), model_type.begin(), ::tolower);
+    std::transform(model_type.begin(), model_type.end(), model_type.begin(), ::tolower);
 
     if (model_type.empty() || model_type != "ssd") {
         throw std::runtime_error("Incorrect or unsupported model_type, expected: ssd");

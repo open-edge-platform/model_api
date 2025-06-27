@@ -67,7 +67,7 @@ std::map<std::string, ov::Tensor> SSD::preprocess(cv::Mat image) {
     return input;
 }
 
-void SSD::serialize(std::shared_ptr<ov::Model> ov_model) {
+void SSD::serialize(std::shared_ptr<ov::Model>& ov_model) {
     if (utils::model_has_embedded_processing(ov_model)) {
         std::cout << "model already was serialized" << std::endl;
         return;

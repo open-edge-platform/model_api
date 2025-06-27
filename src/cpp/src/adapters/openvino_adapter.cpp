@@ -48,6 +48,9 @@ void OpenVINOInferenceAdapter::loadModel(const std::string& modelPath,
     model = core.read_model(modelPath);
     if (model->has_rt_info({"model_info"})) {
         modelConfig = model->get_rt_info<ov::AnyMap>("model_info");
+    } else if (modelPath.find("onnx") != std::string::npos || modelPath.find("ONNX") != std::string::npos) {
+        modelConfig = utils::get_config_from_onnx(modelPath);
+        utils::add_ov_model_info(model, modelConfig);
     }
     if (preCompile) {
         compileModel(device, adapterConfig);
