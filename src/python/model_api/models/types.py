@@ -178,6 +178,8 @@ class ListValue(BaseValue):
         self.value_type = value_type
 
     def from_str(self, value: str) -> list[Any]:
+        if self.value_type is str or self.value_type is StringValue:
+            return value.split()
         try:
             floats = [float(i) for i in value.split()]
             try:
