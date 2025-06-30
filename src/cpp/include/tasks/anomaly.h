@@ -18,7 +18,7 @@ public:
     std::shared_ptr<InferenceAdapter> adapter;
     VisionPipeline<AnomalyResult> pipeline;
 
-    Anomaly(std::shared_ptr<InferenceAdapter> adapter) : adapter(adapter) {
+    Anomaly(std::shared_ptr<InferenceAdapter> adapter, const ov::AnyMap& user_config) : adapter(adapter) {
         pipeline = VisionPipeline<AnomalyResult>(
             adapter,
             [&](cv::Mat image) {
@@ -28,18 +28,19 @@ public:
                 return postprocess(result);
             });
 
-        auto config = adapter->getModelConfig();
-        image_threshold = utils::get_from_any_maps("image_threshold", config, {}, image_threshold);
-        pixel_threshold = utils::get_from_any_maps("pixel_threshold", config, {}, pixel_threshold);
-        normalization_scale = utils::get_from_any_maps("normalization_scale", config, {}, normalization_scale);
-        task = utils::get_from_any_maps("pixel_threshold", config, {}, task);
-        labels = utils::get_from_any_maps("labels", config, {}, labels);
-        input_shape.width = utils::get_from_any_maps("orig_width", config, {}, input_shape.width);
-        input_shape.height = utils::get_from_any_maps("orig_height", config, {}, input_shape.height);
+        auto model_config = adapter->getModelConfig();
+        image_threshold = utils::get_from_any_maps("image_threshold", user_config, model_config, image_threshold);
+        pixel_threshold = utils::get_from_any_maps("pixel_threshold", user_config, model_config, pixel_threshold);
+        normalization_scale =
+            utils::get_from_any_maps("normalization_scale", user_config, model_config, normalization_scale);
+        task = utils::get_from_any_maps("pixel_threshold", user_config, model_config, task);
+        labels = utils::get_from_any_maps("labels", user_config, model_config, labels);
+        input_shape.width = utils::get_from_any_maps("orig_width", user_config, model_config, input_shape.width);
+        input_shape.height = utils::get_from_any_maps("orig_height", user_config, model_config, input_shape.height);
     }
 
     static void serialize(std::shared_ptr<ov::Model>& ov_model);
-    static Anomaly load(const std::string& model_path);
+    static Anomaly create_model(const std::string& model_path, const ov::AnyMap& user_config = {});
 
     AnomalyResult infer(cv::Mat image);
     std::vector<AnomalyResult> inferBatch(std::vector<cv::Mat> image);

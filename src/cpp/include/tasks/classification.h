@@ -19,7 +19,7 @@ public:
     std::shared_ptr<InferenceAdapter> adapter;
     VisionPipeline<ClassificationResult> pipeline;
 
-    Classification(std::shared_ptr<InferenceAdapter> adapter) : adapter(adapter) {
+    Classification(std::shared_ptr<InferenceAdapter> adapter, const ov::AnyMap& user_config) : adapter(adapter) {
         pipeline = VisionPipeline<ClassificationResult>(
             adapter,
             [&](cv::Mat image) {
@@ -29,16 +29,19 @@ public:
                 return postprocess(result);
             });
 
-        auto config = adapter->getModelConfig();
-        labels = utils::get_from_any_maps("labels", config, {}, labels);
+        auto model_config = adapter->getModelConfig();
+        labels = utils::get_from_any_maps("labels", user_config, model_config, labels);
 
-        topk = utils::get_from_any_maps("topk", config, {}, topk);
-        multilabel = utils::get_from_any_maps("multilabel", config, {}, multilabel);
-        output_raw_scores = utils::get_from_any_maps("output_raw_scores", config, {}, output_raw_scores);
-        confidence_threshold = utils::get_from_any_maps("confidence_threshold", config, {}, confidence_threshold);
-        hierarchical = utils::get_from_any_maps("hierarchical", config, {}, hierarchical);
-        hierarchical_config = utils::get_from_any_maps("hierarchical_config", config, {}, hierarchical_config);
-        hierarchical_postproc = utils::get_from_any_maps("hierarchical_postproc", config, {}, hierarchical_postproc);
+        topk = utils::get_from_any_maps("topk", user_config, model_config, topk);
+        multilabel = utils::get_from_any_maps("multilabel", user_config, model_config, multilabel);
+        output_raw_scores = utils::get_from_any_maps("output_raw_scores", user_config, model_config, output_raw_scores);
+        confidence_threshold =
+            utils::get_from_any_maps("confidence_threshold", user_config, model_config, confidence_threshold);
+        hierarchical = utils::get_from_any_maps("hierarchical", user_config, model_config, hierarchical);
+        hierarchical_config =
+            utils::get_from_any_maps("hierarchical_config", user_config, model_config, hierarchical_config);
+        hierarchical_postproc =
+            utils::get_from_any_maps("hierarchical_postproc", user_config, model_config, hierarchical_postproc);
         if (hierarchical) {
             if (hierarchical_config.empty()) {
                 throw std::runtime_error("Error: empty hierarchical classification config");
@@ -55,7 +58,7 @@ public:
     }
 
     static void serialize(std::shared_ptr<ov::Model>& ov_model);
-    static Classification load(const std::string& model_path);
+    static Classification create_model(const std::string& model_path, const ov::AnyMap& user_config = {});
 
     ClassificationResult infer(cv::Mat image);
     std::vector<ClassificationResult> inferBatch(std::vector<cv::Mat> image);

@@ -19,9 +19,9 @@ class DetectionModel {
 public:
     std::unique_ptr<Pipeline<DetectionResult>> pipeline;
 
-    DetectionModel(std::unique_ptr<SSD> algorithm, const ov::AnyMap& configuration) : algorithm(std::move(algorithm)) {
+    DetectionModel(std::unique_ptr<SSD> algorithm, const ov::AnyMap& user_config) : algorithm(std::move(algorithm)) {
         auto config = this->algorithm->adapter->getModelConfig();
-        if (configuration.count("tiling") && configuration.at("tiling").as<bool>()) {
+        if (user_config.count("tiling") && user_config.at("tiling").as<bool>()) {
             if (!utils::config_contains_tiling_info(config)) {
                 throw std::runtime_error("Model config does not contain tiling properties.");
             }
@@ -67,7 +67,7 @@ public:
                                    const std::vector<cv::Rect>& tile_coords,
                                    const utils::TilingInfo& tiling_info);
 
-    static DetectionModel load(const std::string& model_path, const ov::AnyMap& configuration = {});
+    static DetectionModel create_model(const std::string& model_path, const ov::AnyMap& user_config = {});
 
     DetectionResult infer(cv::Mat image);
     std::vector<DetectionResult> inferBatch(std::vector<cv::Mat> image);

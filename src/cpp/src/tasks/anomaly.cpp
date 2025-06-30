@@ -51,12 +51,12 @@ void Anomaly::serialize(std::shared_ptr<ov::Model>& ov_model) {
     ov_model->set_rt_info(input_shape[1], "model_info", "orig_height");
 }
 
-Anomaly Anomaly::load(const std::string& model_path) {
+Anomaly Anomaly::create_model(const std::string& model_path, const ov::AnyMap& user_config) {
     auto adapter = std::make_shared<OpenVINOInferenceAdapter>();
-    adapter->loadModel(model_path, "", {}, false);
+    adapter->loadModel(model_path, "", user_config, false);
 
     std::string model_type;
-    model_type = utils::get_from_any_maps("model_type", adapter->getModelConfig(), {}, model_type);
+    model_type = utils::get_from_any_maps("model_type", adapter->getModelConfig(), user_config, model_type);
 
     if (!model_type.empty()) {
         std::cout << "has model type in info: " << model_type << std::endl;
@@ -65,9 +65,9 @@ Anomaly Anomaly::load(const std::string& model_path) {
     }
 
     adapter->applyModelTransform(Anomaly::serialize);
-    adapter->compileModel("AUTO", {});
+    adapter->compileModel("AUTO", user_config);
 
-    return Anomaly(adapter);
+    return Anomaly(adapter, user_config);
 }
 
 AnomalyResult Anomaly::infer(cv::Mat image) {

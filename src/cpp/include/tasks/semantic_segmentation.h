@@ -17,7 +17,7 @@ class SemanticSegmentation {
 public:
     VisionPipeline<SemanticSegmentationResult> pipeline;
     std::shared_ptr<InferenceAdapter> adapter;
-    SemanticSegmentation(std::shared_ptr<InferenceAdapter> adapter) : adapter(adapter) {
+    SemanticSegmentation(std::shared_ptr<InferenceAdapter> adapter, const ov::AnyMap& user_config) : adapter(adapter) {
         pipeline = VisionPipeline<SemanticSegmentationResult>(
             adapter,
             [&](cv::Mat image) {
@@ -27,14 +27,14 @@ public:
                 return postprocess(result);
             });
 
-        auto config = adapter->getModelConfig();
-        labels = utils::get_from_any_maps("labels", config, {}, labels);
-        soft_threshold = utils::get_from_any_maps("soft_threshold", config, {}, soft_threshold);
-        blur_strength = utils::get_from_any_maps("blur_strength", config, {}, blur_strength);
+        auto model_config = adapter->getModelConfig();
+        labels = utils::get_from_any_maps("labels", user_config, model_config, labels);
+        soft_threshold = utils::get_from_any_maps("soft_threshold", user_config, model_config, soft_threshold);
+        blur_strength = utils::get_from_any_maps("blur_strength", user_config, model_config, blur_strength);
     }
 
     static void serialize(std::shared_ptr<ov::Model>& ov_model);
-    static SemanticSegmentation load(const std::string& model_path);
+    static SemanticSegmentation create_model(const std::string& model_path, const ov::AnyMap& user_config = {});
 
     std::map<std::string, ov::Tensor> preprocess(cv::Mat);
     SemanticSegmentationResult postprocess(InferenceResult& infResult);

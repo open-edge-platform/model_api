@@ -20,20 +20,20 @@ cv::Mat get_activation_map(const cv::Mat& features) {
     return int_act_map;
 }
 
-SemanticSegmentation SemanticSegmentation::load(const std::string& model_path) {
+SemanticSegmentation SemanticSegmentation::create_model(const std::string& model_path, const ov::AnyMap& user_config) {
     auto adapter = std::make_shared<OpenVINOInferenceAdapter>();
-    adapter->loadModel(model_path, "", {}, false);
+    adapter->loadModel(model_path, "", user_config, false);
 
     std::string model_type;
-    model_type = utils::get_from_any_maps("model_type", adapter->getModelConfig(), {}, model_type);
+    model_type = utils::get_from_any_maps("model_type", user_config, adapter->getModelConfig(), model_type);
 
     if (model_type.empty() || model_type != "Segmentation") {
         throw std::runtime_error("Incorrect or unsupported model_type, expected: Segmentation");
     }
     adapter->applyModelTransform(SemanticSegmentation::serialize);
-    adapter->compileModel("AUTO", {});
+    adapter->compileModel("AUTO", user_config);
 
-    return SemanticSegmentation(adapter);
+    return SemanticSegmentation(adapter, user_config);
 }
 
 void SemanticSegmentation::serialize(std::shared_ptr<ov::Model>& ov_model) {

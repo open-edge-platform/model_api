@@ -180,20 +180,20 @@ void Classification::serialize(std::shared_ptr<ov::Model>& ov_model) {
     ov_model->set_rt_info(input_shape[1], "model_info", "orig_height");
 }
 
-Classification Classification::load(const std::string& model_path) {
+Classification Classification::create_model(const std::string& model_path, const ov::AnyMap& user_config) {
     auto adapter = std::make_shared<OpenVINOInferenceAdapter>();
-    adapter->loadModel(model_path, "", {}, false);
+    adapter->loadModel(model_path, "", user_config, false);
 
     std::string model_type;
-    model_type = utils::get_from_any_maps("model_type", adapter->getModelConfig(), {}, model_type);
+    model_type = utils::get_from_any_maps("model_type", adapter->getModelConfig(), user_config, model_type);
 
     if (model_type.empty() || model_type != "Classification") {
         throw std::runtime_error("Incorrect or unsupported model_type, expected: Classification");
     }
     adapter->applyModelTransform(Classification::serialize);
-    adapter->compileModel("AUTO", {});
+    adapter->compileModel("AUTO", user_config);
 
-    return Classification(adapter);
+    return Classification(adapter, user_config);
 }
 
 ClassificationResult Classification::infer(cv::Mat image) {
