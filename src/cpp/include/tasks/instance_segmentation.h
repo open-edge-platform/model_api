@@ -37,7 +37,7 @@ public:
     }
 
     static void serialize(std::shared_ptr<ov::Model>& ov_model);
-    static InstanceSegmentation create_model(const std::string& model_path, const ov::AnyMap& user_config = {});
+    static InstanceSegmentation create_model(const std::string& model_path, const ov::AnyMap& user_config = {}, bool preload = true, const std::string& device = "AUTO");
 
     InstanceSegmentationResult infer(cv::Mat image);
     std::vector<InstanceSegmentationResult> inferBatch(std::vector<cv::Mat> image);

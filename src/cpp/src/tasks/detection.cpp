@@ -13,9 +13,9 @@
 #include "utils/nms.h"
 #include "utils/tensor.h"
 
-DetectionModel DetectionModel::create_model(const std::string& model_path, const ov::AnyMap& user_config) {
+DetectionModel DetectionModel::create_model(const std::string& model_path, const ov::AnyMap& user_config, bool preload, const std::string& device) {
     auto adapter = std::make_shared<OpenVINOInferenceAdapter>();
-    adapter->loadModel(model_path, "", user_config, false);
+    adapter->loadModel(model_path, device, user_config, false);
 
     std::string model_type;
     model_type = utils::get_from_any_maps("model_type", adapter->getModelConfig(), user_config, model_type);
@@ -25,7 +25,9 @@ DetectionModel DetectionModel::create_model(const std::string& model_path, const
         throw std::runtime_error("Incorrect or unsupported model_type, expected: ssd");
     }
     adapter->applyModelTransform(SSD::serialize);
-    adapter->compileModel("AUTO", user_config);
+    if (preload) {
+        adapter->compileModel(device, user_config);
+    }
 
     return DetectionModel(std::make_unique<SSD>(adapter), user_config);
 }

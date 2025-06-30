@@ -40,7 +40,7 @@ public:
     }
 
     static void serialize(std::shared_ptr<ov::Model>& ov_model);
-    static Anomaly create_model(const std::string& model_path, const ov::AnyMap& user_config = {});
+    static Anomaly create_model(const std::string& model_path, const ov::AnyMap& user_config = {}, bool preload = true, const std::string& device = "AUTO");
 
     AnomalyResult infer(cv::Mat image);
     std::vector<AnomalyResult> inferBatch(std::vector<cv::Mat> image);

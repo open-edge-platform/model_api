@@ -190,9 +190,9 @@ void InstanceSegmentation::serialize(std::shared_ptr<ov::Model>& ov_model) {
     ov_model->set_rt_info(input_shape.height, "model_info", "orig_height");
 }
 
-InstanceSegmentation InstanceSegmentation::create_model(const std::string& model_path, const ov::AnyMap& user_config) {
+InstanceSegmentation InstanceSegmentation::create_model(const std::string& model_path, const ov::AnyMap& user_config, bool preload, const std::string& device) {
     auto adapter = std::make_shared<OpenVINOInferenceAdapter>();
-    adapter->loadModel(model_path, "", user_config, false);
+    adapter->loadModel(model_path, device, user_config, false);
 
     std::string model_type;
     model_type = utils::get_from_any_maps("model_type", user_config, adapter->getModelConfig(), model_type);
@@ -201,7 +201,9 @@ InstanceSegmentation InstanceSegmentation::create_model(const std::string& model
         throw std::runtime_error("Incorrect or unsupported model_type, expected: MaskRCNN");
     }
     adapter->applyModelTransform(InstanceSegmentation::serialize);
-    adapter->compileModel("AUTO", user_config);
+    if (preload) {
+        adapter->compileModel(device, user_config);
+    }
 
     return InstanceSegmentation(adapter, user_config);
 }

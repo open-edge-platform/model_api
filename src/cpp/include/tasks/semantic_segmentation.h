@@ -34,7 +34,7 @@ public:
     }
 
     static void serialize(std::shared_ptr<ov::Model>& ov_model);
-    static SemanticSegmentation create_model(const std::string& model_path, const ov::AnyMap& user_config = {});
+    static SemanticSegmentation create_model(const std::string& model_path, const ov::AnyMap& user_config = {}, bool preload = true, const std::string& device = "AUTO");
 
     std::map<std::string, ov::Tensor> preprocess(cv::Mat);
     SemanticSegmentationResult postprocess(InferenceResult& infResult);
