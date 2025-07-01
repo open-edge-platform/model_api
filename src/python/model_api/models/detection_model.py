@@ -58,7 +58,7 @@ class DetectionModel(ImageModel):
                     default_value=0.5,
                     description="Probability threshold value for bounding box filtering",
                 ),
-                "labels": ListValue(description="List of class labels"),
+                "labels": ListValue(description="List of class labels", value_type=str),
                 "path_to_labels": StringValue(
                     description="Path to file with labels. Overrides the labels, if they sets via 'labels' parameter",
                 ),

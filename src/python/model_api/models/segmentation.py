@@ -117,7 +117,7 @@ class SegmentationModel(ImageModel):
         parameters = super().parameters()
         parameters.update(
             {
-                "labels": ListValue(description="List of class labels"),
+                "labels": ListValue(description="List of class labels", value_type=str),
                 "path_to_labels": StringValue(
                     description="Path to file with labels. Overrides the labels, if they sets via 'labels' parameter",
                 ),

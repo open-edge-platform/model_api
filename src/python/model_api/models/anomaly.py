@@ -153,7 +153,7 @@ class AnomalyDetection(ImageModel):
                     description="Task type",
                     default_value="segmentation",
                 ),
-                "labels": ListValue(description="List of class labels"),
+                "labels": ListValue(description="List of class labels", value_type=str),
             },
         )
         return parameters
