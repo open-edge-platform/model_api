@@ -186,11 +186,15 @@ void InstanceSegmentation::serialize(std::shared_ptr<ov::Model>& ov_model) {
                                saliency_map_name + ", " + feature_vector_name + " and 3 or 4 other outputs");
     }
 
+    ov_model->set_rt_info(true, "model_info", "embedded_processing");
     ov_model->set_rt_info(input_shape.width, "model_info", "orig_width");
     ov_model->set_rt_info(input_shape.height, "model_info", "orig_height");
 }
 
-InstanceSegmentation InstanceSegmentation::create_model(const std::string& model_path, const ov::AnyMap& user_config, bool preload, const std::string& device) {
+InstanceSegmentation InstanceSegmentation::create_model(const std::string& model_path,
+                                                        const ov::AnyMap& user_config,
+                                                        bool preload,
+                                                        const std::string& device) {
     auto adapter = std::make_shared<OpenVINOInferenceAdapter>();
     adapter->loadModel(model_path, device, user_config, false);
 

@@ -58,7 +58,10 @@ public:
     }
 
     static void serialize(std::shared_ptr<ov::Model>& ov_model);
-    static Classification create_model(const std::string& model_path, const ov::AnyMap& user_config = {}, bool preload = true, const std::string& device = "AUTO");
+    static Classification create_model(const std::string& model_path,
+                                       const ov::AnyMap& user_config = {},
+                                       bool preload = true,
+                                       const std::string& device = "AUTO");
 
     ClassificationResult infer(cv::Mat image);
     std::vector<ClassificationResult> inferBatch(std::vector<cv::Mat> image);

@@ -13,7 +13,10 @@
 #include "utils/nms.h"
 #include "utils/tensor.h"
 
-DetectionModel DetectionModel::create_model(const std::string& model_path, const ov::AnyMap& user_config, bool preload, const std::string& device) {
+DetectionModel DetectionModel::create_model(const std::string& model_path,
+                                            const ov::AnyMap& user_config,
+                                            bool preload,
+                                            const std::string& device) {
     auto adapter = std::make_shared<OpenVINOInferenceAdapter>();
     adapter->loadModel(model_path, device, user_config, false);
 

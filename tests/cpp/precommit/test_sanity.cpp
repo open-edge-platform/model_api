@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 #include <gtest/gtest.h>
+#include <stddef.h>
 #include <tasks/classification.h>
 #include <tasks/detection.h>
 #include <tasks/results.h>
 #include <tasks/semantic_segmentation.h>
-#include <stddef.h>
 
 #include <cstdint>
 #include <exception>

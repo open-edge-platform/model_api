@@ -18,6 +18,7 @@
 class DetectionModel {
 public:
     std::unique_ptr<Pipeline<DetectionResult>> pipeline;
+    std::unique_ptr<SSD> algorithm;
 
     DetectionModel(std::unique_ptr<SSD> algorithm, const ov::AnyMap& user_config) : algorithm(std::move(algorithm)) {
         auto config = this->algorithm->adapter->getModelConfig();
@@ -67,11 +68,11 @@ public:
                                    const std::vector<cv::Rect>& tile_coords,
                                    const utils::TilingInfo& tiling_info);
 
-    static DetectionModel create_model(const std::string& model_path, const ov::AnyMap& user_config = {}, bool preload = true, const std::string& device = "AUTO");
+    static DetectionModel create_model(const std::string& model_path,
+                                       const ov::AnyMap& user_config = {},
+                                       bool preload = true,
+                                       const std::string& device = "AUTO");
 
     DetectionResult infer(cv::Mat image);
     std::vector<DetectionResult> inferBatch(std::vector<cv::Mat> image);
-
-private:
-    std::unique_ptr<SSD> algorithm;
 };

@@ -20,3 +20,6 @@ find_package(OpenCV REQUIRED COMPONENTS imgcodecs)
 
 add_executable(test_sanity test_sanity.cpp)
 target_link_libraries(test_sanity gtest_main nlohmann_json::nlohmann_json model_api ${OpenCV_LIBRARIES})
+
+add_executable(test_model_config test_model_config.cpp)
+target_link_libraries(test_model_config gtest_main nlohmann_json::nlohmann_json model_api ${OpenCV_LIBRARIES})
