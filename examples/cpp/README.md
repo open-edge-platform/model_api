@@ -18,28 +18,22 @@ This example demonstrates how to use a C++ API of OpenVINO Model API for synchro
 - Build example:
 
   - Create `build` folder and navigate into it:
-  <!-- prettier-ignore-start -->
 
   ```bash
   mkdir build && cd build
   ```
 
-<!-- prettier-ignore-end -->
+  - Run cmake:
 
-- Run cmake:
-<!-- prettier-ignore-start -->
+  ```bash
+  cmake ../
+  ```
 
-```bash
-cmake ../
-```
+  - Build:
 
-  <!-- prettier-ignore-end -->
-
-- Build:
-
-```bash
-make -j
-```
+  ```bash
+  make -j
+  ```
 
 - Download a model by running a Python code with Model API, see Python [example](../../python/synchronous_api/README.md):
 
