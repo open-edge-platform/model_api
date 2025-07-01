@@ -40,7 +40,7 @@ tests = [
     "httpx",
     "pytest",
     "pytest-mock",
-    "ultralytics>=8.0.114,<=8.0.205",
+    "ultralytics>=8.0.114,<=8.3.161",
     "onnx",
     "onnxruntime",
 ]
