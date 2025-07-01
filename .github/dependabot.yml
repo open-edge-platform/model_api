@@ -15,3 +15,5 @@ updates:
     schedule:
       interval: weekly
     target-branch: "master"
+    ignore:
+      - dependency-name: "ultralytics"
