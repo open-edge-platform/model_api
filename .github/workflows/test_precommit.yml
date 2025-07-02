@@ -77,8 +77,6 @@ jobs:
       - name: Build
         run: |
           mkdir build && cd build
-          pip install nanobind==2.4.0
-          pip install typing_extensions==4.12.2
           cmake ../tests/cpp/precommit/
           cmake --build . -j $((`nproc`*2+2))
       - name: Run test
