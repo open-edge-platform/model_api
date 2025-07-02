@@ -54,13 +54,11 @@ Training Extensions embed all the metadata required for inference into model fil
 
 - Build library:
   - Create `build` folder and navigate into it:
-  <!-- prettier-ignore-start -->
 
   ```bash
   mkdir build && cd build
   ```
 
-    <!-- prettier-ignore-end -->
   - Run cmake:
 
   ```bash
