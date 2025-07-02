@@ -209,12 +209,7 @@ TEST_P(ModelParameterizedTest, SerializedAccuracyTest) {
 TEST_P(ModelParameterizedTest, AccuracyTestBatch) {
     auto data = GetParam();
 
-    const std::string& basename = data.name.substr(data.name.find_last_of("/\\") + 1);
-    auto model_path = DATA_DIR + "/serialized/" + basename;
-
-    if (model_path.find(".onnx") != std::string::npos) {
-        GTEST_SKIP() << "ONNX models are not serializable";
-    }
+    auto model_path = DATA_DIR + '/' + data.name;
 
     if (data.type == "DetectionModel") {
         auto use_tiling = !data.input_res.empty();
