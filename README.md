@@ -53,7 +53,6 @@ Training Extensions embed all the metadata required for inference into model fil
   ```
 
 - Build library:
-
   - Create `build` folder and navigate into it:
 
   ```bash
