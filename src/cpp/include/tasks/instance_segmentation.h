@@ -18,7 +18,7 @@ public:
     std::shared_ptr<InferenceAdapter> adapter;
     VisionPipeline<InstanceSegmentationResult> pipeline;
 
-    InstanceSegmentation(std::shared_ptr<InferenceAdapter> adapter) : adapter(adapter) {
+    InstanceSegmentation(std::shared_ptr<InferenceAdapter> adapter, const ov::AnyMap& user_config) : adapter(adapter) {
         pipeline = VisionPipeline<InstanceSegmentationResult>(
             adapter,
             [&](cv::Mat image) {
@@ -28,15 +28,19 @@ public:
                 return postprocess(result);
             });
 
-        auto config = adapter->getModelConfig();
-        labels = utils::get_from_any_maps("labels", config, {}, labels);
-        confidence_threshold = utils::get_from_any_maps("confidence_threshold", config, {}, confidence_threshold);
-        input_shape.width = utils::get_from_any_maps("orig_width", config, {}, input_shape.width);
-        input_shape.height = utils::get_from_any_maps("orig_height", config, {}, input_shape.width);
+        auto model_config = adapter->getModelConfig();
+        labels = utils::get_from_any_maps("labels", user_config, model_config, labels);
+        confidence_threshold =
+            utils::get_from_any_maps("confidence_threshold", user_config, model_config, confidence_threshold);
+        input_shape.width = utils::get_from_any_maps("orig_width", user_config, model_config, input_shape.width);
+        input_shape.height = utils::get_from_any_maps("orig_height", user_config, model_config, input_shape.width);
     }
 
     static void serialize(std::shared_ptr<ov::Model>& ov_model);
-    static InstanceSegmentation load(const std::string& model_path);
+    static InstanceSegmentation create_model(const std::string& model_path,
+                                             const ov::AnyMap& user_config = {},
+                                             bool preload = true,
+                                             const std::string& device = "AUTO");
 
     InstanceSegmentationResult infer(cv::Mat image);
     std::vector<InstanceSegmentationResult> inferBatch(std::vector<cv::Mat> image);

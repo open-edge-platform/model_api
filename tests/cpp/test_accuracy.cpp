@@ -86,7 +86,7 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
 
     if (data.type == "DetectionModel") {
         auto use_tiling = !data.input_res.empty();
-        auto model = DetectionModel::load(model_path, {{"tiling", use_tiling}});
+        auto model = DetectionModel::create_model(model_path, {{"tiling", use_tiling}});
 
         for (auto& test_data : data.test_data) {
             std::string image_path = DATA_DIR + '/' + test_data.image;
@@ -99,7 +99,7 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
         }
 
     } else if (data.type == "SegmentationModel") {
-        auto model = SemanticSegmentation::load(model_path);
+        auto model = SemanticSegmentation::create_model(model_path);
 
         for (auto& test_data : data.test_data) {
             std::string image_path = DATA_DIR + '/' + test_data.image;
@@ -109,7 +109,7 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
             EXPECT_EQ(format_test_output_to_string(model, result), test_data.reference[0]);
         }
     } else if (data.type == "MaskRCNNModel") {
-        auto model = InstanceSegmentation::load(model_path);
+        auto model = InstanceSegmentation::create_model(model_path);
 
         for (auto& test_data : data.test_data) {
             std::string image_path = DATA_DIR + '/' + test_data.image;
@@ -119,7 +119,7 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
             EXPECT_EQ(format_test_output_to_string(model, result), test_data.reference[0]);
         }
     } else if (data.type == "ClassificationModel") {
-        auto model = Classification::load(model_path);
+        auto model = Classification::create_model(model_path);
         for (auto& test_data : data.test_data) {
             std::string image_path = DATA_DIR + '/' + test_data.image;
             cv::Mat image = cv::imread(image_path);
@@ -127,7 +127,7 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
             EXPECT_EQ(std::string{result}, test_data.reference[0]);
         }
     } else if (data.type == "AnomalyDetection") {
-        auto model = Anomaly::load(model_path);
+        auto model = Anomaly::create_model(model_path);
 
         for (auto& test_data : data.test_data) {
             std::string image_path = DATA_DIR + '/' + test_data.image;
@@ -153,7 +153,7 @@ TEST_P(ModelParameterizedTest, SerializedAccuracyTest) {
 
     if (data.type == "DetectionModel") {
         auto use_tiling = !data.input_res.empty();
-        auto model = DetectionModel::load(model_path, {{"tiling", use_tiling}});
+        auto model = DetectionModel::create_model(model_path, {{"tiling", use_tiling}});
         for (auto& test_data : data.test_data) {
             std::string image_path = DATA_DIR + '/' + test_data.image;
             cv::Mat image = cv::imread(image_path);
@@ -164,7 +164,7 @@ TEST_P(ModelParameterizedTest, SerializedAccuracyTest) {
             EXPECT_EQ(std::string{result}, test_data.reference[0]);
         }
     } else if (data.type == "SegmentationModel") {
-        auto model = SemanticSegmentation::load(model_path);
+        auto model = SemanticSegmentation::create_model(model_path);
 
         for (auto& test_data : data.test_data) {
             std::string image_path = DATA_DIR + '/' + test_data.image;
@@ -174,7 +174,7 @@ TEST_P(ModelParameterizedTest, SerializedAccuracyTest) {
             EXPECT_EQ(format_test_output_to_string(model, result), test_data.reference[0]);
         }
     } else if (data.type == "MaskRCNNModel") {
-        auto model = InstanceSegmentation::load(model_path);
+        auto model = InstanceSegmentation::create_model(model_path);
 
         for (auto& test_data : data.test_data) {
             std::string image_path = DATA_DIR + '/' + test_data.image;
@@ -184,7 +184,7 @@ TEST_P(ModelParameterizedTest, SerializedAccuracyTest) {
             EXPECT_EQ(format_test_output_to_string(model, result), test_data.reference[0]);
         }
     } else if (data.type == "ClassificationModel") {
-        auto model = Classification::load(model_path);
+        auto model = Classification::create_model(model_path);
         for (auto& test_data : data.test_data) {
             std::string image_path = DATA_DIR + '/' + test_data.image;
             cv::Mat image = cv::imread(image_path);
@@ -193,7 +193,7 @@ TEST_P(ModelParameterizedTest, SerializedAccuracyTest) {
             EXPECT_EQ(std::string{result}, test_data.reference[0]);
         }
     } else if (data.type == "AnomalyDetection") {
-        auto model = Anomaly::load(model_path);
+        auto model = Anomaly::create_model(model_path);
         for (auto& test_data : data.test_data) {
             std::string image_path = DATA_DIR + '/' + test_data.image;
             cv::Mat image = cv::imread(image_path);
@@ -213,7 +213,7 @@ TEST_P(ModelParameterizedTest, AccuracyTestBatch) {
 
     if (data.type == "DetectionModel") {
         auto use_tiling = !data.input_res.empty();
-        auto model = DetectionModel::load(model_path, {{"tiling", use_tiling}});
+        auto model = DetectionModel::create_model(model_path, {{"tiling", use_tiling}});
 
         for (auto& test_data : data.test_data) {
             std::string image_path = DATA_DIR + '/' + test_data.image;
@@ -226,7 +226,7 @@ TEST_P(ModelParameterizedTest, AccuracyTestBatch) {
             EXPECT_EQ(std::string{result[0]}, test_data.reference[0]);
         }
     } else if (data.type == "SegmentationModel") {
-        auto model = SemanticSegmentation::load(model_path);
+        auto model = SemanticSegmentation::create_model(model_path);
 
         for (auto& test_data : data.test_data) {
             std::string image_path = DATA_DIR + '/' + test_data.image;
@@ -236,7 +236,7 @@ TEST_P(ModelParameterizedTest, AccuracyTestBatch) {
             EXPECT_EQ(format_test_output_to_string(model, result[0]), test_data.reference[0]);
         }
     } else if (data.type == "MaskRCNNModel") {
-        auto model = InstanceSegmentation::load(model_path);
+        auto model = InstanceSegmentation::create_model(model_path);
 
         for (auto& test_data : data.test_data) {
             std::string image_path = DATA_DIR + '/' + test_data.image;
@@ -247,7 +247,7 @@ TEST_P(ModelParameterizedTest, AccuracyTestBatch) {
             EXPECT_EQ(format_test_output_to_string(model, result[0]), test_data.reference[0]);
         }
     } else if (data.type == "ClassificationModel") {
-        auto model = Classification::load(model_path);
+        auto model = Classification::create_model(model_path);
 
         for (auto& test_data : data.test_data) {
             std::string image_path = DATA_DIR + '/' + test_data.image;
@@ -258,7 +258,7 @@ TEST_P(ModelParameterizedTest, AccuracyTestBatch) {
             EXPECT_EQ(std::string{result[0]}, test_data.reference[0]);
         }
     } else if (data.type == "AnomalyDetection") {
-        auto model = Anomaly::load(model_path);
+        auto model = Anomaly::create_model(model_path);
 
         for (auto& test_data : data.test_data) {
             std::string image_path = DATA_DIR + '/' + test_data.image;

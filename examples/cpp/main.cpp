@@ -30,7 +30,7 @@ int main(int argc, char* argv[]) try {
     }
 
     // Instantiate Object Detection model
-    auto model = DetectionModel::load(argv[1], {});  // works with SSD models. Download it using Python Model API
+    auto model = DetectionModel::create_model(argv[1]);
 
     // Run the inference
     auto result = model.infer(image);

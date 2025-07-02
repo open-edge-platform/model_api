@@ -51,6 +51,37 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN}}
           # missingInclude: cppcheck can't find stl, openvino, opencv
           other_options: --suppress=missingInclude -Isrc/cpp/models/include -Isrc/cpp/utils/include -Isrc/cpp/pipelines/include --check-config
+  CPP-Precommit:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+          cache: pip
+      - name: Create and start a virtual environment
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+      - name: Install dependencies
+        run: |
+          source venv/bin/activate
+          python -m pip install --upgrade pip
+          pip install src/python/[tests,build] --extra-index-url https://download.pytorch.org/whl/cpu
+
+          sudo bash src/cpp/install_dependencies.sh
+      - name: Prepare test data
+        run: |
+          source venv/bin/activate
+          python tests/cpp/precommit/prepare_data.py -d data -p tests/cpp/precommit/public_scope.json
+      - name: Build
+        run: |
+          mkdir build && cd build
+          cmake ../tests/cpp/precommit/
+          cmake --build . -j $((`nproc`*2+2))
+      - name: Run test
+        run: |
+          build/test_sanity -d data -p tests/cpp/precommit/public_scope.json && build/test_model_config -d data
   serving_api:
     strategy:
       fail-fast: false
