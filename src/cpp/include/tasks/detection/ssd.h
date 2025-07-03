@@ -12,7 +12,7 @@
 #include "utils/config.h"
 #include "utils/preprocessing.h"
 
-enum SSDOutputMode { single, multi };
+enum class SSDOutputMode { single, multi };
 
 class NumAndStep {
 public:
