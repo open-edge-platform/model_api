@@ -86,7 +86,7 @@ void SemanticSegmentation::serialize(std::shared_ptr<ov::Model>& ov_model) {
     utils::RESIZE_MODE resize_mode = utils::RESIZE_MODE::RESIZE_FILL;
     resize_mode = utils::get_from_any_maps("resize_type", config, ov::AnyMap{}, resize_mode);
     uint8_t pad_value = 0;
-    pad_value = utils::get_from_any_maps("pad_value", config, ov::AnyMap{}, pad_value);
+    pad_value = utils::get_from_any_maps<unsigned>("pad_value", config, ov::AnyMap{}, pad_value);
     bool reverse_input_channels = false;
     reverse_input_channels =
         utils::get_from_any_maps("reverse_input_channels", config, ov::AnyMap{}, reverse_input_channels);

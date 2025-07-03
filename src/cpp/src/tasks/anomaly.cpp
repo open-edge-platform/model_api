@@ -29,7 +29,7 @@ void Anomaly::serialize(std::shared_ptr<ov::Model>& ov_model) {
     if (ov_model->has_rt_info("model_info")) {
         auto config = ov_model->get_rt_info<ov::AnyMap>("model_info");
         resize_mode = utils::get_from_any_maps("resize_type", config, ov::AnyMap{}, resize_mode);
-        pad_value = utils::get_from_any_maps("pad_value", config, ov::AnyMap{}, pad_value);
+        pad_value = utils::get_from_any_maps<unsigned>("pad_value", config, ov::AnyMap{}, pad_value);
         reverse_input_channels =
             utils::get_from_any_maps("reverse_input_channels", config, ov::AnyMap{}, reverse_input_channels);
         scale_values = utils::get_from_any_maps("scale_values", config, ov::AnyMap{}, scale_values);

@@ -91,7 +91,7 @@ void SSD::serialize(std::shared_ptr<ov::Model>& ov_model) {
 
     auto input_shape = ov::Shape{shape[ov::layout::width_idx(layout)], shape[ov::layout::height_idx(layout)]};
     uint8_t pad_value = 0;
-    pad_value = utils::get_from_any_maps("pad_value", config, ov::AnyMap{}, pad_value);
+    pad_value = utils::get_from_any_maps<unsigned>("pad_value", config, ov::AnyMap{}, pad_value);
 
     std::vector<float> scale_values;
     std::vector<float> mean_values;
