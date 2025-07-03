@@ -34,6 +34,7 @@ public:
             utils::get_from_any_maps("confidence_threshold", user_config, model_config, confidence_threshold);
         input_shape.width = utils::get_from_any_maps("orig_width", user_config, model_config, input_shape.width);
         input_shape.height = utils::get_from_any_maps("orig_height", user_config, model_config, input_shape.width);
+        resize_mode = utils::get_from_any_maps("resize_type", user_config, model_config, resize_mode);
     }
 
     static void serialize(std::shared_ptr<ov::Model>& ov_model);
@@ -61,4 +62,5 @@ private:
 
     cv::Size input_shape;
     float confidence_threshold = 0.5f;
+    utils::RESIZE_MODE resize_mode = utils::RESIZE_MODE::RESIZE_FILL;
 };

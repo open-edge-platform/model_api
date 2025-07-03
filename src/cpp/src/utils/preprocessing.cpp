@@ -32,7 +32,7 @@ std::shared_ptr<ov::Model> embedProcessing(std::shared_ptr<ov::Model>& model,
 
     ppp.input(inputName).tensor().set_layout(ov::Layout("NHWC")).set_color_format(ov::preprocess::ColorFormat::BGR);
 
-    if (resize_mode != NO_RESIZE) {
+    if (resize_mode != RESIZE_MODE::NO_RESIZE) {
         ppp.input(inputName).tensor().set_spatial_dynamic_shape();
         // Doing resize in u8 is more efficient than FP32 but can lead to slightly different results
         ppp.input(inputName).preprocess().custom(
@@ -65,28 +65,28 @@ ov::preprocess::PostProcessSteps::CustomPostprocessOp createResizeGraph(RESIZE_M
                                                                         const cv::InterpolationFlags interpolationMode,
                                                                         uint8_t pad_value) {
     switch (resizeMode) {
-    case RESIZE_FILL:
+    case RESIZE_MODE::RESIZE_FILL:
         return [=](const ov::Output<ov::Node>& node) {
             return resizeImageGraph(node, size, false, interpolationMode, pad_value);
         };
         break;
-    case RESIZE_KEEP_ASPECT:
+    case RESIZE_MODE::RESIZE_KEEP_ASPECT:
         return [=](const ov::Output<ov::Node>& node) {
             return resizeImageGraph(node, size, true, interpolationMode, pad_value);
         };
         break;
-    case RESIZE_KEEP_ASPECT_LETTERBOX:
+    case RESIZE_MODE::RESIZE_KEEP_ASPECT_LETTERBOX:
         return [=](const ov::Output<ov::Node>& node) {
             return fitToWindowLetterBoxGraph(node, size, interpolationMode, pad_value);
         };
         break;
-    case RESIZE_CROP:
+    case RESIZE_MODE::RESIZE_CROP:
         return [=](const ov::Output<ov::Node>& node) {
             return cropResizeGraph(node, size, interpolationMode);
         };
         break;
     default:
-        throw std::runtime_error("Unsupported resize mode: " + resizeMode);
+        throw std::runtime_error("Unsupported resize mode");
         break;
     }
 }
