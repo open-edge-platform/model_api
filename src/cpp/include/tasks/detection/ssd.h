@@ -34,7 +34,7 @@ public:
         confidence_threshold = utils::get_from_any_maps("confidence_threshold", config, {}, confidence_threshold);
         input_shape.width = utils::get_from_any_maps("orig_width", config, {}, input_shape.width);
         input_shape.height = utils::get_from_any_maps("orig_height", config, {}, input_shape.height);
-        resize_mode = utils::get_from_any_maps("resize_type", user_config, model_config, resize_mode);
+        resize_mode = utils::get_from_any_maps("resize_type", config, {}, resize_mode);
     }
     std::map<std::string, ov::Tensor> preprocess(cv::Mat);
     DetectionResult postprocess(InferenceResult& infResult);
