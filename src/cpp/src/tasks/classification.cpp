@@ -105,14 +105,18 @@ void Classification::serialize(std::shared_ptr<ov::Model>& ov_model) {
     const ov::Layout& inputLayout = utils::getInputLayout(input, inputsLayouts);
 
     auto interpolation_mode = cv::INTER_LINEAR;
-    utils::RESIZE_MODE resize_mode = utils::RESIZE_FILL;
+    utils::RESIZE_MODE resize_mode = utils::RESIZE_MODE::RESIZE_FILL;
+    resize_mode = utils::get_from_any_maps("resize_type", config, ov::AnyMap{}, resize_mode);
 
     std::vector<float> scale_values;
     std::vector<float> mean_values;
     scale_values = utils::get_from_any_maps("scale_values", config, ov::AnyMap{}, scale_values);
     mean_values = utils::get_from_any_maps("mean_values", config, ov::AnyMap{}, mean_values);
     uint8_t pad_value = 0;
+    pad_value = utils::get_from_any_maps("pad_value", config, ov::AnyMap{}, pad_value);
     bool reverse_input_channels = false;
+    reverse_input_channels =
+        utils::get_from_any_maps("reverse_input_channels", config, ov::AnyMap{}, reverse_input_channels);
 
     auto input_shape =
         ov::Shape{inputShape[ov::layout::width_idx(inputLayout)], inputShape[ov::layout::height_idx(inputLayout)]};

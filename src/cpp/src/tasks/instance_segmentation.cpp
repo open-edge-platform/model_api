@@ -141,13 +141,15 @@ void InstanceSegmentation::serialize(std::shared_ptr<ov::Model>& ov_model) {
     }
 
     auto interpolation_mode = cv::INTER_LINEAR;
-    utils::RESIZE_MODE resize_mode = utils::RESIZE_FILL;
+    utils::RESIZE_MODE resize_mode = utils::RESIZE_MODE::RESIZE_FILL;
+    resize_mode = utils::get_from_any_maps("resize_type", config, ov::AnyMap{}, resize_mode);
 
     std::vector<float> scale_values;
     std::vector<float> mean_values;
     scale_values = utils::get_from_any_maps("scale_values", config, ov::AnyMap{}, scale_values);
     mean_values = utils::get_from_any_maps("mean_values", config, ov::AnyMap{}, mean_values);
     uint8_t pad_value = 0;
+    pad_value = utils::get_from_any_maps("pad_value", config, ov::AnyMap{}, pad_value);
     bool reverse_input_channels = false;
     reverse_input_channels =
         utils::get_from_any_maps("reverse_input_channels", config, ov::AnyMap{}, reverse_input_channels);
@@ -232,10 +234,10 @@ InstanceSegmentationResult InstanceSegmentation::postprocess(InferenceResult& in
     float invertedScaleX = floatInputImgWidth / input_shape.width,
           invertedScaleY = floatInputImgHeight / input_shape.height;
     int padLeft = 0, padTop = 0;
-    auto resizeMode = utils::RESIZE_FILL;
-    if (utils::RESIZE_KEEP_ASPECT == resizeMode || utils::RESIZE_KEEP_ASPECT_LETTERBOX == resizeMode) {
+    auto resizeMode = utils::RESIZE_MODE::RESIZE_FILL;
+    if (utils::RESIZE_MODE::RESIZE_KEEP_ASPECT == resizeMode || utils::RESIZE_MODE::RESIZE_KEEP_ASPECT_LETTERBOX == resizeMode) {
         invertedScaleX = invertedScaleY = std::max(invertedScaleX, invertedScaleY);
-        if (utils::RESIZE_KEEP_ASPECT_LETTERBOX == resizeMode) {
+        if (utils::RESIZE_MODE::RESIZE_KEEP_ASPECT_LETTERBOX == resizeMode) {
             padLeft = (input_shape.width - int(std::round(floatInputImgWidth / invertedScaleX))) / 2;
             padTop = (input_shape.height - int(std::round(floatInputImgHeight / invertedScaleY))) / 2;
         }

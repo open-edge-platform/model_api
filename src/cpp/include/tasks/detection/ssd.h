@@ -55,7 +55,7 @@ private:
     std::vector<std::string> filterOutXai(const std::vector<std::string>&);
 
     std::vector<std::string> output_names = {};
-    utils::RESIZE_MODE resize_mode = utils::RESIZE_FILL;
+    utils::RESIZE_MODE resize_mode = utils::RESIZE_MODE::RESIZE_FILL;
     ov::Layout layout;
     cv::InterpolationFlags interpolation_mode;
     cv::Size input_shape;

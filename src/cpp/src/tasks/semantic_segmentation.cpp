@@ -80,12 +80,16 @@ void SemanticSegmentation::serialize(std::shared_ptr<ov::Model>& ov_model) {
         throw std::runtime_error("No output containing segmentation masks found");
     }
 
-    auto interpolation_mode = cv::INTER_LINEAR;
-    utils::RESIZE_MODE resize_mode = utils::RESIZE_FILL;
-    uint8_t pad_value = 0;
-    bool reverse_input_channels = false;
-
     auto config = ov_model->has_rt_info("model_info") ? ov_model->get_rt_info<ov::AnyMap>("model_info") : ov::AnyMap{};
+
+    auto interpolation_mode = cv::INTER_LINEAR;
+    utils::RESIZE_MODE resize_mode = utils::RESIZE_MODE::RESIZE_FILL;
+    resize_mode = utils::get_from_any_maps("resize_type", config, ov::AnyMap{}, resize_mode);
+    uint8_t pad_value = 0;
+    pad_value = utils::get_from_any_maps("pad_value", config, ov::AnyMap{}, pad_value);
+    bool reverse_input_channels = false;
+    reverse_input_channels =
+        utils::get_from_any_maps("reverse_input_channels", config, ov::AnyMap{}, reverse_input_channels);
 
     std::vector<float> scale_values;
     std::vector<float> mean_values;
