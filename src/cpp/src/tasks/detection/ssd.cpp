@@ -208,7 +208,8 @@ DetectionResult SSD::postprocessMultipleOutputs(InferenceResult& infResult) {
     float invertedScaleX = floatInputImgWidth / input_shape.width,
           invertedScaleY = floatInputImgHeight / input_shape.height;
     int padLeft = 0, padTop = 0;
-    if (utils::RESIZE_MODE::RESIZE_KEEP_ASPECT == resize_mode || utils::RESIZE_MODE::RESIZE_KEEP_ASPECT_LETTERBOX == resize_mode) {
+    if (utils::RESIZE_MODE::RESIZE_KEEP_ASPECT == resize_mode ||
+        utils::RESIZE_MODE::RESIZE_KEEP_ASPECT_LETTERBOX == resize_mode) {
         invertedScaleX = invertedScaleY = std::max(invertedScaleX, invertedScaleY);
         if (utils::RESIZE_MODE::RESIZE_KEEP_ASPECT_LETTERBOX == resize_mode) {
             padLeft = (input_shape.width - int(std::round(floatInputImgWidth / invertedScaleX))) / 2;

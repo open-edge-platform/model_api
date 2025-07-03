@@ -234,10 +234,10 @@ InstanceSegmentationResult InstanceSegmentation::postprocess(InferenceResult& in
     float invertedScaleX = floatInputImgWidth / input_shape.width,
           invertedScaleY = floatInputImgHeight / input_shape.height;
     int padLeft = 0, padTop = 0;
-    auto resizeMode = utils::RESIZE_MODE::RESIZE_FILL;
-    if (utils::RESIZE_MODE::RESIZE_KEEP_ASPECT == resizeMode || utils::RESIZE_MODE::RESIZE_KEEP_ASPECT_LETTERBOX == resizeMode) {
+    if (utils::RESIZE_MODE::RESIZE_KEEP_ASPECT == resize_mode ||
+        utils::RESIZE_MODE::RESIZE_KEEP_ASPECT_LETTERBOX == resize_mode) {
         invertedScaleX = invertedScaleY = std::max(invertedScaleX, invertedScaleY);
-        if (utils::RESIZE_MODE::RESIZE_KEEP_ASPECT_LETTERBOX == resizeMode) {
+        if (utils::RESIZE_MODE::RESIZE_KEEP_ASPECT_LETTERBOX == resize_mode) {
             padLeft = (input_shape.width - int(std::round(floatInputImgWidth / invertedScaleX))) / 2;
             padTop = (input_shape.height - int(std::round(floatInputImgHeight / invertedScaleY))) / 2;
         }

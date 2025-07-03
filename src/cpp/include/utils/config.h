@@ -42,7 +42,7 @@ inline bool get_from_any_maps(const std::string& key,
     return low_priority;
 }
 
-enum class RESIZE_MODE  {
+enum class RESIZE_MODE {
     RESIZE_FILL,
     RESIZE_KEEP_ASPECT,
     RESIZE_KEEP_ASPECT_LETTERBOX,
@@ -71,7 +71,6 @@ inline RESIZE_MODE get_from_any_maps(const std::string& key,
 
     return resize;
 }
-
 
 ov::AnyMap get_config_from_onnx(const std::string& model_path);
 
