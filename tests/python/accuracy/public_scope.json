@@ -255,5 +255,17 @@
         ]
       }
     ]
+  },
+  {
+    "name": "otx_models/rtmpose_tiny.xml",
+    "type": "KeypointDetectionModel",
+    "test_data": [
+      {
+        "image": "coco128/images/train2017/000000000471.jpg",
+        "reference": [
+          "keypoints: (17, 2), keypoints_x_sum: 2930.000, scores: (17,) 14.061"
+        ]
+      }
+    ]
   }
 ]
