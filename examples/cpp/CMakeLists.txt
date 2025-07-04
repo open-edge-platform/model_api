@@ -90,7 +90,7 @@ macro(add_example)
     endif()
 endmacro()
 
-find_package(OpenCV REQUIRED COMPONENTS imgcodecs)
+find_package(OpenCV REQUIRED COMPONENTS imgcodecs highgui)
 
 add_subdirectory(../../src/cpp ${Samples_BINARY_DIR}/src/cpp)
 
