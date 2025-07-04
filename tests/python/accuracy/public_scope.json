@@ -243,5 +243,29 @@
         ]
       }
     ]
+  },
+  {
+    "name": "otx_models/maskrcnn_xai_tiling.xml",
+    "type": "MaskRCNNModel",
+    "test_data": [
+      {
+        "image": "coco128/images/train2017/000000000074.jpg",
+        "reference": [
+          "281, 71, 303, 84, 2 (ellipse): 0.553, 224, RotatedRect: 291.500 77.000 12.000 19.000 90.000; 496, 7, 523, 38, 1 (rectangle): 0.497, 775, RotatedRect: 509.000 23.000 30.000 26.000 90.000; 2; [1,1280,1,1]; "
+        ]
+      }
+    ]
+  },
+  {
+    "name": "otx_models/rtmpose_tiny.xml",
+    "type": "KeypointDetectionModel",
+    "test_data": [
+      {
+        "image": "coco128/images/train2017/000000000471.jpg",
+        "reference": [
+          "keypoints: (17, 2), keypoints_x_sum: 2930.000, scores: (17,) 14.061"
+        ]
+      }
+    ]
   }
 ]

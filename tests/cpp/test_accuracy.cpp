@@ -11,6 +11,7 @@
 #include "tasks/classification.h"
 #include "tasks/detection.h"
 #include "tasks/instance_segmentation.h"
+#include "tasks/keypoint_detection.h"
 #include "tasks/semantic_segmentation.h"
 
 std::string PUBLIC_SCOPE_PATH = "../public_scope.json";
@@ -124,10 +125,21 @@ TEST_P(ModelParameterizedTest, AccuracyTest) {
             std::string image_path = DATA_DIR + '/' + test_data.image;
             cv::Mat image = cv::imread(image_path);
             auto result = model.infer(image);
+
             EXPECT_EQ(std::string{result}, test_data.reference[0]);
         }
     } else if (data.type == "AnomalyDetection") {
         auto model = Anomaly::create_model(model_path);
+
+        for (auto& test_data : data.test_data) {
+            std::string image_path = DATA_DIR + '/' + test_data.image;
+            cv::Mat image = cv::imread(image_path);
+            auto result = model.infer(image);
+
+            EXPECT_EQ(std::string{result}, test_data.reference[0]);
+        }
+    } else if (data.type == "KeypointDetectionModel") {
+        auto model = KeypointDetection::create_model(model_path);
 
         for (auto& test_data : data.test_data) {
             std::string image_path = DATA_DIR + '/' + test_data.image;
@@ -201,6 +213,15 @@ TEST_P(ModelParameterizedTest, SerializedAccuracyTest) {
 
             EXPECT_EQ(std::string{result}, test_data.reference[0]);
         }
+    } else if (data.type == "KeypointDetectionModel") {
+        auto model = KeypointDetection::create_model(model_path);
+        for (auto& test_data : data.test_data) {
+            std::string image_path = DATA_DIR + '/' + test_data.image;
+            cv::Mat image = cv::imread(image_path);
+            auto result = model.infer(image);
+
+            EXPECT_EQ(std::string{result}, test_data.reference[0]);
+        }
     } else {
         FAIL() << "No implementation for model type " << data.type;
     }
@@ -259,6 +280,17 @@ TEST_P(ModelParameterizedTest, AccuracyTestBatch) {
         }
     } else if (data.type == "AnomalyDetection") {
         auto model = Anomaly::create_model(model_path);
+
+        for (auto& test_data : data.test_data) {
+            std::string image_path = DATA_DIR + '/' + test_data.image;
+            cv::Mat image = cv::imread(image_path);
+            auto result = model.inferBatch({image});
+
+            ASSERT_EQ(result.size(), 1);
+            EXPECT_EQ(std::string{result[0]}, test_data.reference[0]);
+        }
+    } else if (data.type == "KeypointDetectionModel") {
+        auto model = KeypointDetection::create_model(model_path);
 
         for (auto& test_data : data.test_data) {
             std::string image_path = DATA_DIR + '/' + test_data.image;
