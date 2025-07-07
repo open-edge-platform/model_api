@@ -52,8 +52,6 @@ KeypointDetectionResult decode_simcc(const cv::Mat& simcc_x,
                                      float decode_beta = 150.0f,
                                      float sigma = 6.0f) {
     cv::Mat x_locs, max_val_x;
-    std::cout << cv::sum(simcc_x) << "\n";
-    std::cout << cv::sum(simcc_y) << "\n";
     colArgMax(simcc_x, x_locs, max_val_x, false);
 
     cv::Mat y_locs, max_val_y;
@@ -161,6 +159,7 @@ void KeypointDetection::serialize(std::shared_ptr<ov::Model>& ov_model) {
     ov_model->set_rt_info(true, "model_info", "embedded_processing");
     ov_model->set_rt_info(input_shape.width, "model_info", "orig_width");
     ov_model->set_rt_info(input_shape.height, "model_info", "orig_height");
+    ov::save_model(ov_model, "kp_tmp_model.xml");
 }
 
 std::map<std::string, ov::Tensor> KeypointDetection::preprocess(cv::Mat image) {

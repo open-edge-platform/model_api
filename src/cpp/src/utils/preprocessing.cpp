@@ -150,8 +150,15 @@ Output<Node> resizeImageGraph(const ov::Output<ov::Node>& input,
     auto w_ratio = std::make_shared<opset10::Divide>(opset10::Constant::create(element::f32, Shape{1}, {float(w)}), iw);
     auto h_ratio = std::make_shared<opset10::Divide>(opset10::Constant::create(element::f32, Shape{1}, {float(h)}), ih);
     auto scale = std::make_shared<opset10::Minimum>(w_ratio, h_ratio);
-    auto nw = std::make_shared<opset10::Convert>(std::make_shared<opset10::Multiply>(iw, scale), element::i32);
-    auto nh = std::make_shared<opset10::Convert>(std::make_shared<opset10::Multiply>(ih, scale), element::i32);
+    auto nw = std::make_shared<opset10::Convert>(
+        std::make_shared<opset10::Round>(std::make_shared<opset10::Multiply>(iw, scale),
+                                         opset10::Round::RoundMode::HALF_TO_EVEN),
+        element::i32);
+    auto nh = std::make_shared<opset10::Convert>(
+        std::make_shared<opset10::Round>(std::make_shared<opset10::Multiply>(ih, scale),
+                                         opset10::Round::RoundMode::HALF_TO_EVEN),
+        element::i32);
+
     auto new_size = std::make_shared<opset10::Concat>(OutputVector{nh, nw}, 0);
 
     auto scales = opset10::Constant::create(element::f32, Shape{2}, {0.0f, 0.0f});

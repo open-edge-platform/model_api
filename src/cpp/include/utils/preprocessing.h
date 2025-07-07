@@ -40,11 +40,6 @@ ov::Output<ov::Node> fitToWindowLetterBoxGraph(const ov::Output<ov::Node>& input
                                                const cv::InterpolationFlags interpolationMode,
                                                uint8_t pad_value);
 
-ov::Output<ov::Node> fitToWindowLetterBoxGraph(const ov::Output<ov::Node>& input,
-                                               const ov::Shape& size,
-                                               const cv::InterpolationFlags interpolationMode,
-                                               uint8_t pad_value);
-
 ov::Output<ov::Node> cropResizeGraph(const ov::Output<ov::Node>& input,
                                      const ov::Shape& size,
                                      const cv::InterpolationFlags interpolationMode);
