@@ -120,17 +120,6 @@ void OpenVINOInferenceAdapter::awaitAny() {
     asyncQueue->get_idle_request_id();
 }
 
-size_t OpenVINOInferenceAdapter::getNumAsyncExecutors() const {
-    return asyncQueue->size();
-}
-
-ov::PartialShape OpenVINOInferenceAdapter::getInputShape(const std::string& inputName) const {
-    return compiledModel.input(inputName).get_partial_shape();
-}
-ov::PartialShape OpenVINOInferenceAdapter::getOutputShape(const std::string& outputName) const {
-    return compiledModel.output(outputName).get_partial_shape();
-}
-
 void OpenVINOInferenceAdapter::initInputsOutputs() {
     for (const auto& input : compiledModel.inputs()) {
         inputNames.push_back(input.get_any_name());
@@ -139,12 +128,6 @@ void OpenVINOInferenceAdapter::initInputsOutputs() {
     for (const auto& output : compiledModel.outputs()) {
         outputNames.push_back(output.get_any_name());
     }
-}
-ov::element::Type_t OpenVINOInferenceAdapter::getInputDatatype(const std::string& name) const {
-    return compiledModel.input(name).get_element_type();
-}
-ov::element::Type_t OpenVINOInferenceAdapter::getOutputDatatype(const std::string& name) const {
-    return compiledModel.output(name).get_element_type();
 }
 
 std::vector<std::string> OpenVINOInferenceAdapter::getInputNames() const {
