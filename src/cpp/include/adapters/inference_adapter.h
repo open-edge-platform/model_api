@@ -30,16 +30,11 @@ public:
     virtual bool isReady() = 0;
     virtual void awaitAll() = 0;
     virtual void awaitAny() = 0;
-    virtual size_t getNumAsyncExecutors() const = 0;
     virtual void loadModel(const std::string& modelPath,
                            const std::string& device = "",
                            const ov::AnyMap& adapterConfig = {},
                            bool preCompile = true) = 0;
     virtual void compileModel(const std::string& device = "", const ov::AnyMap& adapterConfig = {}) = 0;
-    virtual ov::PartialShape getInputShape(const std::string& inputName) const = 0;
-    virtual ov::PartialShape getOutputShape(const std::string& inputName) const = 0;
-    virtual ov::element::Type_t getInputDatatype(const std::string& inputName) const = 0;
-    virtual ov::element::Type_t getOutputDatatype(const std::string& outputName) const = 0;
     virtual std::vector<std::string> getInputNames() const = 0;
     virtual std::vector<std::string> getOutputNames() const = 0;
     virtual const ov::AnyMap& getModelConfig() const = 0;
