@@ -5,6 +5,7 @@
 
 #include "adapters/openvino_adapter.h"
 
+#include <openvino/core/graph_util.hpp>
 #include <openvino/openvino.hpp>
 #include <stdexcept>
 #include <vector>
