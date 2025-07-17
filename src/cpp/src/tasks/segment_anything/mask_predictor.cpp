@@ -1,7 +1,8 @@
 #include "tasks/segment_anything/mask_predictor.h"
+
 #include "tasks/results.h"
 
-//Inputs
+// Inputs
 constexpr char image_embeddings_tensor_name[]{"image_embeddings"};
 constexpr char point_coords_tensor_name[]{"point_coords"};
 constexpr char point_labels_tensor_name[]{"point_labels"};
@@ -9,7 +10,7 @@ constexpr char orig_image_tensor_name[]{"orig_im_size"};
 constexpr char has_mask_tensor_name[]{"has_mask_input"};
 constexpr char mask_input_tensor_name[]{"mask_input"};
 
-//Outputs
+// Outputs
 constexpr char predictions_tensor_name[]{"masks"};
 constexpr char low_res_masks_tensor_name[]{"low_res_masks"};
 constexpr char iou_predictions_tensor_name[]{"iou_predictions"};
@@ -32,9 +33,9 @@ std::map<std::string, ov::Tensor> MaskPredictor::preprocess(std::vector<float> p
     return input;
 }
 
-std::vector<SegmentAnythingMask> MaskPredictor::infer(std::vector<cv::Point> positive, std::vector<cv::Point> negative) {
+std::vector<SegmentAnythingMask> MaskPredictor::infer(std::vector<cv::Point> positive,
+                                                      std::vector<cv::Point> negative) {
     std::map<std::string, ov::Tensor> tensors;
-
 
     tensors[image_embeddings_tensor_name] = image_encodings;
 
@@ -68,7 +69,7 @@ std::vector<SegmentAnythingMask> MaskPredictor::postprocess(InferenceResult resu
     auto low_res_masks = result.data[low_res_masks_tensor_name];
     auto iou_predictions = result.data[iou_predictions_tensor_name];
 
-    //Find the best mask based on IOU tensor
+    // Find the best mask based on IOU tensor
     auto iou_predictions_ptr = iou_predictions.data<float>();
     size_t best_index = 0;
     float highest_iou = 0;
@@ -79,16 +80,14 @@ std::vector<SegmentAnythingMask> MaskPredictor::postprocess(InferenceResult resu
         }
     }
 
-    //Copy chosen low res mask into mask input tensor for next infer.
+    // Copy chosen low res mask into mask input tensor for next infer.
     float* src_data = low_res_masks.data<float>();
     auto mask_size = mask_input_tensor.get_size();
-    std::copy(
-        src_data + best_index * mask_size,
-        src_data + (best_index + 1) * mask_size,
-        mask_input_tensor.data<float>()
-    );
+    std::copy(src_data + best_index * mask_size,
+              src_data + (best_index + 1) * mask_size,
+              mask_input_tensor.data<float>());
 
-    //Build result
+    // Build result
     float* data = predictions.data<float>();
     ov::Shape shape = predictions.get_shape();
     size_t num_masks = shape[1];
@@ -99,18 +98,13 @@ std::vector<SegmentAnythingMask> MaskPredictor::postprocess(InferenceResult resu
     for (size_t i = 0; i < num_masks; ++i) {
         size_t offset = i * height * width;
         cv::Mat mask(height, width, CV_32F, data + offset);
-        mask_mats.push_back(SegmentAnythingMask{
-            mask.clone(),
-            iou_predictions_ptr[i]
-        });
+        mask_mats.push_back(SegmentAnythingMask{mask.clone(), iou_predictions_ptr[i]});
     }
     return mask_mats;
 }
 
-
 std::vector<SegmentAnythingMask> MaskPredictor::infer(cv::Rect box) {
     std::map<std::string, ov::Tensor> tensors;
-
 
     tensors[image_embeddings_tensor_name] = image_encodings;
 
@@ -140,7 +134,6 @@ cv::Point MaskPredictor::transform(cv::Point input) {
     return cv::Point(scaled[0], scaled[1]);
 }
 
-
 cv::Matx33f MaskPredictor::build_transform() {
     float scaleX = input_image_tensor_size.width / (float)input_image_size.width;
     float scaleY = input_image_tensor_size.height / (float)input_image_size.height;
@@ -148,11 +141,13 @@ cv::Matx33f MaskPredictor::build_transform() {
     float sx = s;
     float sy = s;
 
+    // clang-format off
     return cv::Matx33f{
         sx, 0, 0,
         0, sy, 0,
         0, 0, 1,
     };
+    // clang-format on
 }
 
 void MaskPredictor::reset_mask_input() {

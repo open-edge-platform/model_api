@@ -1,18 +1,17 @@
 #include "tasks/segment_anything.h"
-#include <openvino/core/model.hpp>
-#include "adapters/openvino_adapter.h"
 
+#include <openvino/core/model.hpp>
+
+#include "adapters/openvino_adapter.h"
 #include "utils/preprocessing.h"
 #include "utils/tensor.h"
 #include "utils/tiling.h"
 
 SegmentAnything SegmentAnything::create_model(const std::string& encoder_model_path,
-    const std::string& predictor_model_path,
-    const ov::AnyMap& user_config,
-    bool preload,
-    const std::string& device) {
-
-
+                                              const std::string& predictor_model_path,
+                                              const ov::AnyMap& user_config,
+                                              bool preload,
+                                              const std::string& device) {
     auto encoder_adapter = std::make_shared<OpenVINOInferenceAdapter>();
     auto predictor_adapter = std::make_shared<OpenVINOInferenceAdapter>();
     encoder_adapter->loadModel(encoder_model_path, device, user_config, false);
@@ -38,7 +37,6 @@ void SegmentAnything::serialize(std::shared_ptr<ov::Model>& ov_model) {
         layout = utils::getLayoutFromShape(input.get_partial_shape());
     }
 
-
     const ov::Shape& shape = input.get_partial_shape().get_max_shape();
 
     auto interpolation_mode = cv::INTER_LINEAR;
@@ -58,7 +56,6 @@ void SegmentAnything::serialize(std::shared_ptr<ov::Model>& ov_model) {
         mean_values = utils::get_from_any_maps("mean_values", config, ov::AnyMap{}, mean_values);
     }
 
-
     auto input_shape = ov::Shape{shape[ov::layout::width_idx(layout)], shape[ov::layout::height_idx(layout)]};
 
     ov_model = utils::embedProcessing(ov_model,
@@ -76,8 +73,7 @@ void SegmentAnything::serialize(std::shared_ptr<ov::Model>& ov_model) {
     ov_model->set_rt_info(input_shape[1], "model_info", "orig_height");
 }
 
-
-MaskPredictor  SegmentAnything::infer(cv::Mat image) {
+MaskPredictor SegmentAnything::infer(cv::Mat image) {
     return pipeline.infer(image);
 }
 
@@ -89,5 +85,9 @@ std::map<std::string, ov::Tensor> SegmentAnything::preprocess(cv::Mat image) {
 
 MaskPredictor SegmentAnything::postprocess(InferenceResult& infResult) {
     auto tensorName = encoder_adapter->getOutputNames().front();
-    return MaskPredictor(predictor_adapter, std::move(infResult.data[tensorName]), infResult.inputImageSize, input_shape, resize_mode);
+    return MaskPredictor(predictor_adapter,
+                         std::move(infResult.data[tensorName]),
+                         infResult.inputImageSize,
+                         input_shape,
+                         resize_mode);
 }

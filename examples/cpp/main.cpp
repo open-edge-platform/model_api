@@ -3,15 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <stddef.h>
-#include <tasks/segment_anything.h>
-#include <tasks/results.h>
-#include <utils/tensor.h>
-#include <utils/preprocessing.h>
 #include <adapters/openvino_adapter.h>
+#include <stddef.h>
+#include <tasks/results.h>
+#include <tasks/segment_anything.h>
+#include <utils/preprocessing.h>
+#include <utils/tensor.h>
 
 #include <cstdint>
 #include <exception>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <opencv2/core.hpp>
@@ -23,13 +24,13 @@
 #include <openvino/runtime/infer_request.hpp>
 #include <stdexcept>
 #include <string>
-#include <fstream>
 
-void store_tensor(ov::Tensor tensor, const std::string& path){
+void store_tensor(ov::Tensor tensor, const std::string& path) {
     std::ofstream file(path, std::ofstream::binary);
     file.write(static_cast<char*>(tensor.data()), tensor.get_byte_size());
     file.close();
-    std::cout << "stored tensor of shape: " << tensor.get_shape() << " and dtype: " << tensor.get_element_type() << " to " << path << std::endl;
+    std::cout << "stored tensor of shape: " << tensor.get_shape() << " and dtype: " << tensor.get_element_type()
+              << " to " << path << std::endl;
 }
 
 ov::Tensor load_tensor(const std::filesystem::path& path, const ov::Shape& shape, const ov::element::Type& element) {
@@ -42,7 +43,6 @@ ov::Tensor load_tensor(const std::filesystem::path& path, const ov::Shape& shape
 
 std::shared_ptr<MaskPredictor> predictor;
 
-cv::Matx33f transform;
 cv::Mat image;
 cv::Mat initial;
 
@@ -50,7 +50,8 @@ std::vector<cv::Point> positive_points;
 std::vector<cv::Point> negative_points;
 int main(int argc, char* argv[]) try {
     if (argc != 4) {
-        throw std::runtime_error(std::string{"Usage: "} + argv[0] + " <path_to_encoder_model> <path_to_predictor_model> <path_to_image>");
+        throw std::runtime_error(std::string{"Usage: "} + argv[0] +
+                                 " <path_to_encoder_model> <path_to_predictor_model> <path_to_image>");
     }
 
     std::string tmp_tensor_path = "./image_encodings.ov";
@@ -72,20 +73,11 @@ int main(int argc, char* argv[]) try {
     float sx = s;
     float sy = s;
 
-    transform = {
-        sx, 0, 0,
-        0, sy, 0,
-        0, 0, 1,
-    };
-
-
-
-    cv::setMouseCallback("image", [](int event, int x, int y, int, void* ) {
+    cv::setMouseCallback("image", [](int event, int x, int y, int, void*) {
         bool run_inference = false;
 
-
         if (event == 6) {
-            //reset!
+            // reset!
             positive_points.clear();
             negative_points.clear();
             predictor->reset_mask_input();
@@ -113,24 +105,22 @@ int main(int argc, char* argv[]) try {
             cv::Mat blended;
             cv::addWeighted(image, 1.0, output, 180.0f, 0.0, blended);
 
-
             std::vector<std::vector<cv::Point>> contours;
             cv::findContours(resizedMaskInt, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
 
             cv::drawContours(blended, contours, 0, cv::Scalar{255, 0, 0}, 2);
             cv::cvtColor(blended, blended, cv::COLOR_BGR2RGB);
 
-            for (auto &point: positive_points) {
+            for (auto& point : positive_points) {
                 cv::circle(blended, point, 3, cv::Scalar{0, 255, 0});
             }
-            for (auto &point: negative_points) {
+            for (auto& point : negative_points) {
                 cv::circle(blended, point, 3, cv::Scalar{255, 0, 0});
             }
 
-            //cv::rectangle(blended, cv::Rect(start, point), cv::Scalar{255, 0, 0}, 2);
+            // cv::rectangle(blended, cv::Rect(start, point), cv::Scalar{255, 0, 0}, 2);
             cv::imshow("image", blended);
         }
-
     });
     cv::imshow("image", initial);
 

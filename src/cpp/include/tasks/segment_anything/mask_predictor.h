@@ -4,10 +4,10 @@
 #include <openvino/openvino.hpp>
 #include <string>
 
+#include "adapters/inference_adapter.h"
 #include "tasks/results.h"
 #include "utils/config.h"
 #include "utils/preprocessing.h"
-#include "adapters/inference_adapter.h"
 #include "utils/vision_pipeline.h"
 
 class MaskPredictor {
@@ -19,8 +19,16 @@ public:
     utils::RESIZE_MODE resize_mode;
 
     MaskPredictor() {}
-    MaskPredictor(std::shared_ptr<InferenceAdapter> adapter, ov::Tensor image_encodings, cv::Size input_image_size, cv::Size input_image_tensor_size, utils::RESIZE_MODE resize_mode):
-        adapter(adapter), image_encodings(image_encodings), input_image_size(input_image_size), input_image_tensor_size(input_image_tensor_size), resize_mode(resize_mode) {
+    MaskPredictor(std::shared_ptr<InferenceAdapter> adapter,
+                  ov::Tensor image_encodings,
+                  cv::Size input_image_size,
+                  cv::Size input_image_tensor_size,
+                  utils::RESIZE_MODE resize_mode)
+        : adapter(adapter),
+          image_encodings(image_encodings),
+          input_image_size(input_image_size),
+          input_image_tensor_size(input_image_tensor_size),
+          resize_mode(resize_mode) {
         resize_transform = build_transform();
 
         reset_mask_input();
@@ -41,5 +49,4 @@ private:
     cv::Matx33f build_transform();
     ov::Tensor mask_input_tensor;
     bool use_previous_mask_input = 0;
-
 };
