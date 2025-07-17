@@ -42,14 +42,10 @@ ov::Tensor load_tensor(const std::filesystem::path& path, const ov::Shape& shape
 
 std::shared_ptr<MaskPredictor> predictor;
 
-// SAM normalization constants (in pixel scale)
-const std::vector<float> MEAN = {123.675f, 116.28f, 103.53f};
-const std::vector<float> STD  = {58.395f, 57.12f, 57.375f};
-
-
 cv::Matx33f transform;
 cv::Mat image;
 
+cv::Point start;
 int main(int argc, char* argv[]) try {
     if (argc != 4) {
         throw std::runtime_error(std::string{"Usage: "} + argv[0] + " <path_to_encoder_model> <path_to_predictor_model> <path_to_image>");
@@ -64,14 +60,7 @@ int main(int argc, char* argv[]) try {
         throw std::runtime_error{"Failed to read the image"};
     }
     auto model = SegmentAnything::create_model(argv[1], argv[2]);
-
-    auto predictor_adapter = std::make_shared<OpenVINOInferenceAdapter>();
-    predictor_adapter->loadModel(argv[2], "CPU", {}, true);
-
-
-    auto image_encodings = load_tensor("./image_encodings.ov", ov::Shape{1,256,64,64}, ov::element::f32);
-    predictor = std::make_shared<MaskPredictor>(predictor_adapter, image_encodings, image.size(), utils::RESIZE_KEEP_ASPECT);
-
+    predictor = std::make_unique<MaskPredictor>(model.infer(image));
     cv::namedWindow("image");
 
     cv::Size input_size(1024, 1024);
@@ -89,9 +78,12 @@ int main(int argc, char* argv[]) try {
 
 
     cv::setMouseCallback("image", [](int event, int x, int y, int, void* ) {
+        if (event == 1) {
+           start = cv::Point(x, y);
+        }
         if (event == 4) {
             cv::Point point(x,y);
-            auto masks = predictor->infer({point}, {});
+            auto masks = predictor->infer({point});
 
             cv::Mat resizedMask;
             cv::resize(masks[0], resizedMask, image.size());
@@ -109,6 +101,8 @@ int main(int argc, char* argv[]) try {
 
             cv::drawContours(blended, contours, 0, cv::Scalar{255, 0, 0}, 2);
             cv::cvtColor(blended, blended, cv::COLOR_BGR2RGB);
+
+            cv::rectangle(blended, cv::Rect(start, point), cv::Scalar{255, 0, 0}, 2);
             cv::imshow("image", blended);
         }
 

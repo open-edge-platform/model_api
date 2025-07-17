@@ -6,76 +6,6 @@
 #include "utils/tensor.h"
 #include "utils/tiling.h"
 
-using utils::RESIZE_KEEP_ASPECT;
-
-std::vector<cv::Mat> MaskPredictor::infer(std::vector<cv::Point> positive, std::vector<cv::Point> negative) {
-    const std::string image_embeddings_tensor_name = "image_embeddings";
-    const std::string point_coords_tensor_name = "point_coords";
-    const std::string point_labels_tensor_name = "point_labels";
-    const std::string orig_image_tensor_name = "orig_im_size";
-
-    std::map<std::string, ov::Tensor> tensors;
-
-
-    tensors[image_embeddings_tensor_name] = image_encodings;
-
-    std::vector<float> point_coord_data;
-    std::vector<float> point_label_data;
-    point_coord_data.reserve(positive.size() * 2);
-    point_label_data.reserve(positive.size());
-
-    for (size_t i = 0; i < positive.size(); i++) {
-        auto transformed = transform(positive[i]);
-        point_coord_data.push_back(transformed.x);
-        point_coord_data.push_back(transformed.y);
-        point_label_data.push_back(1);
-    }
-    std::vector<float> orig_image_size = {(float)inputImageSize.height, (float)inputImageSize.width};
-    std::vector<float> mask_input(256 * 256);
-
-
-    tensors[point_coords_tensor_name] = ov::Tensor(ov::element::f32, ov::Shape({positive.size(), 1, 2}), point_coord_data.data());
-    tensors[point_labels_tensor_name] = ov::Tensor(ov::element::f32, ov::Shape({positive.size(), 1}), point_label_data.data());
-    tensors[orig_image_tensor_name] = ov::Tensor(ov::element::f32, ov::Shape({2}), orig_image_size.data());
-    std::vector<float> has_mask_input = {0};
-    tensors["has_mask_input"] = ov::Tensor(ov::element::f32, ov::Shape({1}), has_mask_input.data());
-    tensors["mask_input"] = ov::Tensor(ov::element::f32, ov::Shape({1, 1, 256, 256}), mask_input.data());
-
-
-    InferenceResult result;
-    result.data = adapter->infer(tensors);
-    auto tensorName = adapter->getOutputNames().front();
-    auto predictions = result.data[tensorName];
-
-    float* data = predictions.data<float>();
-
-    // Step 2: Get tensor shape
-    ov::Shape shape = predictions.get_shape(); // [1, 4, 2048, 1365]
-    size_t num_masks = shape[1];
-    size_t height = shape[2];
-    size_t width = shape[3];
-
-    // Step 3: Convert each mask to cv::Mat
-    std::vector<cv::Mat> mask_mats;
-    for (size_t i = 0; i < num_masks; ++i) {
-        // Calculate offset into the data array
-        size_t offset = i * height * width;
-
-        // Wrap the raw data into a cv::Mat (no data copy)
-        cv::Mat mask(height, width, CV_32F, data + offset);
-
-        // Optional: Clone if you need to store it independently
-        mask_mats.push_back(mask.clone());
-    }
-    return mask_mats;
-}
-
-cv::Point MaskPredictor::transform(cv::Point input) {
-    cv::Vec3f vector(input.x, input.y, 1);
-    auto scaled = resize_transform * vector;
-    return cv::Point(scaled[0], scaled[1]);
-}
-
 SegmentAnything SegmentAnything::create_model(const std::string& encoder_model_path,
     const std::string& predictor_model_path,
     const ov::AnyMap& user_config,
@@ -93,10 +23,6 @@ SegmentAnything SegmentAnything::create_model(const std::string& encoder_model_p
     }
 
     predictor_adapter->loadModel(predictor_model_path, device, user_config, true);
-    //predictor_adapter->applyModelTransform([](std::shared_ptr<ov::Model>& model) {
-    //    ov::set_batch(model, 1);
-    //});
-
     return SegmentAnything(encoder_adapter, predictor_adapter, user_config);
 }
 
@@ -116,12 +42,13 @@ void SegmentAnything::serialize(std::shared_ptr<ov::Model>& ov_model) {
     const ov::Shape& shape = input.get_partial_shape().get_max_shape();
 
     auto interpolation_mode = cv::INTER_LINEAR;
-    utils::RESIZE_MODE resize_mode = RESIZE_KEEP_ASPECT;
     uint8_t pad_value = 0;
     bool reverse_input_channels = false;
 
+    utils::RESIZE_MODE resize_mode = utils::RESIZE_KEEP_ASPECT;
     std::vector<float> scale_values = {58.395, 57.12, 57.375};
     std::vector<float> mean_values = {123.675, 116.28, 103.53};
+
     if (ov_model->has_rt_info("model_info")) {
         std::cout << "getting config from model config" << std::endl;
         auto config = ov_model->get_rt_info<ov::AnyMap>("model_info");
@@ -162,6 +89,5 @@ std::map<std::string, ov::Tensor> SegmentAnything::preprocess(cv::Mat image) {
 
 MaskPredictor SegmentAnything::postprocess(InferenceResult& infResult) {
     auto tensorName = encoder_adapter->getOutputNames().front();
-
-    return MaskPredictor(predictor_adapter, std::move(infResult.data[tensorName]), infResult.inputImageSize, utils::RESIZE_KEEP_ASPECT);
+    return MaskPredictor(predictor_adapter, std::move(infResult.data[tensorName]), infResult.inputImageSize, input_shape, resize_mode);
 }
