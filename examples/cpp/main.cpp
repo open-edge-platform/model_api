@@ -22,6 +22,7 @@
 #include <openvino/core/graph_util.hpp>
 #include <openvino/openvino.hpp>
 #include <openvino/runtime/infer_request.hpp>
+#include <optional>
 #include <stdexcept>
 #include <string>
 
@@ -46,8 +47,12 @@ std::shared_ptr<MaskPredictor> predictor;
 cv::Mat image;
 cv::Mat initial;
 
+cv::Point start;
+
 std::vector<cv::Point> positive_points;
 std::vector<cv::Point> negative_points;
+
+std::optional<cv::Rect> box;
 int main(int argc, char* argv[]) try {
     if (argc != 4) {
         throw std::runtime_error(std::string{"Usage: "} + argv[0] +
@@ -66,18 +71,15 @@ int main(int argc, char* argv[]) try {
     predictor = std::make_unique<MaskPredictor>(model.infer(image));
     cv::namedWindow("image");
 
-    cv::Size input_size(1024, 1024);
-    float scaleX = input_size.width / (float)image.cols;
-    float scaleY = input_size.height / (float)image.rows;
-    float s = std::min(scaleX, scaleY);
-    float sx = s;
-    float sy = s;
-
     cv::setMouseCallback("image", [](int event, int x, int y, int, void*) {
         bool run_inference = false;
 
+        if (event == 1) {
+            start = cv::Point(x, y);
+        }
         if (event == 6) {
             // reset!
+            box.reset();
             positive_points.clear();
             negative_points.clear();
             predictor->reset_mask_input();
@@ -89,11 +91,21 @@ int main(int argc, char* argv[]) try {
         }
 
         if (event == 4) {
-            positive_points.emplace_back(x, y);
+            float distance = (x - start.x) * (x - start.x) + (y - start.y) * (y - start.y);
+            if (distance > 10) {
+                box = cv::Rect(cv::Point(x, y), start);
+            } else {
+                positive_points.emplace_back(x, y);
+            }
             run_inference = true;
         }
         if (run_inference) {
-            auto masks = predictor->infer(positive_points, negative_points);
+            std::vector<SegmentAnythingMask> masks;
+            if (box.has_value()) {
+                masks = predictor->infer(box.value());
+            } else {
+                masks = predictor->infer(positive_points, negative_points);
+            }
 
             cv::Mat resizedMask;
             cv::resize(masks[0].mask, resizedMask, image.size());
@@ -117,8 +129,10 @@ int main(int argc, char* argv[]) try {
             for (auto& point : negative_points) {
                 cv::circle(blended, point, 3, cv::Scalar{255, 0, 0});
             }
+            if (box.has_value()) {
+                cv::rectangle(blended, box.value(), cv::Scalar{255, 0, 0}, 2);
+            }
 
-            // cv::rectangle(blended, cv::Rect(start, point), cv::Scalar{255, 0, 0}, 2);
             cv::imshow("image", blended);
         }
     });
