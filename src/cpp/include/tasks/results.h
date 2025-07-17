@@ -227,3 +227,24 @@ struct AnomalyResult {
         return ss.str();
     }
 };
+
+struct SegmentAnythingMask {
+    cv::Mat mask;
+    float iou;
+
+    friend std::ostream& operator<<(std::ostream& os, const SegmentAnythingMask& prediction) {
+        double min_map, max_map;
+        cv::minMaxLoc(prediction.mask, &min_map, &max_map);
+        double min_pred_mask, max_pred_mask;
+        cv::minMaxLoc(prediction.mask, &min_pred_mask, &max_pred_mask);
+        os << "mask min:" << min_map << " max:" << max_map << ";";
+        os << "iou:" << std::fixed << std::setprecision(1) << prediction.iou << ";";
+        return os;
+    }
+
+    explicit operator std::string() {
+        std::stringstream ss;
+        ss << *this;
+        return ss.str();
+    }
+};
