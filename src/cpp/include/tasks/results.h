@@ -228,6 +228,30 @@ struct AnomalyResult {
     }
 };
 
+struct KeypointDetectionResult {
+    std::vector<cv::Point2f> keypoints;
+    std::vector<float> scores;
+
+    friend std::ostream& operator<<(std::ostream& os, const KeypointDetectionResult& prediction) {
+        float kp_x_sum = 0.f;
+        for (const cv::Point2f& keypoint : prediction.keypoints) {
+            kp_x_sum += keypoint.x;
+        }
+        float scores_sum = std::accumulate(prediction.scores.begin(), prediction.scores.end(), 0.f);
+
+        os << "keypoints: (" << prediction.keypoints.size() << ", 2), keypoints_x_sum: ";
+        os << std::fixed << std::setprecision(3) << kp_x_sum << ", scores: (" << prediction.scores.size() << ",) "
+           << std::fixed << std::setprecision(3) << scores_sum;
+        return os;
+    }
+
+    explicit operator std::string() {
+        std::stringstream ss;
+        ss << *this;
+        return ss.str();
+    }
+};
+
 struct SegmentAnythingMask {
     cv::Mat mask;
     float iou;
@@ -239,6 +263,7 @@ struct SegmentAnythingMask {
         cv::minMaxLoc(prediction.mask, &min_pred_mask, &max_pred_mask);
         os << "mask min:" << min_map << " max:" << max_map << ";";
         os << "iou:" << std::fixed << std::setprecision(1) << prediction.iou << ";";
+
         return os;
     }
 

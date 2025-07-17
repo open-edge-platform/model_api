@@ -42,6 +42,36 @@ inline bool get_from_any_maps(const std::string& key,
     return low_priority;
 }
 
+enum class RESIZE_MODE {
+    RESIZE_FILL,
+    RESIZE_KEEP_ASPECT,
+    RESIZE_KEEP_ASPECT_LETTERBOX,
+    RESIZE_CROP,
+    NO_RESIZE,
+};
+
+inline RESIZE_MODE get_from_any_maps(const std::string& key,
+                                     const ov::AnyMap& top_priority,
+                                     const ov::AnyMap& mid_priority,
+                                     RESIZE_MODE low_priority) {
+    std::string resize_type = "standard";
+    resize_type = utils::get_from_any_maps("resize_type", top_priority, mid_priority, resize_type);
+    RESIZE_MODE resize = RESIZE_MODE::RESIZE_FILL;
+    if ("crop" == resize_type) {
+        resize = RESIZE_MODE::RESIZE_CROP;
+    } else if ("standard" == resize_type) {
+        resize = RESIZE_MODE::RESIZE_FILL;
+    } else if ("fit_to_window" == resize_type) {
+        resize = RESIZE_MODE::RESIZE_KEEP_ASPECT;
+    } else if ("fit_to_window_letterbox" == resize_type) {
+        resize = RESIZE_MODE::RESIZE_KEEP_ASPECT_LETTERBOX;
+    } else {
+        throw std::runtime_error("Unknown value for resize_type model parameter: " + resize_type);
+    }
+
+    return resize;
+}
+
 ov::AnyMap get_config_from_onnx(const std::string& model_path);
 
 void add_ov_model_info(std::shared_ptr<ov::Model> model, const ov::AnyMap& config);

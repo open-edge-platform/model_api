@@ -49,5 +49,5 @@ public:
     MaskPredictor postprocess(InferenceResult& infResult);
     MaskPredictor infer(cv::Mat image);
 private:
-    utils::RESIZE_MODE resize_mode = utils::RESIZE_KEEP_ASPECT;
+    utils::RESIZE_MODE resize_mode = utils::RESIZE_MODE::RESIZE_KEEP_ASPECT;
 };

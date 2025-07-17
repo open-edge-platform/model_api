@@ -8,14 +8,9 @@
 #include <opencv2/opencv.hpp>
 #include <openvino/openvino.hpp>
 
+#include "utils/config.h"
+
 namespace utils {
-enum RESIZE_MODE {
-    RESIZE_FILL,
-    RESIZE_KEEP_ASPECT,
-    RESIZE_KEEP_ASPECT_LETTERBOX,
-    RESIZE_CROP,
-    NO_RESIZE,
-};
 
 std::shared_ptr<ov::Model> embedProcessing(std::shared_ptr<ov::Model>& model,
                                            const std::string& inputName,
@@ -33,14 +28,6 @@ ov::preprocess::PostProcessSteps::CustomPostprocessOp createResizeGraph(RESIZE_M
                                                                         const ov::Shape& size,
                                                                         const cv::InterpolationFlags interpolationMode,
                                                                         uint8_t pad_value);
-
-cv::Mat resizeImageExt(const cv::Mat& mat,
-                       int width,
-                       int height,
-                       RESIZE_MODE resizeMode = RESIZE_FILL,
-                       cv::InterpolationFlags interpolationMode = cv::INTER_LINEAR,
-                       cv::Rect* roi = nullptr,
-                       cv::Scalar BorderConstant = cv::Scalar(0, 0, 0));
 
 ov::Output<ov::Node> resizeImageGraph(const ov::Output<ov::Node>& input,
                                       const ov::Shape& size,

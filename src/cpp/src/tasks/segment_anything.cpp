@@ -45,7 +45,7 @@ void SegmentAnything::serialize(std::shared_ptr<ov::Model>& ov_model) {
     uint8_t pad_value = 0;
     bool reverse_input_channels = false;
 
-    utils::RESIZE_MODE resize_mode = utils::RESIZE_KEEP_ASPECT;
+    utils::RESIZE_MODE resize_mode = utils::RESIZE_MODE::RESIZE_KEEP_ASPECT;
     std::vector<float> scale_values = {58.395, 57.12, 57.375};
     std::vector<float> mean_values = {123.675, 116.28, 103.53};
 

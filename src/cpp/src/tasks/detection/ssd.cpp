@@ -81,15 +81,17 @@ void SSD::serialize(std::shared_ptr<ov::Model>& ov_model) {
         layout = utils::getLayoutFromShape(input_tensor.get_partial_shape());
     }
 
+    auto config = ov_model->has_rt_info("model_info") ? ov_model->get_rt_info<ov::AnyMap>("model_info") : ov::AnyMap{};
+
     auto interpolation_mode = cv::INTER_LINEAR;
-    utils::RESIZE_MODE resize_mode = utils::RESIZE_FILL;
+    utils::RESIZE_MODE resize_mode = utils::RESIZE_MODE::RESIZE_FILL;
+    resize_mode = utils::get_from_any_maps("resize_type", config, ov::AnyMap{}, resize_mode);
 
     auto shape = input_tensor.get_partial_shape().get_max_shape();
 
     auto input_shape = ov::Shape{shape[ov::layout::width_idx(layout)], shape[ov::layout::height_idx(layout)]};
     uint8_t pad_value = 0;
-
-    auto config = ov_model->has_rt_info("model_info") ? ov_model->get_rt_info<ov::AnyMap>("model_info") : ov::AnyMap{};
+    pad_value = utils::get_from_any_maps<unsigned>("pad_value", config, ov::AnyMap{}, pad_value);
 
     std::vector<float> scale_values;
     std::vector<float> mean_values;
@@ -97,6 +99,8 @@ void SSD::serialize(std::shared_ptr<ov::Model>& ov_model) {
     mean_values = utils::get_from_any_maps("mean_values", config, ov::AnyMap{}, mean_values);
 
     bool reverse_input_channels = false;
+    reverse_input_channels =
+        utils::get_from_any_maps("reverse_input_channels", config, ov::AnyMap{}, reverse_input_channels);
 
     ov_model = utils::embedProcessing(ov_model,
                                       input_tensor.get_any_name(),
@@ -204,9 +208,10 @@ DetectionResult SSD::postprocessMultipleOutputs(InferenceResult& infResult) {
     float invertedScaleX = floatInputImgWidth / input_shape.width,
           invertedScaleY = floatInputImgHeight / input_shape.height;
     int padLeft = 0, padTop = 0;
-    if (utils::RESIZE_KEEP_ASPECT == resize_mode || utils::RESIZE_KEEP_ASPECT_LETTERBOX == resize_mode) {
+    if (utils::RESIZE_MODE::RESIZE_KEEP_ASPECT == resize_mode ||
+        utils::RESIZE_MODE::RESIZE_KEEP_ASPECT_LETTERBOX == resize_mode) {
         invertedScaleX = invertedScaleY = std::max(invertedScaleX, invertedScaleY);
-        if (utils::RESIZE_KEEP_ASPECT_LETTERBOX == resize_mode) {
+        if (utils::RESIZE_MODE::RESIZE_KEEP_ASPECT_LETTERBOX == resize_mode) {
             padLeft = (input_shape.width - int(std::round(floatInputImgWidth / invertedScaleX))) / 2;
             padTop = (input_shape.height - int(std::round(floatInputImgHeight / invertedScaleY))) / 2;
         }
