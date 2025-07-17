@@ -44,6 +44,7 @@ std::shared_ptr<MaskPredictor> predictor;
 
 cv::Matx33f transform;
 cv::Mat image;
+cv::Mat initial;
 
 std::vector<cv::Point> positive_points;
 std::vector<cv::Point> negative_points;
@@ -54,8 +55,8 @@ int main(int argc, char* argv[]) try {
 
     std::string tmp_tensor_path = "./image_encodings.ov";
 
-    image = cv::imread(argv[3]);
-    cv::cvtColor(image, image, cv::COLOR_BGR2RGB);
+    initial = cv::imread(argv[3]);
+    cv::cvtColor(initial, image, cv::COLOR_BGR2RGB);
 
     if (!image.data) {
         throw std::runtime_error{"Failed to read the image"};
@@ -88,7 +89,7 @@ int main(int argc, char* argv[]) try {
             positive_points.clear();
             negative_points.clear();
             predictor->reset_mask_input();
-            cv::imshow("image", image);
+            cv::imshow("image", initial);
         }
         if (event == 5) {
             negative_points.emplace_back(x, y);
@@ -131,21 +132,7 @@ int main(int argc, char* argv[]) try {
         }
 
     });
-
-    cv::Size new_size(1024, 1024);
-    if (image.cols > image.rows) {
-        new_size.height = (float)image.rows / image.cols * new_size.width;
-    } else {
-        new_size.width = (float)image.cols / image.rows * new_size.height;
-    }
-
-
-    std::cout << "new size: " << new_size << std::endl;
-
-    cv::Mat resized;
-    cv::resize(image, resized, new_size);
-
-    cv::imshow("image", image);
+    cv::imshow("image", initial);
 
     cv::waitKey(0);
 
