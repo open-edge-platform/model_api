@@ -30,11 +30,6 @@ public:
                            const ov::AnyMap& adapterConfig = {},
                            bool preCompile = true) override;
     virtual void compileModel(const std::string& device = "", const ov::AnyMap& adapterConfig = {}) override;
-    virtual size_t getNumAsyncExecutors() const;
-    virtual ov::PartialShape getInputShape(const std::string& inputName) const override;
-    virtual ov::PartialShape getOutputShape(const std::string& outputName) const override;
-    virtual ov::element::Type_t getInputDatatype(const std::string& inputName) const override;
-    virtual ov::element::Type_t getOutputDatatype(const std::string& outputName) const override;
     virtual std::vector<std::string> getInputNames() const override;
     virtual std::vector<std::string> getOutputNames() const override;
     virtual const ov::AnyMap& getModelConfig() const override;
