@@ -20,7 +20,8 @@ class InstanceSegmentationScene(Scene):
 
     def __init__(self, image: Image, result: InstanceSegmentationResult, layout: Union[Layout, None] = None) -> None:
         # nosec as random is used for color generation
-        self.color_per_label = {label: f"#{random.randint(0, 0xFFFFFF):06x}" for label in set(result.label_names)}  # noqa: S311 # nosec B311
+        g = random.Random(0)  # noqa: S311 # nosec B311
+        self.color_per_label = {label: f"#{g.randint(0, 0xFFFFFF):06x}" for label in set(result.label_names)}  # noqa: S311 # nosec B311
         super().__init__(
             base=image,
             label=self._get_labels(result),
@@ -54,7 +55,7 @@ class InstanceSegmentationScene(Scene):
 
     def _get_overlays(self, result: InstanceSegmentationResult) -> list[Overlay]:
         overlays = []
-        if len(result.saliency_map) > 0:
+        if result.saliency_map is not None and len(result.saliency_map) > 0:
             labels_label_names_mapping = dict(zip(result.labels, result.label_names))
             for label, label_name in labels_label_names_mapping.items():
                 saliency_map = result.saliency_map[label - 1]
