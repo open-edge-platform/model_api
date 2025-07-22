@@ -21,7 +21,7 @@ class InstanceSegmentationScene(Scene):
     def __init__(self, image: Image, result: InstanceSegmentationResult, layout: Union[Layout, None] = None) -> None:
         # nosec as random is used for color generation
         g = random.Random(0)  # noqa: S311 # nosec B311
-        self.color_per_label = {label: f"#{g.randint(0, 0xFFFFFF):06x}" for label in set(result.label_names)}  # noqa: S311 # nosec B311
+        self.color_per_label = {label: f"#{g.randint(0, 0xFFFFFF):06x}" for label in set(result.label_names)}  # nosec B311
         super().__init__(
             base=image,
             label=self._get_labels(result),
