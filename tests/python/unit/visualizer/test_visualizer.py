@@ -3,7 +3,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-
 from pathlib import Path
 
 import numpy as np
@@ -42,4 +41,3 @@ def test_anomaly_scene(mock_image: Image, tmpdir: Path):
 
     assert isinstance(rendered_img_np, np.ndarray)
     assert rendered_img_np.shape == np.array(mock_image).shape
-    
