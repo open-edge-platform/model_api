@@ -149,13 +149,20 @@ class RotatedSegmentationResult(InstanceSegmentationResult):
 
 
 class Contour:
-    def __init__(self, label: str, probability: float, shape: list[tuple[int, int]]):
+    def __init__(self, label: str, probability: float, shape: np.ndarray, child_shapes: list[np.ndarray] | None = None):
         self.shape = shape
         self.label = label
         self.probability = probability
+        self.child_shapes = child_shapes
 
     def __str__(self):
-        return f"{self.label}: {self.probability:.3f}, {len(self.shape)}"
+        repr = f"{self.label}: {self.probability:.3f}, {len(self.shape)}"
+        if self.child_shapes is not None:
+            repr += f", {len(self.child_shapes)}"
+        return repr
+
+    def __repr__(self):
+        return self.__str__()
 
 
 class ImageResultWithSoftPrediction(Result):
