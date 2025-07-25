@@ -224,9 +224,6 @@ class SegmentationModel(ImageModel):
                 while next_child_idx >= 0:
                     children.append(contours[next_child_idx])
                     next_child_idx = hierarchy[next_child_idx][0]
-                
-                if not children:
-                    children = None
 
                 mask = np.zeros(prediction.resultImage.shape, dtype=np.uint8)
                 cv2.drawContours(
