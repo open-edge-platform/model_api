@@ -315,10 +315,11 @@ struct Contour {
     std::string label;
     float probability;
     std::vector<cv::Point> shape;
+    std::vector<std::vector<cv::Point>> child_shapes;
 
     friend std::ostream& operator<<(std::ostream& os, const Contour& contour) {
         return os << contour.label << ": " << std::fixed << std::setprecision(3) << contour.probability << ", "
-                  << contour.shape.size();
+                  << contour.shape.size() << ", " << contour.child_shapes.size();
     }
 };
 
@@ -332,7 +333,7 @@ static inline std::vector<Contour> getContours(const std::vector<SegmentedObject
         if (contours.size() != 1) {
             throw std::runtime_error("findContours() must have returned only one contour");
         }
-        combined_contours.push_back({obj.label, obj.confidence, contours[0]});
+        combined_contours.push_back({obj.label, obj.confidence, contours[0], {}});
     }
     return combined_contours;
 }

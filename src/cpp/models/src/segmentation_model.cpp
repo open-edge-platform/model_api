@@ -298,17 +298,29 @@ std::vector<Contour> SegmentationModel::getContours(const ImageResultWithSoftPre
                     cv::Scalar(index, index, index),
                     label_index_map);
         std::vector<std::vector<cv::Point>> contours;
-        cv::findContours(label_index_map, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
+        std::vector<cv::Vec4i> hierarchy;
+        cv::findContours(label_index_map, contours, hierarchy, cv::RETR_CCOMP, cv::CHAIN_APPROX_NONE);
 
         std::string label = getLabelName(index - 1);
 
-        for (unsigned int i = 0; i < contours.size(); i++) {
+        for (size_t i = 0; i < contours.size(); ++i) {
+            if (hierarchy[i][3] >= 0) {
+                continue;
+            }
+
+            std::vector<std::vector<cv::Point>> children;
+            int next_child_idx = hierarchy[i][2];
+            while (next_child_idx >= 0) {
+                children.push_back(contours[next_child_idx]);
+                next_child_idx = hierarchy[next_child_idx][0];
+            }
+
             cv::Mat mask = cv::Mat::zeros(imageResult.resultImage.rows,
                                           imageResult.resultImage.cols,
                                           imageResult.resultImage.type());
             cv::drawContours(mask, contours, i, 255, -1);
             float probability = (float)cv::mean(current_label_soft_prediction, mask)[0];
-            combined_contours.push_back({label, probability, contours[i]});
+            combined_contours.push_back({label, probability, contours[i], children});
         }
     }
 
