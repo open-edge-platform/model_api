@@ -215,8 +215,6 @@ class SegmentationModel(ImageModel):
             hierarchy = hierarchy.squeeze()
 
             for i, contour in enumerate(contours):
-                children = None
-
                 if hierarchy[i][3] >= 0:
                     continue
 
@@ -226,6 +224,10 @@ class SegmentationModel(ImageModel):
                     while child_next_idx >= 0:
                         children.append(contours[child_next_idx])
                         child_next_idx = hierarchy[child_next_idx][0]
+                
+                if not children:
+                    children = None
+
                 mask = np.zeros(prediction.resultImage.shape, dtype=np.uint8)
                 cv2.drawContours(
                     mask,
