@@ -212,7 +212,8 @@ class SegmentationModel(ImageModel):
                 cv2.RETR_CCOMP,
                 cv2.CHAIN_APPROX_NONE,
             )
-            hierarchy = hierarchy.squeeze()
+            if len(contours):
+                hierarchy = hierarchy.squeeze(axis=0)
 
             for i, contour in enumerate(contours):
                 if hierarchy[i][3] >= 0:
