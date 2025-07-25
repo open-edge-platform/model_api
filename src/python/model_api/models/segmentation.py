@@ -219,11 +219,10 @@ class SegmentationModel(ImageModel):
                     continue
 
                 children = []
-                if hierarchy[i][2] >= 0:
-                    child_next_idx = hierarchy[i][2]
-                    while child_next_idx >= 0:
-                        children.append(contours[child_next_idx])
-                        child_next_idx = hierarchy[child_next_idx][0]
+                next_child_idx = hierarchy[i][2]
+                while next_child_idx >= 0:
+                    children.append(contours[next_child_idx])
+                    next_child_idx = hierarchy[next_child_idx][0]
                 
                 if not children:
                     children = None
