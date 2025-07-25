@@ -135,10 +135,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-22.04, ubuntu-24.04]
-        python-version: [3.9, "3.10", "3.11"]
-        exclude:
-          - os: ubuntu-24.04
-            python-version: "3.9"
+        python-version: ["3.10", "3.11", "3.13"]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Set up docker for macOS
