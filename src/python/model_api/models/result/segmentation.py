@@ -156,10 +156,8 @@ class Contour:
         self.child_shapes = child_shapes
 
     def __str__(self):
-        repr = f"{self.label}: {self.probability:.3f}, {len(self.shape)}"
-        if self.child_shapes is not None:
-            repr += f", {len(self.child_shapes)}"
-        return repr
+        num_children = len(self.child_shapes) if self.child_shapes is not None else 0
+        return f"{self.label}: {self.probability:.3f}, {len(self.shape)}, {num_children}"
 
     def __repr__(self):
         return self.__str__()
