@@ -315,11 +315,11 @@ struct Contour {
     std::string label;
     float probability;
     std::vector<cv::Point> shape;
-    std::vector<std::vector<cv::Point>> child_shapes;
+    std::vector<std::vector<cv::Point>> excluded_shapes;
 
     friend std::ostream& operator<<(std::ostream& os, const Contour& contour) {
         return os << contour.label << ": " << std::fixed << std::setprecision(3) << contour.probability << ", "
-                  << contour.shape.size() << ", " << contour.child_shapes.size();
+                  << contour.shape.size() << ", " << contour.excluded_shapes.size();
     }
 };
 

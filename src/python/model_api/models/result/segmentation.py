@@ -149,12 +149,15 @@ class RotatedSegmentationResult(InstanceSegmentationResult):
 
 
 class Contour:
-    """Represents a contour object with label, probability, shape, and optional excluded shapes.
+    """Represents a semantic segmentation mask as internals of a contour with "holes".
     Args:
         label (str): The label of the contour.
         probability (float): The probability associated with the contour.
-        shape (np.ndarray | list[tuple[int, int]]): The shape of the contour.
-        child_shapes (list[np.ndarray] | list[tuple[int, int]] | None, optional): Shapes of excluded contours. Defaults to None.
+        shape (np.ndarray | list[tuple[int, int]]): The shape of the contour. Shape is represented as a
+            list of 2d points or an equivalent numpy array (N, 2).
+        excluded_shapes (list[np.ndarray] | list[tuple[int, int]] | None, optional): Shapes of excluded contours.
+            If empty, the main shape is simply connected. Otherwise, excluded_shapes
+            represent "holes". Defaults to None.
     """
 
     def __init__(
@@ -162,15 +165,15 @@ class Contour:
         label: str,
         probability: float,
         shape: np.ndarray | list[tuple[int, int]],
-        child_shapes: list[np.ndarray] | list[tuple[int, int]] | None = None,
+        excluded_shapes: list[np.ndarray] | list[tuple[int, int]] | None = None,
     ):
         self.shape = shape
         self.label = label
         self.probability = probability
-        self.child_shapes = child_shapes
+        self.excluded_shapes = excluded_shapes
 
     def __str__(self):
-        num_children = len(self.child_shapes) if self.child_shapes is not None else 0
+        num_children = len(self.excluded_shapes) if self.excluded_shapes is not None else 0
         return f"{self.label}: {self.probability:.3f}, {len(self.shape)}, {num_children}"
 
     def __repr__(self):
