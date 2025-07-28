@@ -149,7 +149,13 @@ class RotatedSegmentationResult(InstanceSegmentationResult):
 
 
 class Contour:
-    def __init__(self, label: str, probability: float, shape: np.ndarray, child_shapes: list[np.ndarray] | None = None):
+    def __init__(
+        self,
+        label: str,
+        probability: float,
+        shape: np.ndarray | list[tuple[int, int]],
+        child_shapes: list[np.ndarray] | list[tuple[int, int]] | None = None,
+    ):
         self.shape = shape
         self.label = label
         self.probability = probability
