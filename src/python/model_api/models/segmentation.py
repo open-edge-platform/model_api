@@ -220,25 +220,13 @@ class SegmentationModel(ImageModel):
                     continue
 
                 mask = np.zeros(prediction.resultImage.shape, dtype=np.uint8)
-                cv2.drawContours(
-                    mask,
-                    np.asarray([contour]),
-                    contourIdx=-1,
-                    color=1,
-                    thickness=-1,
-                )
+                cv2.drawContours(mask, contours, contourIdx=i, color=1, thickness=-1)
 
                 children = []
                 next_child_idx = hierarchy[i][2]
                 while next_child_idx >= 0:
                     children.append(contours[next_child_idx])
-                    cv2.drawContours(
-                        mask,
-                        np.asarray([contours[next_child_idx]]),
-                        contourIdx=-1,
-                        color=0,
-                        thickness=-1,
-                    )
+                    cv2.drawContours(mask, contours, contourIdx=next_child_idx, color=0, thickness=-1)
                     next_child_idx = hierarchy[next_child_idx][0]
 
                 probability = cv2.mean(current_label_soft_prediction, mask)[0]
