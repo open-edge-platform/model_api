@@ -6,7 +6,7 @@
       {
         "image": "coco128/images/train2017/000000000074.jpg",
         "reference": [
-          "0: 0.537, 1: 0.463, [426,640,2], [0], [0]; object: 0.675, 508, 0, object: 0.527, 65, 1, object: 0.507, 18, 0, object: 0.624, 144, 0, object: 0.538, 67, 0, object: 0.507, 15, 0, object: 0.518, 41, 0, object: 0.507, 8, 0, object: 0.505, 14, 0, object: 0.885, 2138, 2, "
+          "0: 0.537, 1: 0.463, [426,640,2], [0], [0]; object: 0.675, 508, 0, object: 0.530, 65, 1, object: 0.507, 18, 0, object: 0.624, 144, 0, object: 0.538, 67, 0, object: 0.507, 15, 0, object: 0.518, 41, 0, object: 0.507, 8, 0, object: 0.505, 14, 0, object: 0.885, 2138, 2, "
         ]
       }
     ]
@@ -55,7 +55,7 @@
       {
         "image": "coco128/images/train2017/000000000074.jpg",
         "reference": [
-          "0: 0.561, 1: 0.439, [426,640,2], [0], [0]; object: 0.519, 26, 0, object: 0.531, 42, 0, object: 0.502, 21, 0, object: 0.505, 9, 0, object: 0.501, 4, 0, object: 0.509, 22, 0, object: 0.524, 85, 0, object: 0.520, 93, 0, object: 0.754, 2564, 3, "
+          "0: 0.561, 1: 0.439, [426,640,2], [0], [0]; object: 0.519, 26, 0, object: 0.531, 42, 0, object: 0.502, 21, 0, object: 0.505, 9, 0, object: 0.501, 4, 0, object: 0.509, 22, 0, object: 0.524, 85, 0, object: 0.520, 93, 0, object: 0.757, 2564, 3, "
         ]
       }
     ]
@@ -67,7 +67,7 @@
       {
         "image": "coco128/images/train2017/000000000074.jpg",
         "reference": [
-          "0: 0.944, 1: 0.056, [426,640,2], [0], [0]; object: 0.505, 2, 0, object: 0.518, 8, 0, object: 0.512, 5, 0, object: 0.506, 4, 0, object: 0.526, 8, 0, object: 0.529, 21, 0, object: 0.513, 12, 0, object: 0.536, 49, 0, object: 0.505, 2, 0, object: 0.512, 4, 0, object: 0.547, 6, 0, object: 0.511, 6, 0, object: 0.503, 1, 0, object: 0.539, 6, 0, object: 0.543, 39, 0, object: 0.529, 2, 0, object: 0.516, 9, 0, object: 0.565, 157, 4, object: 0.524, 6, 0, object: 0.528, 15, 0, object: 0.521, 18, 0, object: 0.503, 1, 0, object: 0.537, 73, 0, object: 0.513, 4, 0, object: 0.524, 27, 0, object: 0.513, 6, 0, object: 0.538, 65, 1, object: 0.501, 6, 0, object: 0.504, 1, 0, object: 0.507, 4, 0, object: 0.502, 1, 0, object: 0.518, 8, 0, object: 0.530, 11, 0, object: 0.502, 2, 0, object: 0.516, 2, 0, object: 0.506, 1, 0, object: 0.567, 17, 0, object: 0.502, 1, 0, object: 0.512, 7, 0, object: 0.538, 24, 0, object: 0.507, 1, 0, object: 0.534, 12, 0, object: 0.510, 5, 0, object: 0.537, 6, 0, object: 0.519, 13, 0, object: 0.505, 2, 0, object: 0.540, 6, 0, object: 0.517, 16, 0, object: 0.505, 5, 0, object: 0.506, 20, 0, object: 0.508, 6, 0, object: 0.519, 24, 0, object: 0.507, 4, 0, object: 0.506, 2, 0, object: 0.511, 4, 0, object: 0.556, 47, 0, object: 0.510, 10, 0, object: 0.500, 1, 0, object: 0.504, 5, 0, object: 0.501, 1, 0, object: 0.510, 6, 0, object: 0.549, 13, 0, object: 0.509, 2, 0, object: 0.510, 3, 0, object: 0.514, 1, 0, object: 0.529, 15, 0, object: 0.551, 110, 1, object: 0.504, 2, 0, object: 0.503, 3, 0, object: 0.518, 16, 0, object: 0.511, 14, 0, object: 0.502, 1, 0, object: 0.523, 1, 0, object: 0.533, 16, 0, object: 0.568, 65, 0, object: 0.582, 1793, 73, "
+          "0: 0.944, 1: 0.056, [426,640,2], [0], [0]; object: 0.505, 2, 0, object: 0.518, 8, 0, object: 0.512, 5, 0, object: 0.506, 4, 0, object: 0.526, 8, 0, object: 0.529, 21, 0, object: 0.513, 12, 0, object: 0.536, 49, 0, object: 0.505, 2, 0, object: 0.512, 4, 0, object: 0.547, 6, 0, object: 0.511, 6, 0, object: 0.503, 1, 0, object: 0.539, 6, 0, object: 0.543, 39, 0, object: 0.529, 2, 0, object: 0.516, 9, 0, object: 0.571, 157, 4, object: 0.524, 6, 0, object: 0.528, 15, 0, object: 0.521, 18, 0, object: 0.503, 1, 0, object: 0.537, 73, 0, object: 0.513, 4, 0, object: 0.524, 27, 0, object: 0.513, 6, 0, object: 0.539, 65, 1, object: 0.501, 6, 0, object: 0.504, 1, 0, object: 0.507, 4, 0, object: 0.502, 1, 0, object: 0.518, 8, 0, object: 0.530, 11, 0, object: 0.502, 2, 0, object: 0.516, 2, 0, object: 0.506, 1, 0, object: 0.567, 17, 0, object: 0.502, 1, 0, object: 0.512, 7, 0, object: 0.538, 24, 0, object: 0.507, 1, 0, object: 0.534, 12, 0, object: 0.510, 5, 0, object: 0.537, 6, 0, object: 0.519, 13, 0, object: 0.505, 2, 0, object: 0.540, 6, 0, object: 0.517, 16, 0, object: 0.505, 5, 0, object: 0.506, 20, 0, object: 0.508, 6, 0, object: 0.519, 24, 0, object: 0.507, 4, 0, object: 0.506, 2, 0, object: 0.511, 4, 0, object: 0.556, 47, 0, object: 0.510, 10, 0, object: 0.500, 1, 0, object: 0.504, 5, 0, object: 0.501, 1, 0, object: 0.510, 6, 0, object: 0.549, 13, 0, object: 0.509, 2, 0, object: 0.510, 3, 0, object: 0.514, 1, 0, object: 0.529, 15, 0, object: 0.554, 110, 1, object: 0.504, 2, 0, object: 0.503, 3, 0, object: 0.518, 16, 0, object: 0.511, 14, 0, object: 0.502, 1, 0, object: 0.523, 1, 0, object: 0.533, 16, 0, object: 0.568, 65, 0, object: 0.603, 1793, 73, "
         ]
       }
     ]
@@ -427,7 +427,7 @@
       {
         "image": "coco128/images/train2017/000000000074.jpg",
         "reference": [
-          "0: 0.272, 1: 0.728, [3500,3500,5], [0], [0]; background: 1.404, 311, 0, background: 1.397, 44, 0, background: 1.371, 34, 0, background: 1.377, 12, 0, background: 1.356, 155, 0, background: 1.345, 12, 0, background: 1.183, 219, 0, background: 1.524, 8, 0, background: 1.533, 4, 0, background: 1.519, 2, 0, background: 1.524, 4, 0, background: 1.530, 6, 0, background: 1.537, 2, 0, background: 1.514, 4, 0, background: 1.519, 8, 0, background: 1.529, 6, 0, background: 1.550, 6, 0, background: 1.558, 4, 0, background: 1.520, 2, 0, background: 1.529, 4, 0, background: 1.532, 6, 0, background: 1.535, 6, 0, background: 1.530, 2, 0, background: 1.529, 50, 0, background: 1.528, 22, 0, background: 1.527, 38, 0, background: 1.451, 1476, 0, background: 1.345, 2743, 9, background: 1.609, 2987, 1, background: 1.398, 20, 0, background: 1.636, 29909, 8, "
+          "0: 0.272, 1: 0.728, [3500,3500,5], [0], [0]; background: 1.404, 311, 0, background: 1.397, 44, 0, background: 1.371, 34, 0, background: 1.377, 12, 0, background: 1.356, 155, 0, background: 1.345, 12, 0, background: 1.183, 219, 0, background: 1.524, 8, 0, background: 1.533, 4, 0, background: 1.519, 2, 0, background: 1.524, 4, 0, background: 1.530, 6, 0, background: 1.537, 2, 0, background: 1.514, 4, 0, background: 1.519, 8, 0, background: 1.529, 6, 0, background: 1.550, 6, 0, background: 1.558, 4, 0, background: 1.520, 2, 0, background: 1.529, 4, 0, background: 1.532, 6, 0, background: 1.535, 6, 0, background: 1.530, 2, 0, background: 1.529, 50, 0, background: 1.528, 22, 0, background: 1.527, 38, 0, background: 1.451, 1476, 0, background: 1.344, 2743, 9, background: 1.609, 2987, 1, background: 1.398, 20, 0, background: 1.644, 29909, 8, "
         ]
       }
     ]

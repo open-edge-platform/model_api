@@ -149,6 +149,14 @@ class RotatedSegmentationResult(InstanceSegmentationResult):
 
 
 class Contour:
+    """Represents a contour object with label, probability, shape, and optional excluded shapes.
+    Args:
+        label (str): The label of the contour.
+        probability (float): The probability associated with the contour.
+        shape (np.ndarray | list[tuple[int, int]]): The shape of the contour.
+        child_shapes (list[np.ndarray] | list[tuple[int, int]] | None, optional): Shapes of excluded contours. Defaults to None.
+    """
+
     def __init__(
         self,
         label: str,

@@ -308,17 +308,19 @@ std::vector<Contour> SegmentationModel::getContours(const ImageResultWithSoftPre
                 continue;
             }
 
-            std::vector<std::vector<cv::Point>> children;
-            int next_child_idx = hierarchy[i][2];
-            while (next_child_idx >= 0) {
-                children.push_back(contours[next_child_idx]);
-                next_child_idx = hierarchy[next_child_idx][0];
-            }
-
             cv::Mat mask = cv::Mat::zeros(imageResult.resultImage.rows,
                                           imageResult.resultImage.cols,
                                           imageResult.resultImage.type());
             cv::drawContours(mask, contours, i, 255, -1);
+
+            std::vector<std::vector<cv::Point>> children;
+            int next_child_idx = hierarchy[i][2];
+            while (next_child_idx >= 0) {
+                children.push_back(contours[next_child_idx]);
+                cv::drawContours(mask, contours, next_child_idx, 0, -1);
+                next_child_idx = hierarchy[next_child_idx][0];
+            }
+
             float probability = (float)cv::mean(current_label_soft_prediction, mask)[0];
             combined_contours.push_back({label, probability, contours[i], children});
         }
