@@ -186,7 +186,7 @@ class SegmentationModel(ImageModel):
     def get_contours(
         self,
         prediction: ImageResultWithSoftPrediction,
-    ) -> list:
+    ) -> list[Contour]:
         n_layers = prediction.soft_prediction.shape[2]
 
         if n_layers == 1:
@@ -207,23 +207,30 @@ class SegmentationModel(ImageModel):
             obj_group = prediction.resultImage == layer_index
             label_index_map = obj_group.astype(np.uint8) * 255
 
-            contours, _hierarchy = cv2.findContours(
+            contours, hierarchy = cv2.findContours(
                 label_index_map,
-                cv2.RETR_EXTERNAL,
+                cv2.RETR_CCOMP,
                 cv2.CHAIN_APPROX_NONE,
             )
+            if len(contours):
+                hierarchy = hierarchy.squeeze(axis=0)
 
-            for contour in contours:
+            for i, contour in enumerate(contours):
+                if hierarchy[i][3] >= 0:
+                    continue
+
                 mask = np.zeros(prediction.resultImage.shape, dtype=np.uint8)
-                cv2.drawContours(
-                    mask,
-                    np.asarray([contour]),
-                    contourIdx=-1,
-                    color=1,
-                    thickness=-1,
-                )
+                cv2.drawContours(mask, contours, contourIdx=i, color=1, thickness=-1)
+
+                children = []
+                next_child_idx = hierarchy[i][2]
+                while next_child_idx >= 0:
+                    children.append(contours[next_child_idx])
+                    cv2.drawContours(mask, contours, contourIdx=next_child_idx, color=0, thickness=-1)
+                    next_child_idx = hierarchy[next_child_idx][0]
+
                 probability = cv2.mean(current_label_soft_prediction, mask)[0]
-                combined_contours.append(Contour(label, probability, contour))
+                combined_contours.append(Contour(label, probability, contour, children))
 
         return combined_contours
 

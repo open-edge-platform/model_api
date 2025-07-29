@@ -35,7 +35,7 @@ jobs:
       - name: Run Python Test
         run: |
           source venv/bin/activate
-          pytest --data=./data tests/python/accuracy/test_accuracy.py
+          pytest -v --data=./data tests/python/accuracy/test_accuracy.py
       - name: Install CPP dependencies
         run: |
           sudo bash src/cpp/install_dependencies.sh
