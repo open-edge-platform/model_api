@@ -167,10 +167,10 @@ class Contour:
         shape: np.ndarray | list[tuple[int, int]],
         excluded_shapes: list[np.ndarray] | list[tuple[int, int]] | None = None,
     ):
-        self.shape = shape
+        self.shape = np.array(shape)
         self.label = label
         self.probability = probability
-        self.excluded_shapes = excluded_shapes
+        self.excluded_shapes = np.array(excluded_shapes) if excluded_shapes is not None else None
 
     def __str__(self):
         num_children = len(self.excluded_shapes) if self.excluded_shapes is not None else 0
