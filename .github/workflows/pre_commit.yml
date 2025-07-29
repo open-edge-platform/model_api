@@ -60,7 +60,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run Zizmor scan
-        uses: open-edge-platform/anomalib/.github/actions/security/zizmor@90e1192dd7d420cb243a93ce17809e43f23fc36d
+        uses: open-edge-platform/anomalib/.github/actions/security/zizmor@73073a0461feaf388de6211000e8cc24ad2ae2f6
         with:
           scan-scope: "changed"
           severity-level: "MEDIUM"
@@ -76,7 +76,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run Bandit scan
-        uses: open-edge-platform/anomalib/.github/actions/security/bandit@90e1192dd7d420cb243a93ce17809e43f23fc36d
+        uses: open-edge-platform/anomalib/.github/actions/security/bandit@73073a0461feaf388de6211000e8cc24ad2ae2f6
         with:
           scan-scope: "changed"
           severity-level: "LOW"
