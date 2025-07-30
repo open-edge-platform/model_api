@@ -6,7 +6,7 @@
       {
         "image": "coco128/images/train2017/000000000074.jpg",
         "reference": [
-          "0: 0.537, 1: 0.463, [426,640,2], [0], [0]; object: 0.675, 508, object: 0.527, 65, object: 0.507, 18, object: 0.624, 144, object: 0.538, 67, object: 0.507, 15, object: 0.518, 41, object: 0.507, 8, object: 0.505, 14, object: 0.885, 2138, "
+          "0: 0.537, 1: 0.463, [426,640,2], [0], [0]; object: 0.675, 508, 0, object: 0.530, 65, 1, object: 0.507, 18, 0, object: 0.624, 144, 0, object: 0.538, 67, 0, object: 0.507, 15, 0, object: 0.518, 41, 0, object: 0.507, 8, 0, object: 0.505, 14, 0, object: 0.885, 2138, 2, "
         ]
       }
     ]
@@ -18,7 +18,7 @@
       {
         "image": "coco128/images/train2017/000000000074.jpg",
         "reference": [
-          "0: 0.992, 1: 0.008, [426,640,2], [0], [0]; object: 0.555, 112, object: 0.506, 17, object: 0.555, 154, object: 0.511, 19, object: 0.514, 52, "
+          "0: 0.992, 1: 0.008, [426,640,2], [0], [0]; object: 0.555, 112, 0, object: 0.506, 17, 0, object: 0.555, 154, 0, object: 0.511, 19, 0, object: 0.514, 52, 0, "
         ]
       }
     ]
@@ -30,7 +30,7 @@
       {
         "image": "coco128/images/train2017/000000000074.jpg",
         "reference": [
-          "0: 0.563, 1: 0.437, [426,640,2], [0], [0]; object: 0.520, 26, object: 0.530, 42, object: 0.501, 4, object: 0.507, 27, object: 0.503, 8, object: 0.502, 6, object: 0.505, 18, object: 0.504, 13, object: 0.524, 87, object: 0.521, 89, object: 0.757, 2706, "
+          "0: 0.563, 1: 0.437, [426,640,2], [0], [0]; object: 0.520, 26, 0, object: 0.530, 42, 0, object: 0.501, 4, 0, object: 0.507, 27, 0, object: 0.503, 8, 0, object: 0.502, 6, 0, object: 0.505, 18, 0, object: 0.504, 13, 0, object: 0.524, 87, 0, object: 0.521, 89, 0, object: 0.757, 2706, 2, "
         ]
       }
     ]
@@ -42,7 +42,7 @@
       {
         "image": "coco128/images/train2017/000000000074.jpg",
         "reference": [
-          "0: 0.563, 1: 0.437, [426,640,2], [0], [0]; object: 0.520, 26, object: 0.530, 42, object: 0.501, 4, object: 0.507, 27, object: 0.503, 8, object: 0.502, 6, object: 0.505, 18, object: 0.504, 13, object: 0.524, 87, object: 0.521, 89, object: 0.757, 2706, "
+          "0: 0.563, 1: 0.437, [426,640,2], [0], [0]; object: 0.520, 26, 0, object: 0.530, 42, 0, object: 0.501, 4, 0, object: 0.507, 27, 0, object: 0.503, 8, 0, object: 0.502, 6, 0, object: 0.505, 18, 0, object: 0.504, 13, 0, object: 0.524, 87, 0, object: 0.521, 89, 0, object: 0.757, 2706, 2, "
         ]
       }
     ]
@@ -55,7 +55,7 @@
       {
         "image": "coco128/images/train2017/000000000074.jpg",
         "reference": [
-          "0: 0.561, 1: 0.439, [426,640,2], [0], [0]; object: 0.519, 26, object: 0.531, 42, object: 0.502, 21, object: 0.505, 9, object: 0.501, 4, object: 0.509, 22, object: 0.524, 85, object: 0.520, 93, object: 0.754, 2564, "
+          "0: 0.561, 1: 0.439, [426,640,2], [0], [0]; object: 0.519, 26, 0, object: 0.531, 42, 0, object: 0.502, 21, 0, object: 0.505, 9, 0, object: 0.501, 4, 0, object: 0.509, 22, 0, object: 0.524, 85, 0, object: 0.520, 93, 0, object: 0.757, 2564, 3, "
         ]
       }
     ]
@@ -67,7 +67,7 @@
       {
         "image": "coco128/images/train2017/000000000074.jpg",
         "reference": [
-          "0: 0.944, 1: 0.056, [426,640,2], [0], [0]; object: 0.505, 2, object: 0.518, 8, object: 0.512, 5, object: 0.506, 4, object: 0.526, 8, object: 0.529, 21, object: 0.513, 12, object: 0.535, 49, object: 0.505, 2, object: 0.512, 4, object: 0.547, 6, object: 0.511, 6, object: 0.503, 1, object: 0.539, 6, object: 0.543, 39, object: 0.529, 2, object: 0.516, 9, object: 0.565, 157, object: 0.524, 6, object: 0.528, 15, object: 0.521, 18, object: 0.502, 1, object: 0.537, 73, object: 0.513, 4, object: 0.524, 27, object: 0.513, 6, object: 0.538, 65, object: 0.501, 6, object: 0.504, 1, object: 0.507, 4, object: 0.502, 1, object: 0.518, 8, object: 0.530, 11, object: 0.502, 2, object: 0.516, 2, object: 0.506, 1, object: 0.567, 17, object: 0.502, 1, object: 0.512, 7, object: 0.538, 24, object: 0.507, 1, object: 0.534, 12, object: 0.537, 6, object: 0.519, 13, object: 0.505, 2, object: 0.517, 16, object: 0.505, 5, object: 0.506, 20, object: 0.508, 6, object: 0.519, 24, object: 0.507, 4, object: 0.506, 2, object: 0.511, 4, object: 0.556, 47, object: 0.510, 10, object: 0.500, 1, object: 0.504, 5, object: 0.501, 1, object: 0.510, 6, object: 0.549, 13, object: 0.509, 2, object: 0.510, 3, object: 0.514, 1, object: 0.529, 15, object: 0.551, 110, object: 0.504, 2, object: 0.503, 3, object: 0.518, 16, object: 0.511, 14, object: 0.502, 1, object: 0.523, 1, object: 0.533, 16, object: 0.568, 66, object: 0.582, 1793, "
+          "0: 0.944, 1: 0.056, [426,640,2], [0], [0]; object: 0.505, 2, 0, object: 0.518, 8, 0, object: 0.512, 5, 0, object: 0.506, 4, 0, object: 0.526, 8, 0, object: 0.529, 21, 0, object: 0.513, 12, 0, object: 0.535, 49, 0, object: 0.505, 2, 0, object: 0.512, 4, 0, object: 0.547, 6, 0, object: 0.511, 6, 0, object: 0.503, 1, 0, object: 0.539, 6, 0, object: 0.543, 39, 0, object: 0.529, 2, 0, object: 0.516, 9, 0, object: 0.571, 157, 4, object: 0.524, 6, 0, object: 0.528, 15, 0, object: 0.521, 18, 0, object: 0.502, 1, 0, object: 0.537, 73, 0, object: 0.513, 4, 0, object: 0.524, 27, 0, object: 0.513, 6, 0, object: 0.539, 65, 1, object: 0.501, 6, 0, object: 0.504, 1, 0, object: 0.507, 4, 0, object: 0.502, 1, 0, object: 0.518, 8, 0, object: 0.530, 11, 0, object: 0.502, 2, 0, object: 0.516, 2, 0, object: 0.506, 1, 0, object: 0.567, 17, 0, object: 0.502, 1, 0, object: 0.512, 7, 0, object: 0.538, 24, 0, object: 0.507, 1, 0, object: 0.534, 12, 0, object: 0.510, 5, 0, object: 0.537, 6, 0, object: 0.519, 13, 0, object: 0.505, 2, 0, object: 0.540, 6, 0, object: 0.517, 16, 0, object: 0.505, 5, 0, object: 0.506, 20, 0, object: 0.508, 6, 0, object: 0.519, 24, 0, object: 0.507, 4, 0, object: 0.506, 2, 0, object: 0.511, 4, 0, object: 0.556, 47, 0, object: 0.510, 10, 0, object: 0.500, 1, 0, object: 0.504, 5, 0, object: 0.501, 1, 0, object: 0.510, 6, 0, object: 0.549, 13, 0, object: 0.509, 2, 0, object: 0.510, 3, 0, object: 0.514, 1, 0, object: 0.529, 15, 0, object: 0.554, 110, 1, object: 0.504, 2, 0, object: 0.503, 3, 0, object: 0.518, 16, 0, object: 0.511, 14, 0, object: 0.502, 1, 0, object: 0.523, 1, 0, object: 0.533, 16, 0, object: 0.568, 66, 0, object: 0.603, 1793, 73, "
         ]
       }
     ]
@@ -214,7 +214,7 @@
       {
         "image": "coco128/images/train2017/000000000074.jpg",
         "reference": [
-          "458, 106, 495, 150, 1 (bicycle): 0.818, 852, RotatedRect: 478.119 130.332 28.677 46.408 46.637; 0, 30, 178, 323, 2 (car): 0.753, 26728, RotatedRect: 79.739 177.262 251.785 156.656 87.397; 0; [0]; bicycle: 0.818, 139; car: 0.753, 622; "
+          "458, 106, 495, 150, 1 (bicycle): 0.818, 852, RotatedRect: 478.119 130.332 28.677 46.408 46.637; 0, 30, 178, 323, 2 (car): 0.753, 26728, RotatedRect: 79.739 177.262 251.785 156.656 87.397; 0; [0]; bicycle: 0.818, 139, 0; car: 0.753, 622, 0; "
         ]
       }
     ]
@@ -226,7 +226,7 @@
       {
         "image": "coco128/images/train2017/000000000074.jpg",
         "reference": [
-          "458, 106, 495, 150, 1 (person): 0.818, 852, RotatedRect: 478.119 130.332 28.677 46.408 46.637; 0, 30, 178, 323, 2 (bicycle): 0.753, 26728, RotatedRect: 79.739 177.262 251.785 156.656 87.397; 0; [0]; person: 0.818, 139; bicycle: 0.753, 622; "
+          "458, 106, 495, 150, 1 (person): 0.818, 852, RotatedRect: 478.119 130.332 28.677 46.408 46.637; 0, 30, 178, 323, 2 (bicycle): 0.753, 26728, RotatedRect: 79.739 177.262 251.785 156.656 87.397; 0; [0]; person: 0.818, 139, 0; bicycle: 0.753, 622, 0; "
         ]
       }
     ]
@@ -239,7 +239,7 @@
       {
         "image": "coco128/images/train2017/000000000074.jpg",
         "reference": [
-          "458, 106, 495, 150, 1 (person): 0.816, 851, RotatedRect: 478.119 130.332 28.677 46.408 46.637; 0, 30, 178, 323, 2 (bicycle): 0.754, 26748, RotatedRect: 79.762 177.261 251.785 156.702 87.397; 0; [0]; person: 0.816, 142; bicycle: 0.754, 622; "
+          "458, 106, 495, 150, 1 (person): 0.816, 851, RotatedRect: 478.119 130.332 28.677 46.408 46.637; 0, 30, 178, 323, 2 (bicycle): 0.754, 26748, RotatedRect: 79.762 177.261 251.785 156.702 87.397; 0; [0]; person: 0.816, 142, 0; bicycle: 0.754, 622, 0; "
         ]
       }
     ]
@@ -251,7 +251,7 @@
       {
         "image": "coco128/images/train2017/000000000074.jpg",
         "reference": [
-          "59, 277, 360, 380, 16 (horse): 0.999, 19053, RotatedRect: 210.000 327.500 101.000 296.000 90.000; 2, 9, 162, 318, 2 (car): 0.999, 31153, RotatedRect: 82.086 163.312 307.394 156.997 89.669; 294, 94, 316, 153, 1 (bicycle): 0.985, 840, RotatedRect: 305.000 123.500 59.000 18.000 90.000; 326, 97, 341, 136, 1 (bicycle): 0.974, 397, RotatedRect: 332.500 116.000 38.000 13.000 90.000; 461, 105, 493, 150, 1 (bicycle): 0.918, 846, RotatedRect: 476.052 126.972 27.619 47.834 16.928; 350, 92, 386, 149, 1 (bicycle): 0.807, 1458, RotatedRect: 369.319 119.891 54.848 34.230 82.405; 279, 110, 291, 146, 1 (bicycle): 0.788, 312, RotatedRect: 284.000 127.500 35.000 10.000 90.000; 0; [0]; horse: 0.999, 668; car: 0.999, 782; bicycle: 0.985, 127; bicycle: 0.974, 87; bicycle: 0.918, 122; bicycle: 0.807, 140; bicycle: 0.788, 79; "
+          "59, 277, 360, 380, 16 (horse): 0.999, 19053, RotatedRect: 210.000 327.500 101.000 296.000 90.000; 2, 9, 162, 318, 2 (car): 0.999, 31153, RotatedRect: 82.086 163.312 307.394 156.997 89.669; 294, 94, 316, 153, 1 (bicycle): 0.985, 840, RotatedRect: 305.000 123.500 59.000 18.000 90.000; 326, 97, 341, 136, 1 (bicycle): 0.974, 397, RotatedRect: 332.500 116.000 38.000 13.000 90.000; 461, 105, 493, 150, 1 (bicycle): 0.918, 846, RotatedRect: 476.052 126.972 27.619 47.834 16.928; 350, 92, 386, 149, 1 (bicycle): 0.807, 1458, RotatedRect: 369.319 119.891 54.848 34.230 82.405; 279, 110, 291, 146, 1 (bicycle): 0.788, 312, RotatedRect: 284.000 127.500 35.000 10.000 90.000; 0; [0]; horse: 0.999, 668, 0; car: 0.999, 782, 0; bicycle: 0.985, 127, 0; bicycle: 0.974, 87, 0; bicycle: 0.918, 122, 0; bicycle: 0.807, 140, 0; bicycle: 0.788, 79, 0; "
         ]
       }
     ]
@@ -285,7 +285,7 @@
       {
         "image": "coco128/images/train2017/000000000074.jpg",
         "reference": [
-          "0: 1.000, 1: 0.000, [426,640,3], [426,640,3], [1,600,1,1]; backpack: 0.505, 2, "
+          "0: 1.000, 1: 0.000, [426,640,3], [426,640,3], [1,600,1,1]; backpack: 0.505, 2, 0, "
         ]
       }
     ]
@@ -313,7 +313,7 @@
       {
         "image": "coco128/images/train2017/000000000074.jpg",
         "reference": [
-          "1535, 585, 1662, 697, 2 (ellipse): 0.643, 9822, RotatedRect: 1598.500 641.500 111.000 109.000 90.000; 3091, 3097, 3105, 3112, 1 (rectangle): 0.483, 197, RotatedRect: 3097.500 3104.000 14.000 13.000 90.000; 2734, 60, 2867, 324, 1 (rectangle): 0.401, 30622, RotatedRect: 2800.000 188.500 255.000 132.000 90.000; 2; [1,1280,1,1]; ellipse: 0.643, 331; rectangle: 0.483, 48; rectangle: 0.401, 758; "
+          "1535, 585, 1662, 697, 2 (ellipse): 0.643, 9822, RotatedRect: 1598.500 641.500 111.000 109.000 90.000; 3091, 3097, 3105, 3112, 1 (rectangle): 0.483, 197, RotatedRect: 3097.500 3104.000 14.000 13.000 90.000; 2734, 60, 2867, 324, 1 (rectangle): 0.401, 30622, RotatedRect: 2800.000 188.500 255.000 132.000 90.000; 2; [1,1280,1,1]; ellipse: 0.643, 331, 0; rectangle: 0.483, 48, 0; rectangle: 0.401, 758, 0; "
         ]
       }
     ]
@@ -427,7 +427,7 @@
       {
         "image": "coco128/images/train2017/000000000074.jpg",
         "reference": [
-          "0: 0.272, 1: 0.728, [3500,3500,5], [0], [0]; background: 1.404, 311, background: 1.397, 44, background: 1.371, 34, background: 1.377, 12, background: 1.356, 155, background: 1.345, 12, background: 1.183, 219, background: 1.524, 8, background: 1.533, 4, background: 1.519, 2, background: 1.524, 4, background: 1.530, 6, background: 1.537, 2, background: 1.514, 4, background: 1.519, 8, background: 1.529, 6, background: 1.550, 6, background: 1.558, 4, background: 1.520, 2, background: 1.529, 4, background: 1.532, 6, background: 1.535, 6, background: 1.530, 2, background: 1.529, 50, background: 1.528, 22, background: 1.527, 38, background: 1.451, 1476, background: 1.345, 2743, background: 1.609, 2987, background: 1.636, 29909, "
+          "0: 0.272, 1: 0.728, [3500,3500,5], [0], [0]; background: 1.404, 311, 0, background: 1.397, 44, 0, background: 1.371, 34, 0, background: 1.377, 12, 0, background: 1.356, 155, 0, background: 1.345, 12, 0, background: 1.183, 219, 0, background: 1.524, 8, 0, background: 1.533, 4, 0, background: 1.519, 2, 0, background: 1.524, 4, 0, background: 1.530, 6, 0, background: 1.537, 2, 0, background: 1.514, 4, 0, background: 1.519, 8, 0, background: 1.529, 6, 0, background: 1.550, 6, 0, background: 1.558, 4, 0, background: 1.520, 2, 0, background: 1.529, 4, 0, background: 1.532, 6, 0, background: 1.535, 6, 0, background: 1.530, 2, 0, background: 1.529, 50, 0, background: 1.528, 22, 0, background: 1.527, 38, 0, background: 1.451, 1476, 0, background: 1.344, 2743, 9, background: 1.609, 2987, 1, background: 1.398, 20, 0, background: 1.644, 29909, 8, "
         ]
       }
     ]

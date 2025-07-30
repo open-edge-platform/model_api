@@ -123,7 +123,7 @@ class InstanceSegmentationTiler(DetectionTiler):
         labels = labels.astype(np.int32)
         resized_masks, label_names = [], []
         for mask, box, label_idx in zip(masks, bboxes, labels):
-            label_names.append(self.model.labels[int(label_idx)])
+            label_names.append(self.model.labels[int(label_idx.squeeze())])
             resized_masks.append(_segm_postprocess(box, mask, *shape[:-1]))
 
         resized_masks = np.stack(resized_masks) if resized_masks else masks
