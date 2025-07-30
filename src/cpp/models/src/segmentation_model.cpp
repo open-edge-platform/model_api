@@ -292,7 +292,7 @@ std::vector<Contour> SegmentationModel::getContours(const ImageResultWithSoftPre
     std::vector<Contour> combined_contours = {};
     cv::Mat label_index_map;
     cv::Mat current_label_soft_prediction;
-    int find_contours_mode = include_nested_contours ? cv::RETR_EXTERNAL : cv::RETR_CCOMP;
+    int find_contours_mode = include_nested_contours ? cv::RETR_CCOMP : cv::RETR_EXTERNAL;
     for (int index = 1; index < imageResult.soft_prediction.channels(); index++) {
         cv::extractChannel(imageResult.soft_prediction, current_label_soft_prediction, index);
         cv::inRange(imageResult.resultImage,

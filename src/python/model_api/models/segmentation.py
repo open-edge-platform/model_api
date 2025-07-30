@@ -203,7 +203,7 @@ class SegmentationModel(ImageModel):
             msg = "Cannot get contours from soft prediction with 1 layer"
             raise RuntimeError(msg)
 
-        find_contours_mode = cv2.RETR_CCOMP if not include_nested_contours else cv2.RETR_EXTERNAL
+        find_contours_mode = cv2.RETR_CCOMP if include_nested_contours else cv2.RETR_EXTERNAL
         combined_contours = []
         for layer_index in range(1, n_layers):  # ignoring background
             label = self.get_label_name(layer_index - 1)
