@@ -283,7 +283,8 @@ std::unique_ptr<ResultBase> SegmentationModel::postprocess(InferenceResult& infR
     return std::unique_ptr<ResultBase>(result);
 }
 
-std::vector<Contour> SegmentationModel::getContours(const ImageResultWithSoftPrediction& imageResult) {
+std::vector<Contour> SegmentationModel::getContours(const ImageResultWithSoftPrediction& imageResult,
+                                                    bool simplified_postprocessing) {
     if (imageResult.soft_prediction.channels() == 1) {
         throw std::runtime_error{"Cannot get contours from soft prediction with 1 layer"};
     }
@@ -291,6 +292,7 @@ std::vector<Contour> SegmentationModel::getContours(const ImageResultWithSoftPre
     std::vector<Contour> combined_contours = {};
     cv::Mat label_index_map;
     cv::Mat current_label_soft_prediction;
+    int find_contours_mode = simplified_postprocessing ? cv::RETR_EXTERNAL : cv::RETR_CCOMP;
     for (int index = 1; index < imageResult.soft_prediction.channels(); index++) {
         cv::extractChannel(imageResult.soft_prediction, current_label_soft_prediction, index);
         cv::inRange(imageResult.resultImage,
@@ -299,7 +301,7 @@ std::vector<Contour> SegmentationModel::getContours(const ImageResultWithSoftPre
                     label_index_map);
         std::vector<std::vector<cv::Point>> contours;
         std::vector<cv::Vec4i> hierarchy;
-        cv::findContours(label_index_map, contours, hierarchy, cv::RETR_CCOMP, cv::CHAIN_APPROX_NONE);
+        cv::findContours(label_index_map, contours, hierarchy, find_contours_mode, cv::CHAIN_APPROX_NONE);
 
         std::string label = getLabelName(index - 1);
 

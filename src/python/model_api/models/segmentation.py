@@ -186,12 +186,24 @@ class SegmentationModel(ImageModel):
     def get_contours(
         self,
         prediction: ImageResultWithSoftPrediction,
+        simplified_postprocessing: bool = False,
     ) -> list[Contour]:
+        """Represents existing masks with contours.
+
+        Args:
+            prediction (ImageResultWithSoftPrediction): Input segmentation prediction.
+            simplified_postprocessing (bool, optional): Disables searching for holes in masks. Defaults to False.
+
+        Returns:
+            list[Contour]: Contours found.
+        """
         n_layers = prediction.soft_prediction.shape[2]
 
         if n_layers == 1:
             msg = "Cannot get contours from soft prediction with 1 layer"
             raise RuntimeError(msg)
+
+        find_contours_mode = cv2.RETR_CCOMP if not simplified_postprocessing else cv2.RETR_EXTERNAL
         combined_contours = []
         for layer_index in range(1, n_layers):  # ignoring background
             label = self.get_label_name(layer_index - 1)
@@ -209,7 +221,7 @@ class SegmentationModel(ImageModel):
 
             contours, hierarchy = cv2.findContours(
                 label_index_map,
-                cv2.RETR_CCOMP,
+                find_contours_mode,
                 cv2.CHAIN_APPROX_NONE,
             )
             if len(contours):
