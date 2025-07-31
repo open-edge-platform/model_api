@@ -391,59 +391,6 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">feature_vector</span></code>: Feature vector of the input image. This is useful for Active Learning.</p></li>
 </ul>
 <dl class="py class" id="module-model_api.models.segmentation">
-<dt class="sig sig-object py" id="model_api.models.segmentation.SalientObjectDetectionModel">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_api.models.segmentation.</span></span><span class="sig-name descname"><span class="pre">SalientObjectDetectionModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inference_adapter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configuration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preload</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.segmentation.SalientObjectDetectionModel" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#model_api.models.segmentation.SegmentationModel" title="model_api.models.segmentation.SegmentationModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">SegmentationModel</span></code></a></p>
-<p>Image model constructor</p>
-<p>It extends the <cite>Model</cite> constructor.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>inference_adapter</strong> (<a class="reference internal" href="../adapters/inference_adapter.html#model_api.adapters.inference_adapter.InferenceAdapter" title="model_api.adapters.inference_adapter.InferenceAdapter"><em>InferenceAdapter</em></a>) – allows working with the specified executor</p></li>
-<li><p><strong>configuration</strong> (<em>dict</em><em>, </em><em>optional</em>) – it contains values for parameters accepted by specific
-wrapper (<cite>confidence_threshold</cite>, <cite>labels</cite> etc.) which are set as data attributes</p></li>
-<li><p><strong>preload</strong> (<em>bool</em><em>, </em><em>optional</em>) – a flag whether the model is loaded to device while
-initialization. If <cite>preload=False</cite>, the model must be loaded via <cite>load</cite> method before inference</p></li>
-</ul>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="model.html#model_api.models.model.WrapperError" title="model_api.models.model.WrapperError"><strong>WrapperError</strong></a> – if the wrapper failed to define appropriate inputs for images</p>
-</dd>
-</dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="model_api.models.segmentation.SalientObjectDetectionModel.postprocess">
-<span class="sig-name descname"><span class="pre">postprocess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">outputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.segmentation.SalientObjectDetectionModel.postprocess" title="Link to this definition">#</a></dt>
-<dd><p>Interface for postprocess method.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>outputs</strong> (<em>dict</em>) – <p>model raw output in the following format:
-{</p>
-<blockquote>
-<div><p>’output_layer_name_1’: raw_result_1,
-‘output_layer_name_2’: raw_result_2,
-…</p>
-</div></blockquote>
-<p>}</p>
-</p></li>
-<li><p><strong>meta</strong> (<em>dict</em>) – the input metadata obtained from <cite>preprocess</cite> method</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mat</span></code></span></p>
-</dd>
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p><ul class="simple">
-<li><p>postprocessed data in the format defined by wrapper</p></li>
-</ul>
-</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
 <dt class="sig sig-object py" id="model_api.models.segmentation.SegmentationModel">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_api.models.segmentation.</span></span><span class="sig-name descname"><span class="pre">SegmentationModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inference_adapter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configuration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preload</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.segmentation.SegmentationModel" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="image_model.html#model_api.models.image_model.ImageModel" title="model_api.models.image_model.ImageModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImageModel</span></code></a></p>
@@ -636,10 +583,6 @@ segmentation output will be, but less accurate</p></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model-specifications">Model Specifications</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#inputs">Inputs</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#outputs">Outputs</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.segmentation.SalientObjectDetectionModel"><code class="docutils literal notranslate"><span class="pre">SalientObjectDetectionModel</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.segmentation.SalientObjectDetectionModel.postprocess"><code class="docutils literal notranslate"><span class="pre">SalientObjectDetectionModel.postprocess()</span></code></a></li>
-</ul>
-</li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.segmentation.SegmentationModel"><code class="docutils literal notranslate"><span class="pre">SegmentationModel</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.segmentation.SegmentationModel.get_contours"><code class="docutils literal notranslate"><span class="pre">SegmentationModel.get_contours()</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.segmentation.SegmentationModel.parameters"><code class="docutils literal notranslate"><span class="pre">SegmentationModel.parameters()</span></code></a></li>
