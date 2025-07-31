@@ -37,7 +37,8 @@ public:
     virtual std::vector<std::unique_ptr<ImageResult>> inferBatch(const std::vector<ImageInputData>& inputImgs);
 
     static std::string ModelType;
-    std::vector<Contour> getContours(const ImageResultWithSoftPrediction& imageResult);
+    std::vector<Contour> getContours(const ImageResultWithSoftPrediction& imageResult,
+                                     bool include_nested_contours = true);
 
 protected:
     void prepareInputsOutputs(std::shared_ptr<ov::Model>& model) override;
