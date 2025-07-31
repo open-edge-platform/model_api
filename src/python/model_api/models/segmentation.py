@@ -235,23 +235,6 @@ class SegmentationModel(ImageModel):
         return combined_contours
 
 
-class SalientObjectDetectionModel(SegmentationModel):
-    __model__ = "Salient_Object_Detection"
-
-    def postprocess(self, outputs: dict, meta: dict) -> cv2.Mat:
-        input_image_height = meta["original_shape"][0]
-        input_image_width = meta["original_shape"][1]
-        result = outputs[self.output_blob_name].squeeze()
-        result = 1 / (1 + np.exp(-result))
-        return cv2.resize(
-            result,
-            (input_image_width, input_image_height),
-            0,
-            0,
-            interpolation=cv2.INTER_NEAREST,
-        )
-
-
 _feature_vector_name = "feature_vector"
 
 
