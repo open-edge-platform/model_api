@@ -253,12 +253,27 @@ def clip_detections(detections, size):
 
 
 class Contour(NamedTuple):
+    """Represents a semantic segmentation mask as internals of a contour with "holes".
+    Args:
+        label (str): The label of the contour.
+        probability (float): The probability associated with the contour.
+        shape (np.ndarray | list[tuple[int, int]]): The shape of the contour. Shape is represented as a
+            list of 2d points or an equivalent numpy array (N, 2).
+        excluded_shapes (list[np.ndarray] | list[tuple[int, int]] | None, optional): Shapes of excluded contours.
+            If empty, the main shape is simply connected. Otherwise, excluded_shapes
+            represent "holes". Defaults to None.
+    """
     label: str
     probability: float
-    shape: List[Tuple[int, int]]
+    shape: List[Tuple[int, int]] | np.ndarray
+    excluded_shapes: list[np.ndarray] | List[list[tuple[int, int]]] | None = None,
 
     def __str__(self):
-        return f"{self.label}: {self.probability:.3f}, {len(self.shape)}"
+        num_children = len(self.excluded_shapes) if self.excluded_shapes is not None else 0
+        return f"{self.label}: {self.probability:.3f}, {len(self.shape)}, {num_children}"
+
+    def __repr__(self):
+        return self.__str__()
 
 
 class ImageResultWithSoftPrediction(NamedTuple):

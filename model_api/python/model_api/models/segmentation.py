@@ -14,7 +14,7 @@
  limitations under the License.
 """
 
-from typing import Iterable, Union
+from typing import Iterable, List, Union
 
 import cv2
 import numpy as np
@@ -167,17 +167,32 @@ class SegmentationModel(ImageModel):
     def get_contours(
         self,
         prediction: ImageResultWithSoftPrediction,
-    ) -> list:
+        include_nested_contours: bool = False,
+    ) -> List[Contour]:
+        """Represents existing masks with contours.
+
+        Args:
+            prediction (ImageResultWithSoftPrediction): Input segmentation prediction.
+            include_nested_contours (bool, optional): Enables searching for holes in masks. Defaults to True.
+
+        Returns:
+            list[Contour]: Contours found.
+        """
         n_layers = prediction.soft_prediction.shape[2]
 
         if n_layers == 1:
-            raise RuntimeError("Cannot get contours from soft prediction with 1 layer")
+            msg = "Cannot get contours from soft prediction with 1 layer"
+            raise RuntimeError(msg)
+
+        find_contours_mode = cv2.RETR_CCOMP if include_nested_contours else cv2.RETR_EXTERNAL
         combined_contours = []
         for layer_index in range(1, n_layers):  # ignoring background
             label = self.get_label_name(layer_index - 1)
             if len(prediction.soft_prediction.shape) == 3:
                 current_label_soft_prediction = prediction.soft_prediction[
-                    :, :, layer_index
+                    :,
+                    :,
+                    layer_index,
                 ]
             else:
                 current_label_soft_prediction = prediction.soft_prediction
@@ -185,21 +200,30 @@ class SegmentationModel(ImageModel):
             obj_group = prediction.resultImage == layer_index
             label_index_map = obj_group.astype(np.uint8) * 255
 
-            contours, _hierarchy = cv2.findContours(
-                label_index_map, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE
+            contours, hierarchy = cv2.findContours(
+                label_index_map,
+                find_contours_mode,
+                cv2.CHAIN_APPROX_NONE,
             )
+            if len(contours):
+                hierarchy = hierarchy.squeeze(axis=0)
 
-            for contour in contours:
+            for i, contour in enumerate(contours):
+                if hierarchy[i][3] >= 0:
+                    continue
+
                 mask = np.zeros(prediction.resultImage.shape, dtype=np.uint8)
-                cv2.drawContours(
-                    mask,
-                    np.asarray([contour]),
-                    contourIdx=-1,
-                    color=1,
-                    thickness=-1,
-                )
+                cv2.drawContours(mask, contours, contourIdx=i, color=1, thickness=-1)
+
+                children = []
+                next_child_idx = hierarchy[i][2]
+                while next_child_idx >= 0:
+                    children.append(contours[next_child_idx])
+                    cv2.drawContours(mask, contours, contourIdx=next_child_idx, color=0, thickness=-1)
+                    next_child_idx = hierarchy[next_child_idx][0]
+
                 probability = cv2.mean(current_label_soft_prediction, mask)[0]
-                combined_contours.append(Contour(label, probability, contour))
+                combined_contours.append(Contour(label, probability, contour, children))
 
         return combined_contours
 
