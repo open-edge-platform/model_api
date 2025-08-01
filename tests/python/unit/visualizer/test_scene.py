@@ -7,6 +7,7 @@ from pathlib import Path
 
 import numpy as np
 from PIL import Image
+import pytest
 
 from model_api.models.result import (
     AnomalyResult,
@@ -71,7 +72,8 @@ def test_detection_scene(mock_image: Image, tmpdir: Path):
     assert Path(tmpdir / "detection_scene.jpg").exists()
 
 
-def test_segmentation_scene(mock_image: Image, tmpdir: Path):
+@pytest.mark.parametrize("with_saliency_map", [True, False])
+def test_segmentation_scene(mock_image: Image, tmpdir: Path, with_saliency_map: bool):
     """Test if the segmentation scene is created."""
     visualizer = Visualizer()
 
@@ -85,7 +87,9 @@ def test_segmentation_scene(mock_image: Image, tmpdir: Path):
         ),
         scores=np.array([0.85, 0.75]),
         label_names=["person", "car"],
-        saliency_map=[np.ones((128, 128), dtype=np.uint8) * 255],
+        saliency_map=[np.ones((128, 128), dtype=np.uint8) * 255]
+        if with_saliency_map
+        else None,
         feature_vector=np.array([1, 2, 3, 4]),
     )
 
@@ -104,7 +108,9 @@ def test_segmentation_scene(mock_image: Image, tmpdir: Path):
         soft_prediction=np.ones(
             (3, 3, 3), dtype=np.float32
         ),  # 3 classes, 3x3 prediction
-        saliency_map=np.ones((3, 3), dtype=np.uint8) * 255,
+        saliency_map=np.ones((3, 3), dtype=np.uint8) * 255
+        if with_saliency_map
+        else None,
         feature_vector=np.array([1, 2, 3, 4]),
     )
 
