@@ -186,12 +186,24 @@ class SegmentationModel(ImageModel):
     def get_contours(
         self,
         prediction: ImageResultWithSoftPrediction,
-    ) -> list:
+        include_nested_contours: bool = True,
+    ) -> list[Contour]:
+        """Represents existing masks with contours.
+
+        Args:
+            prediction (ImageResultWithSoftPrediction): Input segmentation prediction.
+            include_nested_contours (bool, optional): Enables searching for holes in masks. Defaults to True.
+
+        Returns:
+            list[Contour]: Contours found.
+        """
         n_layers = prediction.soft_prediction.shape[2]
 
         if n_layers == 1:
             msg = "Cannot get contours from soft prediction with 1 layer"
             raise RuntimeError(msg)
+
+        find_contours_mode = cv2.RETR_CCOMP if include_nested_contours else cv2.RETR_EXTERNAL
         combined_contours = []
         for layer_index in range(1, n_layers):  # ignoring background
             label = self.get_label_name(layer_index - 1)
@@ -207,42 +219,32 @@ class SegmentationModel(ImageModel):
             obj_group = prediction.resultImage == layer_index
             label_index_map = obj_group.astype(np.uint8) * 255
 
-            contours, _hierarchy = cv2.findContours(
+            contours, hierarchy = cv2.findContours(
                 label_index_map,
-                cv2.RETR_EXTERNAL,
+                find_contours_mode,
                 cv2.CHAIN_APPROX_NONE,
             )
+            if len(contours):
+                hierarchy = hierarchy.squeeze(axis=0)
 
-            for contour in contours:
+            for i, contour in enumerate(contours):
+                if hierarchy[i][3] >= 0:
+                    continue
+
                 mask = np.zeros(prediction.resultImage.shape, dtype=np.uint8)
-                cv2.drawContours(
-                    mask,
-                    np.asarray([contour]),
-                    contourIdx=-1,
-                    color=1,
-                    thickness=-1,
-                )
+                cv2.drawContours(mask, contours, contourIdx=i, color=1, thickness=-1)
+
+                children = []
+                next_child_idx = hierarchy[i][2]
+                while next_child_idx >= 0:
+                    children.append(contours[next_child_idx])
+                    cv2.drawContours(mask, contours, contourIdx=next_child_idx, color=0, thickness=-1)
+                    next_child_idx = hierarchy[next_child_idx][0]
+
                 probability = cv2.mean(current_label_soft_prediction, mask)[0]
-                combined_contours.append(Contour(label, probability, contour))
+                combined_contours.append(Contour(label, probability, contour, children))
 
         return combined_contours
-
-
-class SalientObjectDetectionModel(SegmentationModel):
-    __model__ = "Salient_Object_Detection"
-
-    def postprocess(self, outputs: dict, meta: dict) -> cv2.Mat:
-        input_image_height = meta["original_shape"][0]
-        input_image_width = meta["original_shape"][1]
-        result = outputs[self.output_blob_name].squeeze()
-        result = 1 / (1 + np.exp(-result))
-        return cv2.resize(
-            result,
-            (input_image_width, input_image_height),
-            0,
-            0,
-            interpolation=cv2.INTER_NEAREST,
-        )
 
 
 _feature_vector_name = "feature_vector"

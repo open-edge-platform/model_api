@@ -25,7 +25,7 @@ from .result import (
     ZSLVisualPromptingResult,
 )
 from .sam_models import SAMDecoder, SAMImageEncoder
-from .segmentation import SalientObjectDetectionModel, SegmentationModel
+from .segmentation import SegmentationModel
 from .ssd import SSD
 from .utils import (
     OutputTransform,

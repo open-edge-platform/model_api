@@ -149,13 +149,35 @@ class RotatedSegmentationResult(InstanceSegmentationResult):
 
 
 class Contour:
-    def __init__(self, label: str, probability: float, shape: list[tuple[int, int]]):
-        self.shape = shape
+    """Represents a semantic segmentation mask as internals of a contour with "holes".
+    Args:
+        label (str): The label of the contour.
+        probability (float): The probability associated with the contour.
+        shape (np.ndarray | list[tuple[int, int]]): The shape of the contour. Shape is represented as a
+            list of 2d points or an equivalent numpy array (N, 2).
+        excluded_shapes (list[np.ndarray] | list[tuple[int, int]] | None, optional): Shapes of excluded contours.
+            If empty, the main shape is simply connected. Otherwise, excluded_shapes
+            represent "holes". Defaults to None.
+    """
+
+    def __init__(
+        self,
+        label: str,
+        probability: float,
+        shape: np.ndarray | list[tuple[int, int]],
+        excluded_shapes: list[np.ndarray] | list[list[tuple[int, int]]] | None = None,
+    ):
+        self.shape = np.array(shape)
         self.label = label
         self.probability = probability
+        self.excluded_shapes = [np.array(x) for x in excluded_shapes] if excluded_shapes is not None else None
 
     def __str__(self):
-        return f"{self.label}: {self.probability:.3f}, {len(self.shape)}"
+        num_children = len(self.excluded_shapes) if self.excluded_shapes is not None else 0
+        return f"{self.label}: {self.probability:.3f}, {len(self.shape)}, {num_children}"
+
+    def __repr__(self):
+        return self.__str__()
 
 
 class ImageResultWithSoftPrediction(Result):
