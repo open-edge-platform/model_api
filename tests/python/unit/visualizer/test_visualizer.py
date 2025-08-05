@@ -14,8 +14,8 @@ from model_api.models.result import (
 from model_api.visualizer import Visualizer
 
 
-def test_anomaly_scene(mock_image: Image, tmpdir: Path):
-    """Test if the anomaly scene is created."""
+def test_render(mock_image: Image, tmpdir: Path):
+    """Test Visualizer.render()."""
     heatmap = np.ones(mock_image.size, dtype=np.uint8)
     heatmap *= 255
 
