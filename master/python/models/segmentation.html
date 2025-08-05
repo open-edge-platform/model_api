@@ -433,10 +433,20 @@ initialization. If <cite>preload=False</cite>, the model must be loaded via <cit
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="model_api.models.segmentation.SegmentationModel.get_contours">
-<span class="sig-name descname"><span class="pre">get_contours</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prediction</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.segmentation.SegmentationModel.get_contours" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
+<span class="sig-name descname"><span class="pre">get_contours</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prediction</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_nested_contours</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.segmentation.SegmentationModel.get_contours" title="Link to this definition">#</a></dt>
+<dd><p>Represents existing masks with contours.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>prediction</strong> (<em>ImageResultWithSoftPrediction</em>) – Input segmentation prediction.</p></li>
+<li><p><strong>include_nested_contours</strong> (<em>bool</em><em>, </em><em>optional</em>) – Enables searching for holes in masks. Defaults to True.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Contours found.</p>
+</dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Contour</span></code>]</span></p>
+<dd class="field-odd"><p>list[Contour]</p>
 </dd>
 </dl>
 </dd></dl>
