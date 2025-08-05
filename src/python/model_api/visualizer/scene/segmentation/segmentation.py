@@ -37,7 +37,7 @@ class SegmentationScene(Scene):
             overlays.append(Overlay(class_map, label=f"Class {i}"))
 
         # Add saliency map
-        if result.saliency_map.size > 0:
+        if result.saliency_map is not None and result.saliency_map.size > 0:
             saliency_map = cv2.cvtColor(result.saliency_map, cv2.COLOR_BGR2RGB)
             overlays.append(Overlay(saliency_map, label="Saliency Map"))
 
