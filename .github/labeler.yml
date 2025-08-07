@@ -1,14 +1,9 @@
 # See help here: https://github.com/marketplace/actions/labeler
 
-cpp:
-  - changed-files:
-      - any-glob-to-any-file:
-          - src/cpp/**
-
 python:
   - changed-files:
       - any-glob-to-any-file:
-          - src/python/**
+          - src/**
 
 tests:
   - changed-files:

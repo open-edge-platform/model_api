@@ -22,7 +22,7 @@ jobs:
         with:
           python-version: "3.10"
       - name: Install dependencies
-        run: pip install 'src/python/.[docs]'
+        run: pip install 'src/.[docs]'
       - name: Install and Generate Doxygen
         uses: mattnotmitt/doxygen-action@b84fe17600245bb5db3d6c247cc274ea98c15a3b # v1.12.0
       - name: Build Docs

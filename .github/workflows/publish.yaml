@@ -25,18 +25,18 @@ jobs:
           python -m pip install --upgrade build
       - name: Build sdist
         run: |
-          python -m build --sdist src/python/
+          python -m build --sdist src/
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: artifact-sdist
-          path: src/python/dist/*.tar.gz
+          path: src/dist/*.tar.gz
       - name: Build wheel
         run: |
-          python -m build --wheel src/python/
+          python -m build --wheel src/
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: artifact-wheel
-          path: src/python/dist/*.whl
+          path: src/dist/*.whl
 
   publish_package:
     name: Publish package

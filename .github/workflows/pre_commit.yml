@@ -29,10 +29,8 @@ jobs:
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
-      - name: Install clang-format
-        run: sudo apt-get install -y clang-format-13
       - name: Install dependencies
-        run: pip install 'src/python/.[full]'
+        run: pip install 'src/.[full]'
       - name: Run pre-commit checks
         run: pre-commit run --all-files
   Unit-Tests:
@@ -47,9 +45,9 @@ jobs:
         with:
           python-version: "3.10"
       - name: Install dependencies
-        run: pip install 'src/python/.[tests,ovms]'
+        run: pip install 'src/.[tests,ovms]'
       - name: Run python unit tests
-        run: pytest tests/python/unit
+        run: pytest tests/unit
   Zizmor-Scan-PR:
     runs-on: ubuntu-latest
     permissions:
@@ -81,5 +79,5 @@ jobs:
           scan-scope: "changed"
           severity-level: "LOW"
           confidence-level: "LOW"
-          config_file: "src/python/pyproject.toml"
+          config_file: "src/pyproject.toml"
           fail-on-findings: true
