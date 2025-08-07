@@ -58,5 +58,5 @@ Decoder OV model should have the following named inputs:
 
 ## How to use
 
-See demos: [VPT](https://github.com/open-edge-platform/model_api/tree/master/examples/python/visual_prompting)
-and [ZSL-VPT](https://github.com/open-edge-platform/model_api/tree/master/examples/python/zsl_visual_prompting)
+See demos: [VPT](https://github.com/open-edge-platform/model_api/tree/master/examples/visual_prompting)
+and [ZSL-VPT](https://github.com/open-edge-platform/model_api/tree/master/examples/zsl_visual_prompting)

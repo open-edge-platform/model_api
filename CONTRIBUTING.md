@@ -45,7 +45,7 @@ Set up your development environment to start contributing. This involves install
 2. Install the development requirements:
 
    ```bash
-   pip install -e ./src/python[full]
+   pip install -e ./src[full]
    ```
 
 3. [Build](https://github.com/open-edge-platform/model_api?tab=readme-ov-file#c) C++ binaries
@@ -71,12 +71,9 @@ pre-commit run --all-files
 
    ```bash
    pre-commit run --all-files
-   python tests/cpp/precommit/prepare_data.py -d data -p tests/cpp/precommit/public_scope.json
-   python tests/python/accuracy/prepare_data.py -d data
-   pytest tests/python/
-
-   build/test_sanity -d data -p tests/cpp/precommit/public_scope.json && build/test_model_config -d data
-   build/test_accuracy -d data -p tests/python/accuracy/public_scope.json
+   python tests/precommit/prepare_data.py -d data -p tests/precommit/public_scope.json
+   python tests/accuracy/prepare_data.py -d data
+   pytest tests/
    ```
 
 5. **Update the Changelog:** For significant changes, add a summary to the [CHANGELOG](CHANGELOG.md).

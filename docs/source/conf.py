@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 
 # Define the path to your module using Path
-module_path = Path(__file__).parent.parent / "src" / "python"
+module_path = Path(__file__).parent.parent / "src"
 
 # Insert the path to sys.path
 sys.path.insert(0, str(module_path.resolve()))

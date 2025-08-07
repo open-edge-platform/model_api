@@ -17,7 +17,7 @@ This example demonstrates how to use a Python API of OpenVINO Model API for a re
   pip install ovmsclient
   ```
 
-- Download a model by running a Python code with Model API, see Python [exaple](../../python/synchronous_api/README.md) and resave a configured model at OVMS friendly folder layout:
+- Download a model by running a Python code with Model API, see Python [exaple](../../synchronous_api/README.md) and resave a configured model at OVMS friendly folder layout:
 
   ```python
   from model_api.models import DetectionModel

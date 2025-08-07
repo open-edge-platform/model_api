@@ -25,7 +25,7 @@ To run the pipeline out-of-the box you can download the test data by running the
 
 ```bash
 pip install httpx
-python tests/python/accuracy/prepare_data.py -d data
+python tests/accuracy/prepare_data.py -d data
 ```
 
 and then run
