@@ -20,8 +20,8 @@ async def download_images(data_dir):
         image = await client.get(
             "https://raw.githubusercontent.com/Shenggan/BCCD_Dataset/master/BCCD/JPEGImages/BloodImage_00007.jpg"
         )
-        with data_dir / "BloodImage_00007.jpg" as im:
-            im.write_bytes(image.content)
+        with open(data_dir / "BloodImage_00007.jpg", "wb") as im:
+            im.write(image.content)
 
 
 async def stream_file(client, url, filename):
