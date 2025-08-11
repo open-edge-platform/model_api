@@ -71,9 +71,11 @@ pre-commit run --all-files
 
    ```bash
    pre-commit run --all-files
+   pytest tests/unit
    python tests/precommit/prepare_data.py -d data -p tests/precommit/public_scope.json
+   pytest --data=./data tests/functional
    python tests/accuracy/prepare_data.py -d data
-   pytest tests/
+   pytest --data=./data tests/functional
    ```
 
 5. **Update the Changelog:** For significant changes, add a summary to the [CHANGELOG](CHANGELOG.md).
