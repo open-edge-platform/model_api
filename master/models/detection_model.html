@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Guides &#8212; ModelAPI 2025 documentation</title>
+    <title>Detection Model &#8212; ModelAPI 2025 documentation</title>
   
   
   
@@ -48,11 +48,9 @@
     <script src="../_static/copybutton.js?v=6dbb43f8"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'guides/index';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'models/detection_model';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Model configuration" href="model-configuration.html" />
-    <link rel="prev" title="Model API Documentation" href="../index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -131,8 +129,8 @@
 <nav>
   <ul class="bd-navbar-elements navbar-nav">
     
-<li class="nav-item current active">
-  <a class="nav-link nav-internal" href="#">
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guides/index.html">
     Guides
   </a>
 </li>
@@ -210,8 +208,8 @@
 <nav>
   <ul class="bd-navbar-elements navbar-nav">
     
-<li class="nav-item current active">
-  <a class="nav-link nav-internal" href="#">
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guides/index.html">
     Guides
   </a>
 </li>
@@ -243,11 +241,7 @@
 <nav class="bd-docs-nav bd-links"
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
-  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Guides</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="model-configuration.html">Model configuration</a></li>
-</ul>
-</div>
+  <div class="bd-toc-item navbar-nav"></div>
 </nav></div>
     </div>
   
@@ -286,7 +280,7 @@
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Guides</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Detection Model</span></li>
   </ul>
 </nav>
 </div>
@@ -303,10 +297,103 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="guides">
-<h1>Guides<a class="headerlink" href="#guides" title="Link to this heading">#</a></h1>
-<div class="toctree-wrapper compound">
+  <section id="detection-model">
+<h1>Detection Model<a class="headerlink" href="#detection-model" title="Link to this heading">#</a></h1>
+<section id="description">
+<h2>Description<a class="headerlink" href="#description" title="Link to this heading">#</a></h2>
+<p>Detection model aims to detect objects in an image. The model outputs a list of detected objects, each containing a bounding box, score and class label.</p>
+</section>
+<section id="openvino-model-specifications">
+<h2>OpenVINO Model Specifications<a class="headerlink" href="#openvino-model-specifications" title="Link to this heading">#</a></h2>
+<section id="inputs">
+<h3>Inputs<a class="headerlink" href="#inputs" title="Link to this heading">#</a></h3>
+<p>A single input image of shape (H, W, 3) where H and W are the height and width of the image, respectively.</p>
+</section>
+<section id="outputs">
+<h3>Outputs<a class="headerlink" href="#outputs" title="Link to this heading">#</a></h3>
+<p>Detection model outputs a <code class="docutils literal notranslate"><span class="pre">DetectionResult</span></code> objects containing the following attributes:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">boxes</span></code> (np.ndarray) - Bounding boxes of the detected objects. Each in format of x1, y1, x2 y2.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">scores</span></code> (np.ndarray) - Confidence scores of the detected objects.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">labels</span></code> (np.ndarray) - Class labels of the detected objects.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">label_names</span></code> (list[str]) - List of class names of the detected objects.</p></li>
+</ul>
+</section>
+</section>
+<section id="example">
+<h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">cv2</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">model_api.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">SSD</span>
+
+<span class="c1"># Load the model</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">SSD</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span><span class="s2">&quot;model.xml&quot;</span><span class="p">)</span>
+
+<span class="c1"># Forward pass</span>
+<span class="n">predictions</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+
+<span class="c1"># Iterate over detection result</span>
+<span class="k">for</span> <span class="n">box</span><span class="p">,</span> <span class="n">score</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">label_name</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+    <span class="n">predictions</span><span class="o">.</span><span class="n">boxes</span><span class="p">,</span>
+    <span class="n">predictions</span><span class="o">.</span><span class="n">scores</span><span class="p">,</span>
+    <span class="n">predictions</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span>
+    <span class="n">predictions</span><span class="o">.</span><span class="n">label_names</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Box: </span><span class="si">{</span><span class="n">box</span><span class="si">}</span><span class="s2">, Score: </span><span class="si">{</span><span class="n">score</span><span class="si">}</span><span class="s2">, Label: </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">, Label Name: </span><span class="si">{</span><span class="n">label_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
 </div>
+<dl class="py class" id="module-model_api.models.detection_model">
+<dt class="sig sig-object py" id="model_api.models.detection_model.DetectionModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_api.models.detection_model.</span></span><span class="sig-name descname"><span class="pre">DetectionModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inference_adapter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configuration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preload</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.detection_model.DetectionModel" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="image_model.html#model_api.models.image_model.ImageModel" title="model_api.models.image_model.ImageModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImageModel</span></code></a></p>
+<p>An abstract wrapper for object detection model</p>
+<p>The DetectionModel must have a single image input.
+It inherits <cite>preprocess</cite> from <cite>ImageModel</cite> wrapper. Also, it defines <cite>_resize_detections</cite> method,
+which should be used in <cite>postprocess</cite>, to clip bounding boxes and resize ones to original image shape.</p>
+<p>The <cite>postprocess</cite> method must be implemented in a specific inherited wrapper.</p>
+<p>Detection Model constructor</p>
+<p>It extends the <cite>ImageModel</cite> construtor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inference_adapter</strong> (<a class="reference internal" href="../adapters/inference_adapter.html#model_api.adapters.inference_adapter.InferenceAdapter" title="model_api.adapters.inference_adapter.InferenceAdapter"><em>InferenceAdapter</em></a>) – allows working with the specified executor</p></li>
+<li><p><strong>configuration</strong> (<em>dict</em><em>, </em><em>optional</em>) – it contains values for parameters accepted by specific
+wrapper (<cite>confidence_threshold</cite>, <cite>labels</cite> etc.) which are set as data attributes</p></li>
+<li><p><strong>preload</strong> (<em>bool</em><em>, </em><em>optional</em>) – a flag whether the model is loaded to device while
+initialization. If <cite>preload=False</cite>, the model must be loaded via <cite>load</cite> method before inference</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="model.html#model_api.models.model.WrapperError" title="model_api.models.model.WrapperError"><strong>WrapperError</strong></a> – if the model has more than 1 image inputs</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="model_api.models.detection_model.DetectionModel.parameters">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.detection_model.DetectionModel.parameters" title="Link to this definition">#</a></dt>
+<dd><p>Defines the description and type of configurable data parameters for the wrapper.</p>
+<p>See <cite>types.py</cite> to find available types of the data parameter. For each parameter
+the type, default value and description must be provided.</p>
+<dl>
+<dt>The example of possible data parameter:</dt><dd><dl class="simple">
+<dt>‘confidence_threshold’: NumericalValue(</dt><dd><p>default_value=0.5, description=”Threshold value for detection box confidence”</p>
+</dd>
+</dl>
+<p>)</p>
+</dd>
+</dl>
+<p>The method must be implemented in each specific inherited wrapper.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><ul class="simple">
+<li><p>the dictionary with defined wrapper data parameters</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
 </section>
 
 
@@ -319,24 +406,6 @@
                 <footer class="prev-next-footer d-print-none">
                   
 <div class="prev-next-area">
-    <a class="left-prev"
-       href="../index.html"
-       title="previous page">
-      <i class="fa-solid fa-angle-left"></i>
-      <div class="prev-next-info">
-        <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Model API Documentation</p>
-      </div>
-    </a>
-    <a class="right-next"
-       href="model-configuration.html"
-       title="next page">
-      <div class="prev-next-info">
-        <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Model configuration</p>
-      </div>
-      <i class="fa-solid fa-angle-right"></i>
-    </a>
 </div>
                 </footer>
               
@@ -349,10 +418,34 @@
 
 
   <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#description">Description</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#openvino-model-specifications">OpenVINO Model Specifications</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#inputs">Inputs</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#outputs">Outputs</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.detection_model.DetectionModel"><code class="docutils literal notranslate"><span class="pre">DetectionModel</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.detection_model.DetectionModel.parameters"><code class="docutils literal notranslate"><span class="pre">DetectionModel.parameters()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="../_sources/guides/index.md.txt"
+      <li><a href="../_sources/models/detection_model.md.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div></div>

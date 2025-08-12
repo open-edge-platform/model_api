@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Guides &#8212; ModelAPI 2025 documentation</title>
+    <title>Instance Segmentation &#8212; ModelAPI 2025 documentation</title>
   
   
   
@@ -48,11 +48,9 @@
     <script src="../_static/copybutton.js?v=6dbb43f8"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'guides/index';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tilers/instance_segmentation';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Model configuration" href="model-configuration.html" />
-    <link rel="prev" title="Model API Documentation" href="../index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -131,8 +129,8 @@
 <nav>
   <ul class="bd-navbar-elements navbar-nav">
     
-<li class="nav-item current active">
-  <a class="nav-link nav-internal" href="#">
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guides/index.html">
     Guides
   </a>
 </li>
@@ -210,8 +208,8 @@
 <nav>
   <ul class="bd-navbar-elements navbar-nav">
     
-<li class="nav-item current active">
-  <a class="nav-link nav-internal" href="#">
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guides/index.html">
     Guides
   </a>
 </li>
@@ -243,11 +241,7 @@
 <nav class="bd-docs-nav bd-links"
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
-  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Guides</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="model-configuration.html">Model configuration</a></li>
-</ul>
-</div>
+  <div class="bd-toc-item navbar-nav"></div>
 </nav></div>
     </div>
   
@@ -286,7 +280,7 @@
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Guides</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Instance Segmentation</span></li>
   </ul>
 </nav>
 </div>
@@ -303,10 +297,48 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="guides">
-<h1>Guides<a class="headerlink" href="#guides" title="Link to this heading">#</a></h1>
-<div class="toctree-wrapper compound">
-</div>
+  <section id="module-model_api.tilers.instance_segmentation">
+<span id="instance-segmentation"></span><h1>Instance Segmentation<a class="headerlink" href="#module-model_api.tilers.instance_segmentation" title="Link to this heading">#</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="model_api.tilers.instance_segmentation.InstanceSegmentationTiler">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_api.tilers.instance_segmentation.</span></span><span class="sig-name descname"><span class="pre">InstanceSegmentationTiler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configuration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">execution_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'async'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tile_classifier_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.tilers.instance_segmentation.InstanceSegmentationTiler" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="detection.html#model_api.tilers.detection.DetectionTiler" title="model_api.tilers.detection.DetectionTiler"><code class="xref py py-class docutils literal notranslate"><span class="pre">DetectionTiler</span></code></a></p>
+<p>Tiler for object instance segmentation models.
+This tiler expects model to output a list of <cite>SegmentedObject</cite> objects.</p>
+<p>In addition, this tiler allows to use a tile classifier model,
+which predicts objectness score for each tile. Later, tiles can
+be filtered by this score.</p>
+<p>Constructor for creating a semantic segmentation tiling pipeline</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> – underlying model</p></li>
+<li><p><strong>configuration</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span>) – it contains values for parameters accepted by specific</p></li>
+<li><p><strong>tiler</strong> (<cite>tile_size</cite>, <cite>tiles_overlap</cite> etc.)</p></li>
+<li><p><strong>execution_mode</strong> – Controls inference mode of the tiler (<cite>async</cite> or <cite>sync</cite>).</p></li>
+<li><p><strong>tile_classifier_model</strong> – an <cite>ImageModel</cite>, which has “tile_prob” output.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="model_api.tilers.instance_segmentation.InstanceSegmentationTiler.__call__">
+<span class="sig-name descname"><span class="pre">__call__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.tilers.instance_segmentation.InstanceSegmentationTiler.__call__" title="Link to this definition">#</a></dt>
+<dd><p>Applies full pipeline of tiling inference in one call.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>inputs</strong> – raw input data, the data type is defined by underlying model wrapper</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>postprocessed data in the format defined by underlying model wrapper</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 
 
@@ -319,24 +351,6 @@
                 <footer class="prev-next-footer d-print-none">
                   
 <div class="prev-next-area">
-    <a class="left-prev"
-       href="../index.html"
-       title="previous page">
-      <i class="fa-solid fa-angle-left"></i>
-      <div class="prev-next-info">
-        <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Model API Documentation</p>
-      </div>
-    </a>
-    <a class="right-next"
-       href="model-configuration.html"
-       title="next page">
-      <div class="prev-next-info">
-        <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Model configuration</p>
-      </div>
-      <i class="fa-solid fa-angle-right"></i>
-    </a>
 </div>
                 </footer>
               
@@ -349,10 +363,25 @@
 
 
   <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.tilers.instance_segmentation.InstanceSegmentationTiler"><code class="docutils literal notranslate"><span class="pre">InstanceSegmentationTiler</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.tilers.instance_segmentation.InstanceSegmentationTiler.__call__"><code class="docutils literal notranslate"><span class="pre">InstanceSegmentationTiler.__call__()</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="../_sources/guides/index.md.txt"
+      <li><a href="../_sources/tilers/instance_segmentation.md.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div></div>

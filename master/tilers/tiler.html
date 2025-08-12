@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Guides &#8212; ModelAPI 2025 documentation</title>
+    <title>Tiler &#8212; ModelAPI 2025 documentation</title>
   
   
   
@@ -48,11 +48,9 @@
     <script src="../_static/copybutton.js?v=6dbb43f8"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'guides/index';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tilers/tiler';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Model configuration" href="model-configuration.html" />
-    <link rel="prev" title="Model API Documentation" href="../index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -131,8 +129,8 @@
 <nav>
   <ul class="bd-navbar-elements navbar-nav">
     
-<li class="nav-item current active">
-  <a class="nav-link nav-internal" href="#">
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guides/index.html">
     Guides
   </a>
 </li>
@@ -210,8 +208,8 @@
 <nav>
   <ul class="bd-navbar-elements navbar-nav">
     
-<li class="nav-item current active">
-  <a class="nav-link nav-internal" href="#">
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guides/index.html">
     Guides
   </a>
 </li>
@@ -243,11 +241,7 @@
 <nav class="bd-docs-nav bd-links"
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
-  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Guides</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="model-configuration.html">Model configuration</a></li>
-</ul>
-</div>
+  <div class="bd-toc-item navbar-nav"></div>
 </nav></div>
     </div>
   
@@ -286,7 +280,7 @@
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Guides</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Tiler</span></li>
   </ul>
 </nav>
 </div>
@@ -303,10 +297,122 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="guides">
-<h1>Guides<a class="headerlink" href="#guides" title="Link to this heading">#</a></h1>
-<div class="toctree-wrapper compound">
-</div>
+  <section id="module-model_api.tilers.tiler">
+<span id="tiler"></span><h1>Tiler<a class="headerlink" href="#module-model_api.tilers.tiler" title="Link to this heading">#</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="model_api.tilers.tiler.Tiler">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_api.tilers.tiler.</span></span><span class="sig-name descname"><span class="pre">Tiler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configuration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">execution_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'async'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.tilers.tiler.Tiler" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Base constructor for creating a tiling pipeline</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> – underlying model</p></li>
+<li><p><strong>configuration</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span>) – it contains values for parameters accepted by specific
+tiler (<cite>tile_size</cite>, <cite>tiles_overlap</cite> etc.) which are set as data attributes.</p></li>
+<li><p><strong>execution_mode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Controls inference mode of the tiler (<cite>async</cite> or <cite>sync</cite>).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="model_api.tilers.tiler.Tiler.__call__">
+<span class="sig-name descname"><span class="pre">__call__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.tilers.tiler.Tiler.__call__" title="Link to this definition">#</a></dt>
+<dd><p>Applies full pipeline of tiling inference in one call.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>inputs</strong> – raw input data, the data type is defined by underlying model wrapper</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>postprocessed data in the format defined by underlying model wrapper</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_api.tilers.tiler.Tiler.get_model">
+<span class="sig-name descname"><span class="pre">get_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#model_api.tilers.tiler.Tiler.get_model" title="Link to this definition">#</a></dt>
+<dd><p>Getter for underlying model</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_api.tilers.tiler.Tiler.parameters">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#model_api.tilers.tiler.Tiler.parameters" title="Link to this definition">#</a></dt>
+<dd><p>Defines the description and type of configurable data parameters for the tiler.</p>
+<p>The structure is similar to model wrapper parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><ul class="simple">
+<li><p>the dictionary with defined wrapper tiler parameters</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_api.tilers.tiler.Tiler.EXECUTION_MODES">
+<span class="sig-name descname"><span class="pre">EXECUTION_MODES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('async',</span> <span class="pre">'sync')</span></em><a class="headerlink" href="#model_api.tilers.tiler.Tiler.EXECUTION_MODES" title="Link to this definition">#</a></dt>
+<dd><p>An abstract tiler</p>
+<p>The abstract tiler is free from any executor dependencies.
+It sets the <cite>Model</cite> instance with the provided model
+and applies it to tiles of the input image, and then merges
+results from all tiles.</p>
+<p>The <cite>_postprocess_tile</cite> and <cite>_merge_results</cite> methods must be implemented in a specific inherited tiler.
+.. attribute:: logger</p>
+<blockquote>
+<div><p>instance of the Logger</p>
+<dl class="field-list simple">
+<dt class="field-odd">type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Logger</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_api.tilers.tiler.Tiler.model">
+<span class="sig-name descname"><span class="pre">model</span></span><a class="headerlink" href="#model_api.tilers.tiler.Tiler.model" title="Link to this definition">#</a></dt>
+<dd><p>model being executed</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="../models/model.html#model_api.models.model.Model" title="model_api.models.model.Model">Model</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_api.tilers.tiler.Tiler.model_loaded">
+<span class="sig-name descname"><span class="pre">model_loaded</span></span><a class="headerlink" href="#model_api.tilers.tiler.Tiler.model_loaded" title="Link to this definition">#</a></dt>
+<dd><p>a flag whether the model is loaded to device</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_api.tilers.tiler.Tiler.async_pipeline">
+<span class="sig-name descname"><span class="pre">async_pipeline</span></span><a class="headerlink" href="#model_api.tilers.tiler.Tiler.async_pipeline" title="Link to this definition">#</a></dt>
+<dd><p>a pipeline for asynchronous execution mode</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="../pipelines/async_pipeline.html#model_api.pipelines.async_pipeline.AsyncPipeline" title="model_api.pipelines.async_pipeline.AsyncPipeline">AsyncPipeline</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_api.tilers.tiler.Tiler.execution_mode">
+<span class="sig-name descname"><span class="pre">execution_mode</span></span><a class="headerlink" href="#model_api.tilers.tiler.Tiler.execution_mode" title="Link to this definition">#</a></dt>
+<dd><p>Controls inference mode of the tiler (<cite>async</cite> or <cite>sync</cite>).</p>
+</dd></dl>
+
+</dd></dl>
+
+</dd></dl>
+
 </section>
 
 
@@ -319,24 +425,6 @@
                 <footer class="prev-next-footer d-print-none">
                   
 <div class="prev-next-area">
-    <a class="left-prev"
-       href="../index.html"
-       title="previous page">
-      <i class="fa-solid fa-angle-left"></i>
-      <div class="prev-next-info">
-        <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Model API Documentation</p>
-      </div>
-    </a>
-    <a class="right-next"
-       href="model-configuration.html"
-       title="next page">
-      <div class="prev-next-info">
-        <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Model configuration</p>
-      </div>
-      <i class="fa-solid fa-angle-right"></i>
-    </a>
 </div>
                 </footer>
               
@@ -349,10 +437,34 @@
 
 
   <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.tilers.tiler.Tiler"><code class="docutils literal notranslate"><span class="pre">Tiler</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.tilers.tiler.Tiler.__call__"><code class="docutils literal notranslate"><span class="pre">Tiler.__call__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.tilers.tiler.Tiler.get_model"><code class="docutils literal notranslate"><span class="pre">Tiler.get_model()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.tilers.tiler.Tiler.parameters"><code class="docutils literal notranslate"><span class="pre">Tiler.parameters()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.tilers.tiler.Tiler.EXECUTION_MODES"><code class="docutils literal notranslate"><span class="pre">Tiler.EXECUTION_MODES</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.tilers.tiler.Tiler.model"><code class="docutils literal notranslate"><span class="pre">Tiler.model</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.tilers.tiler.Tiler.model_loaded"><code class="docutils literal notranslate"><span class="pre">Tiler.model_loaded</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.tilers.tiler.Tiler.async_pipeline"><code class="docutils literal notranslate"><span class="pre">Tiler.async_pipeline</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.tilers.tiler.Tiler.execution_mode"><code class="docutils literal notranslate"><span class="pre">Tiler.execution_mode</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="../_sources/guides/index.md.txt"
+      <li><a href="../_sources/tilers/tiler.md.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div></div>
