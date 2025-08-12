@@ -11,7 +11,7 @@ updates:
         patterns:
           - "*"
   - package-ecosystem: pip
-    directory: /src/python
+    directory: /src
     schedule:
       interval: weekly
     target-branch: "master"

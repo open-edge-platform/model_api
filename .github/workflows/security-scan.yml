@@ -47,7 +47,7 @@ jobs:
           scan-scope: "all"
           severity-level: "LOW"
           confidence-level: "LOW"
-          config_file: "src/python/pyproject.toml"
+          config_file: "src/pyproject.toml"
           fail-on-findings: false # reports only
 
   trivy-scan:
@@ -68,7 +68,7 @@ jobs:
         run: python -m pip install pip-tools
 
       - name: Freeze dependencies
-        run: pip-compile --extra=full -o requirements.txt $(pwd)/src/python/pyproject.toml
+        run: pip-compile --extra=full -o requirements.txt $(pwd)/src/pyproject.toml
 
       - name: Run Trivy scan
         id: trivy

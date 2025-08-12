@@ -29,107 +29,15 @@ jobs:
         run: |
           source venv/bin/activate
           python -m pip install --upgrade pip
-          pip install src/python/[tests,ovms] --extra-index-url https://download.pytorch.org/whl/cpu
+          pip install src/[tests,ovms] --extra-index-url https://download.pytorch.org/whl/cpu
       - name: Prepare test data
         run: |
           source venv/bin/activate
-          python tests/cpp/precommit/prepare_data.py -d data -p tests/cpp/precommit/public_scope.json
+          python tests/precommit/prepare_data.py -d data -p tests/precommit/public_scope.json
       - name: Run test
         run: |
           source venv/bin/activate
-          pytest --data=./data tests/python/functional
-  CPP-Code-Quality:
-    name: CPP-Code-Quality
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-          persist-credentials: false
-      - name: cppcheck
-        uses: chmorgan/cppcheck-action@88696b3fd4a3ced3df76a2f7dc44b251d8232bcb # v1.4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN}}
-          # missingInclude: cppcheck can't find stl, openvino, opencv
-          other_options: --suppress=missingInclude -Isrc/cpp/models/include -Isrc/cpp/utils/include -Isrc/cpp/pipelines/include --check-config
-  CPP-Precommit:
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-          persist-credentials: false
-      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
-        with:
-          python-version: "3.10"
-          cache: pip
-      - name: Create and start a virtual environment
-        run: |
-          python -m venv venv
-          source venv/bin/activate
-      - name: Install dependencies
-        run: |
-          source venv/bin/activate
-          python -m pip install --upgrade pip
-          pip install src/python/[tests,build] --extra-index-url https://download.pytorch.org/whl/cpu
-
-          sudo bash src/cpp/install_dependencies.sh
-      - name: Prepare test data
-        run: |
-          source venv/bin/activate
-          python tests/cpp/precommit/prepare_data.py -d data -p tests/cpp/precommit/public_scope.json
-      - name: Build
-        run: |
-          mkdir build && cd build
-          pip install nanobind==2.4.0
-          pip install typing_extensions==4.12.2
-          cmake ../tests/cpp/precommit/
-          cmake --build . -j $((`nproc`*2+2))
-      - name: Run test
-        run: |
-          build/test_sanity -d data -p tests/cpp/precommit/public_scope.json && build/test_model_config -d data
-  CPP-Windows-Precommit:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-          persist-credentials: false
-      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
-        with:
-          python-version: "3.10"
-          cache: pip
-      - name: Create and start a virtual environment
-        shell: bash
-        run: |
-          python -m venv venv
-          source venv/Scripts/activate
-      - name: Install dependencies
-        shell: bash
-        run: |
-          source venv/Scripts/activate
-          python -m pip install --upgrade pip
-          pip install src/python/[tests,build] --extra-index-url https://download.pytorch.org/whl/cpu
-          curl https://storage.openvinotoolkit.org/repositories/openvino/packages/2024.6/windows/w_openvino_toolkit_windows_2024.6.0.17404.4c0f47d2335_x86_64.zip --output w_openvino_toolkit_windows.zip
-          unzip w_openvino_toolkit_windows.zip
-          rm w_openvino_toolkit_windows.zip
-          curl -L https://github.com/opencv/opencv/releases/download/4.10.0/opencv-4.10.0-windows.exe --output opencv-4.10.0-windows.exe
-          ./opencv-4.10.0-windows.exe -oopencv -y
-          rm opencv-4.10.0-windows.exe
-      - name: Prepare test data
-        shell: bash
-        run: |
-          source venv/Scripts/activate
-          python tests/cpp/precommit/prepare_data.py -d data -p tests/cpp/precommit/public_scope.json
-      - name: Build
-        shell: bash
-        run: |
-          mkdir build && cd build
-          MSYS_NO_PATHCONV=1 cmake ../examples/cpp/ -DOpenVINO_DIR=$GITHUB_WORKSPACE/w_openvino_toolkit_windows_2024.6.0.17404.4c0f47d2335_x86_64/runtime/cmake -DOpenCV_DIR=$GITHUB_WORKSPACE/opencv/opencv/build -DCMAKE_CXX_FLAGS=/WX
-          cmake --build . --config Release -j $((`nproc`*2+2))
-      - name: Run sync sample
-        shell: cmd
-        # .\w_openvino_toolkit_windows_2023.0.0.10926.b4452d56304_x86_64\setupvars.bat exits with 0 code without moving to a next command. Set PATH manually
-        run: |
-          set PATH=opencv\opencv\build\x64\vc16\bin;w_openvino_toolkit_windows_2024.6.0.17404.4c0f47d2335_x86_64\runtime\bin\intel64\Release;w_openvino_toolkit_windows_2024.6.0.17404.4c0f47d2335_x86_64\runtime\3rdparty\tbb\bin;%PATH%
-          .\build\Release\synchronous_api.exe .\data\otx_models\detection_model_with_xai_head.xml .\data\BloodImage_00007.jpg
+          pytest --data=./data tests/functional
   serving_api:
     strategy:
       fail-fast: false
@@ -153,8 +61,8 @@ jobs:
       - name: serving_api
         run: |
           python -m pip install --upgrade pip
-          python -m pip install src/python/[ovms,tests]
-          python tests/cpp/precommit/prepare_data.py -d data -p tests/cpp/precommit/public_scope.json
+          python -m pip install src/[ovms,tests]
+          python tests/precommit/prepare_data.py -d data -p tests/precommit/public_scope.json
           python -c "from model_api.models import DetectionModel; DetectionModel.create_model('./data/otx_models/detection_model_with_xai_head.xml').save('ovms_models/ssd_mobilenet_v1_fpn_coco/1/ssd_mobilenet_v1_fpn_coco.xml')"
           docker run -d --rm -v $GITHUB_WORKSPACE/ovms_models/:/models -p 8000:8000 openvino/model_server:latest --model_path /models/ssd_mobilenet_v1_fpn_coco/ --model_name ssd_mobilenet_v1_fpn_coco --rest_port 8000 --log_level DEBUG --target_device CPU
-          python examples/python/serving_api/run.py data/coco128/images/train2017/000000000009.jpg  # detects 4 objects
+          python examples/serving_api/run.py data/coco128/images/train2017/000000000009.jpg  # detects 4 objects

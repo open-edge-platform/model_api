@@ -27,34 +27,12 @@ jobs:
         run: |
           source venv/bin/activate
           python -m pip install --upgrade pip
-          pip install src/python/[tests,build] --extra-index-url https://download.pytorch.org/whl/cpu
+          pip install src/[tests,build] --extra-index-url https://download.pytorch.org/whl/cpu
       - name: Prepare test data
         run: |
           source venv/bin/activate
-          python tests/python/accuracy/prepare_data.py -d data
+          python tests/accuracy/prepare_data.py -d data
       - name: Run Python Test
         run: |
           source venv/bin/activate
-          pytest -v --data=./data tests/python/accuracy/test_accuracy.py
-      - name: Install CPP dependencies
-        run: |
-          sudo bash src/cpp/install_dependencies.sh
-      - name: Build CPP Test
-        run: |
-          mkdir build && cd build
-          pip install nanobind==2.4.0
-          pip install typing_extensions==4.12.2
-          cmake ../tests/cpp/accuracy/
-          make -j
-      - name: Build CPP-PY Bindings
-        run: |
-          source venv/bin/activate
-          pip install src/cpp/py_bindings
-      - name: Run CPP Test
-        run: |
-          build/test_accuracy -d data -p tests/python/accuracy/public_scope.json
-      - name: Run CPP-PY Bindings Test
-        run: |
-          source venv/bin/activate
-          pip list
-          pytest --data=./data --config=./tests/python/accuracy/public_scope.json tests/cpp/accuracy/test_bindings.py
+          pytest -v --data=./data tests/accuracy/test_accuracy.py
