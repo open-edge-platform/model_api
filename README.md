@@ -32,9 +32,9 @@ Training Extensions embed all the metadata required for inference into model fil
 
 ## Features
 
-- Python and C++ API
+- Python API
 - Synchronous and asynchronous inference
-- Local inference and serving through the rest API (Python only)
+- Local inference and serving through the rest API
 - Model preprocessing embedding for faster inference
 
 ## Installation
