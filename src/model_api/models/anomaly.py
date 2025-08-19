@@ -66,12 +66,52 @@ class AnomalyDetection(ImageModel):
         preload: bool = False,
     ) -> None:
         super().__init__(inference_adapter, configuration, preload)
-        self._check_io_number(1, 1)
+        self._check_io_number(1, (1, 4))
         self.normalization_scale: float
         self.image_threshold: float
         self.pixel_threshold: float
         self.task: str
         self.labels: list[str]
+
+    def preprocess(self, inputs: np.ndarray) -> list[dict]:
+        """Data preprocess method for Anomalib models.
+
+        Anomalib models typically expect inputs in [0,1] range as float32.
+        """
+        original_shape = inputs.shape
+
+        if self._is_dynamic:
+            h, w, c = inputs.shape
+            resized_shape = (w, h, c)
+
+            # For anomalib models, convert to float32 and normalize to [0,1] if needed
+            if inputs.dtype == np.uint8:
+                processed_image = inputs.astype(np.float32) / 255.0
+            else:
+                processed_image = inputs.astype(np.float32)
+
+            # Apply layout change but skip InputTransform (which might apply wrong normalization)
+            processed_image = self._change_layout(processed_image)
+        else:
+            resized_shape = (self.w, self.h, self.c)
+            # For fixed models, use standard preprocessing
+            if self.embedded_processing:
+                processed_image = inputs[None]
+            else:
+                # Convert to float32 and normalize for anomalib
+                if inputs.dtype == np.uint8:
+                    processed_image = inputs.astype(np.float32) / 255.0
+                else:
+                    processed_image = inputs.astype(np.float32)
+                processed_image = self._change_layout(processed_image)
+
+        return [
+            {self.image_blob_name: processed_image},
+            {
+                "original_shape": original_shape,
+                "resized_shape": resized_shape,
+            },
+        ]
 
     def postprocess(self, outputs: dict[str, np.ndarray], meta: dict[str, Any]) -> AnomalyResult:
         """Post-processes the outputs and returns the results.
@@ -87,38 +127,48 @@ class AnomalyDetection(ImageModel):
         pred_label: str | None = None
         pred_mask: np.ndarray | None = None
         pred_boxes: np.ndarray | None = None
-        predictions = outputs[next(iter(self.outputs))]
 
-        if len(predictions.shape) == 1:
-            pred_score = predictions
+        anomalib_keys = ["pred_score", "pred_label", "pred_mask", "anomaly_map"]
+        if not all(key in outputs for key in anomalib_keys):
+            predictions = outputs[next(iter(self.outputs))]
+
+            if len(predictions.shape) == 1:
+                npred_score = predictions
+            else:
+                anomaly_map = predictions.squeeze()
+                npred_score = anomaly_map.reshape(-1).max()
+
+            pred_label = self.labels[1] if npred_score > self.image_threshold else self.labels[0]
+
+            assert anomaly_map is not None
+            pred_mask = (anomaly_map >= self.pixel_threshold).astype(np.uint8)
+            anomaly_map = self._normalize(anomaly_map, self.pixel_threshold)
+
+            # normalize
+            npred_score = self._normalize(npred_score, self.image_threshold)
+
+            if pred_label == self.labels[0]:  # normal
+                npred_score = 1 - npred_score  # Score of normal is 1 - score of anomaly
+            pred_score = npred_score.item()
         else:
-            anomaly_map = predictions.squeeze()
-            pred_score = anomaly_map.reshape(-1).max()
+            pred_score = outputs["pred_score"].item()
+            pred_label = str(outputs["pred_label"].item())
+            anomaly_map = outputs["anomaly_map"].squeeze()
+            pred_mask = outputs["pred_mask"].squeeze().astype(np.uint8)
 
-        pred_label = self.labels[1] if pred_score > self.image_threshold else self.labels[0]
-
-        assert anomaly_map is not None
-        pred_mask = (anomaly_map >= self.pixel_threshold).astype(np.uint8)
-        anomaly_map = self._normalize(anomaly_map, self.pixel_threshold)
         anomaly_map *= 255
         anomaly_map = np.round(anomaly_map).astype(np.uint8)
-        pred_mask = cv2.resize(
-            pred_mask,
-            (meta["original_shape"][1], meta["original_shape"][0]),
-        )
 
-        # normalize
-        pred_score = self._normalize(pred_score, self.image_threshold)
-
-        if pred_label == self.labels[0]:  # normal
-            pred_score = 1 - pred_score  # Score of normal is 1 - score of anomaly
-
-        # resize outputs
         if anomaly_map is not None:
             anomaly_map = cv2.resize(
                 anomaly_map,
                 (meta["original_shape"][1], meta["original_shape"][0]),
             )
+
+        pred_mask = cv2.resize(
+            pred_mask,
+            (meta["original_shape"][1], meta["original_shape"][0]),
+        )
 
         if self.task == "detection":
             pred_boxes = self._get_boxes(pred_mask)
@@ -128,7 +178,7 @@ class AnomalyDetection(ImageModel):
             pred_boxes=pred_boxes,
             pred_label=pred_label,
             pred_mask=pred_mask,
-            pred_score=pred_score.item(),
+            pred_score=pred_score,
         )
 
     @classmethod

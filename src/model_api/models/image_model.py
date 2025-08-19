@@ -68,6 +68,7 @@ class ImageModel(Model):
         self.embedded_processing: bool
         self.labels: list[str]
 
+        self._is_dynamic = False
         self.nchw_layout = self.inputs[self.image_blob_name].layout == "NCHW"
         if self.nchw_layout:
             self.n, self.c, self.h, self.w = self.inputs[self.image_blob_name].shape
