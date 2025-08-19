@@ -17,22 +17,15 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
-          python-version: "3.12"
-          cache: pip
-      - name: Create and start a virtual environment
-        run: |
-          python -m venv venv
-          source venv/bin/activate
+          python-version-file: ".python-version"
+      - name: Install uv
+        uses: astral-sh/setup-uv@d9e0f98d3fc6adb07d1e3d37f3043649ddad06a1 # v6.5.0
       - name: Install dependencies
         run: |
-          source venv/bin/activate
-          python -m pip install --upgrade pip
-          pip install src/[tests,build] --extra-index-url https://download.pytorch.org/whl/cpu
+          uv sync --locked --extra tests --extra build --extra-index-url https://download.pytorch.org/whl/cpu
       - name: Prepare test data
         run: |
-          source venv/bin/activate
-          python tests/accuracy/prepare_data.py -d data
+          uv run python tests/accuracy/prepare_data.py -d data
       - name: Run Python Test
         run: |
-          source venv/bin/activate
-          pytest -v --data=./data tests/accuracy/test_accuracy.py
+          uv run pytest --data=./data tests/accuracy/test_accuracy.py

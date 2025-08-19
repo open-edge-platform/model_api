@@ -35,27 +35,11 @@ Set up your development environment to start contributing. This involves install
 <details>
 <summary>Development Environment Setup Instructions</summary>
 
-1. Create and activate a new python environment:
+1. Create a new python environment and install the development requirements:
 
    ```bash
-   python -m venv .mapi
-   source .mapi/bin/activate
+   uv sync --all-extras
    ```
-
-2. Install the development requirements:
-
-   ```bash
-   pip install -e ./src[full]
-   ```
-
-3. [Build](https://github.com/open-edge-platform/model_api?tab=readme-ov-file#c) C++ binaries
-
-Make sure to address any pre-commit issues before finalizing your pull request.
-Pre-commit checks can be launched by the command:
-
-```bash
-pre-commit run --all-files
-```
 
 </details>
 
@@ -70,12 +54,12 @@ pre-commit run --all-files
 4. **Pass Tests and Quality Checks:** Ensure the test suite passes and that your code meets quality standards by running:
 
    ```bash
-   pre-commit run --all-files
-   pytest tests/unit
-   python tests/precommit/prepare_data.py -d data -p tests/precommit/public_scope.json
-   pytest --data=./data tests/functional
-   python tests/accuracy/prepare_data.py -d data
-   pytest --data=./data tests/functional
+   uv run pre-commit run --all-files
+   uv run pytest tests/unit
+   uv run python tests/precommit/prepare_data.py -d data -p tests/precommit/public_scope.json
+   uv run pytest --data=./data tests/functional
+   uv run python tests/accuracy/prepare_data.py -d data
+   uv run pytest --data=./data tests/accuracy/test_accuracy.py
    ```
 
 5. **Update the Changelog:** For significant changes, add a summary to the [CHANGELOG](CHANGELOG.md).

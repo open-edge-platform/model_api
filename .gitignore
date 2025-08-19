@@ -143,3 +143,6 @@ docs/source/_build/
 
 # vs-code
 .vscode/
+
+data/
+ovms_models/
