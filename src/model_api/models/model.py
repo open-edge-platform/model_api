@@ -125,8 +125,7 @@ class Model:
             if name.lower() == subclass.__model__.lower():
                 return subclass
         return cls.raise_error(
-            f"There is no model with name {name} in list: "
-            f"{', '.join([subclass.__model__ for subclass in subclasses])}",
+            f"There is no model with name {name} in list: {', '.join([subclass.__model__ for subclass in subclasses])}",
         )
 
     @classmethod
@@ -195,11 +194,29 @@ class Model:
                 cache_dir=cache_dir,
             )
         if model_type is None:
-            model_type = inference_adapter.get_rt_info(
-                ["model_info", "model_type"],
-            ).astype(str)
+            try:
+                model_type = inference_adapter.get_rt_info(
+                    ["model_info", "model_type"],
+                ).astype(str)
+            except RuntimeError:
+                model_type = cls.detect_model_type(inference_adapter)
         Model = cls.get_model_class(model_type)
         return Model(inference_adapter, configuration, preload)
+
+    @classmethod
+    def detect_model_type(cls, inference_adapter) -> str:
+        """Detects model type on available information"""
+        input_layers = inference_adapter.get_input_layers()
+        output_layers = inference_adapter.get_output_layers()
+
+        # Check for Anomalib model pattern: 1 input and specific output layer names
+        if len(input_layers) == 1 and len(output_layers) == 4:
+            expected_outputs = {"pred_score", "pred_label", "anomaly_map", "pred_mask"}
+            actual_outputs = set(output_layers.keys())
+            if expected_outputs == actual_outputs:
+                return "AnomalyDetection"
+
+        return "uknown"
 
     @classmethod
     def get_subclasses(cls) -> list[Any]:

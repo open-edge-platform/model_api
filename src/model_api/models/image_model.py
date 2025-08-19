@@ -73,6 +73,11 @@ class ImageModel(Model):
             self.n, self.c, self.h, self.w = self.inputs[self.image_blob_name].shape
         else:
             self.n, self.h, self.w, self.c = self.inputs[self.image_blob_name].shape
+
+        self._is_dynamic = False
+        if self.h == -1 or self.w == -1:
+            self._is_dynamic = True
+
         self.resize = RESIZE_TYPES[self.resize_type]
         self.input_transform = InputTransform(
             self.reverse_input_channels,
@@ -83,7 +88,7 @@ class ImageModel(Model):
         layout = self.inputs[self.image_blob_name].layout
         if self.embedded_processing:
             self.h, self.w = self.orig_height, self.orig_width
-        else:
+        elif not self._is_dynamic:
             inference_adapter.embed_preprocessing(
                 layout=layout,
                 resize_mode=self.resize_type,
@@ -213,11 +218,24 @@ class ImageModel(Model):
                 }
             - the input metadata, which might be used in `postprocess` method
         """
+        if self._is_dynamic:
+            h, w, c = inputs.shape
+            resized_shape = (w, h, c)
+            processed_image = self.input_transform(inputs)
+            processed_image = self._change_layout(processed_image)
+        else:
+            resized_shape = (self.w, self.h, self.c)
+            if self.embedded_processing:
+                processed_image = inputs[None]
+            else:
+                processed_image = self.input_transform(inputs)
+                processed_image = self._change_layout(processed_image)
+
         return [
-            {self.image_blob_name: inputs[None]},
+            {self.image_blob_name: processed_image},
             {
                 "original_shape": inputs.shape,
-                "resized_shape": (self.w, self.h, self.c),
+                "resized_shape": resized_shape,
             },
         ]
 
@@ -230,9 +248,13 @@ class ImageModel(Model):
         Returns:
             - the image with layout aligned with the model layout
         """
+        h, w, c = image.shape if self._is_dynamic else (self.h, self.w, self.c)
+
+        # For fixed models, use the predefined dimensions
         if self.nchw_layout:
             image = image.transpose((2, 0, 1))  # HWC->CHW
-            image = image.reshape((1, self.c, self.h, self.w))
+            image = image.reshape((1, c, h, w))
         else:
-            image = image.reshape((1, self.h, self.w, self.c))
+            image = image.reshape((1, h, w, c))
+
         return image
