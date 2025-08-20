@@ -1597,11 +1597,11 @@ wheels = [
 
 [[package]]
 name = "nanobind"
-version = "2.8.0"
+version = "2.7.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/69/7c/cc6e525b89cca06b9fab7ecb91a11c3fd8258b158897cc804679fcc7b203/nanobind-2.8.0.tar.gz", hash = "sha256:94e7bf6aa1d7dff9566eddc15252aba94fdadbf67a99a169bfab34b708427cd8", size = 979153, upload-time = "2025-07-16T05:52:17.547Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/d8/7d/f77f2bc2e2a210502a164556f8a742cd0f72f39061b97cb9d73bbd3ff0ab/nanobind-2.7.0.tar.gz", hash = "sha256:f9f1b160580c50dcf37b6495a0fd5ec61dc0d95dae5f8004f87dd9ad7eb46b34", size = 976093, upload-time = "2025-04-18T01:17:37.187Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/fc/3f/d81fa4c0d1450c6f58f5b5708082617949c12c5e98c1fae0d94a9e3a9b8f/nanobind-2.8.0-py3-none-any.whl", hash = "sha256:80fd403cfe4c8553b237ba5fbb62971921e2c5d1e6eb4a2fd457c67f987ab56f", size = 242647, upload-time = "2025-07-16T05:52:15.848Z" },
+    { url = "https://files.pythonhosted.org/packages/96/14/989883082b395146120d34ca7e484a2b24cb73b0e428576a3a4249bd4082/nanobind-2.7.0-py3-none-any.whl", hash = "sha256:73b12d0e751d140d6c1bf4b215e18818a8debfdb374f08dc3776ad208d808e74", size = 241690, upload-time = "2025-04-18T01:17:34.821Z" },
 ]
 
 [[package]]
@@ -2087,7 +2087,7 @@ requires-dist = [
     { name = "graphviz", marker = "extra == 'docs'" },
     { name = "httpx", marker = "extra == 'tests'" },
     { name = "myst-parser", marker = "extra == 'docs'" },
-    { name = "nanobind", marker = "extra == 'build'", specifier = "==2.8.0" },
+    { name = "nanobind", marker = "extra == 'build'", specifier = "==2.7.0" },
     { name = "nbsphinx", marker = "extra == 'docs'" },
     { name = "numpy", specifier = ">=1.16.6" },
     { name = "onnx", marker = "extra == 'tests'" },
