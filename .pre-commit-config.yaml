@@ -42,10 +42,10 @@ repos:
 
   # zizmor detects security issues in GitHub Actions workflows.
   - repo: https://github.com/woodruffw/zizmor-pre-commit
-    rev: v1.9.0
+    rev: v1.11.0
     hooks:
       - id: zizmor
-        args: ["--min-severity", "medium", "--min-confidence", "high"]
+        args: ["--min-severity", "low", "--min-confidence", "low"]
 
   # add bandit for security checks
   - repo: https://github.com/PyCQA/bandit
