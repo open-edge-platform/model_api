@@ -57,7 +57,7 @@ docs = [
   "graphviz",
 ]
 build = [
-  "nanobind==2.7.0",
+  "nanobind==2.8.0",
 ]
 
 [project.urls]
