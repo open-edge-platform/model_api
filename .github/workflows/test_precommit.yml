@@ -59,3 +59,36 @@ jobs:
           uv run python -c "from model_api.models import DetectionModel; DetectionModel.create_model('./data/otx_models/detection_model_with_xai_head.xml').save('ovms_models/ssd_mobilenet_v1_fpn_coco/1/ssd_mobilenet_v1_fpn_coco.xml')"
           docker run -d --rm -v $GITHUB_WORKSPACE/ovms_models/:/models -p 8000:8000 openvino/model_server:latest --model_path /models/ssd_mobilenet_v1_fpn_coco/ --model_name ssd_mobilenet_v1_fpn_coco --rest_port 8000 --log_level DEBUG --target_device CPU
           uv run python examples/serving_api/run.py data/coco128/images/train2017/000000000009.jpg  # detects 4 objects
+  Zizmor-Scan-PR:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+      - name: Run Zizmor scan
+        uses: open-edge-platform/anomalib/.github/actions/security/zizmor@f6ec1c57363a9894ff57184a5bfb78efa8f3de1b
+        with:
+          scan-scope: "changed"
+          severity-level: "LOW"
+          confidence-level: "LOW"
+          fail-on-findings: true
+  Bandit-Scan-PR:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+      - name: Run Bandit scan
+        uses: open-edge-platform/anomalib/.github/actions/security/bandit@f6ec1c57363a9894ff57184a5bfb78efa8f3de1b
+        with:
+          scan-scope: "changed"
+          severity-level: "LOW"
+          confidence-level: "LOW"
+          config_file: "./pyproject.toml"
+          fail-on-findings: true
