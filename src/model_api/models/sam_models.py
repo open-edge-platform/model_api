@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-from __future__ import annotations  # TODO: remove when Python3.9 support is dropped
+from __future__ import annotations
 
 from copy import deepcopy
 from typing import TYPE_CHECKING, Any

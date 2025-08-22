@@ -3,7 +3,7 @@
 # Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from __future__ import annotations  # TODO: remove when Python3.9 support is dropped
+from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
