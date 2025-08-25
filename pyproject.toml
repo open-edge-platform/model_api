@@ -218,7 +218,6 @@ exclude = [
     "build",
     "dist",
     "docs",
-    "examples",
     "node_modules",
     "tests",
     "venv",

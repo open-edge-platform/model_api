@@ -6,15 +6,17 @@
 
 import argparse
 import colorsys
+from itertools import starmap
 
 import cv2
 import numpy as np
+
 from model_api.models import Model, Prompt, SAMVisualPrompter
 
 
 def get_colors(n: int):
     HSV_tuples = [(x / n, 0.5, 0.5) for x in range(n)]
-    RGB_tuples = map(lambda x: colorsys.hsv_to_rgb(*x), HSV_tuples)
+    RGB_tuples = starmap(colorsys.hsv_to_rgb, HSV_tuples)
     return (np.array(list(RGB_tuples)) * 255).astype(np.uint8)
 
 
@@ -28,7 +30,8 @@ def main():
 
     image = cv2.cvtColor(cv2.imread(args.image), cv2.COLOR_BGR2RGB)
     if image is None:
-        raise RuntimeError("Failed to read the image")
+        error_message = f"Failed to read the image: {args.image}"
+        raise RuntimeError(error_message)
 
     encoder = Model.create_model(args.encoder_path)
     decoder = Model.create_model(args.decoder_path)
