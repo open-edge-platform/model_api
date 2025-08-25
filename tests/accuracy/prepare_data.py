@@ -18,15 +18,15 @@ async def download_images(data_dir):
         with ZipFile(BytesIO(archive.content)) as zfile:
             zfile.extractall(data_dir)
         image = await client.get(
-            "https://raw.githubusercontent.com/Shenggan/BCCD_Dataset/master/BCCD/JPEGImages/BloodImage_00007.jpg"
+            "https://raw.githubusercontent.com/Shenggan/BCCD_Dataset/master/BCCD/JPEGImages/BloodImage_00007.jpg",
         )
-        with open(data_dir / "BloodImage_00007.jpg", "wb") as im:
+        with Path(data_dir / "BloodImage_00007.jpg").open("wb") as im:
             im.write(image.content)
 
 
 async def stream_file(client, url, filename):
     async with client.stream("GET", url) as stream:
-        with open(filename, "wb") as file:
+        with Path(filename).open("wb") as file:
             async for data in stream.aiter_bytes():
                 file.write(data)
 
@@ -74,11 +74,17 @@ async def main():
             download_otx_model(client, otx_models_dir, "mlc_efficient_v2s_voc"),
             download_otx_model(client, otx_models_dir, "det_mobilenetv2_atss_bccd"),
             download_otx_model(
-                client, otx_models_dir, "det_mobilenetv2_atss_bccd_onnx", "onnx"
+                client,
+                otx_models_dir,
+                "det_mobilenetv2_atss_bccd_onnx",
+                "onnx",
             ),
             download_otx_model(client, otx_models_dir, "cls_mobilenetv3_large_cars"),
             download_otx_model(
-                client, otx_models_dir, "cls_mobilenetv3_large_cars", "onnx"
+                client,
+                otx_models_dir,
+                "cls_mobilenetv3_large_cars",
+                "onnx",
             ),
             download_otx_model(client, otx_models_dir, "cls_efficient_b0_cars"),
             download_otx_model(client, otx_models_dir, "cls_efficient_v2s_cars"),
@@ -88,7 +94,9 @@ async def main():
             download_otx_model(client, otx_models_dir, "Lite-hrnet-s_mod2", "onnx"),
             download_otx_model(client, otx_models_dir, "Lite-hrnet-x-mod3"),
             download_otx_model(
-                client, otx_models_dir, "is_efficientnetb2b_maskrcnn_coco_reduced"
+                client,
+                otx_models_dir,
+                "is_efficientnetb2b_maskrcnn_coco_reduced",
             ),
             download_otx_model(
                 client,
@@ -97,15 +105,21 @@ async def main():
                 "onnx",
             ),
             download_otx_model(
-                client, otx_models_dir, "is_resnet50_maskrcnn_coco_reduced"
+                client,
+                otx_models_dir,
+                "is_resnet50_maskrcnn_coco_reduced",
             ),
             download_otx_model(client, otx_models_dir, "mobilenet_v3_large_hc_cf"),
             download_otx_model(
-                client, otx_models_dir, "classification_model_with_xai_head"
+                client,
+                otx_models_dir,
+                "classification_model_with_xai_head",
             ),
             download_otx_model(client, otx_models_dir, "detection_model_with_xai_head"),
             download_otx_model(
-                client, otx_models_dir, "segmentation_model_with_xai_head"
+                client,
+                otx_models_dir,
+                "segmentation_model_with_xai_head",
             ),
             download_otx_model(client, otx_models_dir, "maskrcnn_model_with_xai_head"),
             download_otx_model(client, otx_models_dir, "maskrcnn_xai_tiling"),
@@ -114,7 +128,9 @@ async def main():
             download_otx_model(client, otx_models_dir, "anomaly_stfpm_bottle_mvtec"),
             download_otx_model(client, otx_models_dir, "deit-tiny"),
             download_otx_model(
-                client, otx_models_dir, "cls_efficient_b0_shuffled_outputs"
+                client,
+                otx_models_dir,
+                "cls_efficient_b0_shuffled_outputs",
             ),
             download_otx_model(client, otx_models_dir, "action_cls_xd3_kinetic"),
             download_otx_model(client, otx_models_dir, "sam_vit_b_zsl_encoder"),

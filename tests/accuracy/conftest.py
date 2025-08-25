@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 import json
+from pathlib import Path
 
 import pytest
 
@@ -28,5 +29,5 @@ def pytest_runtest_makereport(item, call):
 
     if result.when == "call":
         test_results = item.config.test_results
-        with open("test_scope.json", "w") as outfile:
+        with Path("test_scope.json").open("w") as outfile:
             json.dump(test_results, outfile, indent=4)

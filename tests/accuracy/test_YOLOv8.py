@@ -13,9 +13,10 @@ import openvino as ov
 import pytest
 import torch
 import ultralytics
-from model_api.models import YOLOv5
 from ultralytics.data import utils
 from ultralytics.models import yolo
+
+from model_api.models import YOLOv5
 
 
 def _init_predictor(yolo):
@@ -26,15 +27,17 @@ def _init_predictor(yolo):
 def _cached_alignment(pt):
     export_dir = Path(
         ultralytics.YOLO(
-            Path(os.environ["DATA"]) / "ultralytics" / pt, "detect"
-        ).export(format="openvino", half=True)
+            Path(os.environ["DATA"]) / "ultralytics" / pt,
+            "detect",
+        ).export(format="openvino", half=True),
     )
     impl_wrapper = YOLOv5.create_model(export_dir / (pt.stem + ".xml"), device="CPU")
     ref_wrapper = ultralytics.YOLO(export_dir, "detect")
     ref_wrapper.overrides["imgsz"] = (impl_wrapper.w, impl_wrapper.h)
     _init_predictor(ref_wrapper)
     ref_wrapper.predictor.model.ov_compiled_model = ov.Core().compile_model(
-        ref_wrapper.predictor.model.ov_model, "CPU"
+        ref_wrapper.predictor.model.ov_model,
+        "CPU",
     )
     ref_dir = export_dir / "ref"
     ref_dir.mkdir(exist_ok=True)
@@ -60,9 +63,8 @@ def _impaths():
         }
     )
     if not impaths:
-        raise RuntimeError(
-            f"{Path(os.environ['DATA']) / 'coco128/images/train2017/'} is empty"
-        )
+        error_message = f"{Path(os.environ['DATA']) / 'coco128/images/train2017/'} is empty"
+        raise RuntimeError(error_message)
     return impaths
 
 
@@ -77,7 +79,7 @@ def test_alignment(impath, pt):
     pred_scores = impl_preds.scores.astype(np.float32)
     pred_labels = impl_preds.labels
     ref_predictions = ref_wrapper.predict(im)
-    assert 1 == len(ref_predictions)
+    assert len(ref_predictions) == 1
     ref_boxes = ref_predictions[0].boxes.data.numpy()
     if 0 == len(pred_boxes) == len(ref_boxes):
         return  # np.isclose() doesn't work for empty arrays
@@ -86,7 +88,7 @@ def test_alignment(impath, pt):
     assert np.isclose(pred_boxes, ref_boxes[:, :4], 0, 1).all()
     assert np.isclose(pred_scores, ref_boxes[:, 4], 0.0, 0.02).all()
     assert (pred_labels == ref_boxes[:, 5]).all()
-    with open(ref_dir / impath.with_suffix(".txt").name, "w") as file:
+    with Path.open(ref_dir / impath.with_suffix(".txt").name, "w") as file:
         print(impl_preds, end="", file=file)
 
 
@@ -108,20 +110,22 @@ class Metrics(yolo.detect.DetectionValidator):
         )
         self.init_metrics(
             types.SimpleNamespace(
-                names={idx: label for idx, label in enumerate(wrapper.labels)}
-            )
+                names=dict(enumerate(wrapper.labels)),
+            ),
         )
         for batch in dataloader:
             im = cv2.imread(batch["im_file"][0])
             result = wrapper(im)
             bboxes = torch.from_numpy(result.bboxes) / torch.tile(
-                torch.tensor([im.shape[1], im.shape[0]], dtype=torch.float32), (1, 2)
+                torch.tensor([im.shape[1], im.shape[0]], dtype=torch.float32),
+                (1, 2),
             )
             scores = torch.from_numpy(result.scores)
             labels = torch.from_numpy(result.labels)
 
             pred = torch.cat(
-                [bboxes, scores[:, None], labels[:, None].float()], dim=1
+                [bboxes, scores[:, None], labels[:, None].float()],
+                dim=1,
             ).unsqueeze(0)
             if not pred.numel():
                 pred = pred.view(1, 0, 6)
@@ -130,7 +134,7 @@ class Metrics(yolo.detect.DetectionValidator):
 
 
 @pytest.mark.parametrize(
-    "pt,ref_mAP50_95",
+    ("pt", "ref_mAP50_95"),
     [
         (
             Path("yolov8n.pt"),
@@ -146,13 +150,12 @@ def test_metric(pt, ref_mAP50_95):
     mAP50_95 = Metrics().evaluate(
         YOLOv5.create_model(
             ultralytics.YOLO(
-                Path(os.environ["DATA"]) / "ultralytics" / pt, "detect"
+                Path(os.environ["DATA"]) / "ultralytics" / pt,
+                "detect",
             ).export(format="openvino", half=True)
             / pt.with_suffix(".xml"),
             device="CPU",
             configuration={"confidence_threshold": 0.001},
-        )
+        ),
     )["metrics/mAP50-95(B)"]
-    assert (
-        abs(mAP50_95 - ref_mAP50_95) <= 0.01 * ref_mAP50_95 or mAP50_95 >= ref_mAP50_95
-    )
+    assert abs(mAP50_95 - ref_mAP50_95) <= 0.01 * ref_mAP50_95 or mAP50_95 >= ref_mAP50_95

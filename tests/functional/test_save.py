@@ -7,9 +7,9 @@ from pathlib import Path
 
 import onnx
 
-from model_api.models import Model
 from model_api.adapters import ONNXRuntimeAdapter
 from model_api.adapters.utils import load_parameters_from_onnx
+from model_api.models import Model
 
 
 def test_detector_save(tmp_path, data):
@@ -20,11 +20,7 @@ def test_detector_save(tmp_path, data):
     detector.save(xml_path)
     deserialized = Model.create_model(xml_path)
 
-    assert (
-        deserialized.get_model()
-        .get_rt_info(["model_info", "embedded_processing"])
-        .astype(bool)
-    )
+    assert deserialized.get_model().get_rt_info(["model_info", "embedded_processing"]).astype(bool)
     assert type(detector) is type(deserialized)
     for attr in detector.parameters():
         assert getattr(detector, attr) == getattr(deserialized, attr)
@@ -38,11 +34,7 @@ def test_classifier_save(tmp_path, data):
     classifier.save(xml_path)
     deserialized = Model.create_model(xml_path)
 
-    assert (
-        deserialized.get_model()
-        .get_rt_info(["model_info", "embedded_processing"])
-        .astype(bool)
-    )
+    assert deserialized.get_model().get_rt_info(["model_info", "embedded_processing"]).astype(bool)
     assert type(classifier) is type(deserialized)
     for attr in classifier.parameters():
         assert getattr(classifier, attr) == getattr(deserialized, attr)
@@ -56,11 +48,7 @@ def test_segmentor_save(tmp_path, data):
     segmenter.save(xml_path)
     deserialized = Model.create_model(xml_path)
 
-    assert (
-        deserialized.get_model()
-        .get_rt_info(["model_info", "embedded_processing"])
-        .astype(bool)
-    )
+    assert deserialized.get_model().get_rt_info(["model_info", "embedded_processing"]).astype(bool)
     assert type(segmenter) is type(deserialized)
     for attr in segmenter.parameters():
         assert getattr(segmenter, attr) == getattr(deserialized, attr)
@@ -78,12 +66,7 @@ def test_onnx_save(tmp_path, data):
     cls_model.save(onnx_path)
     deserialized = Model.create_model(onnx_path)
 
-    assert (
-        load_parameters_from_onnx(onnx.load(onnx_path))["model_info"][
-            "embedded_processing"
-        ]
-        == "True"
-    )
+    assert load_parameters_from_onnx(onnx.load(onnx_path))["model_info"]["embedded_processing"] == "True"
     assert type(cls_model) is type(deserialized)
     for attr in cls_model.parameters():
         assert getattr(cls_model, attr) == getattr(deserialized, attr)

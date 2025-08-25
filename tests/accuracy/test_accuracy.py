@@ -2,6 +2,8 @@
 # Copyright (C) 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
+import ast
+import contextlib
 import json
 import os
 from pathlib import Path
@@ -49,34 +51,52 @@ from model_api.tilers import (
     SemanticSegmentationTiler,
 )
 
+# Mapping of model type strings to actual classes for security
+MODEL_TYPE_MAPPING = {
+    "ActionClassificationModel": ActionClassificationModel,
+    "AnomalyDetection": AnomalyDetection,
+    "ClassificationModel": ClassificationModel,
+    "DetectionModel": DetectionModel,
+    "ImageModel": ImageModel,
+    "KeypointDetectionModel": KeypointDetectionModel,
+    "MaskRCNNModel": MaskRCNNModel,
+    "SAMDecoder": SAMDecoder,
+    "SAMImageEncoder": SAMImageEncoder,
+    "SAMLearnableVisualPrompter": SAMLearnableVisualPrompter,
+    "SAMVisualPrompter": SAMVisualPrompter,
+    "SegmentationModel": SegmentationModel,
+    # Tiler classes
+    "DetectionTiler": DetectionTiler,
+    "InstanceSegmentationTiler": InstanceSegmentationTiler,
+    "SemanticSegmentationTiler": SemanticSegmentationTiler,
+}
 
-def read_config(path: Path):
-    with open(path, "r") as f:
+
+def read_config(fname):
+    with fname.open("r") as f:
         return json.load(f)
 
 
 def create_models(model_type, model_path, download_dir, force_onnx_adapter=False):
     if model_path.endswith(".onnx") and force_onnx_adapter:
         wrapper_type = model_type.get_model_class(
-            load_parameters_from_onnx(onnx.load(model_path))["model_info"]["model_type"]
+            load_parameters_from_onnx(onnx.load(model_path))["model_info"]["model_type"],
         )
         model = wrapper_type(
             ONNXRuntimeAdapter(
-                model_path, ort_options={"providers": ["CPUExecutionProvider"]}
-            )
+                model_path,
+                ort_options={"providers": ["CPUExecutionProvider"]},
+            ),
         )
         model.load()
         return [model]
 
     models = [
-        model_type.create_model(model_path, device="CPU", download_dir=download_dir)
+        model_type.create_model(model_path, device="CPU", download_dir=download_dir),
     ]
     if model_path.endswith(".xml"):
         wrapper_type = model_type.get_model_class(
-            create_core()
-            .read_model(model_path)
-            .get_rt_info(["model_info", "model_type"])
-            .astype(str)
+            create_core().read_model(model_path).get_rt_info(["model_info", "model_type"]).astype(str),
         )
         model = wrapper_type(OpenvinoAdapter(create_core(), model_path, device="CPU"))
         model.load()
@@ -100,41 +120,53 @@ def result(pytestconfig):
 
 
 @pytest.mark.parametrize(
-    ("model_data"), read_config(Path(__file__).resolve().parent / "public_scope.json")
+    ("model_data"),
+    read_config(Path(__file__).resolve().parent / "public_scope.json"),
 )
-def test_image_models(data, dump, result, model_data):
+def test_image_models(data, dump, result, model_data):  # noqa: C901
     name = model_data["name"]
-    if name.endswith(".xml") or name.endswith(".onnx"):
+    if name.endswith((".xml", ".onnx")):
         name = f"{data}/{name}"
 
     for model in create_models(
-        eval(model_data["type"]), name, data, model_data.get("force_ort", False)
+        MODEL_TYPE_MAPPING[model_data["type"]],
+        name,
+        data,
+        model_data.get("force_ort", False),
     ):
         if "tiler" in model_data:
             if "extra_model" in model_data:
                 extra_adapter = OpenvinoAdapter(
-                    create_core(), f"{data}/{model_data['extra_model']}", device="CPU"
+                    create_core(),
+                    f"{data}/{model_data['extra_model']}",
+                    device="CPU",
                 )
 
-                extra_model = eval(model_data["extra_type"])(
-                    extra_adapter, configuration={}, preload=True
+                extra_model = MODEL_TYPE_MAPPING[model_data["extra_type"]](
+                    extra_adapter,
+                    configuration={},
+                    preload=True,
                 )
-                model = eval(model_data["tiler"])(
+                model = MODEL_TYPE_MAPPING[model_data["tiler"]](
                     model,
                     configuration={},
                     tile_classifier_model=extra_model,
                 )
             else:
-                model = eval(model_data["tiler"])(model, configuration={})
+                model = MODEL_TYPE_MAPPING[model_data["tiler"]](model, configuration={})
         elif "prompter" in model_data:
             encoder_adapter = OpenvinoAdapter(
-                create_core(), f"{data}/{model_data['encoder']}", device="CPU"
+                create_core(),
+                f"{data}/{model_data['encoder']}",
+                device="CPU",
             )
 
-            encoder_model = eval(model_data["encoder_type"])(
-                encoder_adapter, configuration={}, preload=True
+            encoder_model = MODEL_TYPE_MAPPING[model_data["encoder_type"]](
+                encoder_adapter,
+                configuration={},
+                preload=True,
             )
-            model = eval(model_data["prompter"])(encoder_model, model)
+            model = MODEL_TYPE_MAPPING[model_data["prompter"]](encoder_model, model)
 
         if dump:
             result.append(model_data)
@@ -144,9 +176,10 @@ def test_image_models(data, dump, result, model_data):
             image_path = Path(data) / test_data["image"]
             image = cv2.imread(str(image_path))
             if image is None:
-                raise RuntimeError("Failed to read the image")
+                error_message = f"Failed to read the image at {image_path}"
+                raise RuntimeError(error_message)
             if "input_res" in model_data:
-                image = cv2.resize(image, eval(model_data["input_res"]))
+                image = cv2.resize(image, ast.literal_eval(model_data["input_res"]))
             if isinstance(model, ActionClassificationModel):
                 image = np.stack([image for _ in range(8)])
             if "prompter" in model_data:
@@ -157,7 +190,7 @@ def test_image_models(data, dump, result, model_data):
                             Prompt(
                                 np.array([image.shape[0] / 2, image.shape[1] / 2]),
                                 0,
-                            )
+                            ),
                         ],
                         polygons=[
                             Prompt(
@@ -166,10 +199,10 @@ def test_image_models(data, dump, result, model_data):
                                         [image.shape[0] / 4, image.shape[1] / 4],
                                         [image.shape[0] / 4, image.shape[1] / 2],
                                         [image.shape[0] / 2, image.shape[1] / 2],
-                                    ]
+                                    ],
                                 ),
                                 1,
-                            )
+                            ),
                         ],
                     )
                     outputs = model(image)
@@ -180,23 +213,18 @@ def test_image_models(data, dump, result, model_data):
                             Prompt(
                                 np.array([image.shape[0] / 2, image.shape[1] / 2]),
                                 0,
-                            )
+                            ),
                         ],
                     )
             else:
                 outputs = model(image)
-            if isinstance(outputs, ClassificationResult):
-                assert 1 == len(test_data["reference"])
-                output_str = str(outputs)
-                assert test_data["reference"][0] == output_str
-                image_result = [output_str]
-            elif type(outputs) is DetectionResult:
-                assert 1 == len(test_data["reference"])
+            if isinstance(outputs, ClassificationResult) or type(outputs) is DetectionResult:
+                assert len(test_data["reference"]) == 1
                 output_str = str(outputs)
                 assert test_data["reference"][0] == output_str
                 image_result = [output_str]
             elif isinstance(outputs, ImageResultWithSoftPrediction):
-                assert 1 == len(test_data["reference"])
+                assert len(test_data["reference"]) == 1
                 if hasattr(model, "get_contours"):
                     contours = model.get_contours(outputs)
                 else:
@@ -208,42 +236,30 @@ def test_image_models(data, dump, result, model_data):
                 assert test_data["reference"][0] == output_str
                 image_result = [output_str]
             elif type(outputs) is InstanceSegmentationResult:
-                assert 1 == len(test_data["reference"])
+                assert len(test_data["reference"]) == 1
                 output_str = str(add_rotated_rects(outputs)) + "; "
-                try:
+                with contextlib.suppress(RuntimeError):
                     # getContours() assumes each instance generates only one contour.
                     # That doesn't hold for some models
-                    output_str += (
-                        "; ".join(str(contour) for contour in get_contours(outputs))
-                        + "; "
-                    )
-                except RuntimeError:
-                    pass
+                    output_str += "; ".join(str(contour) for contour in get_contours(outputs)) + "; "
                 assert test_data["reference"][0] == output_str
                 image_result = [output_str]
             elif isinstance(outputs, AnomalyResult):
-                assert 1 == len(test_data["reference"])
+                assert len(test_data["reference"]) == 1
                 output_str = str(outputs)
                 assert test_data["reference"][0] == output_str
                 image_result = [output_str]
-            elif isinstance(outputs, (ZSLVisualPromptingResult, VisualPromptingResult)):
-                output_str = str(outputs)
-                assert test_data["reference"][0] == output_str
-                image_result = [output_str]
-            elif isinstance(outputs, DetectedKeypoints):
+            elif isinstance(outputs, (ZSLVisualPromptingResult, VisualPromptingResult, DetectedKeypoints)):
                 output_str = str(outputs)
                 assert test_data["reference"][0] == output_str
                 image_result = [output_str]
             else:
-                assert False
+                pytest.fail(f"Unexpected output type: {type(outputs)}")
             if dump:
                 inference_results.append(
-                    {"image": test_data["image"], "reference": image_result}
+                    {"image": test_data["image"], "reference": image_result},
                 )
-    if name.endswith(".xml"):
-        save_name = os.path.basename(name)
-    else:
-        save_name = name + ".xml"
+    save_name = Path(name).name if name.endswith(".xml") else name + ".xml"
 
     if not model_data.get("force_ort", False):
         if "tiler" in model_data:

@@ -1,3 +1,7 @@
+#
+# Copyright (C) 2020-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
 import argparse
 import json
 import os
@@ -6,17 +10,17 @@ from urllib.request import urlopen, urlretrieve
 
 
 def retrieve_otx_model(data_dir, model_name, format="xml"):
-    destination_folder = os.path.join(data_dir, "otx_models")
-    os.makedirs(destination_folder, exist_ok=True)
+    destination_folder = Path(data_dir) / "otx_models"
+    destination_folder.mkdir(parents=True, exist_ok=True)
     if format == "onnx":
         urlretrieve(
             f"https://storage.openvinotoolkit.org/repositories/model_api/test/otx_models/{model_name}/model.onnx",
-            f"{destination_folder}/{model_name}.onnx",
+            destination_folder / f"{model_name}.onnx",
         )
     else:
         urlretrieve(
             f"https://storage.openvinotoolkit.org/repositories/model_api/test/otx_models/{model_name}/openvino.xml",
-            f"{destination_folder}/{model_name}.xml",
+            destination_folder / f"{model_name}.xml",
         )
         urlretrieve(
             f"https://storage.openvinotoolkit.org/repositories/model_api/test/otx_models/{model_name}/openvino.bin",
@@ -32,13 +36,20 @@ def prepare_model(
     # flake8: noqa: F401
     from model_api.models import ClassificationModel, DetectionModel, SegmentationModel
 
-    with open(public_scope, "r") as f:
+    # Mapping of model type strings to actual classes for security
+    MODEL_TYPE_MAPPING = {
+        "ClassificationModel": ClassificationModel,
+        "DetectionModel": DetectionModel,
+        "SegmentationModel": SegmentationModel,
+    }
+
+    with Path(public_scope).open("r") as f:
         public_scope = json.load(f)
 
     for model in public_scope:
         if model["name"].endswith(".xml") or model["name"].endswith(".onnx"):
             continue
-        model = eval(model["type"]).create_model(model["name"], download_dir=data_dir)
+        model = MODEL_TYPE_MAPPING[model["type"]].create_model(model["name"], download_dir=data_dir)
 
 
 def prepare_data(data_dir="./data"):
@@ -47,13 +58,12 @@ def prepare_data(data_dir="./data"):
 
     COCO128_URL = "https://ultralytics.com/assets/coco128.zip"
 
-    with urlopen(COCO128_URL) as zipresp:
-        with ZipFile(BytesIO(zipresp.read())) as zfile:
-            zfile.extractall(data_dir)
+    with urlopen(COCO128_URL) as zipresp, ZipFile(BytesIO(zipresp.read())) as zfile:  # noqa: S310
+        zfile.extractall(data_dir)
 
     urlretrieve(
         "https://raw.githubusercontent.com/Shenggan/BCCD_Dataset/master/BCCD/JPEGImages/BloodImage_00007.jpg",
-        os.path.join(data_dir, "BloodImage_00007.jpg"),
+        Path(data_dir) / "BloodImage_00007.jpg",
     )
 
 

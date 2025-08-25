@@ -6,15 +6,17 @@
 
 import argparse
 import colorsys
+from itertools import starmap
 
 import cv2
 import numpy as np
+
 from model_api.models import Model, Prompt, SAMLearnableVisualPrompter
 
 
 def get_colors(n: int):
     HSV_tuples = [(x / n, 0.5, 0.5) for x in range(n)]
-    RGB_tuples = map(lambda x: colorsys.hsv_to_rgb(*x), HSV_tuples)
+    RGB_tuples = starmap(colorsys.hsv_to_rgb, HSV_tuples)
     return (np.array(list(RGB_tuples)) * 255).astype(np.uint8)
 
 
@@ -30,16 +32,20 @@ def main():
 
     image = cv2.cvtColor(cv2.imread(args.image_source), cv2.COLOR_BGR2RGB)
     if image is None:
-        raise RuntimeError("Failed to read the source image")
+        error_message = f"Failed to read the source image: {args.image_source}"
+        raise RuntimeError(error_message)
 
     image_target = cv2.cvtColor(cv2.imread(args.image_target), cv2.COLOR_BGR2RGB)
     if image_target is None:
-        raise RuntimeError("Failed to read the target image")
+        error_message = f"Failed to read the target image: {args.image_target}"
+        raise RuntimeError(error_message)
 
     encoder = Model.create_model(args.encoder_path)
     decoder = Model.create_model(args.decoder_path)
     zsl_sam_prompter = SAMLearnableVisualPrompter(
-        encoder, decoder, threshold=args.threshold
+        encoder,
+        decoder,
+        threshold=args.threshold,
     )
 
     all_prompts = []
@@ -61,7 +67,11 @@ def main():
             image_target = cv2.addWeighted(image_target, 0.2, masked_img, 0.8, 0)
             print(f"Reference point: {prompt_point}, point score: {confidence:.3f}")
             cv2.circle(
-                image_target, prompt_point, radius=0, color=(0, 0, 255), thickness=5
+                image_target,
+                prompt_point,
+                radius=0,
+                color=(0, 0, 255),
+                thickness=5,
             )
 
     cv2.imwrite("zsl_sam_result.jpg", cv2.cvtColor(image_target, cv2.COLOR_RGB2BGR))

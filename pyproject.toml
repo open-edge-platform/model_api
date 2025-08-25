@@ -217,9 +217,7 @@ exclude = [
     "buck-out",
     "build",
     "dist",
-    "examples",
     "node_modules",
-    "tests",
     "venv",
 ]
 

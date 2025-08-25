@@ -7,20 +7,24 @@
 import sys
 
 import cv2
+
 from model_api.models import DetectionModel
 
 
 def main():
     if len(sys.argv) != 2:
-        raise RuntimeError(f"Usage: {sys.argv[0]} <path_to_image>")
+        usage_message = f"Usage: {sys.argv[0]} <path_to_image>"
+        raise RuntimeError(usage_message)
 
     image = cv2.cvtColor(cv2.imread(sys.argv[1]), cv2.COLOR_BGR2RGB)
     if image is None:
-        raise RuntimeError("Failed to read the image")
+        error_message = f"Failed to read the image: {sys.argv[1]}"
+        raise RuntimeError(error_message)
 
     # Create Object Detection model specifying the OVMS server URL
     model = DetectionModel.create_model(
-        "localhost:8000/v2/models/ssd_mobilenet_v1_fpn_coco", model_type="ssd"
+        "localhost:8000/v2/models/ssd_mobilenet_v1_fpn_coco",
+        model_type="ssd",
     )
     detections = model(image)
     print(f"Detection results: {detections}")
