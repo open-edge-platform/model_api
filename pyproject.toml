@@ -219,7 +219,6 @@ exclude = [
     "dist",
     "docs",
     "node_modules",
-    "tests",
     "venv",
 ]
 

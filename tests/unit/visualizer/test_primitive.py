@@ -59,8 +59,7 @@ def test_polygon(mock_image: PIL.Image):
     assert polygon.compute(mock_image) == expected_image
 
     with pytest.raises(ValueError, match="No contours found in the mask."):
-        polygon = Polygon(mask=np.zeros((100, 100), dtype=np.uint8))
-        polygon.compute(mock_image)
+        Polygon(mask=np.zeros((100, 100), dtype=np.uint8)).compute(mock_image)
 
 
 def test_label(mock_image: PIL.Image):

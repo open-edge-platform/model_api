@@ -2,15 +2,16 @@
 # Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
+import cv2 as cv
 import numpy as np
 import openvino as ov
+import pytest
+from openvino.preprocess import PrePostProcessor
+
 from model_api.adapters.utils import (
     resize_image_with_aspect,
     resize_image_with_aspect_ocv,
 )
-from openvino.preprocess import PrePostProcessor
-import cv2 as cv
-import pytest
 
 
 @pytest.mark.parametrize(
@@ -33,13 +34,14 @@ def test_resize_image_with_aspect_ocv(img_shape):
             (model_h, model_w),
             "linear",
             pad_value,
-        )
+        ),
     )
     ppp.input().preprocess().convert_element_type(ov.Type.f32)
     ov_resize_image_with_aspect = ov.Core().compile_model(ppp.build(), "CPU")
 
-    img = np.random.randint(0, 255, size=img_shape, dtype=np.uint8)
-    ov_results = list(ov_resize_image_with_aspect(img[None]).values())[0][0]
+    rng = np.random.default_rng()
+    img = rng.integers(0, 255, size=img_shape, dtype=np.uint8)
+    ov_results = next(iter(ov_resize_image_with_aspect(img[None]).values()))[0]
 
     np_results = resize_image_with_aspect_ocv(img, (model_w, model_h))
 
