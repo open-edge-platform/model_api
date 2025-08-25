@@ -1,0 +1,638 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Visual Prompting &#8212; ModelAPI 2025 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=cb975c41"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=6dbb43f8"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'models/visual_prompting';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">ModelAPI 2025 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guides/index.html">
+    Guides
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guides/index.html">
+    Guides
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"></div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Visual Prompting</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-model_api.models.visual_prompting">
+<span id="visual-prompting"></span><h1>Visual Prompting<a class="headerlink" href="#module-model_api.models.visual_prompting" title="Link to this heading">#</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="model_api.models.visual_prompting.Prompt">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_api.models.visual_prompting.</span></span><span class="sig-name descname"><span class="pre">Prompt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.visual_prompting.Prompt" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">NamedTuple</span></code></p>
+<p>Create new instance of Prompt(data, label)</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_api.models.visual_prompting.Prompt.data">
+<span class="sig-name descname"><span class="pre">data</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></em><a class="headerlink" href="#model_api.models.visual_prompting.Prompt.data" title="Link to this definition">#</a></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_api.models.visual_prompting.Prompt.label">
+<span class="sig-name descname"><span class="pre">label</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code> <span class="pre">|</span> <code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></em><a class="headerlink" href="#model_api.models.visual_prompting.Prompt.label" title="Link to this definition">#</a></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="model_api.models.visual_prompting.SAMLearnableVisualPrompter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_api.models.visual_prompting.</span></span><span class="sig-name descname"><span class="pre">SAMLearnableVisualPrompter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoder_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.65</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.visual_prompting.SAMLearnableVisualPrompter" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A wrapper that provides ZSL Visual Prompting workflow.
+To obtain segmentation results, one should run learn() first to obtain the reference features,
+or use previously generated ones.</p>
+<p>Initializes ZSL pipeline.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>encoder_model</strong> (<a class="reference internal" href="sam_models.html#model_api.models.sam_models.SAMImageEncoder" title="model_api.models.sam_models.SAMImageEncoder"><em>SAMImageEncoder</em></a>) – initialized decoder wrapper</p></li>
+<li><p><strong>decoder_model</strong> (<a class="reference internal" href="sam_models.html#model_api.models.sam_models.SAMDecoder" title="model_api.models.sam_models.SAMDecoder"><em>SAMDecoder</em></a>) – initialized encoder wrapper</p></li>
+<li><p><strong>reference_features</strong> (<a class="reference internal" href="#model_api.models.visual_prompting.VisualPromptingFeatures" title="model_api.models.visual_prompting.VisualPromptingFeatures"><em>VisualPromptingFeatures</em></a><em> | </em><em>None</em><em>, </em><em>optional</em>) – Previously generated reference features.
+Once the features are passed, one can skip learn() method, and start predicting masks right away.
+Defaults to None.</p></li>
+<li><p><strong>threshold</strong> (<em>float</em><em>, </em><em>optional</em>) – Threshold to match vs reference features on infer(). Greater value means a</p></li>
+<li><p><strong>0.65.</strong> (<em>stricter matching. Defaults to</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="model_api.models.visual_prompting.SAMLearnableVisualPrompter.__call__">
+<span class="sig-name descname"><span class="pre">__call__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apply_masks_refinement</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.visual_prompting.SAMLearnableVisualPrompter.__call__" title="Link to this definition">#</a></dt>
+<dd><p>A wrapper of the SAMLearnableVisualPrompter.infer() method</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">ZSLVisualPromptingResult</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_api.models.visual_prompting.SAMLearnableVisualPrompter.has_reference_features">
+<span class="sig-name descname"><span class="pre">has_reference_features</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.visual_prompting.SAMLearnableVisualPrompter.has_reference_features" title="Link to this definition">#</a></dt>
+<dd><p>Checks if reference features are stored in the object state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_api.models.visual_prompting.SAMLearnableVisualPrompter.infer">
+<span class="sig-name descname"><span class="pre">infer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apply_masks_refinement</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.visual_prompting.SAMLearnableVisualPrompter.infer" title="Link to this definition">#</a></dt>
+<dd><p>Obtains masks by already prepared reference features.</p>
+<p>Reference features can be obtained with SAMLearnableVisualPrompter.learn() and passed as an argument.
+If the features are not passed, instance internal state will be used as a source of the features.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> (<em>np.ndarray</em>) – HWC-shaped image</p></li>
+<li><p><strong>reference_features</strong> (<a class="reference internal" href="#model_api.models.visual_prompting.VisualPromptingFeatures" title="model_api.models.visual_prompting.VisualPromptingFeatures"><em>VisualPromptingFeatures</em></a><em> | </em><em>None</em><em>, </em><em>optional</em>) – Reference features object obtained during
+previous learn() calls. If not passed, object internal state is used, which reflects the last learn()
+call. Defaults to None.</p></li>
+<li><p><strong>apply_masks_refinement</strong> (<em>bool</em><em>, </em><em>optional</em>) – Flag controlling additional refinement stage on inference.</p></li>
+<li><p><strong>enabled</strong> (<em>Once</em>)</p></li>
+<li><p><strong>decoder</strong> (<em>decoder will be launched 2 extra times to refine the masks obtained with the first</em>)</p></li>
+<li><p><strong>True.</strong> (<em>call. Defaults to</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Mapping label -&gt; predicted mask. Each mask object contains a list of binary masks,</dt><dd><p>and a list of related prompts. Each binary mask corresponds to one prompt point. Class mask can be
+obtained by applying OR operation to all mask corresponding to one label.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ZSLVisualPromptingResult</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_api.models.visual_prompting.SAMLearnableVisualPrompter.learn">
+<span class="sig-name descname"><span class="pre">learn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boxes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">points</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">polygons</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reset_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.visual_prompting.SAMLearnableVisualPrompter.learn" title="Link to this definition">#</a></dt>
+<dd><p>Executes <cite>learn</cite> stage of SAM ZSL pipeline.</p>
+<p>Reference features are updated according to newly arrived prompts.
+Features corresponding to the same labels are overridden during
+consequent learn() calls.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> (<em>np.ndarray</em>) – HWC-shaped image</p></li>
+<li><p><strong>boxes</strong> (<em>list</em><em>[</em><a class="reference internal" href="#model_api.models.visual_prompting.Prompt" title="model_api.models.visual_prompting.Prompt"><em>Prompt</em></a><em>] </em><em>| </em><em>None</em><em>, </em><em>optional</em>) – Prompts containing bounding boxes (in XYXY torchvision format)
+and their labels (ints, one per box). Defaults to None.</p></li>
+<li><p><strong>points</strong> (<em>list</em><em>[</em><a class="reference internal" href="#model_api.models.visual_prompting.Prompt" title="model_api.models.visual_prompting.Prompt"><em>Prompt</em></a><em>] </em><em>| </em><em>None</em><em>, </em><em>optional</em>) – Prompts containing points (in XY format)
+and their labels (ints, one per point). Defaults to None.</p></li>
+<li><p><strong>polygons</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<a class="reference internal" href="#model_api.models.visual_prompting.Prompt" title="model_api.models.visual_prompting.Prompt"><code class="xref py py-class docutils literal notranslate"><span class="pre">Prompt</span></code></a>]]</span>) – (list[Prompt] | None): Prompts containing polygons (a sequence of points in XY format)
+and their labels (ints, one per polygon).
+Polygon prompts are used to mask out the source features without implying decoder usage. Defaults to None.</p></li>
+<li><p><strong>reset_features</strong> (<em>bool</em><em>, </em><em>optional</em>) – Forces learning from scratch. Defaults to False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>return values are the updated VPT reference features and</dt><dd><p>reference masks.</p>
+</dd>
+</dl>
+<p>The shape of the reference mask is N_labels x H x W, where H and W are the same as in the input image.</p>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[<a class="reference internal" href="#model_api.models.visual_prompting.VisualPromptingFeatures" title="model_api.models.visual_prompting.VisualPromptingFeatures">VisualPromptingFeatures</a>, np.ndarray]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_api.models.visual_prompting.SAMLearnableVisualPrompter.reset_reference_info">
+<span class="sig-name descname"><span class="pre">reset_reference_info</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.visual_prompting.SAMLearnableVisualPrompter.reset_reference_info" title="Link to this definition">#</a></dt>
+<dd><p>Initialize reference information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="model_api.models.visual_prompting.SAMLearnableVisualPrompter.reference_features">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">reference_features</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#model_api.models.visual_prompting.VisualPromptingFeatures" title="model_api.models.visual_prompting.VisualPromptingFeatures"><span class="pre">VisualPromptingFeatures</span></a></em><a class="headerlink" href="#model_api.models.visual_prompting.SAMLearnableVisualPrompter.reference_features" title="Link to this definition">#</a></dt>
+<dd><p>Property represents reference features. An exception is thrown if called when
+the features are not presented in the internal object state.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="model_api.models.visual_prompting.SAMVisualPrompter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_api.models.visual_prompting.</span></span><span class="sig-name descname"><span class="pre">SAMVisualPrompter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoder_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder_model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.visual_prompting.SAMVisualPrompter" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A wrapper that implements SAM Visual Prompter.</p>
+<p>Segmentation results can be obtained by calling infer() method
+with corresponding parameters.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="model_api.models.visual_prompting.SAMVisualPrompter.__call__">
+<span class="sig-name descname"><span class="pre">__call__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boxes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">points</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.visual_prompting.SAMVisualPrompter.__call__" title="Link to this definition">#</a></dt>
+<dd><p>A wrapper of the SAMVisualPrompter.infer() method</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">VisualPromptingResult</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_api.models.visual_prompting.SAMVisualPrompter.infer">
+<span class="sig-name descname"><span class="pre">infer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boxes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">points</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.visual_prompting.SAMVisualPrompter.infer" title="Link to this definition">#</a></dt>
+<dd><p>Obtains segmentation masks using given prompts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> (<em>np.ndarray</em>) – HWC-shaped image</p></li>
+<li><p><strong>boxes</strong> (<em>list</em><em>[</em><a class="reference internal" href="#model_api.models.visual_prompting.Prompt" title="model_api.models.visual_prompting.Prompt"><em>Prompt</em></a><em>] </em><em>| </em><em>None</em><em>, </em><em>optional</em>) – Prompts containing bounding boxes (in XYXY torchvision format)
+and their labels (ints, one per box). Defaults to None.</p></li>
+<li><p><strong>points</strong> (<em>list</em><em>[</em><a class="reference internal" href="#model_api.models.visual_prompting.Prompt" title="model_api.models.visual_prompting.Prompt"><em>Prompt</em></a><em>] </em><em>| </em><em>None</em><em>, </em><em>optional</em>) – Prompts containing points (in XY format)
+and their labels (ints, one per point). Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>result object containing predicted masks and aux information.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>VisualPromptingResult</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="model_api.models.visual_prompting.VisualPromptingFeatures">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_api.models.visual_prompting.</span></span><span class="sig-name descname"><span class="pre">VisualPromptingFeatures</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_vectors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">used_indices</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.visual_prompting.VisualPromptingFeatures" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">NamedTuple</span></code></p>
+<p>Create new instance of VisualPromptingFeatures(feature_vectors, used_indices)</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_api.models.visual_prompting.VisualPromptingFeatures.feature_vectors">
+<span class="sig-name descname"><span class="pre">feature_vectors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></em><a class="headerlink" href="#model_api.models.visual_prompting.VisualPromptingFeatures.feature_vectors" title="Link to this definition">#</a></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_api.models.visual_prompting.VisualPromptingFeatures.used_indices">
+<span class="sig-name descname"><span class="pre">used_indices</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></em><a class="headerlink" href="#model_api.models.visual_prompting.VisualPromptingFeatures.used_indices" title="Link to this definition">#</a></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.visual_prompting.Prompt"><code class="docutils literal notranslate"><span class="pre">Prompt</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.visual_prompting.Prompt.data"><code class="docutils literal notranslate"><span class="pre">Prompt.data</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.visual_prompting.Prompt.label"><code class="docutils literal notranslate"><span class="pre">Prompt.label</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.visual_prompting.SAMLearnableVisualPrompter"><code class="docutils literal notranslate"><span class="pre">SAMLearnableVisualPrompter</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.visual_prompting.SAMLearnableVisualPrompter.__call__"><code class="docutils literal notranslate"><span class="pre">SAMLearnableVisualPrompter.__call__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.visual_prompting.SAMLearnableVisualPrompter.has_reference_features"><code class="docutils literal notranslate"><span class="pre">SAMLearnableVisualPrompter.has_reference_features()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.visual_prompting.SAMLearnableVisualPrompter.infer"><code class="docutils literal notranslate"><span class="pre">SAMLearnableVisualPrompter.infer()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.visual_prompting.SAMLearnableVisualPrompter.learn"><code class="docutils literal notranslate"><span class="pre">SAMLearnableVisualPrompter.learn()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.visual_prompting.SAMLearnableVisualPrompter.reset_reference_info"><code class="docutils literal notranslate"><span class="pre">SAMLearnableVisualPrompter.reset_reference_info()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.visual_prompting.SAMLearnableVisualPrompter.reference_features"><code class="docutils literal notranslate"><span class="pre">SAMLearnableVisualPrompter.reference_features</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.visual_prompting.SAMVisualPrompter"><code class="docutils literal notranslate"><span class="pre">SAMVisualPrompter</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.visual_prompting.SAMVisualPrompter.__call__"><code class="docutils literal notranslate"><span class="pre">SAMVisualPrompter.__call__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.visual_prompting.SAMVisualPrompter.infer"><code class="docutils literal notranslate"><span class="pre">SAMVisualPrompter.infer()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.visual_prompting.VisualPromptingFeatures"><code class="docutils literal notranslate"><span class="pre">VisualPromptingFeatures</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.visual_prompting.VisualPromptingFeatures.feature_vectors"><code class="docutils literal notranslate"><span class="pre">VisualPromptingFeatures.feature_vectors</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.visual_prompting.VisualPromptingFeatures.used_indices"><code class="docutils literal notranslate"><span class="pre">VisualPromptingFeatures.used_indices</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/models/visual_prompting.md.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, Intel.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

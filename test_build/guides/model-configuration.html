@@ -1,0 +1,626 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Model configuration &#8212; ModelAPI 2025 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=cb975c41"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=6dbb43f8"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'guides/model-configuration';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Guides" href="index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">ModelAPI 2025 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Guides
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Guides
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Guides</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Model configuration</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Guides</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Model configuration</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="model-configuration">
+<h1>Model configuration<a class="headerlink" href="#model-configuration" title="Link to this heading">#</a></h1>
+<p>Model’s static method <code class="docutils literal notranslate"><span class="pre">create_model()</span></code> has two overloads. One constructs the model from a string (a path or a model name) and the other takes an already constructed <code class="docutils literal notranslate"><span class="pre">InferenceAdapter</span></code>. The first overload configures a created model with values taken from <code class="docutils literal notranslate"><span class="pre">configuration</span></code> dict function argument and from model’s intermediate representation (IR) stored in <code class="docutils literal notranslate"><span class="pre">.xml</span></code> in <code class="docutils literal notranslate"><span class="pre">model_info</span></code> section of <code class="docutils literal notranslate"><span class="pre">rt_info</span></code>. Values provided in <code class="docutils literal notranslate"><span class="pre">configuration</span></code> have priority over values in IR <code class="docutils literal notranslate"><span class="pre">rt_info</span></code>. If no value is specified in <code class="docutils literal notranslate"><span class="pre">configuration</span></code> nor in <code class="docutils literal notranslate"><span class="pre">rt_info</span></code> the default value for a model wrapper is used. For Python configuration values are accessible as model wrapper member fields.</p>
+<section id="list-of-values">
+<h2>List of values<a class="headerlink" href="#list-of-values" title="Link to this heading">#</a></h2>
+<p>The list features only model wrappers which introduce new configuration values in their hierarchy.</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">model_type</span></code>: str - name of a model wrapper to be created</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">layout</span></code>: str - layout of input data in the format: “input0:NCHW,input1:NC”</p></li>
+</ol>
+<section id="imagemodel-and-its-subclasses">
+<h3><code class="docutils literal notranslate"><span class="pre">ImageModel</span></code> and its subclasses<a class="headerlink" href="#imagemodel-and-its-subclasses" title="Link to this heading">#</a></h3>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">mean_values</span></code>: List - normalization values, which will be subtracted from image channels for image-input layer during preprocessing</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">scale_values</span></code>: List - normalization values, which will divide the image channels for image-input layer</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">reverse_input_channels</span></code>: bool - reverse the input channel order</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">resize_type</span></code>: str - crop, standard, fit_to_window or fit_to_window_letterbox</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">embedded_processing</span></code>: bool - flag that pre/postprocessing embedded</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pad_value</span></code>: int - pad value for resize_image_letterbox embedded into a model</p></li>
+</ol>
+<section id="anomalydetection">
+<h4><code class="docutils literal notranslate"><span class="pre">AnomalyDetection</span></code><a class="headerlink" href="#anomalydetection" title="Link to this heading">#</a></h4>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">image_shape</span></code>: List - Input shape of the model</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">image_threshold</span></code>: float - Image threshold that is used for classifying an image as anomalous</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pixel_threshold</span></code>: float - Pixel level threshold used to segment anomalous regions in the image</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">normalization_scale</span></code>: float - Scale by which the outputs are divided. Used to apply min-max normalization</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">task</span></code>: str - Outputs segmentation masks, bounding boxes, or anomaly score based on the task type</p></li>
+</ol>
+</section>
+<section id="classificationmodel">
+<h4><code class="docutils literal notranslate"><span class="pre">ClassificationModel</span></code><a class="headerlink" href="#classificationmodel" title="Link to this heading">#</a></h4>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">topk</span></code>: int - number of most likely labels</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">labels</span></code>: List - list of class labels</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">path_to_labels</span></code>: str - path to file with labels. Overrides the labels, if they sets via ‘labels’ parameter</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">multilabel</span></code>: bool - predict a set of labels per image</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hierarchical</span></code>: bool - predict a hierarchy of labels per image hierarchical_config</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">confidence_threshold</span></code>: float - probability threshold value for multilabel or hierarchical predictions filtering</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hierarchical_config</span></code>: str - a serialized configuration for decoding hierarchical predictions</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">output_raw_scores</span></code>: bool - output all scores for multiclass classification</p></li>
+</ol>
+</section>
+<section id="detectionmodel-and-its-subclasses">
+<h4><code class="docutils literal notranslate"><span class="pre">DetectionModel</span></code> and its subclasses<a class="headerlink" href="#detectionmodel-and-its-subclasses" title="Link to this heading">#</a></h4>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">confidence_threshold</span></code>: float - probability threshold value for bounding box filtering</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">labels</span></code>: List - List of class labels</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">path_to_labels</span></code>: str - path to file with labels. Overrides the labels, if they sets via <code class="docutils literal notranslate"><span class="pre">labels</span></code> parameter</p></li>
+</ol>
+<section id="ctpn">
+<h5><code class="docutils literal notranslate"><span class="pre">CTPN</span></code><a class="headerlink" href="#ctpn" title="Link to this heading">#</a></h5>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">iou_threshold</span></code>: float - threshold for non-maximum suppression (NMS) intersection over union (IOU) filtering</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">input_size</span></code>: List - image resolution which is going to be processed. Reshapes network to match a given size</p></li>
+</ol>
+</section>
+<section id="faceboxes">
+<h5><code class="docutils literal notranslate"><span class="pre">FaceBoxes</span></code><a class="headerlink" href="#faceboxes" title="Link to this heading">#</a></h5>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">iou_threshold</span></code>: float - threshold for non-maximum suppression (NMS) intersection over union (IOU) filtering</p></li>
+</ol>
+</section>
+<section id="nanodet">
+<h5><code class="docutils literal notranslate"><span class="pre">NanoDet</span></code><a class="headerlink" href="#nanodet" title="Link to this heading">#</a></h5>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">iou_threshold</span></code>: float - threshold for non-maximum suppression (NMS) intersection over union (IOU) filtering</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">num_classes</span></code>: int - number of classes</p></li>
+</ol>
+</section>
+<section id="ultralightweightfacedetection">
+<h5><code class="docutils literal notranslate"><span class="pre">UltraLightweightFaceDetection</span></code><a class="headerlink" href="#ultralightweightfacedetection" title="Link to this heading">#</a></h5>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">iou_threshold</span></code>: float - threshold for non-maximum suppression (NMS) intersection over union (IOU) filtering</p></li>
+</ol>
+</section>
+<section id="yolo-and-its-subclasses">
+<h5><code class="docutils literal notranslate"><span class="pre">YOLO</span></code> and its subclasses<a class="headerlink" href="#yolo-and-its-subclasses" title="Link to this heading">#</a></h5>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">iou_threshold</span></code>: float - threshold for non-maximum suppression (NMS) intersection over union (IOU) filtering</p></li>
+</ol>
+<section id="yolov4">
+<h6><code class="docutils literal notranslate"><span class="pre">YoloV4</span></code><a class="headerlink" href="#yolov4" title="Link to this heading">#</a></h6>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">anchors</span></code>: List - list of custom anchor values</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">masks</span></code>: List - list of mask, applied to anchors for each output layer</p></li>
+</ol>
+</section>
+<section id="yolov5-yolov8">
+<h6><code class="docutils literal notranslate"><span class="pre">YOLOv5</span></code>, <code class="docutils literal notranslate"><span class="pre">YOLOv8</span></code><a class="headerlink" href="#yolov5-yolov8" title="Link to this heading">#</a></h6>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">agnostic_nms</span></code>: bool - if True, the model is agnostic to the number of classes, and all classes are considered as one</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">iou_threshold</span></code>: float - threshold for non-maximum suppression (NMS) intersection over union (IOU) filtering</p></li>
+</ol>
+</section>
+<section id="yolox">
+<h6><code class="docutils literal notranslate"><span class="pre">YOLOX</span></code><a class="headerlink" href="#yolox" title="Link to this heading">#</a></h6>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">iou_threshold</span></code>: float - threshold for non-maximum suppression (NMS) intersection over union (IOU) filtering</p></li>
+</ol>
+</section>
+</section>
+</section>
+<section id="hpeassociativeembedding">
+<h4><code class="docutils literal notranslate"><span class="pre">HpeAssociativeEmbedding</span></code><a class="headerlink" href="#hpeassociativeembedding" title="Link to this heading">#</a></h4>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">target_size</span></code>: int - image resolution which is going to be processed. Reshapes network to match a given size</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">aspect_ratio</span></code>: float - image aspect ratio which is going to be processed. Reshapes network to match a given size</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">confidence_threshold</span></code>: float - pose confidence threshold</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">delta</span></code>: float</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">size_divisor</span></code>: int - width and height of the reshaped model will be a multiple of this value</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">padding_mode</span></code>: str - center or right_bottom</p></li>
+</ol>
+</section>
+<section id="openpose">
+<h4><code class="docutils literal notranslate"><span class="pre">OpenPose</span></code><a class="headerlink" href="#openpose" title="Link to this heading">#</a></h4>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">target_size</span></code>: int - image resolution which is going to be processed. Reshapes network to match a given size</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">aspect_ratio</span></code>: float - image aspect ratio which is going to be processed. Reshapes network to match a given size</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">confidence_threshold</span></code>: float - pose confidence threshold</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">upsample_ratio</span></code>: int - upsample ratio of a model backbone</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">size_divisor</span></code>: int - width and height of the reshaped model will be a multiple of this value</p></li>
+</ol>
+</section>
+<section id="maskrcnnmodel">
+<h4><code class="docutils literal notranslate"><span class="pre">MaskRCNNModel</span></code><a class="headerlink" href="#maskrcnnmodel" title="Link to this heading">#</a></h4>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">confidence_threshold</span></code>: float - probability threshold value for bounding box filtering</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">labels</span></code>: List - list of class labels</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">path_to_labels</span></code>: str - path to file with labels. Overrides the labels, if they sets via <code class="docutils literal notranslate"><span class="pre">labels</span></code> parameter</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">postprocess_semantic_masks</span></code>: bool - resize and apply 0.5 threshold to instance segmentation masks</p></li>
+</ol>
+</section>
+<section id="segmentationmodel-and-its-subclasses">
+<h4><code class="docutils literal notranslate"><span class="pre">SegmentationModel</span></code> and its subclasses<a class="headerlink" href="#segmentationmodel-and-its-subclasses" title="Link to this heading">#</a></h4>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">labels</span></code>: List - list of class labels</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">path_to_labels</span></code>: str - path to file with labels. Overrides the labels, if they sets via ‘labels’ parameter</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">blur_strength</span></code>: int - blurring kernel size. -1 value means no blurring and no soft_threshold</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">soft_threshold</span></code>: float - probability threshold value for bounding box filtering. inf value means no blurring and no soft_threshold</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">return_soft_prediction</span></code>: bool - return raw resized model prediction in addition to processed one</p></li>
+</ol>
+</section>
+</section>
+<section id="actionclassificationmodel">
+<h3><code class="docutils literal notranslate"><span class="pre">ActionClassificationModel</span></code><a class="headerlink" href="#actionclassificationmodel" title="Link to this heading">#</a></h3>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">labels</span></code>: List - list of class labels</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">path_to_labels</span></code>: str - path to file with labels. Overrides the labels, if they sets via ‘labels’ parameter</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mean_values</span></code>: List - normalization values, which will be subtracted from image channels for image-input layer during preprocessing</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pad_value</span></code>: int - pad value for resize_image_letterbox embedded into a model</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">resize_type</span></code>: str - crop, standard, fit_to_window or fit_to_window_letterbox</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">reverse_input_channels</span></code>: bool - reverse the input channel order</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">scale_values</span></code>: List - normalization values, which will divide the image channels for image-input layer</p></li>
+</ol>
+<blockquote>
+<div><p><strong>NOTE</strong> <code class="docutils literal notranslate"><span class="pre">ActionClassificationModel</span></code> isn’t subclass of ImageModel.</p>
+</div></blockquote>
+</section>
+<section id="bert-and-its-subclasses">
+<h3><code class="docutils literal notranslate"><span class="pre">Bert</span></code> and its subclasses<a class="headerlink" href="#bert-and-its-subclasses" title="Link to this heading">#</a></h3>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">vocab</span></code>: Dict - mapping from string token to int</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">input_names</span></code>: str - comma-separated names of input layers</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">enable_padding</span></code>: bool - should be input sequence padded to max sequence len or not</p></li>
+</ol>
+<section id="bertquestionanswering">
+<h4><code class="docutils literal notranslate"><span class="pre">BertQuestionAnswering</span></code><a class="headerlink" href="#bertquestionanswering" title="Link to this heading">#</a></h4>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">output_names</span></code>: str - comma-separated names of output layers</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_answer_token_num</span></code>: int</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">squad_ver</span></code>: str - SQuAD dataset version used for training. Affects postprocessing</p></li>
+</ol>
+<blockquote>
+<div><p><strong>NOTE</strong>: OTX <code class="docutils literal notranslate"><span class="pre">AnomalyBase</span></code> model wrapper adds <code class="docutils literal notranslate"><span class="pre">image_threshold</span></code>, <code class="docutils literal notranslate"><span class="pre">pixel_threshold</span></code>, <code class="docutils literal notranslate"><span class="pre">min</span></code>, <code class="docutils literal notranslate"><span class="pre">max</span></code>, <code class="docutils literal notranslate"><span class="pre">threshold</span></code>.</p>
+</div></blockquote>
+</section>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Guides</p>
+      </div>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#list-of-values">List of values</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#imagemodel-and-its-subclasses"><code class="docutils literal notranslate"><span class="pre">ImageModel</span></code> and its subclasses</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#anomalydetection"><code class="docutils literal notranslate"><span class="pre">AnomalyDetection</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#classificationmodel"><code class="docutils literal notranslate"><span class="pre">ClassificationModel</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#detectionmodel-and-its-subclasses"><code class="docutils literal notranslate"><span class="pre">DetectionModel</span></code> and its subclasses</a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#ctpn"><code class="docutils literal notranslate"><span class="pre">CTPN</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#faceboxes"><code class="docutils literal notranslate"><span class="pre">FaceBoxes</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#nanodet"><code class="docutils literal notranslate"><span class="pre">NanoDet</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#ultralightweightfacedetection"><code class="docutils literal notranslate"><span class="pre">UltraLightweightFaceDetection</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#yolo-and-its-subclasses"><code class="docutils literal notranslate"><span class="pre">YOLO</span></code> and its subclasses</a><ul class="nav section-nav flex-column">
+<li class="toc-h6 nav-item toc-entry"><a class="reference internal nav-link" href="#yolov4"><code class="docutils literal notranslate"><span class="pre">YoloV4</span></code></a></li>
+<li class="toc-h6 nav-item toc-entry"><a class="reference internal nav-link" href="#yolov5-yolov8"><code class="docutils literal notranslate"><span class="pre">YOLOv5</span></code>, <code class="docutils literal notranslate"><span class="pre">YOLOv8</span></code></a></li>
+<li class="toc-h6 nav-item toc-entry"><a class="reference internal nav-link" href="#yolox"><code class="docutils literal notranslate"><span class="pre">YOLOX</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hpeassociativeembedding"><code class="docutils literal notranslate"><span class="pre">HpeAssociativeEmbedding</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#openpose"><code class="docutils literal notranslate"><span class="pre">OpenPose</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#maskrcnnmodel"><code class="docutils literal notranslate"><span class="pre">MaskRCNNModel</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#segmentationmodel-and-its-subclasses"><code class="docutils literal notranslate"><span class="pre">SegmentationModel</span></code> and its subclasses</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#actionclassificationmodel"><code class="docutils literal notranslate"><span class="pre">ActionClassificationModel</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bert-and-its-subclasses"><code class="docutils literal notranslate"><span class="pre">Bert</span></code> and its subclasses</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#bertquestionanswering"><code class="docutils literal notranslate"><span class="pre">BertQuestionAnswering</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/guides/model-configuration.md.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, Intel.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
