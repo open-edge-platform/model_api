@@ -186,22 +186,17 @@ def _parse_model_arg(target_model: str):
     if not isinstance(target_model, str):
         msg = "target_model must be str"
         raise TypeError(msg)
-    # Expected format: <address>:<port>/models/<model_name>[:<model_version>]
-    if not re.fullmatch(
-        r"(\w+\.*\-*)*\w+:\d+\/v2/models\/[a-zA-Z0-9._-]+(\:\d+)*",
+
+    # Expected format: <address>:<port>/v2/models/<model_name>[/versions/<model_version>]
+    match = re.fullmatch(
+        r"(.+)\/v2\/models\/([^\/]+)(?:(?:\/versions\/)(\d+))?(?:\/)?",
         target_model,
-    ):
+    )
+    if not match:
         msg = "invalid --model option format"
         raise ValueError(msg)
-    service_url, _, _, model = target_model.split("/")
-    model_spec = model.split(":")
-    if len(model_spec) == 1:
-        # model version not specified - use latest
-        return service_url, model_spec[0], ""
-    if len(model_spec) == 2:
-        return service_url, model_spec[0], model_spec[1]
-    msg = "Invalid target_model format"
-    raise ValueError(msg)
+
+    return match.group(1), match.group(2), match.group(3) or ""
 
 
 def _prepare_inputs(dict_data: dict, inputs_meta: dict[str, Metadata]):
