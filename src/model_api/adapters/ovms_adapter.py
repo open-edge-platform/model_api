@@ -1,12 +1,12 @@
 #
-# Copyright (C) 2020-2024 Intel Corporation
+# Copyright (C) 2020-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
 
 from __future__ import annotations
 
 import re
-from typing import Any, Callable
+from typing import Any, Callable, Final
 
 import numpy as np
 
@@ -17,6 +17,26 @@ from .utils import Layout, get_rt_info_from_dict
 class OVMSAdapter(InferenceAdapter):
     """Inference adapter that allows working with models served by the OpenVINO Model Server"""
 
+    # OVMS model URL regex pattern
+    # Expected format: <address>:<port>/v2/models/<model_name>[/versions/<model_version>]
+    _OVMS_MODEL_URL_PATTERN: Final = re.compile(
+        r"(.+)\/v2\/models\/([^\/]+)(?:(?:\/versions\/)(\d+))?(?:\/)?",
+    )
+
+    # Triton to NumPy precision mapping
+    _triton2np_precision: Final = {
+        "INT64": np.int64,
+        "UINT64": np.uint64,
+        "FLOAT": np.float32,
+        "UINT32": np.uint32,
+        "INT32": np.int32,
+        "HALF": np.float16,
+        "INT16": np.int16,
+        "INT8": np.int8,
+        "UINT8": np.uint8,
+        "FP32": np.float32,
+    }
+
     def __init__(self, target_model: str):
         """
         Initializes OVMS adapter.
@@ -26,7 +46,7 @@ class OVMSAdapter(InferenceAdapter):
         """
         import tritonclient.http as httpclient
 
-        service_url, self.model_name, self.model_version = _parse_model_arg(
+        service_url, self.model_name, self.model_version = self.parse_model_arg(
             target_model,
         )
         self.client = httpclient.InferenceServerClient(service_url)
@@ -83,7 +103,7 @@ class OVMSAdapter(InferenceAdapter):
         Returns:
             dict: model raw outputs.
         """
-        inputs = _prepare_inputs(dict_data, self.inputs)
+        inputs = self._prepare_inputs(dict_data)
         raw_result = self.client.infer(
             model_name=self.model_name,
             model_version=self.model_version,
@@ -98,7 +118,7 @@ class OVMSAdapter(InferenceAdapter):
 
     def infer_async(self, dict_data: dict, callback_data: Any):
         """A stub method imitating async inference with a blocking call."""
-        inputs = _prepare_inputs(dict_data, self.inputs)
+        inputs = self._prepare_inputs(dict_data)
         raw_result = self.client.infer(
             model_name=self.model_name,
             model_version=self.model_version,
@@ -166,60 +186,49 @@ class OVMSAdapter(InferenceAdapter):
         msg = "OVMSAdapter does not support saving a model"
         raise NotImplementedError(msg)
 
+    @staticmethod
+    def is_ovms_model(target_model: str) -> bool:
+        """Checks if the given string is a valid OVMS model URL."""
+        if not isinstance(target_model, str):
+            return False
 
-_triton2np_precision = {
-    "INT64": np.int64,
-    "UINT64": np.uint64,
-    "FLOAT": np.float32,
-    "UINT32": np.uint32,
-    "INT32": np.int32,
-    "HALF": np.float16,
-    "INT16": np.int16,
-    "INT8": np.int8,
-    "UINT8": np.uint8,
-    "FP32": np.float32,
-}
+        return OVMSAdapter._OVMS_MODEL_URL_PATTERN.fullmatch(target_model) is not None
 
+    @staticmethod
+    def parse_model_arg(target_model: str):
+        """Parses OVMS model URL."""
+        if not isinstance(target_model, str):
+            msg = "target_model must be str"
+            raise TypeError(msg)
 
-def _parse_model_arg(target_model: str):
-    """Parses OVMS model URL."""
-    if not isinstance(target_model, str):
-        msg = "target_model must be str"
-        raise TypeError(msg)
-
-    # Expected format: <address>:<port>/v2/models/<model_name>[/versions/<model_version>]
-    match = re.fullmatch(
-        r"(.+)\/v2\/models\/([^\/]+)(?:(?:\/versions\/)(\d+))?(?:\/)?",
-        target_model,
-    )
-    if not match:
-        msg = "invalid --model option format"
-        raise ValueError(msg)
-
-    return match.group(1), match.group(2), match.group(3) or ""
-
-
-def _prepare_inputs(dict_data: dict, inputs_meta: dict[str, Metadata]):
-    """Converts raw model inputs into OVMS-specific representation."""
-    import tritonclient.http as httpclient
-
-    inputs = []
-    for input_name, input_data in dict_data.items():
-        if input_name not in inputs_meta:
-            msg = "Input data does not match model inputs"
+        match = OVMSAdapter._OVMS_MODEL_URL_PATTERN.fullmatch(target_model)
+        if not match:
+            msg = "invalid --model option format"
             raise ValueError(msg)
-        input_info = inputs_meta[input_name]
-        model_precision = _triton2np_precision[input_info.precision]
-        if isinstance(input_data, np.ndarray) and input_data.dtype != model_precision:
-            input_data = input_data.astype(model_precision)
-        elif isinstance(input_data, list):
-            input_data = np.array(input_data, dtype=model_precision)
 
-        infer_input = httpclient.InferInput(
-            input_name,
-            input_data.shape,
-            input_info.precision,
-        )
-        infer_input.set_data_from_numpy(input_data)
-        inputs.append(infer_input)
-    return inputs
+        return match.group(1), match.group(2), match.group(3) or ""
+
+    def _prepare_inputs(self, dict_data: dict) -> list:
+        """Converts raw model inputs into OVMS-specific representation."""
+        import tritonclient.http as httpclient
+
+        inputs = []
+        for input_name, input_data in dict_data.items():
+            if input_name not in self.inputs:
+                msg = "Input data does not match model inputs"
+                raise ValueError(msg)
+            input_info = self.inputs[input_name]
+            model_precision = self._triton2np_precision[input_info.precision]
+            if isinstance(input_data, np.ndarray) and input_data.dtype != model_precision:
+                input_data = input_data.astype(model_precision)
+            elif isinstance(input_data, list):
+                input_data = np.array(input_data, dtype=model_precision)
+
+            infer_input = httpclient.InferInput(
+                input_name,
+                input_data.shape,
+                input_info.precision,
+            )
+            infer_input.set_data_from_numpy(input_data)
+            inputs.append(infer_input)
+        return inputs
