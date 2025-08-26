@@ -6,7 +6,6 @@
 from __future__ import annotations
 
 import logging as log
-import re
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, Callable, NoReturn, Type
 
@@ -173,9 +172,7 @@ class Model:
         inference_adapter: InferenceAdapter
         if isinstance(model, InferenceAdapter):
             inference_adapter = model
-        elif isinstance(model, str) and re.compile(
-            r"(\w+\.*\-*)*\w+:\d+\/v2/models\/[a-zA-Z0-9._-]+(\:\d+)*",
-        ).fullmatch(model):
+        elif isinstance(model, str) and OVMSAdapter.is_ovms_model(model):
             inference_adapter = OVMSAdapter(model)
         else:
             if core is None:
