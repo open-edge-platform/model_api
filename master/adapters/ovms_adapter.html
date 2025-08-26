@@ -445,6 +445,17 @@ instaed actuall of embedding it into the model representation.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="model_api.adapters.ovms_adapter.OVMSAdapter.is_ovms_model">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_ovms_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.adapters.ovms_adapter.OVMSAdapter.is_ovms_model" title="Link to this definition">#</a></dt>
+<dd><p>Checks if the given string is a valid OVMS model URL.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="model_api.adapters.ovms_adapter.OVMSAdapter.is_ready">
 <span class="sig-name descname"><span class="pre">is_ready</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#model_api.adapters.ovms_adapter.OVMSAdapter.is_ready" title="Link to this definition">#</a></dt>
 <dd><p>In case of asynchronous execution checks if one can submit input data
@@ -467,6 +478,12 @@ to the model for inference, or all infer requests are busy.</p>
 <dt class="sig sig-object py" id="model_api.adapters.ovms_adapter.OVMSAdapter.load_model">
 <span class="sig-name descname"><span class="pre">load_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#model_api.adapters.ovms_adapter.OVMSAdapter.load_model" title="Link to this definition">#</a></dt>
 <dd><p>Loads the model on the device.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_api.adapters.ovms_adapter.OVMSAdapter.parse_model_arg">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse_model_arg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.adapters.ovms_adapter.OVMSAdapter.parse_model_arg" title="Link to this definition">#</a></dt>
+<dd><p>Parses OVMS model URL.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -542,8 +559,10 @@ to the model for inference, or all infer requests are busy.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.adapters.ovms_adapter.OVMSAdapter.get_rt_info"><code class="docutils literal notranslate"><span class="pre">OVMSAdapter.get_rt_info()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.adapters.ovms_adapter.OVMSAdapter.infer_async"><code class="docutils literal notranslate"><span class="pre">OVMSAdapter.infer_async()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.adapters.ovms_adapter.OVMSAdapter.infer_sync"><code class="docutils literal notranslate"><span class="pre">OVMSAdapter.infer_sync()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.adapters.ovms_adapter.OVMSAdapter.is_ovms_model"><code class="docutils literal notranslate"><span class="pre">OVMSAdapter.is_ovms_model()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.adapters.ovms_adapter.OVMSAdapter.is_ready"><code class="docutils literal notranslate"><span class="pre">OVMSAdapter.is_ready()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.adapters.ovms_adapter.OVMSAdapter.load_model"><code class="docutils literal notranslate"><span class="pre">OVMSAdapter.load_model()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.adapters.ovms_adapter.OVMSAdapter.parse_model_arg"><code class="docutils literal notranslate"><span class="pre">OVMSAdapter.parse_model_arg()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.adapters.ovms_adapter.OVMSAdapter.reshape_model"><code class="docutils literal notranslate"><span class="pre">OVMSAdapter.reshape_model()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.adapters.ovms_adapter.OVMSAdapter.save_model"><code class="docutils literal notranslate"><span class="pre">OVMSAdapter.save_model()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.adapters.ovms_adapter.OVMSAdapter.set_callback"><code class="docutils literal notranslate"><span class="pre">OVMSAdapter.set_callback()</span></code></a></li>
