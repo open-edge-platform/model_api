@@ -4,6 +4,7 @@
 #
 
 import pytest
+
 from model_api.adapters.ovms_adapter import _parse_model_arg
 
 
@@ -14,7 +15,7 @@ class TestParseModelArg:
         """Test parsing a valid URL with version specified."""
         target_model = "http://localhost:9000/v2/models/my_model/versions/123"
         service_url, model_name, version = _parse_model_arg(target_model)
-        
+
         assert service_url == "http://localhost:9000"
         assert model_name == "my_model"
         assert version == "123"
@@ -23,7 +24,7 @@ class TestParseModelArg:
         """Test parsing a valid URL without version specified."""
         target_model = "http://localhost:9000/v2/models/345$%^!@#$model"
         service_url, model_name, version = _parse_model_arg(target_model)
-        
+
         assert service_url == "http://localhost:9000"
         assert model_name == "345$%^!@#$model"
         assert version == ""
@@ -32,7 +33,7 @@ class TestParseModelArg:
         """Test parsing a valid URL with trailing slash."""
         target_model = "http://localhost:9000/v2/models/my_model/"
         service_url, model_name, version = _parse_model_arg(target_model)
-        
+
         assert service_url == "http://localhost:9000"
         assert model_name == "my_model"
         assert version == ""
@@ -41,7 +42,7 @@ class TestParseModelArg:
         """Test parsing a valid URL with version and trailing slash."""
         target_model = "http://localhost:9000/v2/models/my_model/versions/456/"
         service_url, model_name, version = _parse_model_arg(target_model)
-        
+
         assert service_url == "http://localhost:9000"
         assert model_name == "my_model"
         assert version == "456"
@@ -50,14 +51,13 @@ class TestParseModelArg:
         """Test parsing a valid HTTPS URL."""
         target_model = "https://example.com:8080/v2/models/test_model/versions/1"
         service_url, model_name, version = _parse_model_arg(target_model)
-        
+
         assert service_url == "https://example.com:8080"
         assert model_name == "test_model"
         assert version == "1"
 
-
     @pytest.mark.parametrize(
-        "target_model,description",
+        ("target_model", "description"),
         [
             ("http://localhost:9000/models/my_model", "missing v2/models path"),
             ("http://localhost:9000/v2/models/my_model/version/123", "wrong versions format"),
