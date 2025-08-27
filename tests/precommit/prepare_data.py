@@ -14,16 +14,16 @@ def retrieve_otx_model(data_dir, model_name, format="xml"):
     destination_folder.mkdir(parents=True, exist_ok=True)
     if format == "onnx":
         urlretrieve(
-            f"https://storage.openvinotoolkit.org/repositories/model_api/test/otx_models/{model_name}/model.onnx",
+            f"https://storage.geti.intel.com/geti_predict/test/otx_models/{model_name}/model.onnx",
             destination_folder / f"{model_name}.onnx",
         )
     else:
         urlretrieve(
-            f"https://storage.openvinotoolkit.org/repositories/model_api/test/otx_models/{model_name}/openvino.xml",
+            f"https://storage.geti.intel.com/geti_predict/test/otx_models/{model_name}/openvino.xml",
             destination_folder / f"{model_name}.xml",
         )
         urlretrieve(
-            f"https://storage.openvinotoolkit.org/repositories/model_api/test/otx_models/{model_name}/openvino.bin",
+            f"https://storage.geti.intel.com/geti_predict/test/otx_models/{model_name}/openvino.bin",
             f"{destination_folder}/{model_name}.bin",
         )
 

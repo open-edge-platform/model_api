@@ -35,19 +35,19 @@ async def download_otx_model(client, otx_models_dir, model_name, format="xml"):
     if format == "onnx":
         await stream_file(
             client,
-            f"https://storage.openvinotoolkit.org/repositories/model_api/test/otx_models/{model_name}/model.onnx",
+            f"https://storage.geti.intel.com/geti_predict/test/otx_models/{model_name}/model.onnx",
             f"{otx_models_dir}/{model_name}.onnx",
         )
     else:
         await asyncio.gather(
             stream_file(
                 client,
-                f"https://storage.openvinotoolkit.org/repositories/model_api/test/otx_models/{model_name}/openvino.xml",
+                f"https://storage.geti.intel.com/geti_predict/test/otx_models/{model_name}/openvino.xml",
                 f"{otx_models_dir}/{model_name}.xml",
             ),
             stream_file(
                 client,
-                f"https://storage.openvinotoolkit.org/repositories/model_api/test/otx_models/{model_name}/openvino.bin",
+                f"https://storage.geti.intel.com/geti_predict/test/otx_models/{model_name}/openvino.bin",
                 f"{otx_models_dir}/{model_name}.bin",
             ),
         )
