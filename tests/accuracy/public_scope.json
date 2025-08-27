@@ -208,6 +208,16 @@
     ]
   },
   {
+    "name": "otx_models/tinynet_imagenet.xml",
+    "type": "ClassificationModel",
+    "test_data": [
+      {
+        "image": "coco128/images/train2017/000000000471.jpg",
+        "reference": ["42 (42): 1.000, [0], [0], [0]"]
+      }
+    ]
+  },
+  {
     "name": "otx_models/is_efficientnetb2b_maskrcnn_coco_reduced.xml",
     "type": "MaskRCNNModel",
     "test_data": [
