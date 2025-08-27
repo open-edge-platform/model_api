@@ -88,6 +88,7 @@ async def main():
             ),
             download_otx_model(client, otx_models_dir, "cls_efficient_b0_cars"),
             download_otx_model(client, otx_models_dir, "cls_efficient_v2s_cars"),
+            download_otx_model(client, otx_models_dir, "tinynet_imagenet"),
             download_otx_model(client, otx_models_dir, "Lite-hrnet-18"),
             download_otx_model(client, otx_models_dir, "Lite-hrnet-18_mod2"),
             download_otx_model(client, otx_models_dir, "Lite-hrnet-s_mod2"),
