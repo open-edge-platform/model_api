@@ -62,6 +62,10 @@ class NumericalValue(BaseValue):
         self.value_type = value_type
 
     def from_str(self, value: str) -> Any:
+        if not value and self.default_value is not None:
+            return self.default_value
+        if not value and self.default_value is None:
+            return None
         return self.value_type(value)
 
     def validate(self, value):

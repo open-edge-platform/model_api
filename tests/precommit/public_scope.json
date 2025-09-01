@@ -14,5 +14,17 @@
   {
     "name": "otx_models/tinynet_imagenet.xml",
     "type": "ClassificationModel"
+  },
+  {
+    "name": "anomalib_models/padim.xml",
+    "type": "AnomalyDetection"
+  },
+  {
+    "name": "anomalib_models/stfpm.xml",
+    "type": "AnomalyDetection"
+  },
+  {
+    "name": "anomalib_models/uflow.xml",
+    "type": "AnomalyDetection"
   }
 ]

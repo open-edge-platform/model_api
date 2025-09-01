@@ -121,10 +121,12 @@ class ImageModel(Model):
                 "orig_height": NumericalValue(
                     int,
                     description="Model input height before embedding processing",
+                    default_value=None,
                 ),
                 "orig_width": NumericalValue(
                     int,
                     description="Model input width before embedding processing",
+                    default_value=None,
                 ),
                 "pad_value": NumericalValue(
                     int,
