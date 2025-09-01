@@ -441,5 +441,41 @@
         ]
       }
     ]
+  },
+  {
+    "name": "anomalib_models/padim.xml",
+    "type": "AnomalyDetection",
+    "test_data": [
+      {
+        "image": "coco128/images/train2017/000000000074.jpg",
+        "reference": [
+          "anomaly_map min:153 max:255;pred_score:1.0;pred_label:True;pred_mask min:1 max:1;"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "anomalib_models/stfpm.xml",
+    "type": "AnomalyDetection",
+    "test_data": [
+      {
+        "image": "coco128/images/train2017/000000000074.jpg",
+        "reference": [
+          "anomaly_map min:127 max:255;pred_score:1.0;pred_label:True;pred_mask min:0 max:1;"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "anomalib_models/uflow.xml",
+    "type": "AnomalyDetection",
+    "test_data": [
+      {
+        "image": "coco128/images/train2017/000000000074.jpg",
+        "reference": [
+          "anomaly_map min:191 max:191;pred_score:1.0;pred_label:True;pred_mask min:1 max:1;"
+        ]
+      }
+    ]
   }
 ]

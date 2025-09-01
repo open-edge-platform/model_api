@@ -95,12 +95,14 @@ def create_models(model_type, model_path, download_dir, force_onnx_adapter=False
         model_type.create_model(model_path, device="CPU", download_dir=download_dir),
     ]
     if model_path.endswith(".xml"):
-        wrapper_type = model_type.get_model_class(
-            create_core().read_model(model_path).get_rt_info(["model_info", "model_type"]).astype(str),
-        )
-        model = wrapper_type(OpenvinoAdapter(create_core(), model_path, device="CPU"))
-        model.load()
-        models.append(model)
+        model = create_core().read_model(model_path)
+        if model.has_rt_info(["model_info", "model_type"]):
+            wrapper_type = model_type.get_model_class(
+                create_core().read_model(model_path).get_rt_info(["model_info", "model_type"]).astype(str),
+            )
+            model = wrapper_type(OpenvinoAdapter(create_core(), model_path, device="CPU"))
+            model.load()
+            models.append(model)
     return models
 
 

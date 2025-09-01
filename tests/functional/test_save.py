@@ -70,3 +70,45 @@ def test_onnx_save(tmp_path, data):
     assert type(cls_model) is type(deserialized)
     for attr in cls_model.parameters():
         assert getattr(cls_model, attr) == getattr(deserialized, attr)
+
+
+def test_padim_save(tmp_path, data):
+    padim_model = Model.create_model(
+        Path(data) / "anomalib_models/padim.xml",
+    )
+    xml_path = str(tmp_path / "a.xml")
+    padim_model.save(xml_path)
+    deserialized = Model.create_model(xml_path)
+
+    assert not deserialized.get_model().get_rt_info(["model_info", "embedded_processing"]).astype(bool)
+    assert type(padim_model) is type(deserialized)
+    for attr in padim_model.parameters():
+        assert getattr(padim_model, attr) == getattr(deserialized, attr)
+
+
+def test_stfpm_save(tmp_path, data):
+    stfpm_model = Model.create_model(
+        Path(data) / "anomalib_models/stfpm.xml",
+    )
+    xml_path = str(tmp_path / "a.xml")
+    stfpm_model.save(xml_path)
+    deserialized = Model.create_model(xml_path)
+
+    assert not deserialized.get_model().get_rt_info(["model_info", "embedded_processing"]).astype(bool)
+    assert type(stfpm_model) is type(deserialized)
+    for attr in stfpm_model.parameters():
+        assert getattr(stfpm_model, attr) == getattr(deserialized, attr)
+
+
+def test_uflow_save(tmp_path, data):
+    uflow_model = Model.create_model(
+        Path(data) / "anomalib_models/uflow.xml",
+    )
+    xml_path = str(tmp_path / "a.xml")
+    uflow_model.save(xml_path)
+    deserialized = Model.create_model(xml_path)
+
+    assert not deserialized.get_model().get_rt_info(["model_info", "embedded_processing"]).astype(bool)
+    assert type(uflow_model) is type(deserialized)
+    for attr in uflow_model.parameters():
+        assert getattr(uflow_model, attr) == getattr(deserialized, attr)

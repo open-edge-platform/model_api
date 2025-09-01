@@ -28,16 +28,30 @@ def retrieve_otx_model(data_dir, model_name, format="xml"):
         )
 
 
+def retrieve_anomalib_model(data_dir, model_name, format="xml"):
+    destination_folder = Path(data_dir) / "anomalib_models"
+    destination_folder.mkdir(parents=True, exist_ok=True)
+    urlretrieve(
+        f"https://storage.geti.intel.com/geti_predict/test/anomalib_models/{model_name}/openvino.xml",
+        destination_folder / f"{model_name}.xml",
+    )
+    urlretrieve(
+        f"https://storage.geti.intel.com/geti_predict/test/anomalib_models/{model_name}/openvino.bin",
+        f"{destination_folder}/{model_name}.bin",
+    )
+
+
 def prepare_model(
     data_dir="./data",
     public_scope=Path(__file__).resolve().parent / "public_scope.json",
 ):
     # TODO refactor this test so that it does not use eval
     # flake8: noqa: F401
-    from model_api.models import ClassificationModel, DetectionModel, SegmentationModel
+    from model_api.models import AnomalyDetection, ClassificationModel, DetectionModel, SegmentationModel
 
     # Mapping of model type strings to actual classes for security
     MODEL_TYPE_MAPPING = {
+        "AnomalyDetection": AnomalyDetection,
         "ClassificationModel": ClassificationModel,
         "DetectionModel": DetectionModel,
         "SegmentationModel": SegmentationModel,
@@ -91,3 +105,6 @@ if __name__ == "__main__":
     retrieve_otx_model(args.data_dir, "Lite-hrnet-18_mod2")
     retrieve_otx_model(args.data_dir, "tinynet_imagenet")
     retrieve_otx_model(args.data_dir, "cls_mobilenetv3_large_cars", "onnx")
+    retrieve_anomalib_model(args.data_dir, "padim")
+    retrieve_anomalib_model(args.data_dir, "stfpm")
+    retrieve_anomalib_model(args.data_dir, "uflow")

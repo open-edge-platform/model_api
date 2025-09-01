@@ -53,6 +53,21 @@ async def download_otx_model(client, otx_models_dir, model_name, format="xml"):
         )
 
 
+async def download_anomalib_model(client, models_dir, model_name):
+    await asyncio.gather(
+        stream_file(
+            client,
+            f"https://storage.geti.intel.com/geti_predict/test/anomalib_models/{model_name}/openvino.xml",
+            f"{models_dir}/{model_name}.xml",
+        ),
+        stream_file(
+            client,
+            f"https://storage.geti.intel.com/geti_predict/test/anomalib_models/{model_name}/openvino.bin",
+            f"{models_dir}/{model_name}.bin",
+        ),
+    )
+
+
 async def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -66,6 +81,8 @@ async def main():
 
     otx_models_dir = args.data_dir / "otx_models"
     otx_models_dir.mkdir(parents=True, exist_ok=True)
+    anomalib_models_dir = args.data_dir / "anomalib_models"
+    anomalib_models_dir.mkdir(parents=True, exist_ok=True)
     async with httpx.AsyncClient(timeout=20.0) as client:
         await asyncio.gather(
             download_images(args.data_dir),
@@ -138,6 +155,9 @@ async def main():
             download_otx_model(client, otx_models_dir, "sam_vit_b_zsl_decoder"),
             download_otx_model(client, otx_models_dir, "rtmpose_tiny"),
             download_otx_model(client, otx_models_dir, "segnext_t_tiling"),
+            download_anomalib_model(client, anomalib_models_dir, "padim"),
+            download_anomalib_model(client, anomalib_models_dir, "stfpm"),
+            download_anomalib_model(client, anomalib_models_dir, "uflow"),
         )
 
 
