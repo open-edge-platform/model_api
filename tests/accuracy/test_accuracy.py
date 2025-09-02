@@ -77,7 +77,7 @@ def read_config(fname):
         return json.load(f)
 
 
-def create_models(model_type, model_path, download_dir, force_onnx_adapter=False):
+def create_models(model_type, model_path, download_dir, force_onnx_adapter=False, device="CPU"):
     if model_path.endswith(".onnx") and force_onnx_adapter:
         wrapper_type = model_type.get_model_class(
             load_parameters_from_onnx(onnx.load(model_path))["model_info"]["model_type"],
@@ -92,7 +92,7 @@ def create_models(model_type, model_path, download_dir, force_onnx_adapter=False
         return [model]
 
     models = [
-        model_type.create_model(model_path, device="CPU", download_dir=download_dir),
+        model_type.create_model(model_path, device=device, download_dir=download_dir),
     ]
     if model_path.endswith(".xml"):
         model = create_core().read_model(model_path)
@@ -100,7 +100,7 @@ def create_models(model_type, model_path, download_dir, force_onnx_adapter=False
             wrapper_type = model_type.get_model_class(
                 create_core().read_model(model_path).get_rt_info(["model_info", "model_type"]).astype(str),
             )
-            model = wrapper_type(OpenvinoAdapter(create_core(), model_path, device="CPU"))
+            model = wrapper_type(OpenvinoAdapter(create_core(), model_path, device=device))
             model.load()
             models.append(model)
     return models
@@ -109,6 +109,11 @@ def create_models(model_type, model_path, download_dir, force_onnx_adapter=False
 @pytest.fixture(scope="session")
 def data(pytestconfig):
     return pytestconfig.getoption("data")
+
+
+@pytest.fixture(scope="session")
+def device(pytestconfig):
+    return pytestconfig.getoption("device")
 
 
 @pytest.fixture(scope="session")
@@ -125,7 +130,7 @@ def result(pytestconfig):
     ("model_data"),
     read_config(Path(__file__).resolve().parent / "public_scope.json"),
 )
-def test_image_models(data, dump, result, model_data):  # noqa: C901
+def test_image_models(data, device, dump, result, model_data):  # noqa: C901
     name = model_data["name"]
     if name.endswith((".xml", ".onnx")):
         name = f"{data}/{name}"
@@ -135,13 +140,14 @@ def test_image_models(data, dump, result, model_data):  # noqa: C901
         name,
         data,
         model_data.get("force_ort", False),
+        device=device,
     ):
         if "tiler" in model_data:
             if "extra_model" in model_data:
                 extra_adapter = OpenvinoAdapter(
                     create_core(),
                     f"{data}/{model_data['extra_model']}",
-                    device="CPU",
+                    device=device,
                 )
 
                 extra_model = MODEL_TYPE_MAPPING[model_data["extra_type"]](
@@ -160,7 +166,7 @@ def test_image_models(data, dump, result, model_data):  # noqa: C901
             encoder_adapter = OpenvinoAdapter(
                 create_core(),
                 f"{data}/{model_data['encoder']}",
-                device="CPU",
+                device=device,
             )
 
             encoder_model = MODEL_TYPE_MAPPING[model_data["encoder_type"]](

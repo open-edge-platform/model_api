@@ -11,6 +11,12 @@ import pytest
 def pytest_addoption(parser):
     parser.addoption("--data", action="store", help="data folder with dataset")
     parser.addoption(
+        "--device",
+        action="store",
+        default="CPU",
+        help="device to run tests on (in case of OpenvinoAdapter)",
+    )
+    parser.addoption(
         "--dump",
         action="store_true",
         default=False,
