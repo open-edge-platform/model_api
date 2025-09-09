@@ -1,0 +1,703 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Performance Metrics &#8212; ModelAPI 2025 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=cb975c41"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=6dbb43f8"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'guides/performance_metrics';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Model configuration" href="model-configuration.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">ModelAPI 2025 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Guides
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Guides
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Guides</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="model-configuration.html">Model configuration</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Performance Metrics</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Guides</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Performance Metrics</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="performance-metrics">
+<h1>Performance Metrics<a class="headerlink" href="#performance-metrics" title="Link to this heading">#</a></h1>
+<p>The Model API provides comprehensive performance monitoring capabilities through the <code class="docutils literal notranslate"><span class="pre">PerformanceMetrics</span></code> class. This allows to measure and analyze the performance of model inference pipeline, including detailed timing information for each stage of the inference process.</p>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
+<p>Performance metrics are automatically collected during model inference and include information for:</p>
+<ul class="simple">
+<li><p><strong>Model loading time</strong>: Time spent loading the model to the inference device</p></li>
+<li><p><strong>Preprocessing time</strong>: Time spent on input data preprocessing</p></li>
+<li><p><strong>Inference time</strong>: Time spent on actual model inference on the device</p></li>
+<li><p><strong>Postprocessing time</strong>: Time spent on output data postprocessing</p></li>
+<li><p><strong>Total time</strong>: Overall time for the complete inference pipeline</p></li>
+<li><p><strong>Total minimal time</strong>: Overall minimum time for the complete inference pipeline</p></li>
+<li><p><strong>Total maxmium time</strong>: Overall maximum time for the complete inference pipeline</p></li>
+<li><p><strong>Total frames</strong>: Total number of inferences</p></li>
+<li><p><strong>FPS</strong>: Frames Per Second</p></li>
+</ul>
+<p>Each metric provides statistical information including mean, standard deviation, and individual measurements.</p>
+</section>
+<section id="basic-usage">
+<h2>Basic Usage<a class="headerlink" href="#basic-usage" title="Link to this heading">#</a></h2>
+<section id="accessing-performance-metrics">
+<h3>Accessing Performance Metrics<a class="headerlink" href="#accessing-performance-metrics" title="Link to this heading">#</a></h3>
+<p>Every model instance automatically collects performance metrics. You can access them using the <code class="docutils literal notranslate"><span class="pre">get_performance_metrics()</span></code> method:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">model_api.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">Model</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">cv2</span>
+
+<span class="c1"># Create a model</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span><span class="s2">&quot;path/to/your/model.xml&quot;</span><span class="p">)</span>
+
+<span class="c1"># Perform inference</span>
+<span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="s2">&quot;path/to/image.jpg&quot;</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+
+<span class="c1"># Get performance metrics</span>
+<span class="n">metrics</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_performance_metrics</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="logging-performance-metrics">
+<h3>Logging Performance Metrics<a class="headerlink" href="#logging-performance-metrics" title="Link to this heading">#</a></h3>
+<p>The simplest way to view performance metrics is to use the built-in logging method:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Configure logging</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%(message)s</span><span class="s1">&#39;</span><span class="p">)</span>
+
+<span class="c1"># Log all performance metrics to console</span>
+<span class="n">metrics</span><span class="o">.</span><span class="n">log_metrics</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>This will output detailed performance information:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">============================================================</span>
+<span class="w">               </span>🚀<span class="w"> </span>PERFORMANCE<span class="w"> </span>METRICS<span class="w"> </span>REPORT<span class="w"> </span>🚀
+<span class="o">============================================================</span>
+
+📊<span class="w"> </span>Model<span class="w"> </span>Loading:
+<span class="w">   </span>Load<span class="w"> </span>Time:<span class="w"> </span><span class="m">2</span>.497s
+
+⚙️<span class="w">  </span>Processing<span class="w"> </span>Times<span class="w"> </span><span class="o">(</span>mean<span class="w"> </span>±<span class="w"> </span>std<span class="o">)</span>:
+<span class="w">   </span>Preprocess:<span class="w">  </span><span class="m">0</span>.001s<span class="w"> </span>±<span class="w"> </span><span class="m">0</span>.000s
+<span class="w">   </span>Inference:<span class="w">   </span><span class="m">0</span>.570s<span class="w"> </span>±<span class="w"> </span><span class="m">0</span>.020s
+<span class="w">   </span>Postprocess:<span class="w"> </span><span class="m">0</span>.001s<span class="w"> </span>±<span class="w"> </span><span class="m">0</span>.000s
+
+📈<span class="w"> </span>Total<span class="w"> </span>Time<span class="w"> </span>Statistics:
+<span class="w">   </span>Mean:<span class="w">  </span><span class="m">0</span>.572s<span class="w"> </span>±<span class="w"> </span><span class="m">0</span>.020s
+<span class="w">   </span>Min:<span class="w">   </span><span class="m">0</span>.556s
+<span class="w">   </span>Max:<span class="w">   </span><span class="m">0</span>.642s
+
+🎯<span class="w"> </span>Performance<span class="w"> </span>Summary:
+<span class="w">   </span>Total<span class="w"> </span>Frames:<span class="w"> </span><span class="m">100</span>
+<span class="w">   </span>FPS:<span class="w">          </span><span class="m">1</span>.75
+<span class="o">============================================================</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="detailed-metrics-access">
+<h2>Detailed Metrics Access<a class="headerlink" href="#detailed-metrics-access" title="Link to this heading">#</a></h2>
+<section id="individual-timing-statistics">
+<h3>Individual Timing Statistics<a class="headerlink" href="#individual-timing-statistics" title="Link to this heading">#</a></h3>
+<p>You can access individual timing statistics for more detailed analysis:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get specific timing statistics</span>
+<span class="n">load_time</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">get_load_time</span><span class="p">()</span>
+<span class="n">preprocess_time</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">get_preprocess_time</span><span class="p">()</span>
+<span class="n">inference_time</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">get_inference_time</span><span class="p">()</span>
+<span class="n">postprocess_time</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">get_postprocess_time</span><span class="p">()</span>
+<span class="n">total_time</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">get_total_time</span><span class="p">()</span>
+<span class="n">total_min_time</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">get_total_time_min</span><span class="p">()</span>
+<span class="n">total_max_time</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">get_total_time_max</span><span class="p">()</span>
+
+<span class="c1"># Access statistical information</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Mean inference time: </span><span class="si">{</span><span class="n">inference_time</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> seconds&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Standard deviation: </span><span class="si">{</span><span class="n">inference_time</span><span class="o">.</span><span class="n">stddev</span><span class="p">()</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> seconds&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total inference time: </span><span class="si">{</span><span class="n">inference_time</span><span class="o">.</span><span class="n">time</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> seconds&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Number of inferences: </span><span class="si">{</span><span class="n">inference_time</span><span class="o">.</span><span class="n">count</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="frame-rate-and-throughput">
+<h3>Frame Rate and Throughput<a class="headerlink" href="#frame-rate-and-throughput" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get frames per second and total frame count</span>
+<span class="n">fps</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">get_fps</span><span class="p">()</span>
+<span class="n">total_frames</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">get_total_frames</span><span class="p">()</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Processed </span><span class="si">{</span><span class="n">total_frames</span><span class="si">}</span><span class="s2"> frames at </span><span class="si">{</span><span class="n">fps</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> FPS&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="advanced-usage">
+<h2>Advanced Usage<a class="headerlink" href="#advanced-usage" title="Link to this heading">#</a></h2>
+<section id="batch-processing-performance">
+<h3>Batch Processing Performance<a class="headerlink" href="#batch-processing-performance" title="Link to this heading">#</a></h3>
+<p>When processing multiple inputs, performance metrics accumulate across all inferences:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">cv2</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">model_api.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">DetectionModel</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">DetectionModel</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span><span class="s2">&quot;path/to/detection/model.xml&quot;</span><span class="p">)</span>
+
+<span class="c1"># Process multiple images</span>
+<span class="n">images</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;image1.jpg&quot;</span><span class="p">,</span> <span class="s2">&quot;image2.jpg&quot;</span><span class="p">,</span> <span class="s2">&quot;image3.jpg&quot;</span><span class="p">]</span>
+<span class="k">for</span> <span class="n">image_path</span> <span class="ow">in</span> <span class="n">images</span><span class="p">:</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="n">image_path</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+
+<span class="c1"># Get accumulated metrics for all inferences</span>
+<span class="n">metrics</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_performance_metrics</span><span class="p">()</span>
+<span class="n">metrics</span><span class="o">.</span><span class="n">log_metrics</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="performance-monitoring-during-inference">
+<h3>Performance Monitoring During Inference<a class="headerlink" href="#performance-monitoring-during-inference" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">cv2</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">model_api.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassificationModel</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">ClassificationModel</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span><span class="s2">&quot;efficientnet-b0-pytorch&quot;</span><span class="p">)</span>
+<span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="s2">&quot;test_image.jpg&quot;</span><span class="p">)</span>
+
+<span class="c1"># Run multiple inferences and monitor performance</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">100</span><span class="p">):</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+
+    <span class="c1"># Check performance every 10 inferences</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">metrics</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_performance_metrics</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;After </span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2"> inferences:&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Mean inference time: </span><span class="si">{</span><span class="n">metrics</span><span class="o">.</span><span class="n">get_inference_time</span><span class="p">()</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Current FPS: </span><span class="si">{</span><span class="n">metrics</span><span class="o">.</span><span class="n">get_fps</span><span class="p">()</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="performance-optimization-tips">
+<h2>Performance Optimization Tips<a class="headerlink" href="#performance-optimization-tips" title="Link to this heading">#</a></h2>
+<section id="analyzing-bottlenecks">
+<h3>Analyzing Bottlenecks<a class="headerlink" href="#analyzing-bottlenecks" title="Link to this heading">#</a></h3>
+<p>Use performance metrics to identify bottlenecks in inference pipeline:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">metrics</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_performance_metrics</span><span class="p">()</span>
+
+<span class="n">preprocess_time</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">get_preprocess_time</span><span class="p">()</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+<span class="n">inference_time</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">get_inference_time</span><span class="p">()</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+<span class="n">postprocess_time</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">get_postprocess_time</span><span class="p">()</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Time breakdown:&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Preprocessing: </span><span class="si">{</span><span class="n">preprocess_time</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">s (</span><span class="si">{</span><span class="n">preprocess_time</span><span class="o">/</span><span class="n">total</span><span class="si">:</span><span class="s2">.1%</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Inference:     </span><span class="si">{</span><span class="n">inference_time</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">s (</span><span class="si">{</span><span class="n">inference_time</span><span class="o">/</span><span class="n">total</span><span class="si">:</span><span class="s2">.1%</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Postprocessing: </span><span class="si">{</span><span class="n">postprocess_time</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">s (</span><span class="si">{</span><span class="n">postprocess_time</span><span class="o">/</span><span class="n">total</span><span class="si">:</span><span class="s2">.1%</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+
+<span class="n">total</span> <span class="o">=</span> <span class="n">preprocess_time</span> <span class="o">+</span> <span class="n">inference_time</span> <span class="o">+</span> <span class="n">postprocess_time</span>
+</pre></div>
+</div>
+</section>
+<section id="warm-up-considerations">
+<h3>Warm-up Considerations<a class="headerlink" href="#warm-up-considerations" title="Link to this heading">#</a></h3>
+<p>The first few inferences may be slower due to system warm-up. Consider excluding them from performance analysis:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Warm-up inferences</span>
+<span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+    <span class="n">model</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+
+<span class="c1"># Reset metrics after warm-up</span>
+<span class="n">model</span><span class="o">.</span><span class="n">get_performance_metrics</span><span class="p">()</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+
+<span class="c1"># Now measure actual performance</span>
+<span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">100</span><span class="p">):</span>
+    <span class="n">model</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+
+<span class="n">metrics</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_performance_metrics</span><span class="p">()</span>
+<span class="n">metrics</span><span class="o">.</span><span class="n">log_metrics</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="best-practices">
+<h2>Best Practices<a class="headerlink" href="#best-practices" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p><strong>Warm-up Period</strong>: Always include a warm-up period before measuring performance for production benchmarks.</p></li>
+<li><p><strong>Multiple Runs</strong>: Collect metrics over multiple inference runs to get statistically significant results.</p></li>
+<li><p><strong>Reset Between Tests</strong>: Reset metrics when comparing different configurations or models.</p></li>
+<li><p><strong>Monitor All Stages</strong>: Pay attention to all pipeline stages (preprocessing, inference, postprocessing) to identify bottlenecks.</p></li>
+<li><p><strong>Environment Consistency</strong>: Ensure consistent testing conditions (device state, background processes, etc.) when comparing performance.</p></li>
+</ol>
+</section>
+<section id="example-complete-performance-analysis">
+<h2>Example: Complete Performance Analysis<a class="headerlink" href="#example-complete-performance-analysis" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">cv2</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">model_api.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">DetectionModel</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">analyze_model_performance</span><span class="p">(</span><span class="n">model_path</span><span class="p">,</span> <span class="n">test_images</span><span class="p">,</span> <span class="n">warmup_runs</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">test_runs</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Complete performance analysis example.&quot;&quot;&quot;</span>
+
+    <span class="c1"># Load model</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">DetectionModel</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span>
+
+    <span class="c1"># Load test image</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="n">test_images</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Starting warm-up...&quot;</span><span class="p">)</span>
+    <span class="c1"># Warm-up runs</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">warmup_runs</span><span class="p">):</span>
+        <span class="n">model</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+
+    <span class="c1"># Reset metrics after warm-up</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">get_performance_metrics</span><span class="p">()</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Running </span><span class="si">{</span><span class="n">test_runs</span><span class="si">}</span><span class="s2"> test inferences...&quot;</span><span class="p">)</span>
+    <span class="c1"># Performance measurement runs</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">image_path</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">test_images</span><span class="p">[:</span><span class="n">test_runs</span><span class="p">]):</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="n">image_path</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+
+        <span class="c1"># Log progress</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Completed </span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">test_runs</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Analyze results</span>
+    <span class="n">metrics</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_performance_metrics</span><span class="p">()</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;=&quot;</span><span class="o">*</span><span class="mi">50</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;PERFORMANCE ANALYSIS RESULTS&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="o">*</span><span class="mi">50</span><span class="p">)</span>
+
+    <span class="n">metrics</span><span class="o">.</span><span class="n">log_metrics</span><span class="p">()</span>
+
+    <span class="c1"># Additional analysis</span>
+    <span class="n">inference_time</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">get_inference_time</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Inference time analysis:&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Minimum: </span><span class="si">{</span><span class="nb">min</span><span class="p">(</span><span class="n">inference_time</span><span class="o">.</span><span class="n">durations</span><span class="p">)</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Maximum: </span><span class="si">{</span><span class="nb">max</span><span class="p">(</span><span class="n">inference_time</span><span class="o">.</span><span class="n">durations</span><span class="p">)</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Median: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">inference_time</span><span class="o">.</span><span class="n">durations</span><span class="p">)[</span><span class="nb">len</span><span class="p">(</span><span class="n">inference_time</span><span class="o">.</span><span class="n">durations</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span><span class="p">]</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">metrics</span>
+
+<span class="c1"># Usage</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">model_path</span> <span class="o">=</span> <span class="s2">&quot;path/to/your/model.xml&quot;</span>
+    <span class="n">test_images</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;image1.jpg&quot;</span><span class="p">,</span> <span class="s2">&quot;image2.jpg&quot;</span><span class="p">,</span> <span class="s2">&quot;image3.jpg&quot;</span><span class="p">]</span>  <span class="c1"># Add more images</span>
+
+    <span class="n">metrics</span> <span class="o">=</span> <span class="n">analyze_model_performance</span><span class="p">(</span><span class="n">model_path</span><span class="p">,</span> <span class="n">test_images</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This comprehensive performance monitoring system helps optimize model inference pipeline and ensure optimal performance in production deployments.</p>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="model-configuration.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Model configuration</p>
+      </div>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#basic-usage">Basic Usage</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#accessing-performance-metrics">Accessing Performance Metrics</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#logging-performance-metrics">Logging Performance Metrics</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#detailed-metrics-access">Detailed Metrics Access</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#individual-timing-statistics">Individual Timing Statistics</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#frame-rate-and-throughput">Frame Rate and Throughput</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#advanced-usage">Advanced Usage</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#batch-processing-performance">Batch Processing Performance</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#performance-monitoring-during-inference">Performance Monitoring During Inference</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#performance-optimization-tips">Performance Optimization Tips</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#analyzing-bottlenecks">Analyzing Bottlenecks</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#warm-up-considerations">Warm-up Considerations</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#best-practices">Best Practices</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example-complete-performance-analysis">Example: Complete Performance Analysis</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/guides/performance_metrics.md.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, Intel.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
