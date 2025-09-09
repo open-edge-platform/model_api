@@ -5,4 +5,5 @@
 :hidden:
 
 ./model-configuration
+./performance_metrics
 ```

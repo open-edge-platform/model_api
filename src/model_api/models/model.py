@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2020-2024 Intel Corporation
+# Copyright (C) 2020-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
 
@@ -17,6 +17,7 @@ from model_api.adapters.openvino_adapter import (
     get_user_config,
 )
 from model_api.adapters.ovms_adapter import OVMSAdapter
+from model_api.metrics import PerformanceMetrics
 
 if TYPE_CHECKING:
     from os import PathLike
@@ -73,6 +74,7 @@ class Model:
             WrapperError: if the wrapper configuration is incorrect
         """
         self.logger = log.getLogger()
+        self.perf = PerformanceMetrics()
         self.inference_adapter = inference_adapter
         if isinstance(
             self.inference_adapter,
@@ -105,6 +107,15 @@ class Model:
             Any: Model object.
         """
         return self.inference_adapter.get_model()
+
+    def get_performance_metrics(self) -> PerformanceMetrics:
+        """
+        Returns performance metrics of the model.
+
+        Returns:
+            PerformanceMetrics: Performance metrics object.
+        """
+        return self.perf
 
     @classmethod
     def get_model_class(cls, name: str) -> Type:
@@ -397,9 +408,18 @@ class Model:
         Returns:
             - postprocessed data in the format defined by wrapper
         """
+        self.perf.total_time.update()
+        self.perf.preprocess_time.update()
         dict_data, input_meta = self.preprocess(inputs)
+        self.perf.preprocess_time.update()
+        self.perf.inference_time.update()
         raw_result = self.infer_sync(dict_data)
-        return self.postprocess(raw_result, input_meta)
+        self.perf.inference_time.update()
+        self.perf.postprocess_time.update()
+        result = self.postprocess(raw_result, input_meta)
+        self.perf.postprocess_time.update()
+        self.perf.total_time.update()
+        return result
 
     def infer_batch(self, inputs: list) -> list[Any]:
         """Applies preprocessing, asynchronous inference, postprocessing routines to a collection of inputs.
@@ -443,7 +463,9 @@ class Model:
         """
         if not self.model_loaded or force:
             self.model_loaded = True
+            self.perf.load_time.update()
             self.inference_adapter.load_model()
+            self.perf.load_time.update()
 
     def reshape(self, new_shape: dict):
         """
@@ -504,10 +526,15 @@ class Model:
                 "The model is not loaded to the device. Please, create the wrapper "
                 "with preload=True option or call load() method before infer_async()",
             )
+        self.perf.total_time.update()
+        self.perf.preprocess_time.update()
         dict_data, meta = self.preprocess(input_data)
+        self.perf.preprocess_time.update()
+        self.perf.inference_time.update()
         self.inference_adapter.infer_async(
             dict_data,
             (
+                self,
                 meta,
                 self.inference_adapter.get_raw_result,
                 self.postprocess,
@@ -521,9 +548,13 @@ class Model:
         """
         A wrapper for async inference callback.
         """
-        meta, get_result_fn, postprocess_fn, callback_fn, user_data = callback_data
+        model, meta, get_result_fn, postprocess_fn, callback_fn, user_data = callback_data
         raw_result = get_result_fn(request)
+        model.perf.inference_time.update()
+        model.perf.postprocess_time.update()
         result = postprocess_fn(raw_result, meta)
+        model.perf.postprocess_time.update()
+        model.perf.total_time.update()
         callback_fn(result, user_data)
 
     def set_callback(self, callback_fn: Callable):
