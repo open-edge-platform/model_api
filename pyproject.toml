@@ -39,6 +39,7 @@ tests = [
     "pre-commit",
     "httpx",
     "pytest",
+    "pytest-cov",
     "pytest-mock",
     "ultralytics>=8.0.114,<=8.0.205",
     "onnx",
@@ -246,3 +247,8 @@ notice-rgx = """
 
 [tool.bandit]
 skips = ["B101", "B310"]
+
+[tool.coverage.report]
+# Fail if total coverage is below 40%
+fail_under = 40
+show_missing = true

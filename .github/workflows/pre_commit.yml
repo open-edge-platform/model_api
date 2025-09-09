@@ -55,4 +55,4 @@ jobs:
           uv sync --locked --extra tests --extra ovms
       - name: Run python unit tests
         run: |
-          uv run pytest tests/unit
+          uv run pytest tests/unit --cov
