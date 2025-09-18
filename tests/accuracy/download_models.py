@@ -66,10 +66,9 @@ async def main():
                     stream_file(client, download_url.replace(".xml", ".bin"), save_path.with_suffix(".bin"), semaphore),
                 )
 
-        # Download all models with limited concurrency
-        print(f"Starting download of {len(tasks)} models with max 10 concurrent downloads...")
+        print(f"Starting download of {len(tasks)} files with max 10 concurrent downloads...")
         await asyncio.gather(*tasks)
-        print(f"All {len(tasks)} models downloaded successfully!")
+        print(f"All {len(tasks)} files downloaded successfully!")
 
 
 if __name__ == "__main__":

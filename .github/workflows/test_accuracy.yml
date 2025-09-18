@@ -46,10 +46,11 @@ jobs:
           uv sync --locked --extra tests --extra-index-url https://download.pytorch.org/whl/cpu
       - name: Prepare test data
         run: |
-          uv run python tests/accuracy/download_models.py -d data -j tests/accuracy/otx_2.6.0_scope.json
+          uv run python tests/accuracy/download_models.py -d data -j tests/accuracy/images.json
+          uv run python tests/accuracy/download_models.py -d data -j tests/accuracy/otx_2.6.0_models.json
       - name: Run Python Test
         run: |
-          uv run pytest --data=./data --model_data=otx_2.6.0_scope.json tests/accuracy/test_accuracy.py
+          uv run pytest --data=./data --model_data=otx_2.6.0_models.json tests/accuracy/test_accuracy.py
   test_accuracy_geti_2.13.0:
     runs-on: ubuntu-24.04
     continue-on-error: true
@@ -67,7 +68,8 @@ jobs:
           uv sync --locked --extra tests --extra-index-url https://download.pytorch.org/whl/cpu
       - name: Prepare test data
         run: |
-          uv run python tests/accuracy/download_models.py -d data -j tests/accuracy/geti_2.13.0_scope.json
+          uv run python tests/accuracy/download_models.py -d data -j tests/accuracy/images.json
+          uv run python tests/accuracy/download_models.py -d data -j tests/accuracy/geti_2.13.0_models.json
       - name: Run Python Test
         run: |
-          uv run pytest --data=./data --model_data=geti_2.13.0_scope.json tests/accuracy/test_accuracy.py
+          uv run pytest --data=./data --model_data=geti_2.13.0_models.json tests/accuracy/test_accuracy.py
