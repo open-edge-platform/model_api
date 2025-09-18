@@ -137,6 +137,8 @@ def pytest_generate_tests(metafunc):
         model_data_path = Path(__file__).resolve().parent / model_data_file
         config_data = read_config(model_data_path)
         metafunc.parametrize("model_data", config_data)
+
+
 def test_image_models(data, device, dump, result, model_data):  # noqa: C901
     name = model_data["name"]
     if name.endswith((".xml", ".onnx")):

@@ -29,3 +29,45 @@ jobs:
       - name: Run Python Test
         run: |
           uv run pytest --data=./data tests/accuracy/test_accuracy.py
+  test_accuracy_otx_2.6.0:
+    runs-on: ubuntu-24.04
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version-file: ".python-version"
+      - name: Install uv
+        uses: astral-sh/setup-uv@4959332f0f014c5280e7eac8b70c90cb574c9f9b # v6.6.0
+      - name: Install dependencies
+        run: |
+          uv sync --locked --extra tests --extra-index-url https://download.pytorch.org/whl/cpu
+      - name: Prepare test data
+        run: |
+          uv run python tests/accuracy/download_models.py -d data -j tests/accuracy/otx_2.6.0_scope.json
+      - name: Run Python Test
+        run: |
+          uv run pytest --data=./data --model_data=otx_2.6.0_scope.json tests/accuracy/test_accuracy.py
+  test_accuracy_geti_2.13.0:
+    runs-on: ubuntu-24.04
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version-file: ".python-version"
+      - name: Install uv
+        uses: astral-sh/setup-uv@4959332f0f014c5280e7eac8b70c90cb574c9f9b # v6.6.0
+      - name: Install dependencies
+        run: |
+          uv sync --locked --extra tests --extra-index-url https://download.pytorch.org/whl/cpu
+      - name: Prepare test data
+        run: |
+          uv run python tests/accuracy/download_models.py -d data -j tests/accuracy/geti_2.13.0_scope.json
+      - name: Run Python Test
+        run: |
+          uv run pytest --data=./data --model_data=geti_2.13.0_scope.json tests/accuracy/test_accuracy.py

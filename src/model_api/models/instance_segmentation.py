@@ -188,10 +188,10 @@ class MaskRCNNModel(ImageModel):
         # Calculate box areas safely to avoid overflow
         box_widths = np.clip(boxes[:, 2] - boxes[:, 0], 0, None)
         box_heights = np.clip(boxes[:, 3] - boxes[:, 1], 0, None)
-        
+
         # Use float64 for area calculation to prevent overflow, then check if area > 1
         box_areas = box_widths.astype(np.float64) * box_heights.astype(np.float64)
-        
+
         keep = (scores > self.confidence_threshold) & (box_areas > 1)
 
         if self.labels:
