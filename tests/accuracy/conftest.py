@@ -11,6 +11,12 @@ import pytest
 def pytest_addoption(parser):
     parser.addoption("--data", action="store", help="data folder with dataset")
     parser.addoption(
+        "--model_data",
+        action="store",
+        default="public_scope.json",
+        help="path to model data JSON file for test parameterization",
+    )
+    parser.addoption(
         "--device",
         action="store",
         default="CPU",
