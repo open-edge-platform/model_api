@@ -241,6 +241,9 @@ class SegmentationModel(ImageModel):
                     cv2.drawContours(mask, contours, contourIdx=next_child_idx, color=0, thickness=-1)
                     next_child_idx = hierarchy[next_child_idx][0]
 
+                if current_label_soft_prediction.dtype != np.float32:
+                    current_label_soft_prediction = current_label_soft_prediction.astype(np.float32)
+
                 probability = cv2.mean(current_label_soft_prediction, mask)[0]
                 combined_contours.append(Contour(label, probability, contour, children))
 

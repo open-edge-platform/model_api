@@ -126,10 +126,19 @@ def result(pytestconfig):
     return pytestconfig.test_results
 
 
-@pytest.mark.parametrize(
-    ("model_data"),
-    read_config(Path(__file__).resolve().parent / "public_scope.json"),
-)
+@pytest.fixture(scope="session")
+def model_data_file(pytestconfig):
+    return pytestconfig.getoption("model_data")
+
+
+def pytest_generate_tests(metafunc):
+    if "model_data" in metafunc.fixturenames:
+        model_data_file = metafunc.config.getoption("model_data")
+        model_data_path = Path(__file__).resolve().parent / model_data_file
+        config_data = read_config(model_data_path)
+        metafunc.parametrize("model_data", config_data)
+
+
 def test_image_models(data, device, dump, result, model_data):  # noqa: C901
     name = model_data["name"]
     if name.endswith((".xml", ".onnx")):

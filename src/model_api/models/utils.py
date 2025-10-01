@@ -26,8 +26,12 @@ def add_rotated_rects(inst_seg_result: InstanceSegmentationResult) -> RotatedSeg
             cv2.RETR_EXTERNAL,
             cv2.CHAIN_APPROX_SIMPLE,
         )
-        contour = np.vstack(contours)
-        objects_with_rects.append(cv2.minAreaRect(contour))
+        # Check if contours were found before processing
+        if contours:
+            contour = np.vstack(contours)
+            objects_with_rects.append(cv2.minAreaRect(contour))
+        else:
+            objects_with_rects.append(((0, 0), (0, 0), 0))
     return RotatedSegmentationResult(
         bboxes=inst_seg_result.bboxes,
         masks=inst_seg_result.masks,
