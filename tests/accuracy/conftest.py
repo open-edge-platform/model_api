@@ -28,6 +28,12 @@ def pytest_addoption(parser):
         default=False,
         help="whether to dump results into json file",
     )
+    parser.addoption(
+        "--results-dir",
+        action="store",
+        default="",
+        help="directory to store inference result",
+    )
 
 
 def pytest_configure(config):

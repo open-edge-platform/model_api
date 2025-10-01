@@ -50,6 +50,7 @@ from model_api.tilers import (
     InstanceSegmentationTiler,
     SemanticSegmentationTiler,
 )
+from model_api.visualizer import Visualizer
 
 # Mapping of model type strings to actual classes for security
 MODEL_TYPE_MAPPING = {
@@ -112,6 +113,11 @@ def data(pytestconfig):
 
 
 @pytest.fixture(scope="session")
+def results_dir(pytestconfig):
+    return pytestconfig.getoption("results_dir")
+
+
+@pytest.fixture(scope="session")
 def device(pytestconfig):
     return pytestconfig.getoption("device")
 
@@ -139,7 +145,7 @@ def pytest_generate_tests(metafunc):
         metafunc.parametrize("model_data", config_data)
 
 
-def test_image_models(data, device, dump, result, model_data):  # noqa: C901
+def test_image_models(data, device, dump, result, model_data, results_dir):  # noqa: C901
     name = model_data["name"]
     if name.endswith((".xml", ".onnx")):
         name = f"{data}/{name}"
@@ -235,6 +241,9 @@ def test_image_models(data, device, dump, result, model_data):  # noqa: C901
                     )
             else:
                 outputs = model(image)
+
+            store_outputs(name, image, device, outputs, results_dir)
+
             if isinstance(outputs, ClassificationResult) or type(outputs) is DetectionResult:
                 assert len(test_data["reference"]) == 1
                 output_str = str(outputs)
@@ -295,3 +304,23 @@ def test_image_models(data, device, dump, result, model_data):  # noqa: C901
 
     if dump:
         result[-1]["test_data"] = inference_results
+
+
+def store_outputs(name, image, device, result, results_dir: str) -> None:
+    if not results_dir:
+        return
+
+    Path(results_dir).mkdir(exist_ok=True, parents=True)
+
+    iteration = 1
+    while True:
+        path = Path(results_dir) / f"{Path(name).stem}_{iteration}_{device}.png"
+        if not path.exists():
+            break
+        iteration += 1
+
+    visualizer = Visualizer()
+    try:
+        visualizer.save(image, result, path)
+    except (TypeError, ValueError) as e:
+        print(f"Cannot save the output visualization for {name}. Error: {e}")
