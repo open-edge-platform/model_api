@@ -1,17 +1,16 @@
 #
-# Copyright (C) 2020-2024 Intel Corporation
+# Copyright (C) 2020-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
 
 from __future__ import annotations
 
 import sys
-from functools import partial, reduce
 from typing import Any, Callable
 
 import numpy as np
 
-from .utils import INTERPOLATION_TYPES, RESIZE_TYPES, InputTransform
+from .utils import setup_python_preprocessing_pipeline
 
 try:
     import onnx
@@ -145,30 +144,17 @@ class ONNXRuntimeAdapter(InferenceAdapter):
         """
         Adds external preprocessing steps done before ONNX model execution.
         """
-        preproc_funcs = [np.squeeze]
-        if resize_mode != "crop":
-            if resize_mode == "fit_to_window_letterbox":
-                resize_fn = partial(
-                    RESIZE_TYPES[resize_mode],
-                    size=target_shape,
-                    interpolation=INTERPOLATION_TYPES[interpolation_mode],
-                    pad_value=pad_value,
-                )
-            else:
-                resize_fn = partial(
-                    RESIZE_TYPES[resize_mode],
-                    size=target_shape,
-                    interpolation=INTERPOLATION_TYPES[interpolation_mode],
-                )
-        else:
-            resize_fn = partial(RESIZE_TYPES[resize_mode], size=target_shape)
-        preproc_funcs.append(resize_fn)
-        input_transform = InputTransform(brg2rgb, mean, scale)
-        preproc_funcs.extend((input_transform.__call__, partial(change_layout, layout=layout)))
-
-        self.preprocessor = reduce(
-            lambda f, g: lambda x: f(g(x)),
-            reversed(preproc_funcs),
+        self.preprocessor = setup_python_preprocessing_pipeline(
+            layout=layout,
+            resize_mode=resize_mode,
+            interpolation_mode=interpolation_mode,
+            target_shape=target_shape,
+            pad_value=pad_value,
+            dtype=dtype,
+            brg2rgb=brg2rgb,
+            mean=mean,
+            scale=scale,
+            input_idx=input_idx,
         )
 
     def get_model(self):
@@ -227,18 +213,3 @@ def get_shape_from_onnx(onnx_shape):
         if isinstance(item, str):
             onnx_shape[i] = -1
     return tuple(onnx_shape)
-
-
-def change_layout(image, layout):
-    """Changes the input image layout to fit the layout of the model input layer.
-
-    Args:
-        inputs (ndarray): a single image as 3D array in HWC layout
-
-    Returns:
-        - the image with layout aligned with the model layout
-    """
-    if "CHW" in layout:
-        image = image.transpose((2, 0, 1))  # HWC->CHW
-        image = image.reshape((1, *image.shape))
-    return image
