@@ -178,7 +178,52 @@ class OpenvinoAdapter(InferenceAdapter):
         msg = "Model must be bytes or a file"
         raise RuntimeError(msg)
 
+    def reshape_dynamic_inputs(self) -> None:
+        """For NPU devices, set static shape if the model has dynamic shapes"""
+        for input in self.model.inputs:
+            if input.partial_shape.is_dynamic:
+                input_name = input.get_any_name()
+                shape = get_input_shape(input)
+                static_shape = []
+
+                # Detect likely layout for 4D shapes
+                is_nchw = False
+                if len(shape) == 4 and not isinstance(shape[1], tuple) and shape[1] != -1 and shape[1] <= 4:
+                    is_nchw = True
+
+                for i, dim in enumerate(shape):
+                    if isinstance(dim, tuple):
+                        static_shape.append((dim[0] + dim[1]) // 2)
+                    elif dim == -1:
+                        if i == 0:
+                            static_shape.append(1)
+                        elif len(shape) == 4:
+                            if is_nchw:
+                                if i == 1:
+                                    static_shape.append(3)
+                                else:
+                                    static_shape.append(224)
+                            else:
+                                if i == 3:
+                                    static_shape.append(3)
+                                else:
+                                    static_shape.append(224)
+                        else:
+                            static_shape.append(1)
+                    else:
+                        static_shape.append(dim)
+
+                log.info(
+                    f"NPU: Reshaping input '{input_name}' from dynamic {shape} to static {static_shape}",
+                )
+                self.reshape_model({input_name: static_shape})
+
     def load_model(self) -> None:
+        """Loads the model to the device specified in the constructor"""
+        devices = parse_devices(self.device)
+        if any("NPU" in dev.upper() for dev in devices) and self.model.is_dynamic():
+            self.reshape_dynamic_inputs()
+
         self.compiled_model = self.core.compile_model(
             self.model,
             self.device,
@@ -374,6 +419,12 @@ class OpenvinoAdapter(InferenceAdapter):
                 input_idx=input_idx,
             )
             self.use_python_preprocessing = True
+            input_name = self.model.inputs[input_idx].get_any_name()
+            if layout == "NCHW":
+                static_shape = [1, 3, target_shape[1], target_shape[0]]
+            else:
+                static_shape = [1, target_shape[1], target_shape[0], 3]
+            self.reshape_model({input_name: static_shape})
             return
 
         ppp = PrePostProcessor(self.model)
