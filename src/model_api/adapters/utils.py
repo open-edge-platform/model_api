@@ -517,6 +517,81 @@ def crop_resize_ocv(image: np.ndarray, size: tuple[int, int]) -> np.ndarray:
     return cv2.resize(cropped_frame, size)
 
 
+def setup_python_preprocessing_pipeline(
+    layout: str,
+    resize_mode: str,
+    interpolation_mode: str,
+    target_shape: tuple[int, ...],
+    pad_value: int,
+    dtype: type = int,
+    brg2rgb: bool = False,
+    mean: list[Any] | None = None,
+    scale: list[Any] | None = None,
+    input_idx: int = 0,
+):
+    """
+    Sets up a Python preprocessing pipeline for model adapters.
+
+    Args:
+        layout: Target layout for the input (e.g., "NCHW", "NHWC")
+        resize_mode: Type of resizing ("crop", "standard", "fit_to_window", "fit_to_window_letterbox")
+        interpolation_mode: Interpolation method ("LINEAR", "CUBIC", "NEAREST")
+        target_shape: Target shape for resizing
+        pad_value: Padding value for letterbox resizing
+        dtype: Data type for preprocessing
+        brg2rgb: Whether to convert BGR to RGB
+        mean: Mean values for normalization
+        scale: Scale values for normalization
+        input_idx: Input index (unused but kept for compatibility)
+
+    Returns:
+        Callable: A preprocessing function that can be applied to input data
+    """
+    from functools import partial, reduce
+
+    preproc_funcs = [np.squeeze]
+    if resize_mode != "crop":
+        if resize_mode == "fit_to_window_letterbox":
+            resize_fn = partial(
+                RESIZE_TYPES[resize_mode],
+                size=target_shape,
+                interpolation=INTERPOLATION_TYPES[interpolation_mode],
+                pad_value=pad_value,
+            )
+        else:
+            resize_fn = partial(
+                RESIZE_TYPES[resize_mode],
+                size=target_shape,
+                interpolation=INTERPOLATION_TYPES[interpolation_mode],
+            )
+    else:
+        resize_fn = partial(RESIZE_TYPES[resize_mode], size=target_shape)
+    preproc_funcs.append(resize_fn)
+    input_transform = InputTransform(brg2rgb, mean, scale)
+    preproc_funcs.extend((input_transform.__call__, partial(change_layout, layout=layout)))
+
+    return reduce(
+        lambda f, g: lambda x: f(g(x)),
+        reversed(preproc_funcs),
+    )
+
+
+def change_layout(image, layout):
+    """Changes the input image layout to fit the layout of the model input layer.
+
+    Args:
+        image (ndarray): a single image as 3D array in HWC layout
+        layout (str): target layout
+
+    Returns:
+        ndarray: the image with layout aligned with the model layout
+    """
+    if "CHW" in layout:
+        image = image.transpose((2, 0, 1))  # HWC->CHW
+        image = image.reshape((1, *image.shape))
+    return image
+
+
 RESIZE_TYPES: dict[str, Callable] = {
     "crop": crop_resize_ocv,
     "standard": resize_image_ocv,

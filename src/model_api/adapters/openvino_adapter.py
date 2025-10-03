@@ -41,6 +41,7 @@ from .utils import (
     resize_image,
     resize_image_letterbox,
     resize_image_with_aspect,
+    setup_python_preprocessing_pipeline,
 )
 
 
@@ -143,6 +144,8 @@ class OpenvinoAdapter(InferenceAdapter):
         )
         self.is_onnx_file = False
         self.onnx_metadata = {}
+        self.preprocessor = lambda arg: arg
+        self.use_python_preprocessing = False
 
         if isinstance(self.model_path, (str, Path)):
             if Path(self.model_path).suffix == ".onnx" and weights_path:
@@ -175,7 +178,52 @@ class OpenvinoAdapter(InferenceAdapter):
         msg = "Model must be bytes or a file"
         raise RuntimeError(msg)
 
+    def reshape_dynamic_inputs(self) -> None:
+        """For NPU devices, set static shape if the model has dynamic shapes"""
+        for input in self.model.inputs:
+            if input.partial_shape.is_dynamic:
+                input_name = input.get_any_name()
+                shape = get_input_shape(input)
+                static_shape = []
+
+                # Detect likely layout for 4D shapes
+                is_nchw = False
+                if len(shape) == 4 and not isinstance(shape[1], tuple) and shape[1] != -1 and shape[1] <= 4:
+                    is_nchw = True
+
+                for i, dim in enumerate(shape):
+                    if isinstance(dim, tuple):
+                        static_shape.append((dim[0] + dim[1]) // 2)
+                    elif dim == -1:
+                        if i == 0:
+                            static_shape.append(1)
+                        elif len(shape) == 4:
+                            if is_nchw:
+                                if i == 1:
+                                    static_shape.append(3)
+                                else:
+                                    static_shape.append(224)
+                            else:
+                                if i == 3:
+                                    static_shape.append(3)
+                                else:
+                                    static_shape.append(224)
+                        else:
+                            static_shape.append(1)
+                    else:
+                        static_shape.append(dim)
+
+                log.info(
+                    f"NPU: Reshaping input '{input_name}' from dynamic {shape} to static {static_shape}",
+                )
+                self.reshape_model({input_name: static_shape})
+
     def load_model(self) -> None:
+        """Loads the model to the device specified in the constructor"""
+        devices = parse_devices(self.device)
+        if any("NPU" in dev.upper() for dev in devices) and self.model.is_dynamic():
+            self.reshape_dynamic_inputs()
+
         self.compiled_model = self.core.compile_model(
             self.model,
             self.device,
@@ -280,11 +328,17 @@ class OpenvinoAdapter(InferenceAdapter):
         return {key: request.get_tensor(key).data.copy() for key in self.get_output_layers()}
 
     def infer_sync(self, dict_data: dict[str, ndarray]) -> dict[str, ndarray]:
+        if self.use_python_preprocessing:
+            for key in dict_data:
+                dict_data[key] = self.preprocessor(dict_data[key])
         self.infer_request = self.async_queue[self.async_queue.get_idle_request_id()]
         self.infer_request.infer(dict_data)
         return self.get_raw_result(self.infer_request)
 
     def infer_async(self, dict_data, callback_data) -> None:
+        if self.use_python_preprocessing:
+            for key in dict_data:
+                dict_data[key] = self.preprocessor(dict_data[key])
         self.async_queue.start_async(dict_data, callback_data)
 
     def set_callback(self, callback_fn: Callable):
@@ -347,8 +401,32 @@ class OpenvinoAdapter(InferenceAdapter):
         input_idx: int = 0,
     ) -> None:
         """
-        Embeds OpenVINO PrePostProcessor module into the model.
+        Embeds preprocessing into the model, or sets up Python preprocessing for NPU devices.
         """
+        # Check if we should use Python preprocessing for NPU devices
+        devices = parse_devices(self.device)
+        if any("NPU" in dev.upper() for dev in devices):
+            self.preprocessor = setup_python_preprocessing_pipeline(
+                layout=layout,
+                resize_mode=resize_mode,
+                interpolation_mode=interpolation_mode,
+                target_shape=target_shape,
+                pad_value=pad_value,
+                dtype=dtype,
+                brg2rgb=brg2rgb,
+                mean=mean,
+                scale=scale,
+                input_idx=input_idx,
+            )
+            self.use_python_preprocessing = True
+            input_name = self.model.inputs[input_idx].get_any_name()
+            if layout == "NCHW":
+                static_shape = [1, 3, target_shape[1], target_shape[0]]
+            else:
+                static_shape = [1, target_shape[1], target_shape[0], 3]
+            self.reshape_model({input_name: static_shape})
+            return
+
         ppp = PrePostProcessor(self.model)
 
         # Change the input type to the 8-bit image
