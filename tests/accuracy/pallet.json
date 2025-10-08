@@ -1,0 +1,74 @@
+[
+  {
+    "name": "pallet/YOLOX-S/int8/model.xml",
+    "type": "DetectionModel",
+    "test_data": [
+      {
+        "image": "images/demo_video_frame_986.jpg",
+        "reference": [
+          "258, 81, 596, 321, 2 (box): 0.819; [0]; [0]"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "pallet/YOLOX-S/fp16/model.xml",
+    "type": "DetectionModel",
+    "test_data": [
+      {
+        "image": "images/demo_video_frame_986.jpg",
+        "reference": [
+          "262, 80, 596, 323, 2 (box): 0.799; 338, 213, 355, 233, 0 (defect): 0.529; [0]; [0]"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "pallet/YOLOX-S/fp32/model.xml",
+    "type": "DetectionModel",
+    "test_data": [
+      {
+        "image": "images/demo_video_frame_986.jpg",
+        "reference": [
+          "262, 80, 596, 323, 2 (box): 0.799; 338, 213, 355, 233, 0 (defect): 0.527; [0]; [0]"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "pallet/DFine-X/int8/model.xml",
+    "type": "DetectionModel",
+    "test_data": [
+      {
+        "image": "images/demo_video_frame_986.jpg",
+        "reference": [
+          "274, 100, 512, 305, 2 (box): 0.878; 287, 142, 320, 236, 1 (shipping_label): 0.834; 369, 122, 423, 203, 1 (shipping_label): 0.673; [0]; [0]"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "pallet/DFine-X/fp16/model.xml",
+    "type": "DetectionModel",
+    "test_data": [
+      {
+        "image": "images/demo_video_frame_986.jpg",
+        "reference": [
+          "274, 99, 512, 304, 2 (box): 0.903; 287, 142, 320, 236, 1 (shipping_label): 0.837; 369, 122, 423, 203, 1 (shipping_label): 0.702; [0]; [0]"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "pallet/DFine-X/fp32/model.xml",
+    "type": "DetectionModel",
+    "test_data": [
+      {
+        "image": "images/demo_video_frame_986.jpg",
+        "reference": [
+          "274, 99, 512, 304, 2 (box): 0.905; 287, 142, 320, 236, 1 (shipping_label): 0.837; 369, 122, 423, 203, 1 (shipping_label): 0.698; [0]; [0]"
+        ]
+      }
+    ]
+  }
+]

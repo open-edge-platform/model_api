@@ -42,23 +42,39 @@ class Visualizer:
     def __init__(self, layout: Layout | None = None) -> None:
         self.layout = layout
 
-    def show(self, image: Image.Image | np.ndarray, result: Result) -> None:
+    def show(self, image: Image.Image | np.ndarray, result: Result, name: str | None = None) -> None:
         if isinstance(image, np.ndarray):
-            image = Image.fromarray(image)
+            image = Image.fromarray(self._convert_bgr_to_rgb(image))
         scene = self._scene_from_result(image, result)
-        return scene.show()
+        rendered_image = scene.render()
+        
+        # Add name label in top-left corner if provided
+        if name:
+            from .primitive import Label
+            name_label = Label(label=name, bg_color="white", fg_color="black", size=16)
+            rendered_image = name_label.compute(rendered_image.copy())
+        
+        rendered_image.show()
 
-    def save(self, image: Image.Image | np.ndarray, result: Result, path: Path) -> None:
+    def save(self, image: Image.Image | np.ndarray, result: Result, path: Path, name: str | None = None) -> None:
         if isinstance(image, np.ndarray):
-            image = Image.fromarray(image)
+            image = Image.fromarray(self._convert_bgr_to_rgb(image))
         scene = self._scene_from_result(image, result)
-        scene.save(path)
+        rendered_image = scene.render()
+        
+        # Add name label in top-left corner if provided
+        if name:
+            from .primitive import Label
+            name_label = Label(label=name, bg_color="white", fg_color="black", size=16)
+            rendered_image = name_label.compute(rendered_image.copy())
+        
+        rendered_image.save(path)
 
     def render(self, image: Image.Image | np.ndarray, result: Result) -> Image.Image | np.ndarray:
         is_numpy = isinstance(image, np.ndarray)
 
         if is_numpy:
-            image = Image.fromarray(image)
+            image = Image.fromarray(self._convert_bgr_to_rgb(image))
 
         scene = self._scene_from_result(image, result)
         result_img: Image = scene.render()
@@ -89,3 +105,17 @@ class Visualizer:
             raise ValueError(msg)
 
         return scene
+
+    def _convert_bgr_to_rgb(self, image: np.ndarray) -> np.ndarray:
+        """Convert BGR image to RGB if it's a 3-channel image.
+        
+        Args:
+            image: Input image array
+            
+        Returns:
+            RGB image array
+        """
+        # Only convert if it's a 3-channel image (BGR format from OpenCV)
+        if len(image.shape) == 3 and image.shape[2] == 3:
+            return image[:, :, ::-1]  # Convert BGR to RGB by reversing last dimension
+        return image

@@ -105,6 +105,9 @@ class Scene:
 
     def _to_overlay(self, overlay: Overlay | list[Overlay] | np.ndarray | None) -> list[Overlay] | None:
         if isinstance(overlay, np.ndarray):
+            # Convert BGR to RGB if it's a 3-channel image
+            if len(overlay.shape) == 3 and overlay.shape[2] == 3:
+                overlay = overlay[:, :, ::-1]  # Convert BGR to RGB
             image = Image.fromarray(overlay)
             return [Overlay(image)]
         if isinstance(overlay, Overlay):

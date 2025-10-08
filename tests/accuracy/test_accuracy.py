@@ -312,15 +312,15 @@ def store_outputs(name, image, device, result, results_dir: str) -> None:
 
     Path(results_dir).mkdir(exist_ok=True, parents=True)
 
+    model_path = Path(name)
+    display_name = f"{model_path.parent.parent.name}_{model_path.parent.name}"
+
     iteration = 1
     while True:
-        path = Path(results_dir) / f"{Path(name).stem}_{iteration}_{device}.png"
+        path = Path(results_dir) / f"{display_name}_{iteration}_{device}.png"
         if not path.exists():
             break
         iteration += 1
 
     visualizer = Visualizer()
-    try:
-        visualizer.save(image, result, path)
-    except (TypeError, ValueError) as e:
-        print(f"Cannot save the output visualization for {name}. Error: {e}")
+    visualizer.save(image, result, path, name=display_name)
