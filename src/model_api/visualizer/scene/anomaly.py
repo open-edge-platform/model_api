@@ -19,10 +19,11 @@ from .scene import Scene
 class AnomalyScene(Scene):
     """Anomaly Scene."""
 
-    def __init__(self, image: Image, result: AnomalyResult, layout: Union[Layout, None] = None) -> None:
+    def __init__(self, image: Image, result: AnomalyResult, layout: Union[Layout, None] = None, include_xai: bool = True) -> None:
+        self.include_xai = include_xai
         super().__init__(
             base=image,
-            overlay=self._get_overlays(result),
+            overlay=self._get_overlays(result) if include_xai else [],
             bounding_box=self._get_bounding_boxes(result),
             label=self._get_labels(result),
             polygon=self._get_polygons(result),

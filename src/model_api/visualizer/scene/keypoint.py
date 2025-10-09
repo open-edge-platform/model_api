@@ -17,7 +17,8 @@ from .scene import Scene
 class KeypointScene(Scene):
     """Keypoint Scene."""
 
-    def __init__(self, image: Image, result: DetectedKeypoints, layout: Union[Layout, None] = None) -> None:
+    def __init__(self, image: Image, result: DetectedKeypoints, layout: Union[Layout, None] = None, include_xai: bool = True) -> None:
+        # Keypoint scenes don't typically have XAI overlays, but keeping parameter for consistency
         super().__init__(
             base=image,
             keypoints=self._get_keypoints(result),

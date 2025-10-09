@@ -18,11 +18,12 @@ from .scene import Scene
 class ClassificationScene(Scene):
     """Classification Scene."""
 
-    def __init__(self, image: Image, result: ClassificationResult, layout: Union[Layout, None] = None) -> None:
+    def __init__(self, image: Image, result: ClassificationResult, layout: Union[Layout, None] = None, include_xai: bool = True) -> None:
+        self.include_xai = include_xai
         super().__init__(
             base=image,
             label=self._get_labels(result),
-            overlay=self._get_overlays(result),
+            overlay=self._get_overlays(result) if include_xai else [],
             layout=layout,
         )
 

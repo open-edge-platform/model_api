@@ -39,13 +39,16 @@ if TYPE_CHECKING:
 class Visualizer:
     """Utility class to automatically select the correct scene and render/show it."""
 
-    def __init__(self, layout: Layout | None = None) -> None:
+    def __init__(self, layout: Layout | None = None, include_xai: bool = True) -> None:
         self.layout = layout
+        self.include_xai = include_xai
 
-    def show(self, image: Image.Image | np.ndarray, result: Result, name: str | None = None) -> None:
+    def show(self, image: Image.Image | np.ndarray, result: Result, name: str | None = None, include_xai: bool | None = None) -> None:
         if isinstance(image, np.ndarray):
             image = Image.fromarray(self._convert_bgr_to_rgb(image))
-        scene = self._scene_from_result(image, result)
+        # Use parameter value if provided, otherwise use instance default
+        xai_setting = include_xai if include_xai is not None else self.include_xai
+        scene = self._scene_from_result(image, result, include_xai=xai_setting)
         rendered_image = scene.render()
         
         # Add name label in top-left corner if provided
@@ -56,10 +59,12 @@ class Visualizer:
         
         rendered_image.show()
 
-    def save(self, image: Image.Image | np.ndarray, result: Result, path: Path, name: str | None = None) -> None:
+    def save(self, image: Image.Image | np.ndarray, result: Result, path: Path, name: str | None = None, include_xai: bool | None = None) -> None:
         if isinstance(image, np.ndarray):
             image = Image.fromarray(self._convert_bgr_to_rgb(image))
-        scene = self._scene_from_result(image, result)
+        # Use parameter value if provided, otherwise use instance default
+        xai_setting = include_xai if include_xai is not None else self.include_xai
+        scene = self._scene_from_result(image, result, include_xai=xai_setting)
         rendered_image = scene.render()
         
         # Add name label in top-left corner if provided
@@ -70,13 +75,15 @@ class Visualizer:
         
         rendered_image.save(path)
 
-    def render(self, image: Image.Image | np.ndarray, result: Result) -> Image.Image | np.ndarray:
+    def render(self, image: Image.Image | np.ndarray, result: Result, include_xai: bool | None = None) -> Image.Image | np.ndarray:
         is_numpy = isinstance(image, np.ndarray)
 
         if is_numpy:
             image = Image.fromarray(self._convert_bgr_to_rgb(image))
 
-        scene = self._scene_from_result(image, result)
+        # Use parameter value if provided, otherwise use instance default
+        xai_setting = include_xai if include_xai is not None else self.include_xai
+        scene = self._scene_from_result(image, result, include_xai=xai_setting)
         result_img: Image = scene.render()
 
         if is_numpy:
@@ -84,22 +91,22 @@ class Visualizer:
 
         return result_img
 
-    def _scene_from_result(self, image: Image, result: Result) -> Scene:
+    def _scene_from_result(self, image: Image, result: Result, include_xai: bool = True) -> Scene:
         scene: Scene
         if isinstance(result, AnomalyResult):
-            scene = AnomalyScene(image, result, self.layout)
+            scene = AnomalyScene(image, result, self.layout, include_xai=include_xai)
         elif isinstance(result, ClassificationResult):
-            scene = ClassificationScene(image, result, self.layout)
+            scene = ClassificationScene(image, result, self.layout, include_xai=include_xai)
         elif isinstance(result, InstanceSegmentationResult):
             # Note: This has to be before DetectionScene because InstanceSegmentationResult is a subclass
             # of DetectionResult
-            scene = InstanceSegmentationScene(image, result, self.layout)
+            scene = InstanceSegmentationScene(image, result, self.layout, include_xai=include_xai)
         elif isinstance(result, ImageResultWithSoftPrediction):
-            scene = SegmentationScene(image, result, self.layout)
+            scene = SegmentationScene(image, result, self.layout, include_xai=include_xai)
         elif isinstance(result, DetectionResult):
-            scene = DetectionScene(image, result, self.layout)
+            scene = DetectionScene(image, result, self.layout, include_xai=include_xai)
         elif isinstance(result, DetectedKeypoints):
-            scene = KeypointScene(image, result, self.layout)
+            scene = KeypointScene(image, result, self.layout, include_xai=include_xai)
         else:
             msg = f"Unsupported result type: {type(result)}"
             raise ValueError(msg)

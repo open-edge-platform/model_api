@@ -19,14 +19,15 @@ from .scene import Scene
 class DetectionScene(Scene):
     """Detection Scene."""
 
-    def __init__(self, image: Image, result: DetectionResult, layout: Union[Layout, None] = None) -> None:
+    def __init__(self, image: Image, result: DetectionResult, layout: Union[Layout, None] = None, include_xai: bool = True) -> None:
         g = random.Random(1983)  # noqa: S311 # nosec B311
         self.color_per_label = {label: f"#{g.randint(0, 0xFFFFFF):06x}" for label in set(result.label_names)}  # nosec B311
+        self.include_xai = include_xai
         
         super().__init__(
             base=image,
             bounding_box=self._get_bounding_boxes(result),
-            overlay=self._get_overlays(result),
+            overlay=self._get_overlays(result) if include_xai else [],
             layout=layout,
         )
 

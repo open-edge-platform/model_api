@@ -322,5 +322,5 @@ def store_outputs(name, image, device, result, results_dir: str) -> None:
             break
         iteration += 1
 
-    visualizer = Visualizer()
+    visualizer = Visualizer(include_xai=False)
     visualizer.save(image, result, path, name=display_name)
