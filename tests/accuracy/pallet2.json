@@ -1,0 +1,182 @@
+[
+  {
+    "name": "pallet/YOLOX-S/int8/model.xml",
+    "type": "DetectionModel",
+    "test_data": [
+      {
+        "image": "images/demo_video_frame_2726.jpg",
+        "reference": [
+          "326, 175, 370, 233, 0 (defect): 0.925; 157, 121, 401, 290, 2 (box): 0.920; 221, 189, 245, 212, 0 (defect): 0.756; [0]; [0]"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "pallet/YOLOX-S/fp16/model.xml",
+    "type": "DetectionModel",
+    "test_data": [
+      {
+        "image": "images/demo_video_frame_2726.jpg",
+        "reference": [
+          "325, 175, 371, 233, 0 (defect): 0.936; 157, 118, 405, 288, 2 (box): 0.908; 222, 189, 245, 211, 0 (defect): 0.788; [0]; [0]"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "pallet/YOLOX-S/fp16-xai/model.xml",
+    "type": "DetectionModel",
+    "test_data": [
+      {
+        "image": "images/demo_video_frame_2726.jpg",
+        "reference": [
+          "325, 175, 371, 233, 0 (defect): 0.936; 157, 118, 405, 288, 2 (box): 0.908; 222, 189, 245, 211, 0 (defect): 0.788; [1,3,40,40]; [1,384]"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "pallet/YOLOX-S/fp32/model.xml",
+    "type": "DetectionModel",
+    "test_data": [
+      {
+        "image": "images/demo_video_frame_2726.jpg",
+        "reference": [
+          "325, 175, 371, 233, 0 (defect): 0.936; 157, 118, 405, 288, 2 (box): 0.908; 222, 189, 245, 211, 0 (defect): 0.789; [0]; [0]"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "pallet/YOLOX-S/model.onnx",
+    "type": "DetectionModel",
+    "test_data": [
+      {
+        "image": "images/demo_video_frame_2726.jpg",
+        "reference": [
+          "325, 175, 371, 233, 0 (defect): 0.936; 157, 118, 405, 288, 2 (box): 0.908; 222, 189, 245, 211, 0 (defect): 0.789; [0]; [0]"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "pallet/DFine-X/int8/model.xml",
+    "type": "DetectionModel",
+    "test_data": [
+      {
+        "image": "images/demo_video_frame_2726.jpg",
+        "reference": [
+          "164, 116, 389, 280, 2 (box): 0.941; 327, 176, 369, 233, 0 (defect): 0.792; 220, 183, 249, 216, 0 (defect): 0.666; [0]; [0]"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "pallet/DFine-X/fp16/model.xml",
+    "type": "DetectionModel",
+    "test_data": [
+      {
+        "image": "images/demo_video_frame_2726.jpg",
+        "reference": [
+          "164, 116, 389, 280, 2 (box): 0.943; 326, 176, 369, 233, 0 (defect): 0.780; 220, 183, 249, 216, 0 (defect): 0.705; [0]; [0]"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "pallet/DFine-X/fp16-xai/model.xml",
+    "type": "DetectionModel",
+    "test_data": [
+      {
+        "image": "images/demo_video_frame_2726.jpg",
+        "reference": [
+          "164, 116, 389, 280, 2 (box): 0.943; 326, 176, 369, 233, 0 (defect): 0.780; 220, 183, 249, 216, 0 (defect): 0.705; [1,3,40,40]; [1,1152]"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "pallet/DFine-X/fp32/model.xml",
+    "type": "DetectionModel",
+    "test_data": [
+      {
+        "image": "images/demo_video_frame_2726.jpg",
+        "reference": [
+          "164, 116, 389, 280, 2 (box): 0.943; 326, 176, 369, 233, 0 (defect): 0.779; 220, 183, 249, 216, 0 (defect): 0.705; [0]; [0]"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "pallet/DFine-X/model.onnx",
+    "type": "DetectionModel",
+    "test_data": [
+      {
+        "image": "images/demo_video_frame_2726.jpg",
+        "reference": [
+          "164, 116, 389, 280, 2 (box): 0.943; 326, 176, 369, 233, 0 (defect): 0.779; 220, 183, 249, 216, 0 (defect): 0.705; [0]; [0]"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "pallet/ATSS-MobileNetV2/int8/model.xml",
+    "type": "DetectionModel",
+    "test_data": [
+      {
+        "image": "images/demo_video_frame_2726.jpg",
+        "reference": [
+          "168, 112, 383, 286, 2 (box): 0.790; 221, 188, 247, 213, 0 (defect): 0.448; [0]; [0]"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "pallet/ATSS-MobileNetV2/fp16/model.xml",
+    "type": "DetectionModel",
+    "test_data": [
+      {
+        "image": "images/demo_video_frame_2726.jpg",
+        "reference": [
+          "168, 112, 382, 286, 2 (box): 0.798; 221, 187, 247, 213, 0 (defect): 0.441; [0]; [0]"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "pallet/ATSS-MobileNetV2/fp16-xai/model.xml",
+    "type": "DetectionModel",
+    "test_data": [
+      {
+        "image": "images/demo_video_frame_2726.jpg",
+        "reference": [
+          "168, 112, 382, 286, 2 (box): 0.798; 221, 187, 247, 213, 0 (defect): 0.441; [1,3,25,31]; [1,320]"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "pallet/ATSS-MobileNetV2/fp32/model.xml",
+    "type": "DetectionModel",
+    "test_data": [
+      {
+        "image": "images/demo_video_frame_2726.jpg",
+        "reference": [
+          "168, 112, 382, 286, 2 (box): 0.798; 221, 187, 247, 213, 0 (defect): 0.441; [0]; [0]"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "pallet/ATSS-MobileNetV2/model.onnx",
+    "type": "DetectionModel",
+    "test_data": [
+      {
+        "image": "images/demo_video_frame_2726.jpg",
+        "reference": [
+          "168, 112, 382, 286, 2 (box): 0.798; 221, 187, 247, 213, 0 (defect): 0.441; [0]; [0]"
+        ]
+      }
+    ]
+  }
+]
