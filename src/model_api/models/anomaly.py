@@ -80,6 +80,14 @@ class AnomalyDetection(ImageModel):
         """
         original_shape = inputs.shape
 
+        if (
+            self._is_dynamic
+            and getattr(self.inference_adapter, "device", "") == "NPU"
+            and hasattr(self.inference_adapter, "compiled_model")
+        ):
+            _, self.c, self.h, self.w = self.inference_adapter.compiled_model.inputs[0].get_shape()
+            self._is_dynamic = False
+
         if self._is_dynamic:
             h, w, c = inputs.shape
             resized_shape = (w, h, c)
@@ -98,11 +106,13 @@ class AnomalyDetection(ImageModel):
             if self.embedded_processing:
                 processed_image = inputs[None]
             else:
+                # Resize image to expected model input dimensions
+                resized_image = self.resize(inputs, (self.w, self.h))
                 # Convert to float32 and normalize for anomalib
-                if inputs.dtype == np.uint8:
-                    processed_image = inputs.astype(np.float32) / 255.0
+                if resized_image.dtype == np.uint8:
+                    processed_image = resized_image.astype(np.float32) / 255.0
                 else:
-                    processed_image = inputs.astype(np.float32)
+                    processed_image = resized_image.astype(np.float32)
                 processed_image = self._change_layout(processed_image)
 
         return [

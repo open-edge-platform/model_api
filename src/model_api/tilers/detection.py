@@ -112,7 +112,7 @@ class DetectionTiler(Tiler):
 
         merged_vector = np.mean(feature_vectors, axis=0) if feature_vectors else np.ndarray(0)
         saliency_map = self._merge_saliency_maps(saliency_maps, shape, tiles_coords) if saliency_maps else np.ndarray(0)
-        label_names = [self.model.labels[int(label_idx)] for label_idx in detections_array[:, 0]]
+        label_names = [self.model.get_label_name(int(label_idx)) for label_idx in detections_array[:, 0]]
 
         return DetectionResult(
             bboxes=detections_array[:, 2:].astype(np.int32),
