@@ -352,6 +352,26 @@
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="model_api.adapters.utils.change_layout">
+<span class="sig-prename descclassname"><span class="pre">model_api.adapters.utils.</span></span><span class="sig-name descname"><span class="pre">change_layout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layout</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.adapters.utils.change_layout" title="Link to this definition">#</a></dt>
+<dd><p>Changes the input image layout to fit the layout of the model input layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> (<em>ndarray</em>) – a single image as 3D array in HWC layout</p></li>
+<li><p><strong>layout</strong> (<em>str</em>) – target layout</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the image with layout aligned with the model layout</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="model_api.adapters.utils.crop_resize">
 <span class="sig-prename descclassname"><span class="pre">model_api.adapters.utils.</span></span><span class="sig-name descname"><span class="pre">crop_resize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interpolation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.adapters.utils.crop_resize" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
@@ -481,6 +501,34 @@
 </dl>
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="model_api.adapters.utils.setup_python_preprocessing_pipeline">
+<span class="sig-prename descclassname"><span class="pre">model_api.adapters.utils.</span></span><span class="sig-name descname"><span class="pre">setup_python_preprocessing_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resize_mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interpolation_mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype=&lt;class</span> <span class="pre">'int'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">brg2rgb=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mean=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_idx=0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.adapters.utils.setup_python_preprocessing_pipeline" title="Link to this definition">#</a></dt>
+<dd><p>Sets up a Python preprocessing pipeline for model adapters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>layout</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Target layout for the input (e.g., “NCHW”, “NHWC”)</p></li>
+<li><p><strong>resize_mode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Type of resizing (“crop”, “standard”, “fit_to_window”, “fit_to_window_letterbox”)</p></li>
+<li><p><strong>interpolation_mode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Interpolation method (“LINEAR”, “CUBIC”, “NEAREST”)</p></li>
+<li><p><strong>target_shape</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">...</span></code>]</span>) – Target shape for resizing</p></li>
+<li><p><strong>pad_value</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Padding value for letterbox resizing</p></li>
+<li><p><strong>dtype</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">type</span></code></span>) – Data type for preprocessing</p></li>
+<li><p><strong>brg2rgb</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Whether to convert BGR to RGB</p></li>
+<li><p><strong>mean</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span>) – Mean values for normalization</p></li>
+<li><p><strong>scale</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span>) – Scale values for normalization</p></li>
+<li><p><strong>input_idx</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Input index (unused but kept for compatibility)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A preprocessing function that can be applied to input data</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Callable</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 
 
@@ -523,6 +571,7 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.adapters.utils.Layout.parse_layouts"><code class="docutils literal notranslate"><span class="pre">Layout.parse_layouts()</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.adapters.utils.change_layout"><code class="docutils literal notranslate"><span class="pre">change_layout()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.adapters.utils.crop_resize"><code class="docutils literal notranslate"><span class="pre">crop_resize()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.adapters.utils.crop_resize_graph"><code class="docutils literal notranslate"><span class="pre">crop_resize_graph()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.adapters.utils.crop_resize_ocv"><code class="docutils literal notranslate"><span class="pre">crop_resize_ocv()</span></code></a></li>
@@ -536,6 +585,7 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.adapters.utils.resize_image_ocv"><code class="docutils literal notranslate"><span class="pre">resize_image_ocv()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.adapters.utils.resize_image_with_aspect"><code class="docutils literal notranslate"><span class="pre">resize_image_with_aspect()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.adapters.utils.resize_image_with_aspect_ocv"><code class="docutils literal notranslate"><span class="pre">resize_image_with_aspect_ocv()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.adapters.utils.setup_python_preprocessing_pipeline"><code class="docutils literal notranslate"><span class="pre">setup_python_preprocessing_pipeline()</span></code></a></li>
 </ul>
   </nav></div>
 

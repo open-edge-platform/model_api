@@ -337,7 +337,7 @@ busy infer request until it becomes available for the data submission.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="model_api.adapters.openvino_adapter.OpenvinoAdapter.embed_preprocessing">
 <span class="sig-name descname"><span class="pre">embed_preprocessing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resize_mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interpolation_mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype=&lt;class</span> <span class="pre">'int'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">brg2rgb=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mean=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_idx=0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.adapters.openvino_adapter.OpenvinoAdapter.embed_preprocessing" title="Link to this definition">#</a></dt>
-<dd><p>Embeds OpenVINO PrePostProcessor module into the model.</p>
+<dd><p>Embeds preprocessing into the model, or sets up Python preprocessing for NPU devices.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
@@ -540,7 +540,7 @@ to the model for inference, or all infer requests are busy.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="model_api.adapters.openvino_adapter.OpenvinoAdapter.load_model">
 <span class="sig-name descname"><span class="pre">load_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#model_api.adapters.openvino_adapter.OpenvinoAdapter.load_model" title="Link to this definition">#</a></dt>
-<dd><p>Loads the model on the device.</p>
+<dd><p>Loads the model to the device specified in the constructor</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
@@ -562,6 +562,17 @@ to the model for inference, or all infer requests are busy.</p>
 <dt class="sig sig-object py" id="model_api.adapters.openvino_adapter.OpenvinoAdapter.operations_by_type">
 <span class="sig-name descname"><span class="pre">operations_by_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operation_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.adapters.openvino_adapter.OpenvinoAdapter.operations_by_type" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_api.adapters.openvino_adapter.OpenvinoAdapter.reshape_dynamic_inputs">
+<span class="sig-name descname"><span class="pre">reshape_dynamic_inputs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#model_api.adapters.openvino_adapter.OpenvinoAdapter.reshape_dynamic_inputs" title="Link to this definition">#</a></dt>
+<dd><p>For NPU devices, set static shape if the model has dynamic shapes</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="model_api.adapters.openvino_adapter.OpenvinoAdapter.reshape_model">
@@ -721,6 +732,7 @@ list of new shape as values in the following format:
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.adapters.openvino_adapter.OpenvinoAdapter.load_model"><code class="docutils literal notranslate"><span class="pre">OpenvinoAdapter.load_model()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.adapters.openvino_adapter.OpenvinoAdapter.log_runtime_settings"><code class="docutils literal notranslate"><span class="pre">OpenvinoAdapter.log_runtime_settings()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.adapters.openvino_adapter.OpenvinoAdapter.operations_by_type"><code class="docutils literal notranslate"><span class="pre">OpenvinoAdapter.operations_by_type()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.adapters.openvino_adapter.OpenvinoAdapter.reshape_dynamic_inputs"><code class="docutils literal notranslate"><span class="pre">OpenvinoAdapter.reshape_dynamic_inputs()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.adapters.openvino_adapter.OpenvinoAdapter.reshape_model"><code class="docutils literal notranslate"><span class="pre">OpenvinoAdapter.reshape_model()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.adapters.openvino_adapter.OpenvinoAdapter.save_model"><code class="docutils literal notranslate"><span class="pre">OpenvinoAdapter.save_model()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.adapters.openvino_adapter.OpenvinoAdapter.set_callback"><code class="docutils literal notranslate"><span class="pre">OpenvinoAdapter.set_callback()</span></code></a></li>
