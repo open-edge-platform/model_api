@@ -189,6 +189,40 @@ class ModelAPIGradioApp:
             iterating, frame = cap.read()
             n_frames += 1
 
+    def start_camera_stream(self, frame):
+        """Process camera stream - runs inference on captured camera frame"""
+        try:
+            if frame is None:
+                return None, "0.00", "0", "0.00", "0.00", "0.00", "0.00", "0.00", "0.00"
+            
+            #if isinstance(image, Image.Image):
+            #    image_array = np.array(image)
+            #else:
+            #    image_array = image
+            
+            # Run inference
+            predictions = self.model(frame)
+            result_image = self.visualizer.render(image=frame, result=predictions)
+
+            # Get current performance metrics
+            stats = self.model.get_performance_metrics()
+            stats_dict = self.format_statistics(stats)
+            
+            return (
+                result_image,
+                stats_dict['fps'],
+                stats_dict['total_frames'],
+                stats_dict['preprocess_mean'],
+                stats_dict['inference_mean'],
+                stats_dict['postprocess_mean'],
+                stats_dict['total_mean'],
+                stats_dict['total_min'],
+                stats_dict['total_max']
+            )
+        except Exception as e:
+            print(f"Error during camera inference: {str(e)}")
+            return None, "0.00", "0", "0.00", "0.00", "0.00", "0.00", "0.00", "0.00"
+
     def load_and_process_image(self, image_path):
         if image_path:
             image = Image.open(image_path)
@@ -267,11 +301,17 @@ class ModelAPIGradioApp:
 
                         with gr.TabItem("Camera"):
                             with gr.Row():
-                                with gr.Column(scale=1):
+                                with gr.Column(scale=2):
                                     gr.Markdown("## Input Source")
-                                    cam_input = gr.Image(sources=["webcam"], label="Webcam", type="pil")
-                                with gr.Column(scale=1):
-                                    gr.Markdown("## Camera Stream")
+                                    cam_input = gr.Image(
+                                        sources=["webcam"],
+                                        label="Webcam",
+                                        type="numpy",
+                                        show_label=False
+                                        )
+                                with gr.Column(scale=3):
+                                    gr.Markdown("## Camera Inference Stream")
+                                    cam_result = gr.Image(label="Camera Result", type="pil", show_label=False)
                         with gr.TabItem("Model"):
                             with gr.Row():
                                 with gr.Column(scale=1):
@@ -376,6 +416,24 @@ class ModelAPIGradioApp:
                             total_max_display
                         ]
                     )
+
+                    live_stream = cam_input.stream(
+                        fn=self.start_camera_stream,
+                        inputs=[cam_input],
+                        outputs=[
+                            cam_result,
+                            fps_display,
+                            total_frames_display,
+                            preprocess_display,
+                            inference_display,
+                            postprocess_display,
+                            total_mean_display,
+                            total_min_display,
+                            total_max_display
+                        ],
+                        time_limit=60,
+                        stream_every=0.1,
+                        concurrency_limit=2)
 
             return demo
 
