@@ -28,6 +28,8 @@ dependencies = [
     "opencv-python-headless",
     "openvino>=2025.3",
     "pillow",
+    "gradio",
+    "fastrtc",
 ]
 
 [project.optional-dependencies]
