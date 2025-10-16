@@ -27,6 +27,7 @@ class ModelAPIGradioApp:
         self.stats = PerformanceMetrics()
         self.available_models = self._discover_models()
         self.visualizer = Visualizer()
+        self.streaming = False
         self.load_model(list(self.available_models.keys())[0])
 
     def _discover_models(self):
@@ -49,9 +50,18 @@ class ModelAPIGradioApp:
             # Create model name from the 3 upper folders (excluding model.xml)
             # Example: AnomalyDetection/STFPM/openvino_fp32
             model_name = "/".join(parts[-4:-1])
+            
+            # Find corresponding .bin file and get its size
+            bin_file = model_file.with_suffix('.bin')
+            size_str = ""
+            if bin_file.exists():
+                size_mb = bin_file.stat().st_size / (1024 * 1024)
+                size_str = f" [{size_mb:.1f}MB]"
+            
+            model_name_with_size = f"{model_name}{size_str}"
             model_path = str(model_file)
             
-            models[model_name] = model_path
+            models[model_name_with_size] = model_path
         
         # Sort models by name for better UI experience
         return dict(sorted(models.items()))
@@ -134,6 +144,7 @@ class ModelAPIGradioApp:
             return []
     
     def stream_vid(self, video):
+        self.streaming = True
         cap = cv2.VideoCapture(video)
 
         # This means we will output mp4 videos
@@ -141,8 +152,6 @@ class ModelAPIGradioApp:
         fps = int(cap.get(cv2.CAP_PROP_FPS))
 
         desired_fps = fps
-        width  = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
         iterating, frame = cap.read()
 
@@ -151,10 +160,17 @@ class ModelAPIGradioApp:
         # Use UUID to create a unique video file
         output_video_name = f"/tmp/output_{uuid.uuid4()}.mp4"
 
-        # Output Video
+        # Output Video - get dimensions from first result image
+        predictions = self.model(frame)
+        result_image = self.visualizer.render(image=frame, result=predictions)
+        height, width = result_image.shape[:2]
         output_video = cv2.VideoWriter(output_video_name, video_codec, desired_fps, (width, height)) # type: ignore
 
-        while iterating:
+        while iterating and self.streaming:
+            if frame is None:
+                break
+
+            # Convert BGR to RGB
 #            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
            # frame = cv2.resize( frame, (0,0), fx=0.5, fy=0.5)
             try:
@@ -188,6 +204,9 @@ class ModelAPIGradioApp:
 
             iterating, frame = cap.read()
             n_frames += 1
+
+    def stop_vid(self):
+        self.streaming = False
 
     def start_camera_stream(self, frame):
         """Process camera stream - runs inference on captured camera frame"""
@@ -290,6 +309,10 @@ class ModelAPIGradioApp:
                                 with gr.Column(scale=2):
                                     gr.Markdown("## Input Source")
                                     video_input = gr.Video(label="Video", show_label=False)
+                                    with gr.Row():
+                                        video_start_button = gr.Button("Start", variant="primary")
+                                        video_stop_button = gr.Button("Stop", variant="stop")
+                                    
                                 with gr.Column(scale=3):
                                     gr.Markdown("## Inference Stream")
                                     result_stream = gr.Video(
@@ -314,7 +337,7 @@ class ModelAPIGradioApp:
                                     cam_result = gr.Image(label="Camera Result", type="pil", show_label=False)
                         with gr.TabItem("Model"):
                             with gr.Row():
-                                with gr.Column(scale=1):
+                                with gr.Column(scale=3):
                                     gr.Markdown("## Load/Reload Model")
                                     model_dropdown = gr.Dropdown(
                                         choices=self.available_models.keys(),
@@ -401,7 +424,7 @@ class ModelAPIGradioApp:
                         ]
                     )
 
-                    video_input.play(
+                    video_start_button.click(
                         fn=self.stream_vid,
                         inputs=[video_input],
                         outputs=[
@@ -415,6 +438,12 @@ class ModelAPIGradioApp:
                             total_min_display,
                             total_max_display
                         ]
+                    )
+
+                    video_stop_button.click(
+                        fn=self.stop_vid,
+                        inputs=None,
+                        outputs=None
                     )
 
                     live_stream = cam_input.stream(
@@ -432,8 +461,9 @@ class ModelAPIGradioApp:
                             total_max_display
                         ],
                         time_limit=60,
-                        stream_every=0.1,
-                        concurrency_limit=2)
+                        stream_every=0.2,
+                        concurrency_limit=16
+                    )
 
             return demo
 
