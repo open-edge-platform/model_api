@@ -11,6 +11,7 @@ from PIL import Image
 from model_api.models.result import ClassificationResult
 from model_api.visualizer.layout import Flatten, Layout
 from model_api.visualizer.primitive import Label, Overlay
+from model_api.visualizer.utils import generate_color_palette
 
 from .scene import Scene
 
@@ -19,6 +20,12 @@ class ClassificationScene(Scene):
     """Classification Scene."""
 
     def __init__(self, image: Image, result: ClassificationResult, layout: Union[Layout, None] = None) -> None:
+        # Generate colors for labels if there are multiple top labels
+        label_names = []
+        if result.top_labels is not None and len(result.top_labels) > 0:
+            label_names = [label.name for label in result.top_labels if label.name is not None]
+        self.color_per_label = generate_color_palette(label_names, seed=0)
+        
         super().__init__(
             base=image,
             label=self._get_labels(result),
@@ -31,7 +38,8 @@ class ClassificationScene(Scene):
         if result.top_labels is not None and len(result.top_labels) > 0:
             for label in result.top_labels:
                 if label.name is not None:
-                    labels.append(Label(label=label.name, score=label.confidence))
+                    bg_color = self.color_per_label.get(label.name, "blue")
+                    labels.append(Label(label=label.name, score=label.confidence, bg_color=bg_color))
         return labels
 
     def _get_overlays(self, result: ClassificationResult) -> list[Overlay]:

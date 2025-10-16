@@ -11,6 +11,7 @@ from PIL import Image
 from model_api.models.result import DetectionResult
 from model_api.visualizer.layout import Flatten, HStack, Layout
 from model_api.visualizer.primitive import BoundingBox, Label, Overlay
+from model_api.visualizer.utils import generate_color_palette
 
 from .scene import Scene
 
@@ -19,6 +20,9 @@ class DetectionScene(Scene):
     """Detection Scene."""
 
     def __init__(self, image: Image, result: DetectionResult, layout: Union[Layout, None] = None) -> None:
+        # Generate consistent colors for each unique label
+        self.color_per_label = generate_color_palette(result.label_names, seed=0)
+        
         super().__init__(
             base=image,
             bounding_box=self._get_bounding_boxes(result),
@@ -43,7 +47,8 @@ class DetectionScene(Scene):
         for score, label_name, bbox in zip(result.scores, result.label_names, result.bboxes):
             x1, y1, x2, y2 = bbox
             label = f"{label_name} ({score:.2f})"
-            bounding_boxes.append(BoundingBox(x1=x1, y1=y1, x2=x2, y2=y2, label=label))
+            color = self.color_per_label[label_name]
+            bounding_boxes.append(BoundingBox(x1=x1, y1=y1, x2=x2, y2=y2, label=label, color=color))
         return bounding_boxes
 
     @property

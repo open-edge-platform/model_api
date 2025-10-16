@@ -3,7 +3,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import random
 from typing import Union
 
 import cv2
@@ -13,15 +12,16 @@ from model_api.models.result import InstanceSegmentationResult
 from model_api.visualizer.layout import Flatten, HStack, Layout
 from model_api.visualizer.primitive import BoundingBox, Label, Overlay, Polygon
 from model_api.visualizer.scene import Scene
+from model_api.visualizer.utils import generate_color_palette
 
 
 class InstanceSegmentationScene(Scene):
     """Instance Segmentation Scene."""
 
     def __init__(self, image: Image, result: InstanceSegmentationResult, layout: Union[Layout, None] = None) -> None:
-        # nosec as random is used for color generation
-        g = random.Random(0)  # noqa: S311 # nosec B311
-        self.color_per_label = {label: f"#{g.randint(0, 0xFFFFFF):06x}" for label in set(result.label_names)}  # nosec B311
+        # Generate consistent colors for each unique label
+        self.color_per_label = generate_color_palette(result.label_names, seed=0)
+        
         super().__init__(
             base=image,
             label=self._get_labels(result),
