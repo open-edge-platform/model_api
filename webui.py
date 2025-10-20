@@ -44,7 +44,7 @@ class ModelAPIGradioApp:
             parts = rel_path.parts
             
             # Skip if not enough folder depth (need at least 3 folders)
-            if len(parts) < 3:
+            if len(parts) < 2:
                 continue
             
             # Create model name from the 3 upper folders (excluding model.xml)

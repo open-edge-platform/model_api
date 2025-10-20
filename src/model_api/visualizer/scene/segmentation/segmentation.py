@@ -30,11 +30,21 @@ class SegmentationScene(Scene):
         # Use the hard prediction to get the overlays
         hard_prediction = result.resultImage  # shape H,W
         num_classes = hard_prediction.max()
-        for i in range(1, num_classes + 1):  # ignore background
-            class_map = (hard_prediction == i).astype(np.uint8) * 255
-            class_map = cv2.applyColorMap(class_map, cv2.COLORMAP_JET)
-            class_map = cv2.cvtColor(class_map, cv2.COLOR_BGR2RGB)
-            overlays.append(Overlay(class_map, label=f"Class {i}"))
+        
+        # Create a single colored segmentation map with all classes
+        h, w = hard_prediction.shape
+        colored_segmentation = np.zeros((h, w, 3), dtype=np.uint8)
+        
+        # Generate distinct colors for each class using HSV color space
+        for i in range(1, num_classes + 1):  # ignore background (class 0)
+            class_mask = (hard_prediction == i)
+            # Generate a distinct color for each class using HSV
+            hue = int(180 * i / num_classes)  # Distribute hues across the spectrum
+            color_hsv = np.uint8([[[hue, 255, 255]]])
+            color_rgb = cv2.cvtColor(color_hsv, cv2.COLOR_HSV2RGB)[0, 0]
+            colored_segmentation[class_mask] = color_rgb
+        
+        overlays.append(Overlay(colored_segmentation, label="Segmentation"))
 
         # Add saliency map
         if result.saliency_map is not None and result.saliency_map.size > 0:
