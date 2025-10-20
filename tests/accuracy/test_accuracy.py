@@ -145,6 +145,102 @@ def pytest_generate_tests(metafunc):
         metafunc.parametrize("model_data", config_data)
 
 
+def compare_classification_result(outputs: ClassificationResult, reference: dict) -> None:
+    """Compare ClassificationResult with reference data.
+
+    Args:
+        outputs: The ClassificationResult to validate
+        reference: Dictionary containing expected values for top_labels and/or raw_scores
+    """
+    assert "top_labels" in reference
+    assert outputs.top_labels is not None
+    assert len(outputs.top_labels) == len(reference["top_labels"])
+    for i, (actual_label, expected_label) in enumerate(zip(outputs.top_labels, reference["top_labels"])):
+        assert actual_label.id == expected_label["id"], f"Label {i} id mismatch"
+        assert actual_label.name == expected_label["name"], f"Label {i} name mismatch"
+        assert abs(actual_label.confidence - expected_label["confidence"]) < 1e-5, f"Label {i} confidence mismatch"
+
+    assert "raw_scores" in reference
+    assert outputs.raw_scores is not None
+    expected_scores = np.array(reference["raw_scores"])
+    assert np.allclose(outputs.raw_scores, expected_scores, rtol=1e-5, atol=1e-5), "raw_scores mismatch"
+
+
+def create_classification_result_dump(outputs: ClassificationResult) -> dict:
+    """Create a JSON-serializable dump of ClassificationResult.
+
+    Args:
+        outputs: The ClassificationResult to serialize
+
+    Returns:
+        Dictionary containing top_labels and raw_scores in JSON-serializable format
+    """
+    return {
+        "top_labels": [
+            {
+                "id": int(label.id) if label.id is not None else None,
+                "name": label.name,
+                "confidence": float(label.confidence) if label.confidence is not None else None,
+            }
+            for label in outputs.top_labels
+        ]
+        if outputs.top_labels
+        else None,
+        "raw_scores": [float(x) for x in outputs.raw_scores.tolist()] if outputs.raw_scores is not None else None,
+    }
+
+
+def compare_detection_result(outputs: DetectionResult, reference: dict) -> None:
+    """Compare DetectionResult with reference data.
+
+    Args:
+        outputs: The DetectionResult to validate
+        reference: Dictionary containing expected values for bboxes, labels, scores, and label_names
+    """
+    assert "bboxes" in reference
+    assert outputs.bboxes is not None
+    expected_bboxes = np.array(reference["bboxes"])
+
+    if expected_bboxes.size == 0 and outputs.bboxes.size == 0:
+        expected_bboxes = expected_bboxes.reshape(0, 4)
+
+    assert (
+        outputs.bboxes.shape == expected_bboxes.shape
+    ), f"bboxes shape mismatch: {outputs.bboxes.shape} vs {expected_bboxes.shape}"
+    assert np.allclose(outputs.bboxes, expected_bboxes, rtol=1e-5, atol=1e-5), "bboxes mismatch"
+
+    assert "labels" in reference
+    assert outputs.labels is not None
+    expected_labels = np.array(reference["labels"])
+    assert np.array_equal(outputs.labels, expected_labels), "labels mismatch"
+
+    assert "scores" in reference
+    assert outputs.scores is not None
+    expected_scores = np.array(reference["scores"])
+    assert np.allclose(outputs.scores, expected_scores, rtol=1e-5, atol=1e-5), "scores mismatch"
+
+    assert "label_names" in reference
+    assert outputs.label_names is not None
+    assert outputs.label_names == reference["label_names"], "label_names mismatch"
+
+
+def create_detection_result_dump(outputs: DetectionResult) -> dict:
+    """Create a JSON-serializable dump of DetectionResult.
+
+    Args:
+        outputs: The DetectionResult to serialize
+
+    Returns:
+        Dictionary containing bboxes, labels, scores, and label_names in JSON-serializable format
+    """
+    return {
+        "bboxes": outputs.bboxes.tolist() if outputs.bboxes is not None else None,
+        "labels": outputs.labels.tolist() if outputs.labels is not None else None,
+        "scores": [float(x) for x in outputs.scores.tolist()] if outputs.scores is not None else None,
+        "label_names": outputs.label_names if outputs.label_names is not None else None,
+    }
+
+
 def test_image_models(data, device, dump, result, model_data, results_dir):  # noqa: C901
     name = model_data["name"]
     if name.endswith((".xml", ".onnx")):
@@ -244,11 +340,12 @@ def test_image_models(data, device, dump, result, model_data, results_dir):  # n
 
             store_outputs(name, image, device, outputs, results_dir)
 
-            if isinstance(outputs, ClassificationResult) or type(outputs) is DetectionResult:
-                assert len(test_data["reference"]) == 1
-                output_str = str(outputs)
-                assert test_data["reference"][0] == output_str
-                image_result = [output_str]
+            if isinstance(outputs, ClassificationResult):
+                compare_classification_result(outputs, test_data["reference"])
+                image_result = create_classification_result_dump(outputs)
+            elif type(outputs) is DetectionResult:
+                compare_detection_result(outputs, test_data["reference"])
+                image_result = create_detection_result_dump(outputs)
             elif isinstance(outputs, ImageResultWithSoftPrediction):
                 assert len(test_data["reference"]) == 1
                 if hasattr(model, "get_contours"):
