@@ -151,7 +151,7 @@ def compare_classification_result(outputs: ClassificationResult, reference: dict
     Args:
         outputs: The ClassificationResult to validate
         reference: Dictionary containing expected values for top_labels and/or raw_scores
-    
+
     Note:
         When raw_scores are empty and confidence is 1.0, only confidence is checked.
         This handles models with embedded TopK that may produce different argmax results
@@ -160,23 +160,19 @@ def compare_classification_result(outputs: ClassificationResult, reference: dict
     assert "top_labels" in reference
     assert outputs.top_labels is not None
     assert len(outputs.top_labels) == len(reference["top_labels"])
-    
+
     # Check if we have raw scores to validate predictions
     has_raw_scores = (
-        outputs.raw_scores is not None 
-        and outputs.raw_scores.size > 0 
-        and "raw_scores" in reference 
+        outputs.raw_scores is not None
+        and outputs.raw_scores.size > 0
+        and "raw_scores" in reference
         and len(reference["raw_scores"]) > 0
     )
-    
+
     for i, (actual_label, expected_label) in enumerate(zip(outputs.top_labels, reference["top_labels"])):
-        # When raw_scores are not available and confidence is 1.0, skip ID/name checks
-        # This indicates a model with embedded TopK where different devices may select different classes
         if not has_raw_scores and expected_label.get("confidence", 0.0) == 1.0:
-            # Only verify confidence for models with embedded argmax and no raw scores
             assert abs(actual_label.confidence - expected_label["confidence"]) < 1e-1, f"Label {i} confidence mismatch"
         else:
-            # Normal validation: check ID, name, and confidence
             assert actual_label.id == expected_label["id"], f"Label {i} id mismatch"
             assert actual_label.name == expected_label["name"], f"Label {i} name mismatch"
             assert abs(actual_label.confidence - expected_label["confidence"]) < 1e-1, f"Label {i} confidence mismatch"
@@ -230,20 +226,28 @@ def compare_detection_result(outputs: DetectionResult, reference: dict) -> None:
     ), f"bboxes shape mismatch: {outputs.bboxes.shape} vs {expected_bboxes.shape}"
 
     # Sort both outputs and expected by bbox coordinates (x1, y1, x2, y2) for deterministic comparison
-    output_sort_indices = np.lexsort((outputs.bboxes[:, 3], outputs.bboxes[:, 2], 
-                                       outputs.bboxes[:, 1], outputs.bboxes[:, 0]))
-    expected_sort_indices = np.lexsort((expected_bboxes[:, 3], expected_bboxes[:, 2],
-                                         expected_bboxes[:, 1], expected_bboxes[:, 0]))
-    
+    output_sort_indices = np.lexsort((
+        outputs.bboxes[:, 3],
+        outputs.bboxes[:, 2],
+        outputs.bboxes[:, 1],
+        outputs.bboxes[:, 0],
+    ))
+    expected_sort_indices = np.lexsort((
+        expected_bboxes[:, 3],
+        expected_bboxes[:, 2],
+        expected_bboxes[:, 1],
+        expected_bboxes[:, 0],
+    ))
+
     sorted_output_bboxes = outputs.bboxes[output_sort_indices]
     sorted_expected_bboxes = expected_bboxes[expected_sort_indices]
-    
+
     assert np.allclose(sorted_output_bboxes, sorted_expected_bboxes, rtol=1e-2, atol=1), "bboxes mismatch"
 
     assert "labels" in reference
     assert outputs.labels is not None
     expected_labels = np.array(reference["labels"])
-    #assert np.array_equal(outputs.labels, expected_labels), "labels mismatch"
+    assert np.array_equal(outputs.labels, expected_labels), "labels mismatch"
 
     assert "scores" in reference
     assert outputs.scores is not None
@@ -252,7 +256,7 @@ def compare_detection_result(outputs: DetectionResult, reference: dict) -> None:
 
     assert "label_names" in reference
     assert outputs.label_names is not None
-    #assert outputs.label_names == reference["label_names"], "label_names mismatch"
+    assert outputs.label_names == reference["label_names"], "label_names mismatch"
 
 
 def create_detection_result_dump(outputs: DetectionResult) -> dict:
