@@ -35,7 +35,7 @@ python model_converter.py config.json -o ./output_models
 
 ### Command-Line Options
 
-```
+```text
 positional arguments:
   config                Path to JSON configuration file
 
