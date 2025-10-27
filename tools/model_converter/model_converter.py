@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+#
+# Copyright (C) 2024-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """
 PyTorch to OpenVINO Model Converter
 
@@ -18,6 +23,7 @@ from typing import Any, Dict, List, Optional
 
 import torch
 import torch.nn as nn
+
 
 class ModelConverter:
     """Handles conversion of PyTorch models to OpenVINO format."""
@@ -61,10 +67,11 @@ class ModelConverter:
         """
         if label_set == "IMAGENET1K_V1":
             from torchvision.models._meta import _IMAGENET_CATEGORIES
+
             categories = _IMAGENET_CATEGORIES
             categories = [label.replace(" ", "_") for label in categories]
             return " ".join(categories)
-        
+
         return None
 
     def download_weights(self, url: str, filename: Optional[str] = None) -> Path:
@@ -91,7 +98,10 @@ class ModelConverter:
         self.logger.info(f"Saving to: {cached_file}")
 
         try:
-            urllib.request.urlretrieve(url, cached_file)  # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
+            urllib.request.urlretrieve(  # noqa: S310
+                url,
+                cached_file,
+            )  # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
             self.logger.info("✓ Download complete")
             return cached_file
         except Exception as e:
@@ -111,7 +121,9 @@ class ModelConverter:
         try:
             module_path, class_name = class_path.rsplit(".", 1)
             self.logger.debug(f"Importing module: {module_path}")
-            module = importlib.import_module(module_path)  # nosemgrep: python.lang.security.audit.non-literal-import.non-literal-import
+            module = importlib.import_module(
+                module_path,
+            )  # nosemgrep: python.lang.security.audit.non-literal-import.non-literal-import
             model_class = getattr(module, class_name)
             self.logger.debug(f"Loaded class: {class_name}")
             return model_class
@@ -130,7 +142,11 @@ class ModelConverter:
             Checkpoint dictionary
         """
         try:
-            checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=True)  # nosemgrep: trailofbits.python.pickles-in-pytorch.pickles-in-pytorch
+            checkpoint = torch.load(
+                checkpoint_path,
+                map_location="cpu",
+                weights_only=True,
+            )  # nosemgrep: trailofbits.python.pickles-in-pytorch.pickles-in-pytorch
             self.logger.debug(f"Loaded checkpoint from: {checkpoint_path}")
             return checkpoint
         except Exception as e:
@@ -161,22 +177,21 @@ class ModelConverter:
                     model = checkpoint["model"]
                 elif "state_dict" in checkpoint:
                     # Cannot reconstruct architecture from state_dict alone
-                    raise ValueError(
+                    error_msg = (
                         "Checkpoint contains only state_dict. "
                         "Please specify the model class instead of torch.nn.Module"
                     )
+                    raise ValueError(error_msg)
                 else:
                     # Assume checkpoint is the model itself
                     model = checkpoint
-                
+
                 if not isinstance(model, nn.Module):
-                    raise ValueError("Checkpoint does not contain a valid model")
+                    error_msg = "Checkpoint does not contain a valid model"
+                    raise ValueError(error_msg)
             else:
                 # Instantiate model class
-                if model_params:
-                    model = model_class(**model_params)
-                else:
-                    model = model_class()
+                model = model_class(**model_params) if model_params else model_class()
 
                 # Load weights
                 if "state_dict" in checkpoint:
@@ -205,7 +220,7 @@ class ModelConverter:
         output_path: Path,
         input_names: Optional[List[str]] = None,
         output_names: Optional[List[str]] = None,
-        metadata: Optional[Dict[tuple, str]] = None
+        metadata: Optional[Dict[tuple, str]] = None,
     ) -> Path:
         """
         Export PyTorch model to OpenVINO format.
@@ -232,11 +247,11 @@ class ModelConverter:
 
             # Reshape model to fixed input shape (remove dynamic dimensions)
             first_input = ov_model.input(0)
-            input_name_for_reshape = list(first_input.get_names())[0] if first_input.get_names() else 0
-            
+            input_name_for_reshape = next(iter(first_input.get_names())) if first_input.get_names() else 0
+
             self.logger.debug(f"Setting fixed input shape: {input_shape}")
             ov_model.reshape({input_name_for_reshape: input_shape})
-            
+
             # Post-process the model
             ov_model = self._postprocess_openvino_model(
                 ov_model,
@@ -355,7 +370,7 @@ class ModelConverter:
             if labels_config:
                 labels = self.get_labels(labels_config)
                 if labels:
-                    metadata[("model_info", "labels")] = labels
+                    metadata["model_info", "labels"] = labels
                     self.logger.info(f"Added {labels_config} labels to metadata")
                 else:
                     self.logger.warning(f"Could not load labels for: {labels_config}")
@@ -366,15 +381,16 @@ class ModelConverter:
                 output_path=output_path,
                 input_names=input_names,
                 output_names=output_names,
-                metadata=metadata
+                metadata=metadata,
             )
 
             self.logger.info(f"✓ Successfully converted {model_short_name}")
             return True
 
-        except Exception as e:
+        except (ValueError, RuntimeError, ImportError, FileNotFoundError) as e:
             self.logger.error(f"✗ Failed to process model {model_short_name}: {e}")
             import traceback
+
             self.logger.debug(traceback.format_exc())
             return False
 
@@ -394,7 +410,7 @@ class ModelConverter:
             Tuple of (successful_count, failed_count)
         """
         try:
-            with open(config_path) as f:
+            with Path(config_path).open() as f:
                 config = json.load(f)
         except Exception as e:
             self.logger.error(f"Failed to load configuration file: {e}")
@@ -431,9 +447,9 @@ class ModelConverter:
 def list_models(config_path: Path):
     """List all models in a configuration file."""
     try:
-        with open(config_path) as f:
+        with config_path.open() as f:
             config = json.load(f)
-    except Exception as e:
+    except (FileNotFoundError, json.JSONDecodeError, PermissionError) as e:
         print(f"Error loading configuration: {e}", file=sys.stderr)
         return
 
@@ -566,7 +582,7 @@ Examples:
         logger.info("=" * 80)
 
         return 0 if failed == 0 else 1
-    except Exception as e:
+    except (ValueError, RuntimeError, ImportError, FileNotFoundError) as e:
         logger.error(f"Failed to process model: {e}")
         return 1
 

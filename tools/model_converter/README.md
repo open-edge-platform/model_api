@@ -53,26 +53,31 @@ options:
 ### Examples
 
 **List all models in configuration:**
+
 ```bash
 python model_converter.py example_config.json --list
 ```
 
 **Convert all models:**
+
 ```bash
 python model_converter.py example_config.json -o ./converted_models
 ```
 
 **Convert a specific model:**
+
 ```bash
 python model_converter.py example_config.json -o ./converted_models --model resnet50
 ```
 
 **Use custom cache directory:**
+
 ```bash
 python model_converter.py example_config.json -o ./output -c ./my_cache
 ```
 
 **Enable verbose logging:**
+
 ```bash
 python model_converter.py example_config.json -o ./output -v
 ```
@@ -103,6 +108,7 @@ The configuration file is a JSON file with the following structure:
 **Important**: The `model_type` field enables automatic model detection when using [Intel's model_api](https://github.com/openvinotoolkit/model_api). When specified, this metadata is embedded in the OpenVINO IR, allowing `Model.create_model()` to automatically select the correct model wrapper class.
 
 Common `model_type` values:
+
 - `"Classification"` - Image classification models
 - `"DetectionModel"` - Object detection models
 - `"YOLOX"` - YOLOX detection models
