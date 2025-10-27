@@ -130,7 +130,7 @@ class ModelConverter:
             Checkpoint dictionary
         """
         try:
-            checkpoint = torch.load(checkpoint_path, map_location="cpu")
+            checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
             self.logger.debug(f"Loaded checkpoint from: {checkpoint_path}")
             return checkpoint
         except Exception as e:
