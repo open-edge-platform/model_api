@@ -90,7 +90,7 @@ struct Lbm {
 
 Lbm filterTensors(const std::map<std::string, ov::Tensor>& infResult) {
     Lbm lbm;
-    
+
     auto labels_it = infResult.find(labels_name);
     auto boxes_it = infResult.find(boxes_name);
     auto masks_it = infResult.find(masks_name);
@@ -313,7 +313,7 @@ std::unique_ptr<ResultBase> MaskRCNNModel::postprocess(InferenceResult& infResul
     const float* const boxes = lbm.boxes.data<float>();
     size_t objectSize = lbm.boxes.get_shape().back();
     float* const masks = lbm.masks.data<float>();
-    
+
     cv::Size masks_size;
     if (lbm.masks.get_shape().size() == 4) {
         masks_size = cv::Size{int(lbm.masks.get_shape()[3]), int(lbm.masks.get_shape()[2])};
@@ -322,7 +322,7 @@ std::unique_ptr<ResultBase> MaskRCNNModel::postprocess(InferenceResult& infResul
     } else {
         throw std::runtime_error("Unexpected masks tensor shape");
     }
-    
+
     InstanceSegmentationResult* result = new InstanceSegmentationResult(infResult.frameId, infResult.metaData);
     auto retVal = std::unique_ptr<ResultBase>(result);
     std::vector<std::vector<cv::Mat>> saliency_maps;
