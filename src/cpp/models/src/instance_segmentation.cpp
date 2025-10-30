@@ -27,6 +27,7 @@ constexpr char saliency_map_name[]{"saliency_map"};
 constexpr char feature_vector_name[]{"feature_vector"};
 constexpr char labels_name[]{"labels"};
 constexpr char boxes_name[]{"boxes"};
+constexpr char bboxes_name[]{"bboxes"};
 constexpr char masks_name[]{"masks"};
 
 void append_xai_names(const std::vector<ov::Output<ov::Node>>& outputs, std::vector<std::string>& outputNames) {
@@ -90,9 +91,12 @@ struct Lbm {
 
 Lbm filterTensors(const std::map<std::string, ov::Tensor>& infResult) {
     Lbm lbm;
-    
+
     auto labels_it = infResult.find(labels_name);
     auto boxes_it = infResult.find(boxes_name);
+    if (boxes_it == infResult.end()) {
+        boxes_it = infResult.find(bboxes_name);  // Alternative name for boxes
+    }
     auto masks_it = infResult.find(masks_name);
 
     if (labels_it != infResult.end() && boxes_it != infResult.end() && masks_it != infResult.end()) {
@@ -313,7 +317,7 @@ std::unique_ptr<ResultBase> MaskRCNNModel::postprocess(InferenceResult& infResul
     const float* const boxes = lbm.boxes.data<float>();
     size_t objectSize = lbm.boxes.get_shape().back();
     float* const masks = lbm.masks.data<float>();
-    
+
     cv::Size masks_size;
     if (lbm.masks.get_shape().size() == 4) {
         masks_size = cv::Size{int(lbm.masks.get_shape()[3]), int(lbm.masks.get_shape()[2])};
@@ -322,7 +326,7 @@ std::unique_ptr<ResultBase> MaskRCNNModel::postprocess(InferenceResult& infResul
     } else {
         throw std::runtime_error("Unexpected masks tensor shape");
     }
-    
+
     InstanceSegmentationResult* result = new InstanceSegmentationResult(infResult.frameId, infResult.metaData);
     auto retVal = std::unique_ptr<ResultBase>(result);
     std::vector<std::vector<cv::Mat>> saliency_maps;

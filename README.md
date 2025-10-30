@@ -32,7 +32,6 @@ Model API searches for additional information required for model inference, data
   ```
 
 - Build library:
-
   - Create `build` folder and navigate into it:
 
   ```bash
