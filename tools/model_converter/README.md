@@ -30,7 +30,7 @@ uv pip install torch torchvision openvino
 ### Basic Usage
 
 ```bash
-python model_converter.py config.json -o ./output_models
+uv run python model_converter.py config.json -o ./output_models
 ```
 
 ### Command-Line Options
@@ -55,31 +55,31 @@ options:
 **List all models in configuration:**
 
 ```bash
-python model_converter.py example_config.json --list
+uv run python model_converter.py example_config.json --list
 ```
 
 **Convert all models:**
 
 ```bash
-python model_converter.py example_config.json -o ./converted_models
+uv run python model_converter.py example_config.json -o ./converted_models
 ```
 
 **Convert a specific model:**
 
 ```bash
-python model_converter.py example_config.json -o ./converted_models --model resnet50
+uv run python model_converter.py example_config.json -o ./converted_models --model resnet50
 ```
 
 **Use custom cache directory:**
 
 ```bash
-python model_converter.py example_config.json -o ./output -c ./my_cache
+uv run python model_converter.py example_config.json -o ./output -c ./my_cache
 ```
 
 **Enable verbose logging:**
 
 ```bash
-python model_converter.py example_config.json -o ./output -v
+uv run python model_converter.py example_config.json -o ./output -v
 ```
 
 ## Configuration File Format

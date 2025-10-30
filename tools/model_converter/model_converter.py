@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run --script
 #
 # Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
@@ -8,7 +8,7 @@
 PyTorch to OpenVINO Model Converter
 
 Usage:
-    python model_converter.py config.json -o ./output_models
+    uv run python model_converter.py config.json -o ./output_models
 
 """
 
@@ -74,7 +74,11 @@ class ModelConverter:
 
         return None
 
-    def download_weights(self, url: str, filename: Optional[str] = None) -> Path:
+    def download_weights(
+        self,
+        url: str,
+        filename: Optional[str] = None,
+    ) -> Path:  # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
         """
         Download model weights from URL with caching.
 
@@ -101,14 +105,17 @@ class ModelConverter:
             urllib.request.urlretrieve(  # noqa: S310
                 url,
                 cached_file,
-            )  # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
+            )
             self.logger.info("✓ Download complete")
             return cached_file
         except Exception as e:
             self.logger.error(f"Failed to download weights: {e}")
             raise
 
-    def load_model_class(self, class_path: str) -> type:
+    def load_model_class(
+        self,
+        class_path: str,
+    ) -> type:  # nosemgrep: python.lang.security.audit.non-literal-import.non-literal-import
         """
         Dynamically load a model class from a Python path.
 
@@ -123,7 +130,7 @@ class ModelConverter:
             self.logger.debug(f"Importing module: {module_path}")
             module = importlib.import_module(
                 module_path,
-            )  # nosemgrep: python.lang.security.audit.non-literal-import.non-literal-import
+            )
             model_class = getattr(module, class_name)
             self.logger.debug(f"Loaded class: {class_name}")
             return model_class
@@ -131,7 +138,10 @@ class ModelConverter:
             self.logger.error(f"Failed to import module {module_path}: {e}")
             raise
 
-    def load_checkpoint(self, checkpoint_path: Path) -> Dict[str, Any]:
+    def load_checkpoint(
+        self,
+        checkpoint_path: Path,
+    ) -> Dict[str, Any]:  # nosemgrep: trailofbits.python.pickles-in-pytorch.pickles-in-pytorch
         """
         Load PyTorch checkpoint file.
 
@@ -146,7 +156,7 @@ class ModelConverter:
                 checkpoint_path,
                 map_location="cpu",
                 weights_only=True,
-            )  # nosemgrep: trailofbits.python.pickles-in-pytorch.pickles-in-pytorch
+            )
             self.logger.debug(f"Loaded checkpoint from: {checkpoint_path}")
             return checkpoint
         except Exception as e:
@@ -480,16 +490,16 @@ def main():
         epilog="""
 Examples:
   # Convert all models in config
-  python model_converter.py config.json -o ./models
+  uv run python model_converter.py config.json -o ./models
 
   # Convert a specific model
-  python model_converter.py config.json -o ./models --model resnet50
+  uv run python model_converter.py config.json -o ./models --model resnet50
 
   # List all models in config
-  python model_converter.py config.json --list
+  uv run python model_converter.py config.json --list
 
   # Enable verbose logging
-  python model_converter.py config.json -o ./models -v
+  uv run python model_converter.py config.json -o ./models -v
         """,
     )
 
