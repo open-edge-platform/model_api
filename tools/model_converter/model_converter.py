@@ -78,7 +78,7 @@ class ModelConverter:
         self,
         url: str,
         filename: Optional[str] = None,
-    ) -> Path:  # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
+    ) -> Path:
         """
         Download model weights from URL with caching.
 
@@ -102,7 +102,7 @@ class ModelConverter:
         self.logger.info(f"Saving to: {cached_file}")
 
         try:
-            urllib.request.urlretrieve(  # noqa: S310
+            urllib.request.urlretrieve(  # noqa: S310 # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
                 url,
                 cached_file,
             )
@@ -115,7 +115,7 @@ class ModelConverter:
     def load_model_class(
         self,
         class_path: str,
-    ) -> type:  # nosemgrep: python.lang.security.audit.non-literal-import.non-literal-import
+    ) -> type:
         """
         Dynamically load a model class from a Python path.
 
@@ -128,8 +128,10 @@ class ModelConverter:
         try:
             module_path, class_name = class_path.rsplit(".", 1)
             self.logger.debug(f"Importing module: {module_path}")
-            module = importlib.import_module(
-                module_path,
+            module = (
+                importlib.import_module(  # nosemgrep: python.lang.security.audit.non-literal-import.non-literal-import
+                    module_path,
+                )
             )
             model_class = getattr(module, class_name)
             self.logger.debug(f"Loaded class: {class_name}")
@@ -141,7 +143,7 @@ class ModelConverter:
     def load_checkpoint(
         self,
         checkpoint_path: Path,
-    ) -> Dict[str, Any]:  # nosemgrep: trailofbits.python.pickles-in-pytorch.pickles-in-pytorch
+    ) -> Dict[str, Any]:
         """
         Load PyTorch checkpoint file.
 
@@ -152,7 +154,7 @@ class ModelConverter:
             Checkpoint dictionary
         """
         try:
-            checkpoint = torch.load(
+            checkpoint = torch.load(  # nosemgrep: trailofbits.python.pickles-in-pytorch.pickles-in-pytorch
                 checkpoint_path,
                 map_location="cpu",
                 weights_only=True,
