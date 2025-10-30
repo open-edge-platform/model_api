@@ -220,23 +220,32 @@ class ImageModel(Model):
                 }
             - the input metadata, which might be used in `postprocess` method
         """
-        if self._is_dynamic:
+        original_shape = inputs.shape
+
+        if self.embedded_processing:
+            processed_image = inputs[None]
+            if self._is_dynamic:
+                h, w, c = inputs.shape
+                resized_shape = (w, h, c)
+            else:
+                resized_shape = (self.w, self.h, self.c)
+        elif self._is_dynamic:
             h, w, c = inputs.shape
             resized_shape = (w, h, c)
             processed_image = self.input_transform(inputs)
             processed_image = self._change_layout(processed_image)
         else:
+            # Fixed model without embedded preprocessing
             resized_shape = (self.w, self.h, self.c)
-            if self.embedded_processing:
-                processed_image = inputs[None]
-            else:
-                processed_image = self.input_transform(inputs)
-                processed_image = self._change_layout(processed_image)
+
+            resized_image = self.resize(inputs, (self.w, self.h), pad_value=self.pad_value)
+            processed_image = self.input_transform(resized_image)
+            processed_image = self._change_layout(processed_image)
 
         return [
             {self.image_blob_name: processed_image},
             {
-                "original_shape": inputs.shape,
+                "original_shape": original_shape,
                 "resized_shape": resized_shape,
             },
         ]
