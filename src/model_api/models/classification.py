@@ -109,7 +109,7 @@ class ClassificationModel(ImageModel):
             if self.output_raw_scores:
                 self.out_layer_names.append(self.raw_scores_name)
         except (RuntimeError, AttributeError):
-            # exception means we have a non-ov model, or a model behind OVMS
+            # exception means we have a non-ov model
             # with already inserted softmax and topk
             if self.embedded_processing and len(self.outputs) >= 2:
                 self.embedded_topk = True
