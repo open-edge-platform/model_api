@@ -32,7 +32,7 @@ dependencies = [
 
 [project.optional-dependencies]
 ovms = [
-  "tritonclient[http]<2.59",
+  "tritonclient[http]<2.63",
 ]
 tests = [
     "pre-commit",

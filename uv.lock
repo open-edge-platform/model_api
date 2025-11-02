@@ -2454,7 +2454,7 @@ requires-dist = [
     { name = "sphinx-autodoc-typehints", marker = "extra == 'docs'" },
     { name = "sphinx-copybutton", marker = "extra == 'docs'" },
     { name = "sphinx-design", marker = "extra == 'docs'" },
-    { name = "tritonclient", extras = ["http"], marker = "extra == 'ovms'", specifier = "<2.59" },
+    { name = "tritonclient", extras = ["http"], marker = "extra == 'ovms'", specifier = "<2.63" },
     { name = "ultralytics", marker = "extra == 'tests'", specifier = ">=8.0.114,<=8.0.205" },
 ]
 provides-extras = ["ovms", "tests", "docs"]
@@ -3930,7 +3930,7 @@ wheels = [
 
 [[package]]
 name = "tritonclient"
-version = "2.58.0"
+version = "2.62.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy" },
@@ -3938,9 +3938,9 @@ dependencies = [
     { name = "urllib3" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/cf/c8/7ef73066476d54e505ebed7435293469a2358f3a173106d2ff9eee70b91f/tritonclient-2.58.0-py3-none-any.whl", hash = "sha256:f456c3d982cc4f0eaaac49e1175a0e86f20fa810d2afc44c0fae3587a97ba67c", size = 98240, upload-time = "2025-05-31T22:07:25.032Z" },
-    { url = "https://files.pythonhosted.org/packages/24/d5/c4ae120fba6621c88c270878e5bffd81c88cf870dd82011e35c2f625cd35/tritonclient-2.58.0-py3-none-manylinux1_x86_64.whl", hash = "sha256:671bf5c6fe441191904978f947ae7db72e4f82b9894301d3c62219a5a2f0c4ee", size = 14450319, upload-time = "2025-05-31T22:07:42.837Z" },
-    { url = "https://files.pythonhosted.org/packages/54/8a/9f10a452a0dcc1156434d93624f1d88351ac0547b990e8b5220c89839de3/tritonclient-2.58.0-py3-none-manylinux2014_aarch64.whl", hash = "sha256:0e25fc64ffaca89ec9b76f8a016a8f0e7391c11b3db334daef1dcc77ce1ca493", size = 13629753, upload-time = "2025-05-31T22:08:07.676Z" },
+    { url = "https://files.pythonhosted.org/packages/91/66/aca902d31bad39e0068c8720de7e74cb9a9e6dbb499093b3056d371e0963/tritonclient-2.62.0-py3-none-any.whl", hash = "sha256:c64dd3e905ff9688fa9871c6245273ab81ecde42f281f43bc5e31f84c094a4cf", size = 98239, upload-time = "2025-10-31T18:07:32.304Z" },
+    { url = "https://files.pythonhosted.org/packages/c0/83/0a3914d6f31a0e1ef001470af0ab541d5a7698de2e12f10efa7dea37eb21/tritonclient-2.62.0-py3-none-manylinux1_x86_64.whl", hash = "sha256:69f3fe65c7249f6b1f8710c4d3ee5ee9784d05c5e2119dc8657dc61ac00f85b9", size = 111800, upload-time = "2025-10-31T01:29:45.129Z" },
+    { url = "https://files.pythonhosted.org/packages/d7/5b/d8a7b2f1df0e16240f6fd60bd24cb77228264ca0eec2694edca045aca622/tritonclient-2.62.0-py3-none-manylinux2014_aarch64.whl", hash = "sha256:7a555a77aaa3b2f980112acf2723ebc43f8789c75a6e0b99f34f2298c2354d0a", size = 111804, upload-time = "2025-10-31T01:30:19.252Z" },
 ]
 
 [package.optional-dependencies]
