@@ -11,17 +11,28 @@ from zipfile import ZipFile
 import httpx
 
 
+async def download_single_image(client, url, filename):
+    image = await client.get(url)
+    with Path(filename).open("wb") as im:
+        im.write(image.content)
+
+
 async def download_images(data_dir):
     async with httpx.AsyncClient(timeout=20.0) as client:
-        COCO128_URL = "https://ultralytics.com/assets/coco128.zip"
+        COCO128_URL = "https://storage.geti.intel.com/geti_predict/test/images/coco128.zip"
         archive = await client.get(COCO128_URL, follow_redirects=True)
         with ZipFile(BytesIO(archive.content)) as zfile:
             zfile.extractall(data_dir)
-        image = await client.get(
-            "https://raw.githubusercontent.com/Shenggan/BCCD_Dataset/master/BCCD/JPEGImages/BloodImage_00007.jpg",
-        )
-        with Path(data_dir / "BloodImage_00007.jpg").open("wb") as im:
-            im.write(image.content)
+
+        image_downloads = [
+            (
+                "https://storage.geti.intel.com/geti_predict/test/images/BloodImage_00007.jpg",
+                data_dir / "BloodImage_00007.jpg",
+            ),
+            ("https://storage.geti.intel.com/geti_predict/test/images/cards.png", data_dir / "cards.png"),
+        ]
+
+        await asyncio.gather(*[download_single_image(client, url, filename) for url, filename in image_downloads])
 
 
 async def stream_file(client, url, filename):
@@ -155,6 +166,7 @@ async def main():
             download_otx_model(client, otx_models_dir, "sam_vit_b_zsl_decoder"),
             download_otx_model(client, otx_models_dir, "rtmpose_tiny"),
             download_otx_model(client, otx_models_dir, "segnext_t_tiling"),
+            download_otx_model(client, otx_models_dir, "ssd-card-detection"),
             download_anomalib_model(client, anomalib_models_dir, "padim"),
             download_anomalib_model(client, anomalib_models_dir, "stfpm"),
             download_anomalib_model(client, anomalib_models_dir, "uflow"),
