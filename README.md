@@ -17,7 +17,7 @@
 
 ## Introduction
 
-Model API is a set of wrapper classes for particular tasks and model architectures, simplifying data preprocess and postprocess as well as routine procedures (model loading, asynchronous execution, etc.). It is aimed at simplifying end-to-end model inference for different deployment scenarios, including local execution and serving. The Model API is based on the OpenVINO inference API.
+Model API is a set of wrapper classes for particular tasks and model architectures, simplifying data preprocess and postprocess as well as routine procedures (model loading, asynchronous execution, etc.). It is aimed at simplifying end-to-end model inference. The Model API is based on the OpenVINO inference API.
 
 ## How it works
 
@@ -35,7 +35,6 @@ Training Extensions embed all the metadata required for inference into model fil
 
 - Python API
 - Synchronous and asynchronous inference
-- Local inference and serving through the rest API
 - Model preprocessing embedding for faster inference
 
 ## Installation
