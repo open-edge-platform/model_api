@@ -477,5 +477,17 @@
         ]
       }
     ]
+  },
+  {
+    "name": "otx_models/ssd-card-detection.xml",
+    "type": "DetectionModel",
+    "test_data": [
+      {
+        "image": "coco128/images/train2017/000000000074.jpg",
+        "reference": [
+          "79, 281, 318, 371, 1 (Diamonds): 0.700; 0, 75, 172, 333, 1 (Diamonds): 0.575; 109, 6, 625, 224, 3 (Hearts): 0.547; [0]; [0]"
+        ]
+      }
+    ]
   }
 ]
