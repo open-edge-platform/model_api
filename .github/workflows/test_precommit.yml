@@ -24,7 +24,7 @@ jobs:
         uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
       - name: Install dependencies
         run: |
-          uv sync --locked --extra tests --extra ovms --extra-index-url https://download.pytorch.org/whl/cpu
+          uv sync --locked --extra tests --extra-index-url https://download.pytorch.org/whl/cpu
       - name: Prepare test data
         run: |
           uv run python tests/precommit/prepare_data.py -d data -p tests/precommit/public_scope.json
