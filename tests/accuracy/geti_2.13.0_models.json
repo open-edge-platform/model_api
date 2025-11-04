@@ -60,16 +60,6 @@
     ]
   },
   {
-    "name": "geti_2.13.0_models/AnomalyDetection/PADIM/torch/weights.pth",
-    "type": "AnomalyDetection",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
-      }
-    ]
-  },
-  {
     "name": "geti_2.13.0_models/AnomalyDetection/STFPM/onnx/model.onnx",
     "type": "AnomalyDetection",
     "test_data": [
@@ -126,16 +116,6 @@
         "reference": [
           "anomaly_map min:129 max:203;pred_score:0.7;pred_label:Anomaly;pred_mask min:1 max:1;"
         ]
-      }
-    ]
-  },
-  {
-    "name": "geti_2.13.0_models/AnomalyDetection/STFPM/torch/weights.pth",
-    "type": "AnomalyDetection",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
       }
     ]
   },
@@ -200,22 +180,29 @@
     ]
   },
   {
-    "name": "geti_2.13.0_models/AnomalyDetection/U-FLOW/torch/weights.pth",
-    "type": "AnomalyDetection",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
-      }
-    ]
-  },
-  {
     "name": "geti_2.13.0_models/ClassificationHierarchical/DeiT-Tiny/onnx/model.onnx",
     "type": "ClassificationModel",
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["4 (dog): 1.000, 1 (outside): 1.000, [0], [0], [5]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 1.0
+            },
+            {
+              "id": 1,
+              "name": "outside",
+              "confidence": 0.9995660185813904
+            }
+          ],
+          "raw_scores": [
+            0.0004340099112596363, 0.9995660185813904, 1.2432556095731684e-9,
+            2.806482823913825e-9, 1.0
+          ]
+        }
       }
     ]
   },
@@ -225,7 +212,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["4 (dog): 1.000, 1 (outside): 1.000, [0], [0], [5]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 1.0
+            },
+            {
+              "id": 1,
+              "name": "outside",
+              "confidence": 0.9995731711387634
+            }
+          ],
+          "raw_scores": [
+            0.00042678863974288106, 0.9995731711387634, 1.2321149656102648e-9,
+            2.771554541425303e-9, 1.0
+          ]
+        }
       }
     ]
   },
@@ -235,7 +239,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["4 (dog): 1.000, 1 (outside): 1.000, [0], [0], [5]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 1.0
+            },
+            {
+              "id": 1,
+              "name": "outside",
+              "confidence": 0.9995660185813904
+            }
+          ],
+          "raw_scores": [
+            0.00043402682058513165, 0.9995660185813904, 1.2432935792006106e-9,
+            2.806365140273215e-9, 1.0
+          ]
+        }
       }
     ]
   },
@@ -245,7 +266,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["4 (dog): 1.000, 1 (outside): 0.938, [0], [0], [5]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.9999827146530151
+            },
+            {
+              "id": 1,
+              "name": "outside",
+              "confidence": 0.9376516938209534
+            }
+          ],
+          "raw_scores": [
+            0.062348317354917526, 0.9376516938209534, 4.446972923233261e-8,
+            1.7239970475202426e-5, 0.9999827146530151
+          ]
+        }
       }
     ]
   },
@@ -255,19 +293,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": [
-          "4 (dog): 1.000, 1 (outside): 1.000, [1,5,14,14], [1,192], [5]"
-        ]
-      }
-    ]
-  },
-  {
-    "name": "geti_2.13.0_models/ClassificationHierarchical/DeiT-Tiny/torch/weights.pth",
-    "type": "ClassificationModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 1.0
+            },
+            {
+              "id": 1,
+              "name": "outside",
+              "confidence": 0.9995731711387634
+            }
+          ],
+          "raw_scores": [
+            0.00042678863974288106, 0.9995731711387634, 1.2321149656102648e-9,
+            2.771554541425303e-9, 1.0
+          ]
+        }
       }
     ]
   },
@@ -277,7 +320,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["4 (dog): 0.798, 1 (outside): 0.622, [0], [0], [5]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.7981534004211426
+            },
+            {
+              "id": 1,
+              "name": "outside",
+              "confidence": 0.621908962726593
+            }
+          ],
+          "raw_scores": [
+            0.2596023678779602, 0.621908962726593, 0.11848866939544678,
+            0.2018466591835022, 0.7981534004211426
+          ]
+        }
       }
     ]
   },
@@ -287,7 +347,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["4 (dog): 0.798, 1 (outside): 0.622, [0], [0], [5]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.7981191277503967
+            },
+            {
+              "id": 1,
+              "name": "outside",
+              "confidence": 0.6220411658287048
+            }
+          ],
+          "raw_scores": [
+            0.25937649607658386, 0.6220411658287048, 0.1185823306441307,
+            0.20188084244728088, 0.7981191277503967
+          ]
+        }
       }
     ]
   },
@@ -297,7 +374,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["4 (dog): 0.798, 1 (outside): 0.622, [0], [0], [5]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.7981535196304321
+            },
+            {
+              "id": 1,
+              "name": "outside",
+              "confidence": 0.6219091415405273
+            }
+          ],
+          "raw_scores": [
+            0.2596021890640259, 0.6219091415405273, 0.11848869919776917,
+            0.20184649527072906, 0.7981535196304321
+          ]
+        }
       }
     ]
   },
@@ -307,7 +401,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["4 (dog): 0.916, 1 (outside): 0.684, [0], [0], [5]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.9157181978225708
+            },
+            {
+              "id": 1,
+              "name": "outside",
+              "confidence": 0.6836422681808472
+            }
+          ],
+          "raw_scores": [
+            0.21445240080356598, 0.6836422681808472, 0.10190532356500626,
+            0.0842818170785904, 0.9157181978225708
+          ]
+        }
       }
     ]
   },
@@ -317,19 +428,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": [
-          "4 (dog): 0.798, 1 (outside): 0.622, [1,5,7,7], [1,1280], [5]"
-        ]
-      }
-    ]
-  },
-  {
-    "name": "geti_2.13.0_models/ClassificationHierarchical/EfficientNet-B0/torch/weights.pth",
-    "type": "ClassificationModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.7981191277503967
+            },
+            {
+              "id": 1,
+              "name": "outside",
+              "confidence": 0.6220411658287048
+            }
+          ],
+          "raw_scores": [
+            0.25937649607658386, 0.6220411658287048, 0.1185823306441307,
+            0.20188084244728088, 0.7981191277503967
+          ]
+        }
       }
     ]
   },
@@ -339,7 +455,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["4 (dog): 0.807, 1 (outside): 0.581, [0], [0], [5]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.8072364330291748
+            },
+            {
+              "id": 1,
+              "name": "outside",
+              "confidence": 0.580940306186676
+            }
+          ],
+          "raw_scores": [
+            0.28251969814300537, 0.580940306186676, 0.1365399807691574,
+            0.192763552069664, 0.8072364330291748
+          ]
+        }
       }
     ]
   },
@@ -349,7 +482,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["4 (dog): 0.807, 1 (outside): 0.581, [0], [0], [5]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.8070695400238037
+            },
+            {
+              "id": 1,
+              "name": "outside",
+              "confidence": 0.5809533596038818
+            }
+          ],
+          "raw_scores": [
+            0.28232690691947937, 0.5809533596038818, 0.1367197483778,
+            0.1929304450750351, 0.8070695400238037
+          ]
+        }
       }
     ]
   },
@@ -359,7 +509,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["4 (dog): 0.807, 1 (outside): 0.581, [0], [0], [5]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.80723637342453
+            },
+            {
+              "id": 1,
+              "name": "outside",
+              "confidence": 0.5809402465820312
+            }
+          ],
+          "raw_scores": [
+            0.28251975774765015, 0.5809402465820312, 0.1365399956703186,
+            0.19276361167430878, 0.80723637342453
+          ]
+        }
       }
     ]
   },
@@ -369,7 +536,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["4 (dog): 0.771, 1 (outside): 0.559, [0], [0], [5]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.7708662152290344
+            },
+            {
+              "id": 1,
+              "name": "outside",
+              "confidence": 0.5590543746948242
+            }
+          ],
+          "raw_scores": [
+            0.3357127010822296, 0.5590543746948242, 0.10523286461830139,
+            0.22913381457328796, 0.7708662152290344
+          ]
+        }
       }
     ]
   },
@@ -379,19 +563,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": [
-          "4 (dog): 0.807, 1 (outside): 0.581, [1,5,7,7], [1,1536], [5]"
-        ]
-      }
-    ]
-  },
-  {
-    "name": "geti_2.13.0_models/ClassificationHierarchical/EfficientNet-B3/torch/weights.pth",
-    "type": "ClassificationModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.8070695400238037
+            },
+            {
+              "id": 1,
+              "name": "outside",
+              "confidence": 0.5809533596038818
+            }
+          ],
+          "raw_scores": [
+            0.28232690691947937, 0.5809533596038818, 0.1367197483778,
+            0.1929304450750351, 0.8070695400238037
+          ]
+        }
       }
     ]
   },
@@ -401,7 +590,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["4 (dog): 0.957, 1 (outside): 0.644, [0], [0], [5]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.9566987156867981
+            },
+            {
+              "id": 1,
+              "name": "outside",
+              "confidence": 0.6439645886421204
+            }
+          ],
+          "raw_scores": [
+            0.31177225708961487, 0.6439645886421204, 0.04426312819123268,
+            0.04330126568675041, 0.9566987156867981
+          ]
+        }
       }
     ]
   },
@@ -411,7 +617,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["4 (dog): 0.957, 1 (outside): 0.644, [0], [0], [5]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.9567152857780457
+            },
+            {
+              "id": 1,
+              "name": "outside",
+              "confidence": 0.6441488265991211
+            }
+          ],
+          "raw_scores": [
+            0.31161263585090637, 0.6441488265991211, 0.04423857107758522,
+            0.04328468441963196, 0.9567152857780457
+          ]
+        }
       }
     ]
   },
@@ -421,7 +644,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["4 (dog): 0.957, 1 (outside): 0.644, [0], [0], [5]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.9566987156867981
+            },
+            {
+              "id": 1,
+              "name": "outside",
+              "confidence": 0.6439647674560547
+            }
+          ],
+          "raw_scores": [
+            0.3117721378803253, 0.6439647674560547, 0.04426310583949089,
+            0.0433012954890728, 0.9566987156867981
+          ]
+        }
       }
     ]
   },
@@ -431,7 +671,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["4 (dog): 0.964, 1 (outside): 0.691, [0], [0], [5]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.9635509252548218
+            },
+            {
+              "id": 1,
+              "name": "outside",
+              "confidence": 0.6908327341079712
+            }
+          ],
+          "raw_scores": [
+            0.2655159533023834, 0.6908327341079712, 0.04365134611725807,
+            0.036449044942855835, 0.9635509252548218
+          ]
+        }
       }
     ]
   },
@@ -441,19 +698,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": [
-          "4 (dog): 0.957, 1 (outside): 0.644, [1,5,7,7], [1,1280], [5]"
-        ]
-      }
-    ]
-  },
-  {
-    "name": "geti_2.13.0_models/ClassificationHierarchical/EfficientNet-V2-L/torch/weights.pth",
-    "type": "ClassificationModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.9567152857780457
+            },
+            {
+              "id": 1,
+              "name": "outside",
+              "confidence": 0.6441488265991211
+            }
+          ],
+          "raw_scores": [
+            0.31161263585090637, 0.6441488265991211, 0.04423857107758522,
+            0.04328468441963196, 0.9567152857780457
+          ]
+        }
       }
     ]
   },
@@ -463,7 +725,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["4 (dog): 0.954, 0 (inside): 0.493, [0], [0], [5]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.9541687369346619
+            },
+            {
+              "id": 0,
+              "name": "inside",
+              "confidence": 0.4934975802898407
+            }
+          ],
+          "raw_scores": [
+            0.4934975802898407, 0.3930470943450928, 0.11345534026622772,
+            0.04583129659295082, 0.9541687369346619
+          ]
+        }
       }
     ]
   },
@@ -473,7 +752,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["4 (dog): 0.954, 0 (inside): 0.493, [0], [0], [5]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.9542422294616699
+            },
+            {
+              "id": 0,
+              "name": "inside",
+              "confidence": 0.4930516481399536
+            }
+          ],
+          "raw_scores": [
+            0.4930516481399536, 0.3934609591960907, 0.11348743736743927,
+            0.045757781714200974, 0.9542422294616699
+          ]
+        }
       }
     ]
   },
@@ -483,7 +779,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["4 (dog): 0.954, 0 (inside): 0.493, [0], [0], [5]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.9541687369346619
+            },
+            {
+              "id": 0,
+              "name": "inside",
+              "confidence": 0.4934976398944855
+            }
+          ],
+          "raw_scores": [
+            0.4934976398944855, 0.3930470943450928, 0.11345530301332474,
+            0.045831259340047836, 0.9541687369346619
+          ]
+        }
       }
     ]
   },
@@ -493,7 +806,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["4 (dog): 0.946, 0 (inside): 0.513, [0], [0], [5]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.9460054636001587
+            },
+            {
+              "id": 0,
+              "name": "inside",
+              "confidence": 0.5132704973220825
+            }
+          ],
+          "raw_scores": [
+            0.5132704973220825, 0.3514685332775116, 0.13526102900505066,
+            0.05399449169635773, 0.9460054636001587
+          ]
+        }
       }
     ]
   },
@@ -503,19 +833,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": [
-          "4 (dog): 0.954, 0 (inside): 0.493, [1,5,7,7], [1,1280], [5]"
-        ]
-      }
-    ]
-  },
-  {
-    "name": "geti_2.13.0_models/ClassificationHierarchical/EfficientNet-V2-S/torch/weights.pth",
-    "type": "ClassificationModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.9542422294616699
+            },
+            {
+              "id": 0,
+              "name": "inside",
+              "confidence": 0.4930516481399536
+            }
+          ],
+          "raw_scores": [
+            0.4930516481399536, 0.3934609591960907, 0.11348743736743927,
+            0.045757781714200974, 0.9542422294616699
+          ]
+        }
       }
     ]
   },
@@ -525,7 +860,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["4 (dog): 0.571, 1 (outside): 0.420, [0], [0], [5]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.5713164210319519
+            },
+            {
+              "id": 1,
+              "name": "outside",
+              "confidence": 0.42000895738601685
+            }
+          ],
+          "raw_scores": [
+            0.26569658517837524, 0.42000895738601685, 0.3142944276332855,
+            0.4286835789680481, 0.5713164210319519
+          ]
+        }
       }
     ]
   },
@@ -535,7 +887,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["4 (dog): 0.571, 1 (outside): 0.420, [0], [0], [5]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.5714322924613953
+            },
+            {
+              "id": 1,
+              "name": "outside",
+              "confidence": 0.41985875368118286
+            }
+          ],
+          "raw_scores": [
+            0.26576101779937744, 0.41985875368118286, 0.3143802583217621,
+            0.42856767773628235, 0.5714322924613953
+          ]
+        }
       }
     ]
   },
@@ -545,7 +914,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["4 (dog): 0.571, 1 (outside): 0.420, [0], [0], [5]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.5713164210319519
+            },
+            {
+              "id": 1,
+              "name": "outside",
+              "confidence": 0.42000892758369446
+            }
+          ],
+          "raw_scores": [
+            0.26569658517837524, 0.42000892758369446, 0.3142944872379303,
+            0.42868363857269287, 0.5713164210319519
+          ]
+        }
       }
     ]
   },
@@ -555,7 +941,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["4 (dog): 0.588, 1 (outside): 0.437, [0], [0], [5]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.5880841016769409
+            },
+            {
+              "id": 1,
+              "name": "outside",
+              "confidence": 0.4367189109325409
+            }
+          ],
+          "raw_scores": [
+            0.23817238211631775, 0.4367189109325409, 0.32510867714881897,
+            0.4119158685207367, 0.5880841016769409
+          ]
+        }
       }
     ]
   },
@@ -565,19 +968,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": [
-          "4 (dog): 0.571, 1 (outside): 0.420, [1,5,7,7], [1,960], [5]"
-        ]
-      }
-    ]
-  },
-  {
-    "name": "geti_2.13.0_models/ClassificationHierarchical/MobileNet-V3-large-1x/torch/weights.pth",
-    "type": "ClassificationModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.5714322924613953
+            },
+            {
+              "id": 1,
+              "name": "outside",
+              "confidence": 0.41985875368118286
+            }
+          ],
+          "raw_scores": [
+            0.26576101779937744, 0.41985875368118286, 0.3143802583217621,
+            0.42856767773628235, 0.5714322924613953
+          ]
+        }
       }
     ]
   },
@@ -587,7 +995,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["4 (dog): 0.813, 1 (outside): 0.548, [0], [0], [5]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.8130664825439453
+            },
+            {
+              "id": 1,
+              "name": "outside",
+              "confidence": 0.5477104187011719
+            }
+          ],
+          "raw_scores": [
+            0.22652596235275269, 0.5477104187011719, 0.22576364874839783,
+            0.1869334727525711, 0.8130664825439453
+          ]
+        }
       }
     ]
   },
@@ -597,7 +1022,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["4 (dog): 0.813, 1 (outside): 0.547, [0], [0], [5]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.8131321668624878
+            },
+            {
+              "id": 1,
+              "name": "outside",
+              "confidence": 0.5473816394805908
+            }
+          ],
+          "raw_scores": [
+            0.22700215876102448, 0.5473816394805908, 0.2256162166595459,
+            0.1868678778409958, 0.8131321668624878
+          ]
+        }
       }
     ]
   },
@@ -607,7 +1049,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["4 (dog): 0.813, 1 (outside): 0.548, [0], [0], [5]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.8130664229393005
+            },
+            {
+              "id": 1,
+              "name": "outside",
+              "confidence": 0.5477102994918823
+            }
+          ],
+          "raw_scores": [
+            0.22652597725391388, 0.5477102994918823, 0.22576367855072021,
+            0.18693360686302185, 0.8130664229393005
+          ]
+        }
       }
     ]
   },
@@ -617,7 +1076,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["4 (dog): 0.804, 1 (outside): 0.559, [0], [0], [5]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.804233193397522
+            },
+            {
+              "id": 1,
+              "name": "outside",
+              "confidence": 0.5585412383079529
+            }
+          ],
+          "raw_scores": [
+            0.22594331204891205, 0.5585412383079529, 0.21551546454429626,
+            0.19576683640480042, 0.804233193397522
+          ]
+        }
       }
     ]
   },
@@ -627,19 +1103,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": [
-          "4 (dog): 0.813, 1 (outside): 0.547, [1,5,7,7], [1,576], [5]"
-        ]
-      }
-    ]
-  },
-  {
-    "name": "geti_2.13.0_models/ClassificationHierarchical/MobileNet-V3-small/torch/weights.pth",
-    "type": "ClassificationModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.8131321668624878
+            },
+            {
+              "id": 1,
+              "name": "outside",
+              "confidence": 0.5473816394805908
+            }
+          ],
+          "raw_scores": [
+            0.22700215876102448, 0.5473816394805908, 0.2256162166595459,
+            0.1868678778409958, 0.8131321668624878
+          ]
+        }
       }
     ]
   },
@@ -649,9 +1130,29 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": [
-          "1 (inside): 0.519, 2 (outside): 0.910, 4 (dog): 0.975, [0], [0], [6]"
-        ]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "inside",
+              "confidence": 0.5192329287528992
+            },
+            {
+              "id": 2,
+              "name": "outside",
+              "confidence": 0.9097111821174622
+            },
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.9750664830207825
+            }
+          ],
+          "raw_scores": [
+            0.24218815565109253, 0.5192329287528992, 0.9097111821174622,
+            0.4285067617893219, 0.9750664830207825, 0.10727697610855103
+          ]
+        }
       }
     ]
   },
@@ -661,9 +1162,29 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": [
-          "1 (inside): 0.519, 2 (outside): 0.910, 4 (dog): 0.975, [0], [0], [6]"
-        ]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "inside",
+              "confidence": 0.5187600255012512
+            },
+            {
+              "id": 2,
+              "name": "outside",
+              "confidence": 0.9098359942436218
+            },
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.9750276207923889
+            }
+          ],
+          "raw_scores": [
+            0.24216385185718536, 0.5187600255012512, 0.9098359942436218,
+            0.42839863896369934, 0.9750276207923889, 0.1072716936469078
+          ]
+        }
       }
     ]
   },
@@ -673,9 +1194,29 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": [
-          "1 (inside): 0.519, 2 (outside): 0.910, 4 (dog): 0.975, [0], [0], [6]"
-        ]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "inside",
+              "confidence": 0.5192335844039917
+            },
+            {
+              "id": 2,
+              "name": "outside",
+              "confidence": 0.9097110033035278
+            },
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.9750664830207825
+            }
+          ],
+          "raw_scores": [
+            0.24218828976154327, 0.5192335844039917, 0.9097110033035278,
+            0.4285065233707428, 0.9750664830207825, 0.10727689415216446
+          ]
+        }
       }
     ]
   },
@@ -685,9 +1226,29 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": [
-          "1 (inside): 0.561, 2 (outside): 0.917, 4 (dog): 0.970, [0], [0], [6]"
-        ]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "inside",
+              "confidence": 0.5612392425537109
+            },
+            {
+              "id": 2,
+              "name": "outside",
+              "confidence": 0.9172236323356628
+            },
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.9701837301254272
+            }
+          ],
+          "raw_scores": [
+            0.22782911360263824, 0.5612392425537109, 0.9172236323356628,
+            0.48290354013442993, 0.9701837301254272, 0.10515786707401276
+          ]
+        }
       }
     ]
   },
@@ -697,19 +1258,29 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": [
-          "1 (inside): 0.519, 2 (outside): 0.910, 4 (dog): 0.975, [1,6,14,14], [1,192], [6]"
-        ]
-      }
-    ]
-  },
-  {
-    "name": "geti_2.13.0_models/ClassificationMultiLabel/DeiT-Tiny/torch/weights.pth",
-    "type": "ClassificationModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "inside",
+              "confidence": 0.5187600255012512
+            },
+            {
+              "id": 2,
+              "name": "outside",
+              "confidence": 0.9098359942436218
+            },
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.9750276207923889
+            }
+          ],
+          "raw_scores": [
+            0.24216385185718536, 0.5187600255012512, 0.9098359942436218,
+            0.42839863896369934, 0.9750276207923889, 0.1072716936469078
+          ]
+        }
       }
     ]
   },
@@ -719,7 +1290,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["2 (outside): 0.597, 4 (dog): 0.651, [0], [0], [6]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 2,
+              "name": "outside",
+              "confidence": 0.5970104336738586
+            },
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.650637686252594
+            }
+          ],
+          "raw_scores": [
+            0.4608972370624542, 0.45636245608329773, 0.5970104336738586,
+            0.42311835289001465, 0.650637686252594, 0.4392175078392029
+          ]
+        }
       }
     ]
   },
@@ -729,7 +1317,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["2 (outside): 0.597, 4 (dog): 0.651, [0], [0], [6]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 2,
+              "name": "outside",
+              "confidence": 0.597006618976593
+            },
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.6506818532943726
+            }
+          ],
+          "raw_scores": [
+            0.4609382450580597, 0.4563237130641937, 0.597006618976593,
+            0.4230595827102661, 0.6506818532943726, 0.4392147362232208
+          ]
+        }
       }
     ]
   },
@@ -739,7 +1344,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["2 (outside): 0.597, 4 (dog): 0.651, [0], [0], [6]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 2,
+              "name": "outside",
+              "confidence": 0.5970104336738586
+            },
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.650637686252594
+            }
+          ],
+          "raw_scores": [
+            0.4608972370624542, 0.4563624858856201, 0.5970104336738586,
+            0.42311838269233704, 0.650637686252594, 0.4392175078392029
+          ]
+        }
       }
     ]
   },
@@ -749,7 +1371,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["2 (outside): 0.598, 4 (dog): 0.649, [0], [0], [6]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 2,
+              "name": "outside",
+              "confidence": 0.5976037383079529
+            },
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.6492298245429993
+            }
+          ],
+          "raw_scores": [
+            0.45428210496902466, 0.45743581652641296, 0.5976037383079529,
+            0.42379823327064514, 0.6492298245429993, 0.4444277286529541
+          ]
+        }
       }
     ]
   },
@@ -759,19 +1398,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": [
-          "2 (outside): 0.597, 4 (dog): 0.651, [1,6,7,7], [1,1280], [6]"
-        ]
-      }
-    ]
-  },
-  {
-    "name": "geti_2.13.0_models/ClassificationMultiLabel/EfficientNet-B0/torch/weights.pth",
-    "type": "ClassificationModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 2,
+              "name": "outside",
+              "confidence": 0.597006618976593
+            },
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.6506818532943726
+            }
+          ],
+          "raw_scores": [
+            0.4609382450580597, 0.4563237130641937, 0.597006618976593,
+            0.4230595827102661, 0.6506818532943726, 0.4392147362232208
+          ]
+        }
       }
     ]
   },
@@ -781,7 +1425,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["2 (outside): 0.567, 4 (dog): 0.581, [0], [0], [6]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 2,
+              "name": "outside",
+              "confidence": 0.5669705867767334
+            },
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.5811112523078918
+            }
+          ],
+          "raw_scores": [
+            0.4820452928543091, 0.48709094524383545, 0.5669705867767334,
+            0.4663589894771576, 0.5811112523078918, 0.44530725479125977
+          ]
+        }
       }
     ]
   },
@@ -791,7 +1452,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["2 (outside): 0.567, 4 (dog): 0.581, [0], [0], [6]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 2,
+              "name": "outside",
+              "confidence": 0.5668460130691528
+            },
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.5812063217163086
+            }
+          ],
+          "raw_scores": [
+            0.48207327723503113, 0.48721444606781006, 0.5668460130691528,
+            0.4663914442062378, 0.5812063217163086, 0.4451849162578583
+          ]
+        }
       }
     ]
   },
@@ -801,7 +1479,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["2 (outside): 0.567, 4 (dog): 0.581, [0], [0], [6]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 2,
+              "name": "outside",
+              "confidence": 0.5669706463813782
+            },
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.5811112523078918
+            }
+          ],
+          "raw_scores": [
+            0.4820452928543091, 0.48709094524383545, 0.5669706463813782,
+            0.4663589894771576, 0.5811112523078918, 0.44530728459358215
+          ]
+        }
       }
     ]
   },
@@ -811,7 +1506,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["2 (outside): 0.539, 4 (dog): 0.571, [0], [0], [6]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 2,
+              "name": "outside",
+              "confidence": 0.5392977595329285
+            },
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.5714854598045349
+            }
+          ],
+          "raw_scores": [
+            0.4972307085990906, 0.49887433648109436, 0.5392977595329285,
+            0.4692690670490265, 0.5714854598045349, 0.4509527087211609
+          ]
+        }
       }
     ]
   },
@@ -821,19 +1533,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": [
-          "2 (outside): 0.567, 4 (dog): 0.581, [1,6,7,7], [1,1536], [6]"
-        ]
-      }
-    ]
-  },
-  {
-    "name": "geti_2.13.0_models/ClassificationMultiLabel/EfficientNet-B3/torch/weights.pth",
-    "type": "ClassificationModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 2,
+              "name": "outside",
+              "confidence": 0.5668460130691528
+            },
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.5812063217163086
+            }
+          ],
+          "raw_scores": [
+            0.48207327723503113, 0.48721444606781006, 0.5668460130691528,
+            0.4663914442062378, 0.5812063217163086, 0.4451849162578583
+          ]
+        }
       }
     ]
   },
@@ -843,7 +1560,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["2 (outside): 0.628, 4 (dog): 0.601, [0], [0], [6]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 2,
+              "name": "outside",
+              "confidence": 0.6280241012573242
+            },
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.6011207103729248
+            }
+          ],
+          "raw_scores": [
+            0.4296453893184662, 0.4707491099834442, 0.6280241012573242,
+            0.4675343930721283, 0.6011207103729248, 0.4306431710720062
+          ]
+        }
       }
     ]
   },
@@ -853,7 +1587,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["2 (outside): 0.628, 4 (dog): 0.601, [0], [0], [6]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 2,
+              "name": "outside",
+              "confidence": 0.6280432939529419
+            },
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.6010627150535583
+            }
+          ],
+          "raw_scores": [
+            0.4296188950538635, 0.4707626402378082, 0.6280432939529419,
+            0.46759575605392456, 0.6010627150535583, 0.43063676357269287
+          ]
+        }
       }
     ]
   },
@@ -863,7 +1614,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["2 (outside): 0.628, 4 (dog): 0.601, [0], [0], [6]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 2,
+              "name": "outside",
+              "confidence": 0.6280241012573242
+            },
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.6011207103729248
+            }
+          ],
+          "raw_scores": [
+            0.4296453893184662, 0.4707491099834442, 0.6280241012573242,
+            0.4675343632698059, 0.6011207103729248, 0.43064314126968384
+          ]
+        }
       }
     ]
   },
@@ -873,7 +1641,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["2 (outside): 0.626, 4 (dog): 0.590, [0], [0], [6]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 2,
+              "name": "outside",
+              "confidence": 0.6256459355354309
+            },
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.5903835892677307
+            }
+          ],
+          "raw_scores": [
+            0.4292323887348175, 0.4756009578704834, 0.6256459355354309,
+            0.46885502338409424, 0.5903835892677307, 0.43823352456092834
+          ]
+        }
       }
     ]
   },
@@ -883,19 +1668,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": [
-          "2 (outside): 0.628, 4 (dog): 0.601, [1,6,7,7], [1,1280], [6]"
-        ]
-      }
-    ]
-  },
-  {
-    "name": "geti_2.13.0_models/ClassificationMultiLabel/EfficientNet-V2-L/torch/weights.pth",
-    "type": "ClassificationModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 2,
+              "name": "outside",
+              "confidence": 0.6280432939529419
+            },
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.6010627150535583
+            }
+          ],
+          "raw_scores": [
+            0.4296188950538635, 0.4707626402378082, 0.6280432939529419,
+            0.46759575605392456, 0.6010627150535583, 0.43063676357269287
+          ]
+        }
       }
     ]
   },
@@ -905,7 +1695,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["2 (outside): 0.550, 4 (dog): 0.560, [0], [0], [6]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 2,
+              "name": "outside",
+              "confidence": 0.5501821041107178
+            },
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.5601801872253418
+            }
+          ],
+          "raw_scores": [
+            0.4664395749568939, 0.49888157844543457, 0.5501821041107178,
+            0.4995848536491394, 0.5601801872253418, 0.455502450466156
+          ]
+        }
       }
     ]
   },
@@ -915,7 +1722,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["2 (outside): 0.550, 4 (dog): 0.560, [0], [0], [6]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 2,
+              "name": "outside",
+              "confidence": 0.5500993728637695
+            },
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.5601934790611267
+            }
+          ],
+          "raw_scores": [
+            0.4664437174797058, 0.4989291727542877, 0.5500993728637695,
+            0.4995180368423462, 0.5601934790611267, 0.45553985238075256
+          ]
+        }
       }
     ]
   },
@@ -925,7 +1749,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["2 (outside): 0.550, 4 (dog): 0.560, [0], [0], [6]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 2,
+              "name": "outside",
+              "confidence": 0.5501821041107178
+            },
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.5601801872253418
+            }
+          ],
+          "raw_scores": [
+            0.4664395749568939, 0.49888157844543457, 0.5501821041107178,
+            0.49958479404449463, 0.5601801872253418, 0.455502450466156
+          ]
+        }
       }
     ]
   },
@@ -935,9 +1776,29 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": [
-          "2 (outside): 0.559, 3 (cat): 0.501, 4 (dog): 0.563, [0], [0], [6]"
-        ]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 2,
+              "name": "outside",
+              "confidence": 0.5594047904014587
+            },
+            {
+              "id": 3,
+              "name": "cat",
+              "confidence": 0.5012239217758179
+            },
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.5634059906005859
+            }
+          ],
+          "raw_scores": [
+            0.463392436504364, 0.4950887858867645, 0.5594047904014587,
+            0.5012239217758179, 0.5634059906005859, 0.45111140608787537
+          ]
+        }
       }
     ]
   },
@@ -947,19 +1808,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": [
-          "2 (outside): 0.550, 4 (dog): 0.560, [1,6,7,7], [1,1280], [6]"
-        ]
-      }
-    ]
-  },
-  {
-    "name": "geti_2.13.0_models/ClassificationMultiLabel/EfficientNet-V2-S/torch/weights.pth",
-    "type": "ClassificationModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 2,
+              "name": "outside",
+              "confidence": 0.5500993728637695
+            },
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.5601934790611267
+            }
+          ],
+          "raw_scores": [
+            0.4664437174797058, 0.4989291727542877, 0.5500993728637695,
+            0.4995180368423462, 0.5601934790611267, 0.45553985238075256
+          ]
+        }
       }
     ]
   },
@@ -969,9 +1835,29 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": [
-          "1 (inside): 0.532, 2 (outside): 0.542, 4 (dog): 0.637, [0], [0], [6]"
-        ]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "inside",
+              "confidence": 0.5317322015762329
+            },
+            {
+              "id": 2,
+              "name": "outside",
+              "confidence": 0.5421338677406311
+            },
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.6366594433784485
+            }
+          ],
+          "raw_scores": [
+            0.4453333020210266, 0.5317322015762329, 0.5421338677406311,
+            0.4043675363063812, 0.6366594433784485, 0.46472203731536865
+          ]
+        }
       }
     ]
   },
@@ -981,9 +1867,29 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": [
-          "1 (inside): 0.532, 2 (outside): 0.542, 4 (dog): 0.637, [0], [0], [6]"
-        ]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "inside",
+              "confidence": 0.5317105650901794
+            },
+            {
+              "id": 2,
+              "name": "outside",
+              "confidence": 0.5420862436294556
+            },
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.6365987658500671
+            }
+          ],
+          "raw_scores": [
+            0.44537946581840515, 0.5317105650901794, 0.5420862436294556,
+            0.4043958783149719, 0.6365987658500671, 0.4647485017776489
+          ]
+        }
       }
     ]
   },
@@ -993,9 +1899,29 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": [
-          "1 (inside): 0.532, 2 (outside): 0.542, 4 (dog): 0.637, [0], [0], [6]"
-        ]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "inside",
+              "confidence": 0.5317322015762329
+            },
+            {
+              "id": 2,
+              "name": "outside",
+              "confidence": 0.5421338677406311
+            },
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.6366594433784485
+            }
+          ],
+          "raw_scores": [
+            0.4453333020210266, 0.5317322015762329, 0.5421338677406311,
+            0.4043675363063812, 0.6366594433784485, 0.4647219777107239
+          ]
+        }
       }
     ]
   },
@@ -1005,9 +1931,29 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": [
-          "1 (inside): 0.537, 2 (outside): 0.555, 4 (dog): 0.631, [0], [0], [6]"
-        ]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "inside",
+              "confidence": 0.5367164611816406
+            },
+            {
+              "id": 2,
+              "name": "outside",
+              "confidence": 0.5546934008598328
+            },
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.6308700442314148
+            }
+          ],
+          "raw_scores": [
+            0.4350590705871582, 0.5367164611816406, 0.5546934008598328,
+            0.4202575087547302, 0.6308700442314148, 0.44943177700042725
+          ]
+        }
       }
     ]
   },
@@ -1017,19 +1963,29 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": [
-          "1 (inside): 0.532, 2 (outside): 0.542, 4 (dog): 0.637, [1,6,7,7], [1,960], [6]"
-        ]
-      }
-    ]
-  },
-  {
-    "name": "geti_2.13.0_models/ClassificationMultiLabel/MobileNet-V3-large-1x/torch/weights.pth",
-    "type": "ClassificationModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "inside",
+              "confidence": 0.5317105650901794
+            },
+            {
+              "id": 2,
+              "name": "outside",
+              "confidence": 0.5420862436294556
+            },
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.6365987658500671
+            }
+          ],
+          "raw_scores": [
+            0.44537946581840515, 0.5317105650901794, 0.5420862436294556,
+            0.4043958783149719, 0.6365987658500671, 0.4647485017776489
+          ]
+        }
       }
     ]
   },
@@ -1039,7 +1995,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["2 (outside): 0.529, 4 (dog): 0.608, [0], [0], [6]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 2,
+              "name": "outside",
+              "confidence": 0.5289269685745239
+            },
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.6081633567810059
+            }
+          ],
+          "raw_scores": [
+            0.46969136595726013, 0.49655237793922424, 0.5289269685745239,
+            0.4512603282928467, 0.6081633567810059, 0.4342156946659088
+          ]
+        }
       }
     ]
   },
@@ -1049,7 +2022,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["2 (outside): 0.529, 4 (dog): 0.608, [0], [0], [6]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 2,
+              "name": "outside",
+              "confidence": 0.5286858677864075
+            },
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.6083118319511414
+            }
+          ],
+          "raw_scores": [
+            0.46965745091438293, 0.4967147409915924, 0.5286858677864075,
+            0.4510480463504791, 0.6083118319511414, 0.43423911929130554
+          ]
+        }
       }
     ]
   },
@@ -1059,7 +2049,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["2 (outside): 0.529, 4 (dog): 0.608, [0], [0], [6]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 2,
+              "name": "outside",
+              "confidence": 0.5289270281791687
+            },
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.6081632971763611
+            }
+          ],
+          "raw_scores": [
+            0.4696914255619049, 0.4965522587299347, 0.5289270281791687,
+            0.4512602686882019, 0.6081632971763611, 0.4342156946659088
+          ]
+        }
       }
     ]
   },
@@ -1069,7 +2076,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["2 (outside): 0.543, 4 (dog): 0.597, [0], [0], [6]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 2,
+              "name": "outside",
+              "confidence": 0.5427511930465698
+            },
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.5972496867179871
+            }
+          ],
+          "raw_scores": [
+            0.4717657268047333, 0.4745117127895355, 0.5427511930465698,
+            0.45767879486083984, 0.5972496867179871, 0.44160962104797363
+          ]
+        }
       }
     ]
   },
@@ -1079,19 +2103,24 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": [
-          "2 (outside): 0.529, 4 (dog): 0.608, [1,6,7,7], [1,576], [6]"
-        ]
-      }
-    ]
-  },
-  {
-    "name": "geti_2.13.0_models/ClassificationMultiLabel/MobileNet-V3-small/torch/weights.pth",
-    "type": "ClassificationModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 2,
+              "name": "outside",
+              "confidence": 0.5286858677864075
+            },
+            {
+              "id": 4,
+              "name": "dog",
+              "confidence": 0.6083118319511414
+            }
+          ],
+          "raw_scores": [
+            0.46965745091438293, 0.4967147409915924, 0.5286858677864075,
+            0.4510480463504791, 0.6083118319511414, 0.43423911929130554
+          ]
+        }
       }
     ]
   },
@@ -1101,7 +2130,16 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["1 (dog): 0.966, [0], [0], [2]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "dog",
+              "confidence": 0.9661258459091187
+            }
+          ],
+          "raw_scores": [0.03387409448623657, 0.9661258459091187]
+        }
       }
     ]
   },
@@ -1111,7 +2149,16 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["1 (dog): 0.966, [0], [0], [2]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "dog",
+              "confidence": 0.9661222100257874
+            }
+          ],
+          "raw_scores": [0.03387779742479324, 0.9661222100257874]
+        }
       }
     ]
   },
@@ -1121,7 +2168,16 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["1 (dog): 0.966, [0], [0], [2]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "dog",
+              "confidence": 0.9661258459091187
+            }
+          ],
+          "raw_scores": [0.03387409448623657, 0.9661258459091187]
+        }
       }
     ]
   },
@@ -1131,7 +2187,16 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["1 (dog): 0.965, [0], [0], [2]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "dog",
+              "confidence": 0.9654262661933899
+            }
+          ],
+          "raw_scores": [0.0345737561583519, 0.9654262661933899]
+        }
       }
     ]
   },
@@ -1141,17 +2206,16 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["1 (dog): 0.966, [1,2,14,14], [1,192], [2]"]
-      }
-    ]
-  },
-  {
-    "name": "geti_2.13.0_models/ClassificationSingleLabel/DeiT-Tiny/torch/weights.pth",
-    "type": "ClassificationModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "dog",
+              "confidence": 0.9661222100257874
+            }
+          ],
+          "raw_scores": [0.03387779742479324, 0.9661222100257874]
+        }
       }
     ]
   },
@@ -1161,7 +2225,16 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["1 (dog): 0.984, [0], [0], [2]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "dog",
+              "confidence": 0.9836701154708862
+            }
+          ],
+          "raw_scores": [0.016329867765307426, 0.9836701154708862]
+        }
       }
     ]
   },
@@ -1171,7 +2244,16 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["1 (dog): 0.984, [0], [0], [2]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "dog",
+              "confidence": 0.9837675094604492
+            }
+          ],
+          "raw_scores": [0.016232525929808617, 0.9837675094604492]
+        }
       }
     ]
   },
@@ -1181,7 +2263,16 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["1 (dog): 0.984, [0], [0], [2]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "dog",
+              "confidence": 0.9836701154708862
+            }
+          ],
+          "raw_scores": [0.01632986031472683, 0.9836701154708862]
+        }
       }
     ]
   },
@@ -1191,7 +2282,16 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["1 (dog): 0.983, [0], [0], [2]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "dog",
+              "confidence": 0.9832952618598938
+            }
+          ],
+          "raw_scores": [0.016704734414815903, 0.9832952618598938]
+        }
       }
     ]
   },
@@ -1201,17 +2301,16 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["1 (dog): 0.984, [1,2,7,7], [1,1280], [2]"]
-      }
-    ]
-  },
-  {
-    "name": "geti_2.13.0_models/ClassificationSingleLabel/EfficientNet-B0/torch/weights.pth",
-    "type": "ClassificationModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "dog",
+              "confidence": 0.9837675094604492
+            }
+          ],
+          "raw_scores": [0.016232525929808617, 0.9837675094604492]
+        }
       }
     ]
   },
@@ -1221,7 +2320,16 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["1 (dog): 0.680, [0], [0], [2]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "dog",
+              "confidence": 0.6800236701965332
+            }
+          ],
+          "raw_scores": [0.3199763298034668, 0.6800236701965332]
+        }
       }
     ]
   },
@@ -1231,7 +2339,16 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["1 (dog): 0.680, [0], [0], [2]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "dog",
+              "confidence": 0.6803337931632996
+            }
+          ],
+          "raw_scores": [0.31966617703437805, 0.6803337931632996]
+        }
       }
     ]
   },
@@ -1241,7 +2358,16 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["1 (dog): 0.680, [0], [0], [2]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "dog",
+              "confidence": 0.6800236701965332
+            }
+          ],
+          "raw_scores": [0.3199763298034668, 0.6800236701965332]
+        }
       }
     ]
   },
@@ -1251,7 +2377,16 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["1 (dog): 0.687, [0], [0], [2]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "dog",
+              "confidence": 0.6874678730964661
+            }
+          ],
+          "raw_scores": [0.3125321567058563, 0.6874678730964661]
+        }
       }
     ]
   },
@@ -1261,17 +2396,16 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["1 (dog): 0.680, [1,2,7,7], [1,1536], [2]"]
-      }
-    ]
-  },
-  {
-    "name": "geti_2.13.0_models/ClassificationSingleLabel/EfficientNet-B3/torch/weights.pth",
-    "type": "ClassificationModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "dog",
+              "confidence": 0.6803337931632996
+            }
+          ],
+          "raw_scores": [0.31966617703437805, 0.6803337931632996]
+        }
       }
     ]
   },
@@ -1281,7 +2415,16 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["1 (dog): 1.000, [0], [0], [2]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "dog",
+              "confidence": 0.9999783039093018
+            }
+          ],
+          "raw_scores": [2.1702137019019574e-5, 0.9999783039093018]
+        }
       }
     ]
   },
@@ -1291,7 +2434,16 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["1 (dog): 1.000, [0], [0], [2]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "dog",
+              "confidence": 0.9999784231185913
+            }
+          ],
+          "raw_scores": [2.1627654859912582e-5, 0.9999784231185913]
+        }
       }
     ]
   },
@@ -1301,7 +2453,16 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["1 (dog): 1.000, [0], [0], [2]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "dog",
+              "confidence": 0.9999783039093018
+            }
+          ],
+          "raw_scores": [2.1702198864659294e-5, 0.9999783039093018]
+        }
       }
     ]
   },
@@ -1311,7 +2472,16 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["1 (dog): 1.000, [0], [0], [2]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "dog",
+              "confidence": 0.9999547004699707
+            }
+          ],
+          "raw_scores": [4.5328877604333684e-5, 0.9999547004699707]
+        }
       }
     ]
   },
@@ -1321,17 +2491,16 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["1 (dog): 1.000, [1,2,7,7], [1,1280], [2]"]
-      }
-    ]
-  },
-  {
-    "name": "geti_2.13.0_models/ClassificationSingleLabel/EfficientNet-V2-L/torch/weights.pth",
-    "type": "ClassificationModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "dog",
+              "confidence": 0.9999784231185913
+            }
+          ],
+          "raw_scores": [2.1627654859912582e-5, 0.9999784231185913]
+        }
       }
     ]
   },
@@ -1341,7 +2510,16 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["1 (dog): 0.974, [0], [0], [2]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "dog",
+              "confidence": 0.9740546345710754
+            }
+          ],
+          "raw_scores": [0.025945385918021202, 0.9740546345710754]
+        }
       }
     ]
   },
@@ -1351,7 +2529,16 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["1 (dog): 0.974, [0], [0], [2]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "dog",
+              "confidence": 0.973962664604187
+            }
+          ],
+          "raw_scores": [0.02603728510439396, 0.973962664604187]
+        }
       }
     ]
   },
@@ -1361,7 +2548,16 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["1 (dog): 0.974, [0], [0], [2]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "dog",
+              "confidence": 0.9740546345710754
+            }
+          ],
+          "raw_scores": [0.025945337489247322, 0.9740546345710754]
+        }
       }
     ]
   },
@@ -1371,7 +2567,16 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["1 (dog): 0.951, [0], [0], [2]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "dog",
+              "confidence": 0.9511551260948181
+            }
+          ],
+          "raw_scores": [0.0488448366522789, 0.9511551260948181]
+        }
       }
     ]
   },
@@ -1381,17 +2586,16 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["1 (dog): 0.974, [1,2,7,7], [1,1280], [2]"]
-      }
-    ]
-  },
-  {
-    "name": "geti_2.13.0_models/ClassificationSingleLabel/EfficientNet-V2-S/torch/weights.pth",
-    "type": "ClassificationModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "dog",
+              "confidence": 0.973962664604187
+            }
+          ],
+          "raw_scores": [0.02603728510439396, 0.973962664604187]
+        }
       }
     ]
   },
@@ -1401,7 +2605,16 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["1 (dog): 0.847, [0], [0], [2]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "dog",
+              "confidence": 0.8473217487335205
+            }
+          ],
+          "raw_scores": [0.15267826616764069, 0.8473217487335205]
+        }
       }
     ]
   },
@@ -1411,7 +2624,16 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["1 (dog): 0.847, [0], [0], [2]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "dog",
+              "confidence": 0.8470059633255005
+            }
+          ],
+          "raw_scores": [0.1529940813779831, 0.8470059633255005]
+        }
       }
     ]
   },
@@ -1421,7 +2643,16 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["1 (dog): 0.847, [0], [0], [2]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "dog",
+              "confidence": 0.8473217487335205
+            }
+          ],
+          "raw_scores": [0.15267828106880188, 0.8473217487335205]
+        }
       }
     ]
   },
@@ -1431,7 +2662,16 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["1 (dog): 0.879, [0], [0], [2]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "dog",
+              "confidence": 0.8792282938957214
+            }
+          ],
+          "raw_scores": [0.12077173590660095, 0.8792282938957214]
+        }
       }
     ]
   },
@@ -1441,17 +2681,16 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["1 (dog): 0.847, [1,2,7,7], [1,960], [2]"]
-      }
-    ]
-  },
-  {
-    "name": "geti_2.13.0_models/ClassificationSingleLabel/MobileNet-V3-large-1x/torch/weights.pth",
-    "type": "ClassificationModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "dog",
+              "confidence": 0.8470059633255005
+            }
+          ],
+          "raw_scores": [0.1529940813779831, 0.8470059633255005]
+        }
       }
     ]
   },
@@ -1461,7 +2700,16 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["1 (dog): 0.870, [0], [0], [2]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "dog",
+              "confidence": 0.8695344924926758
+            }
+          ],
+          "raw_scores": [0.1304655522108078, 0.8695344924926758]
+        }
       }
     ]
   },
@@ -1471,7 +2719,16 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["1 (dog): 0.869, [0], [0], [2]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "dog",
+              "confidence": 0.8688372373580933
+            }
+          ],
+          "raw_scores": [0.13116273283958435, 0.8688372373580933]
+        }
       }
     ]
   },
@@ -1481,7 +2738,16 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["1 (dog): 0.870, [0], [0], [2]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "dog",
+              "confidence": 0.8695343136787415
+            }
+          ],
+          "raw_scores": [0.13046568632125854, 0.8695343136787415]
+        }
       }
     ]
   },
@@ -1491,7 +2757,16 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["1 (dog): 0.838, [0], [0], [2]"]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "dog",
+              "confidence": 0.8383836150169373
+            }
+          ],
+          "raw_scores": [0.1616164594888687, 0.8383836150169373]
+        }
       }
     ]
   },
@@ -1501,17 +2776,16 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["1 (dog): 0.869, [1,2,7,7], [1,576], [2]"]
-      }
-    ]
-  },
-  {
-    "name": "geti_2.13.0_models/ClassificationSingleLabel/MobileNet-V3-small/torch/weights.pth",
-    "type": "ClassificationModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
+        "reference": {
+          "top_labels": [
+            {
+              "id": 1,
+              "name": "dog",
+              "confidence": 0.8688372373580933
+            }
+          ],
+          "raw_scores": [0.13116273283958435, 0.8688372373580933]
+        }
       }
     ]
   },
@@ -1521,7 +2795,12 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["90, 61, 339, 300, 1 (dog): 0.605; [0]; [0]"]
+        "reference": {
+          "bboxes": [[90, 61, 339, 300]],
+          "labels": [1],
+          "scores": [0.605266273021698],
+          "label_names": ["dog"]
+        }
       }
     ]
   },
@@ -1531,7 +2810,12 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["90, 61, 339, 300, 1 (dog): 0.605; [0]; [0]"]
+        "reference": {
+          "bboxes": [[90, 61, 339, 300]],
+          "labels": [1],
+          "scores": [0.6045332551002502],
+          "label_names": ["dog"]
+        }
       }
     ]
   },
@@ -1541,7 +2825,12 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["90, 61, 339, 300, 1 (dog): 0.605; [0]; [0]"]
+        "reference": {
+          "bboxes": [[90, 61, 339, 300]],
+          "labels": [1],
+          "scores": [0.6052664518356323],
+          "label_names": ["dog"]
+        }
       }
     ]
   },
@@ -1551,7 +2840,12 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["91, 59, 339, 300, 1 (dog): 0.657; [0]; [0]"]
+        "reference": {
+          "bboxes": [[91, 59, 339, 300]],
+          "labels": [1],
+          "scores": [0.6574531197547913],
+          "label_names": ["dog"]
+        }
       }
     ]
   },
@@ -1561,17 +2855,12 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["90, 61, 339, 300, 1 (dog): 0.605; [1,2,25,31]; [1,320]"]
-      }
-    ]
-  },
-  {
-    "name": "geti_2.13.0_models/Detection/ATSS-MobileNetV2/torch/weights.pth",
-    "type": "DetectionModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
+        "reference": {
+          "bboxes": [[90, 61, 339, 300]],
+          "labels": [1],
+          "scores": [0.6045332551002502],
+          "label_names": ["dog"]
+        }
       }
     ]
   },
@@ -1581,7 +2870,12 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["101, 60, 332, 300, 1 (dog): 0.731; [0]; [0]"]
+        "reference": {
+          "bboxes": [[101, 60, 332, 300]],
+          "labels": [1],
+          "scores": [0.7311218976974487],
+          "label_names": ["dog"]
+        }
       }
     ]
   },
@@ -1591,7 +2885,12 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["101, 60, 332, 300, 1 (dog): 0.731; [0]; [0]"]
+        "reference": {
+          "bboxes": [[101, 60, 332, 300]],
+          "labels": [1],
+          "scores": [0.7311151027679443],
+          "label_names": ["dog"]
+        }
       }
     ]
   },
@@ -1601,7 +2900,12 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["101, 60, 332, 300, 1 (dog): 0.731; [0]; [0]"]
+        "reference": {
+          "bboxes": [[101, 60, 332, 300]],
+          "labels": [1],
+          "scores": [0.7311219573020935],
+          "label_names": ["dog"]
+        }
       }
     ]
   },
@@ -1611,7 +2915,12 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["100, 60, 336, 300, 1 (dog): 0.712; [0]; [0]"]
+        "reference": {
+          "bboxes": [[100, 60, 336, 300]],
+          "labels": [1],
+          "scores": [0.7124019861221313],
+          "label_names": ["dog"]
+        }
       }
     ]
   },
@@ -1621,19 +2930,12 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": [
-          "101, 60, 332, 300, 1 (dog): 0.731; [1,2,25,31]; [1,1280]"
-        ]
-      }
-    ]
-  },
-  {
-    "name": "geti_2.13.0_models/Detection/ATSS-ResNeXt101/torch/weights.pth",
-    "type": "DetectionModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
+        "reference": {
+          "bboxes": [[101, 60, 332, 300]],
+          "labels": [1],
+          "scores": [0.7311151027679443],
+          "label_names": ["dog"]
+        }
       }
     ]
   },
@@ -1643,7 +2945,12 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["100, 63, 336, 300, 1 (dog): 0.879; [0]; [0]"]
+        "reference": {
+          "bboxes": [[100, 63, 336, 300]],
+          "labels": [1],
+          "scores": [0.8786922097206116],
+          "label_names": ["dog"]
+        }
       }
     ]
   },
@@ -1653,7 +2960,12 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["100, 63, 336, 300, 1 (dog): 0.880; [0]; [0]"]
+        "reference": {
+          "bboxes": [[100, 63, 336, 300]],
+          "labels": [1],
+          "scores": [0.879804790019989],
+          "label_names": ["dog"]
+        }
       }
     ]
   },
@@ -1663,7 +2975,12 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["100, 63, 336, 300, 1 (dog): 0.879; [0]; [0]"]
+        "reference": {
+          "bboxes": [[100, 63, 336, 300]],
+          "labels": [1],
+          "scores": [0.878692090511322],
+          "label_names": ["dog"]
+        }
       }
     ]
   },
@@ -1673,7 +2990,12 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["88, 59, 333, 297, 1 (dog): 0.814; [0]; [0]"]
+        "reference": {
+          "bboxes": [[88, 59, 333, 297]],
+          "labels": [1],
+          "scores": [0.8135271668434143],
+          "label_names": ["dog"]
+        }
       }
     ]
   },
@@ -1683,17 +3005,12 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["100, 63, 336, 300, 1 (dog): 0.880; [1,2,40,40]; [1,768]"]
-      }
-    ]
-  },
-  {
-    "name": "geti_2.13.0_models/Detection/Deim-DFine-L/torch/weights.pth",
-    "type": "DetectionModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
+        "reference": {
+          "bboxes": [[100, 63, 336, 300]],
+          "labels": [1],
+          "scores": [0.879804790019989],
+          "label_names": ["dog"]
+        }
       }
     ]
   },
@@ -1703,7 +3020,12 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["97, 61, 336, 300, 1 (dog): 0.688; [0]; [0]"]
+        "reference": {
+          "bboxes": [[97, 61, 336, 300]],
+          "labels": [1],
+          "scores": [0.6880279779434204],
+          "label_names": ["dog"]
+        }
       }
     ]
   },
@@ -1713,7 +3035,12 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["97, 61, 336, 300, 1 (dog): 0.691; [0]; [0]"]
+        "reference": {
+          "bboxes": [[97, 61, 336, 300]],
+          "labels": [1],
+          "scores": [0.6911171674728394],
+          "label_names": ["dog"]
+        }
       }
     ]
   },
@@ -1723,7 +3050,12 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["97, 61, 336, 300, 1 (dog): 0.688; [0]; [0]"]
+        "reference": {
+          "bboxes": [[97, 61, 336, 300]],
+          "labels": [1],
+          "scores": [0.6880275011062622],
+          "label_names": ["dog"]
+        }
       }
     ]
   },
@@ -1733,7 +3065,12 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["[0]; [0]"]
+        "reference": {
+          "bboxes": [],
+          "labels": [],
+          "scores": [],
+          "label_names": []
+        }
       }
     ]
   },
@@ -1743,17 +3080,12 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["97, 61, 336, 300, 1 (dog): 0.691; [1,2,40,40]; [1,768]"]
-      }
-    ]
-  },
-  {
-    "name": "geti_2.13.0_models/Detection/Deim-DFine-M/torch/weights.pth",
-    "type": "DetectionModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
+        "reference": {
+          "bboxes": [[97, 61, 336, 300]],
+          "labels": [1],
+          "scores": [0.6911171674728394],
+          "label_names": ["dog"]
+        }
       }
     ]
   },
@@ -1763,7 +3095,12 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["99, 61, 337, 300, 1 (dog): 0.572; [0]; [0]"]
+        "reference": {
+          "bboxes": [[99, 61, 337, 300]],
+          "labels": [1],
+          "scores": [0.5722445249557495],
+          "label_names": ["dog"]
+        }
       }
     ]
   },
@@ -1773,7 +3110,12 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["99, 61, 337, 300, 1 (dog): 0.572; [0]; [0]"]
+        "reference": {
+          "bboxes": [[99, 61, 337, 300]],
+          "labels": [1],
+          "scores": [0.5715287327766418],
+          "label_names": ["dog"]
+        }
       }
     ]
   },
@@ -1783,7 +3125,12 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["99, 61, 337, 300, 1 (dog): 0.572; [0]; [0]"]
+        "reference": {
+          "bboxes": [[99, 61, 337, 300]],
+          "labels": [1],
+          "scores": [0.5722460746765137],
+          "label_names": ["dog"]
+        }
       }
     ]
   },
@@ -1793,7 +3140,12 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["98, 63, 336, 300, 1 (dog): 0.576; [0]; [0]"]
+        "reference": {
+          "bboxes": [[98, 63, 336, 300]],
+          "labels": [1],
+          "scores": [0.5758538842201233],
+          "label_names": ["dog"]
+        }
       }
     ]
   },
@@ -1803,17 +3155,12 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["99, 61, 337, 300, 1 (dog): 0.572; [1,2,40,40]; [1,1152]"]
-      }
-    ]
-  },
-  {
-    "name": "geti_2.13.0_models/Detection/Deim-DFine-X/torch/weights.pth",
-    "type": "DetectionModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
+        "reference": {
+          "bboxes": [[99, 61, 337, 300]],
+          "labels": [1],
+          "scores": [0.5715287327766418],
+          "label_names": ["dog"]
+        }
       }
     ]
   },
@@ -1823,7 +3170,12 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["96, 63, 336, 300, 1 (dog): 0.730; [0]; [0]"]
+        "reference": {
+          "bboxes": [[96, 63, 336, 300]],
+          "labels": [1],
+          "scores": [0.729743242263794],
+          "label_names": ["dog"]
+        }
       }
     ]
   },
@@ -1833,7 +3185,12 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["96, 63, 336, 300, 1 (dog): 0.730; [0]; [0]"]
+        "reference": {
+          "bboxes": [[96, 63, 336, 300]],
+          "labels": [1],
+          "scores": [0.7303683757781982],
+          "label_names": ["dog"]
+        }
       }
     ]
   },
@@ -1843,7 +3200,12 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["96, 63, 336, 300, 1 (dog): 0.730; [0]; [0]"]
+        "reference": {
+          "bboxes": [[96, 63, 336, 300]],
+          "labels": [1],
+          "scores": [0.7297437787055969],
+          "label_names": ["dog"]
+        }
       }
     ]
   },
@@ -1853,7 +3215,12 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["[0]; [0]"]
+        "reference": {
+          "bboxes": [],
+          "labels": [],
+          "scores": [],
+          "label_names": []
+        }
       }
     ]
   },
@@ -1863,17 +3230,12 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["96, 63, 336, 300, 1 (dog): 0.730; [1,2,40,40]; [1,1152]"]
-      }
-    ]
-  },
-  {
-    "name": "geti_2.13.0_models/Detection/DFine-X/torch/weights.pth",
-    "type": "DetectionModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
+        "reference": {
+          "bboxes": [[96, 63, 336, 300]],
+          "labels": [1],
+          "scores": [0.7303683757781982],
+          "label_names": ["dog"]
+        }
       }
     ]
   },
@@ -1938,16 +3300,6 @@
     ]
   },
   {
-    "name": "geti_2.13.0_models/DetectionRotated/MackRCNN-EfficientNetB2B/torch/weights.pth",
-    "type": "MaskRCNNModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
-      }
-    ]
-  },
-  {
     "name": "geti_2.13.0_models/DetectionRotated/MackRCNN-ResNet50-V1/onnx/model.onnx",
     "type": "MaskRCNNModel",
     "test_data": [
@@ -2002,16 +3354,6 @@
         "reference": [
           "86, 68, 352, 300, 2 (dog): 0.161, 36629, RotatedRect: 228.000 166.000 198.000 240.000 90.000; 1; [1,1280]; dog: 0.161, 694, 0; "
         ]
-      }
-    ]
-  },
-  {
-    "name": "geti_2.13.0_models/DetectionRotated/MackRCNN-ResNet50-V1/torch/weights.pth",
-    "type": "MaskRCNNModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
       }
     ]
   },
@@ -2076,22 +3418,17 @@
     ]
   },
   {
-    "name": "geti_2.13.0_models/DetectionRotated/MackRCNN-ResNet50-V2/torch/weights.pth",
-    "type": "MaskRCNNModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
-      }
-    ]
-  },
-  {
     "name": "geti_2.13.0_models/Detection/RTMdet-Tiny/onnx/model.onnx",
     "type": "DetectionModel",
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["[0]; [0]"]
+        "reference": {
+          "bboxes": [],
+          "labels": [],
+          "scores": [],
+          "label_names": []
+        }
       }
     ]
   },
@@ -2101,7 +3438,12 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["[0]; [0]"]
+        "reference": {
+          "bboxes": [],
+          "labels": [],
+          "scores": [],
+          "label_names": []
+        }
       }
     ]
   },
@@ -2111,7 +3453,12 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["[0]; [0]"]
+        "reference": {
+          "bboxes": [],
+          "labels": [],
+          "scores": [],
+          "label_names": []
+        }
       }
     ]
   },
@@ -2121,7 +3468,12 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["[0]; [0]"]
+        "reference": {
+          "bboxes": [],
+          "labels": [],
+          "scores": [],
+          "label_names": []
+        }
       }
     ]
   },
@@ -2131,17 +3483,12 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["[1,2,40,40]; [1,288]"]
-      }
-    ]
-  },
-  {
-    "name": "geti_2.13.0_models/Detection/RTMdet-Tiny/torch/weights.pth",
-    "type": "DetectionModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
+        "reference": {
+          "bboxes": [],
+          "labels": [],
+          "scores": [],
+          "label_names": []
+        }
       }
     ]
   },
@@ -2151,9 +3498,15 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": [
-          "118, 22, 374, 300, 1 (dog): 0.998; 0, 21, 351, 298, 0 (cat): 0.872; [0]; [0]"
-        ]
+        "reference": {
+          "bboxes": [
+            [118, 22, 374, 300],
+            [0, 21, 351, 298]
+          ],
+          "labels": [1, 0],
+          "scores": [0.9981312155723572, 0.8724134564399719],
+          "label_names": ["dog", "cat"]
+        }
       }
     ]
   },
@@ -2163,9 +3516,15 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": [
-          "118, 22, 374, 300, 1 (dog): 0.998; 0, 21, 351, 298, 0 (cat): 0.873; [0]; [0]"
-        ]
+        "reference": {
+          "bboxes": [
+            [118, 22, 374, 300],
+            [0, 21, 351, 298]
+          ],
+          "labels": [1, 0],
+          "scores": [0.9981437921524048, 0.8729411363601685],
+          "label_names": ["dog", "cat"]
+        }
       }
     ]
   },
@@ -2175,9 +3534,15 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": [
-          "118, 22, 374, 300, 1 (dog): 0.998; 0, 21, 351, 298, 0 (cat): 0.872; [0]; [0]"
-        ]
+        "reference": {
+          "bboxes": [
+            [118, 22, 374, 300],
+            [0, 21, 351, 298]
+          ],
+          "labels": [1, 0],
+          "scores": [0.9981312155723572, 0.8724136352539062],
+          "label_names": ["dog", "cat"]
+        }
       }
     ]
   },
@@ -2187,9 +3552,15 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": [
-          "123, 40, 373, 300, 1 (dog): 0.997; 0, 24, 345, 299, 0 (cat): 0.854; [0]; [0]"
-        ]
+        "reference": {
+          "bboxes": [
+            [123, 40, 373, 300],
+            [0, 24, 345, 299]
+          ],
+          "labels": [1, 0],
+          "scores": [0.9971006512641907, 0.8536375164985657],
+          "label_names": ["dog", "cat"]
+        }
       }
     ]
   },
@@ -2199,19 +3570,15 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": [
-          "118, 22, 374, 300, 1 (dog): 0.998; 0, 21, 351, 298, 0 (cat): 0.873; [1,3,27,27]; [1,416]"
-        ]
-      }
-    ]
-  },
-  {
-    "name": "geti_2.13.0_models/Detection/SSD-MobilenetV2/torch/weights.pth",
-    "type": "DetectionModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
+        "reference": {
+          "bboxes": [
+            [118, 22, 374, 300],
+            [0, 21, 351, 298]
+          ],
+          "labels": [1, 0],
+          "scores": [0.9981437921524048, 0.8729411363601685],
+          "label_names": ["dog", "cat"]
+        }
       }
     ]
   },
@@ -2221,7 +3588,12 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["[0]; [0]"]
+        "reference": {
+          "bboxes": [],
+          "labels": [],
+          "scores": [],
+          "label_names": []
+        }
       }
     ]
   },
@@ -2231,7 +3603,12 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["[0]; [0]"]
+        "reference": {
+          "bboxes": [],
+          "labels": [],
+          "scores": [],
+          "label_names": []
+        }
       }
     ]
   },
@@ -2241,7 +3618,12 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["[0]; [0]"]
+        "reference": {
+          "bboxes": [],
+          "labels": [],
+          "scores": [],
+          "label_names": []
+        }
       }
     ]
   },
@@ -2251,7 +3633,12 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["[0]; [0]"]
+        "reference": {
+          "bboxes": [],
+          "labels": [],
+          "scores": [],
+          "label_names": []
+        }
       }
     ]
   },
@@ -2261,17 +3648,12 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["[1,2,40,40]; [1,768]"]
-      }
-    ]
-  },
-  {
-    "name": "geti_2.13.0_models/Detection/YOLOX-L/torch/weights.pth",
-    "type": "DetectionModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
+        "reference": {
+          "bboxes": [],
+          "labels": [],
+          "scores": [],
+          "label_names": []
+        }
       }
     ]
   },
@@ -2281,9 +3663,18 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": [
-          "14, 62, 348, 296, 1 (dog): 0.841; 5, 57, 368, 295, 0 (cat): 0.399; 10, 187, 395, 300, 0 (cat): 0.228; [0]; [0]"
-        ]
+        "reference": {
+          "bboxes": [
+            [14, 62, 348, 296],
+            [5, 57, 368, 295],
+            [10, 187, 395, 300]
+          ],
+          "labels": [1, 0, 0],
+          "scores": [
+            0.8407946228981018, 0.3989197611808777, 0.22831308841705322
+          ],
+          "label_names": ["dog", "cat", "cat"]
+        }
       }
     ]
   },
@@ -2293,9 +3684,16 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": [
-          "14, 62, 348, 296, 1 (dog): 0.841; 5, 57, 368, 296, 0 (cat): 0.399; 10, 187, 395, 300, 0 (cat): 0.228; [0]; [0]"
-        ]
+        "reference": {
+          "bboxes": [
+            [14, 62, 348, 296],
+            [5, 57, 368, 296],
+            [10, 187, 395, 300]
+          ],
+          "labels": [1, 0, 0],
+          "scores": [0.841036319732666, 0.3987918794155121, 0.2283603549003601],
+          "label_names": ["dog", "cat", "cat"]
+        }
       }
     ]
   },
@@ -2305,9 +3703,18 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": [
-          "14, 62, 348, 296, 1 (dog): 0.841; 5, 57, 368, 295, 0 (cat): 0.399; 10, 187, 395, 300, 0 (cat): 0.228; [0]; [0]"
-        ]
+        "reference": {
+          "bboxes": [
+            [14, 62, 348, 296],
+            [5, 57, 368, 295],
+            [10, 187, 395, 300]
+          ],
+          "labels": [1, 0, 0],
+          "scores": [
+            0.8407946228981018, 0.3989197611808777, 0.22831308841705322
+          ],
+          "label_names": ["dog", "cat", "cat"]
+        }
       }
     ]
   },
@@ -2317,9 +3724,18 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": [
-          "21, 63, 355, 297, 1 (dog): 0.893; 9, 56, 369, 298, 0 (cat): 0.234; 7, 188, 396, 300, 0 (cat): 0.220; [0]; [0]"
-        ]
+        "reference": {
+          "bboxes": [
+            [21, 63, 355, 297],
+            [9, 56, 369, 298],
+            [7, 188, 396, 300]
+          ],
+          "labels": [1, 0, 0],
+          "scores": [
+            0.8926340341567993, 0.23384703695774078, 0.22025303542613983
+          ],
+          "label_names": ["dog", "cat", "cat"]
+        }
       }
     ]
   },
@@ -2329,19 +3745,16 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": [
-          "14, 62, 348, 296, 1 (dog): 0.841; 5, 57, 368, 296, 0 (cat): 0.399; 10, 187, 395, 300, 0 (cat): 0.228; [1,2,40,40]; [1,384]"
-        ]
-      }
-    ]
-  },
-  {
-    "name": "geti_2.13.0_models/Detection/YOLOX-S/torch/weights.pth",
-    "type": "DetectionModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
+        "reference": {
+          "bboxes": [
+            [14, 62, 348, 296],
+            [5, 57, 368, 296],
+            [10, 187, 395, 300]
+          ],
+          "labels": [1, 0, 0],
+          "scores": [0.841036319732666, 0.3987918794155121, 0.2283603549003601],
+          "label_names": ["dog", "cat", "cat"]
+        }
       }
     ]
   },
@@ -2351,9 +3764,15 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": [
-          "112, 63, 367, 300, 1 (dog): 0.897; 0, 0, 400, 300, 0 (cat): 0.253; [0]; [0]"
-        ]
+        "reference": {
+          "bboxes": [
+            [112, 63, 367, 300],
+            [0, 0, 400, 300]
+          ],
+          "labels": [1, 0],
+          "scores": [0.8967000246047974, 0.25308260321617126],
+          "label_names": ["dog", "cat"]
+        }
       }
     ]
   },
@@ -2363,9 +3782,15 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": [
-          "112, 63, 367, 300, 1 (dog): 0.896; 0, 0, 400, 300, 0 (cat): 0.254; [0]; [0]"
-        ]
+        "reference": {
+          "bboxes": [
+            [112, 63, 367, 300],
+            [0, 0, 400, 300]
+          ],
+          "labels": [1, 0],
+          "scores": [0.896433413028717, 0.2537277042865753],
+          "label_names": ["dog", "cat"]
+        }
       }
     ]
   },
@@ -2375,9 +3800,15 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": [
-          "112, 63, 367, 300, 1 (dog): 0.897; 0, 0, 400, 300, 0 (cat): 0.253; [0]; [0]"
-        ]
+        "reference": {
+          "bboxes": [
+            [112, 63, 367, 300],
+            [0, 0, 400, 300]
+          ],
+          "labels": [1, 0],
+          "scores": [0.8967000246047974, 0.25308260321617126],
+          "label_names": ["dog", "cat"]
+        }
       }
     ]
   },
@@ -2387,9 +3818,15 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": [
-          "31, 54, 375, 300, 1 (dog): 0.764; 0, 0, 399, 300, 0 (cat): 0.132; [0]; [0]"
-        ]
+        "reference": {
+          "bboxes": [
+            [31, 54, 375, 300],
+            [0, 0, 399, 300]
+          ],
+          "labels": [1, 0],
+          "scores": [0.7641829252243042, 0.13213935494422913],
+          "label_names": ["dog", "cat"]
+        }
       }
     ]
   },
@@ -2399,19 +3836,15 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": [
-          "112, 63, 367, 300, 1 (dog): 0.896; 0, 0, 400, 300, 0 (cat): 0.254; [1,2,26,26]; [1,288]"
-        ]
-      }
-    ]
-  },
-  {
-    "name": "geti_2.13.0_models/Detection/YOLOX-Tiny/torch/weights.pth",
-    "type": "DetectionModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
+        "reference": {
+          "bboxes": [
+            [112, 63, 367, 300],
+            [0, 0, 400, 300]
+          ],
+          "labels": [1, 0],
+          "scores": [0.896433413028717, 0.2537277042865753],
+          "label_names": ["dog", "cat"]
+        }
       }
     ]
   },
@@ -2421,7 +3854,12 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["96, 65, 340, 300, 1 (dog): 0.932; [0]; [0]"]
+        "reference": {
+          "bboxes": [[96, 65, 340, 300]],
+          "labels": [1],
+          "scores": [0.9315186738967896],
+          "label_names": ["dog"]
+        }
       }
     ]
   },
@@ -2431,7 +3869,12 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["96, 65, 340, 300, 1 (dog): 0.932; [0]; [0]"]
+        "reference": {
+          "bboxes": [[96, 65, 340, 300]],
+          "labels": [1],
+          "scores": [0.931570827960968],
+          "label_names": ["dog"]
+        }
       }
     ]
   },
@@ -2441,7 +3884,12 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["96, 65, 340, 300, 1 (dog): 0.932; [0]; [0]"]
+        "reference": {
+          "bboxes": [[96, 65, 340, 300]],
+          "labels": [1],
+          "scores": [0.9315186738967896],
+          "label_names": ["dog"]
+        }
       }
     ]
   },
@@ -2451,7 +3899,12 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["95, 57, 339, 300, 1 (dog): 0.915; [0]; [0]"]
+        "reference": {
+          "bboxes": [[95, 57, 339, 300]],
+          "labels": [1],
+          "scores": [0.9153797626495361],
+          "label_names": ["dog"]
+        }
       }
     ]
   },
@@ -2461,17 +3914,12 @@
     "test_data": [
       {
         "image": "images/dog_50.jpg",
-        "reference": ["96, 65, 340, 300, 1 (dog): 0.932; [1,2,40,40]; [1,960]"]
-      }
-    ]
-  },
-  {
-    "name": "geti_2.13.0_models/Detection/YOLOX-X/torch/weights.pth",
-    "type": "DetectionModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
+        "reference": {
+          "bboxes": [[96, 65, 340, 300]],
+          "labels": [1],
+          "scores": [0.931570827960968],
+          "label_names": ["dog"]
+        }
       }
     ]
   },
@@ -2520,16 +3968,6 @@
         "reference": [
           "keypoints: (17, 2), keypoints_x_sum: 3500.391, scores: (17,) 15.117"
         ]
-      }
-    ]
-  },
-  {
-    "name": "geti_2.13.0_models/KeypointDetection/RTMPose-Tiny/torch/weights.pth",
-    "type": "KeypointDetectionModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
       }
     ]
   },
@@ -2594,16 +4032,6 @@
     ]
   },
   {
-    "name": "geti_2.13.0_models/SegmentationInstance/MaskRCNN-EfficientNetB2B/torch/weights.pth",
-    "type": "MaskRCNNModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
-      }
-    ]
-  },
-  {
     "name": "geti_2.13.0_models/SegmentationInstance/MaskRCNN-ResNet50-V1/onnx/model.onnx",
     "type": "MaskRCNNModel",
     "test_data": [
@@ -2660,16 +4088,6 @@
         "reference": [
           "98, 56, 354, 300, 2 (dog): 0.467, 37977, RotatedRect: 223.408 159.229 218.224 227.527 33.179; 116, 21, 334, 296, 1 (cat): 0.386, 38859, RotatedRect: 224.324 175.206 209.793 235.017 14.036; 2; [1,1280]; dog: 0.467, 683, 0; cat: 0.386, 683, 0; "
         ]
-      }
-    ]
-  },
-  {
-    "name": "geti_2.13.0_models/SegmentationInstance/MaskRCNN-ResNet50-V1/torch/weights.pth",
-    "type": "MaskRCNNModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
       }
     ]
   },
@@ -2734,16 +4152,6 @@
     ]
   },
   {
-    "name": "geti_2.13.0_models/SegmentationInstance/MaskRCNN-ResNet50-V2/torch/weights.pth",
-    "type": "MaskRCNNModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
-      }
-    ]
-  },
-  {
     "name": "geti_2.13.0_models/SegmentationInstance/MaskRCNN-Swin-T/onnx/model.onnx",
     "type": "MaskRCNNModel",
     "test_data": [
@@ -2804,16 +4212,6 @@
     ]
   },
   {
-    "name": "geti_2.13.0_models/SegmentationInstance/MaskRCNN-Swin-T/torch/weights.pth",
-    "type": "MaskRCNNModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
-      }
-    ]
-  },
-  {
     "name": "geti_2.13.0_models/SegmentationInstance/RTMDet-Tiny/onnx/model.onnx",
     "type": "MaskRCNNModel",
     "test_data": [
@@ -2860,16 +4258,6 @@
       {
         "image": "images/dog_50.jpg",
         "reference": ["0; [1,288]; ; "]
-      }
-    ]
-  },
-  {
-    "name": "geti_2.13.0_models/SegmentationInstance/RTMDet-Tiny/torch/weights.pth",
-    "type": "MaskRCNNModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
       }
     ]
   },
@@ -2934,16 +4322,6 @@
     ]
   },
   {
-    "name": "geti_2.13.0_models/SegmentationSemantic/Dino-V2-Small/torch/weights.pth",
-    "type": "SegmentationModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
-      }
-    ]
-  },
-  {
     "name": "geti_2.13.0_models/SegmentationSemantic/LiteHRNet-18/onnx/model.onnx",
     "type": "SegmentationModel",
     "test_data": [
@@ -3000,16 +4378,6 @@
         "reference": [
           "0: 0.602, 1: 0.037, 2: 0.361, [300,400,3], [300,400,3], [1,600]; cat: 0.397, 8, 0, cat: 0.402, 16, 0, cat: 0.434, 34, 0, cat: 0.429, 32, 0, cat: 0.389, 3, 0, cat: 0.440, 27, 0, cat: 0.366, 6, 0, cat: 0.405, 4, 0, cat: 0.381, 6, 0, cat: 0.354, 8, 0, cat: 0.359, 11, 0, cat: 0.337, 1, 0, cat: 0.353, 9, 0, cat: 0.563, 379, 0, cat: 0.443, 1, 0, cat: 0.351, 2, 0, cat: 0.340, 2, 0, cat: 0.357, 21, 0, cat: 0.348, 2, 0, cat: 0.444, 2, 0, cat: 0.373, 18, 0, cat: 0.380, 9, 0, cat: 0.384, 11, 0, cat: 0.383, 26, 0, cat: 0.400, 4, 0, cat: 0.348, 2, 0, cat: 0.407, 56, 0, cat: 0.460, 17, 0, cat: 0.390, 37, 0, cat: 0.357, 6, 0, cat: 0.434, 68, 0, dog: 0.397, 1, 0, dog: 0.359, 5, 0, dog: 0.436, 4, 0, dog: 0.394, 13, 0, dog: 0.449, 38, 0, dog: 0.460, 310, 1, dog: 0.386, 44, 0, dog: 0.401, 32, 0, dog: 0.423, 6, 0, dog: 0.357, 1, 0, dog: 0.380, 15, 0, dog: 0.417, 8, 0, dog: 0.427, 30, 0, dog: 0.430, 20, 0, dog: 0.405, 34, 0, dog: 0.506, 297, 2, dog: 0.406, 1, 0, dog: 0.427, 36, 0, dog: 0.423, 8, 0, dog: 0.412, 12, 0, dog: 0.762, 899, 6, dog: 0.345, 2, 0, dog: 0.434, 43, 0, dog: 0.400, 34, 0, dog: 0.393, 39, 0, dog: 0.336, 1, 0, dog: 0.347, 2, 0, dog: 0.413, 27, 0, dog: 0.390, 9, 0, dog: 0.442, 6, 0, "
         ]
-      }
-    ]
-  },
-  {
-    "name": "geti_2.13.0_models/SegmentationSemantic/LiteHRNet-18/torch/weights.pth",
-    "type": "SegmentationModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
       }
     ]
   },
@@ -3074,16 +4442,6 @@
     ]
   },
   {
-    "name": "geti_2.13.0_models/SegmentationSemantic/LiteHRNet-S/torch/weights.pth",
-    "type": "SegmentationModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
-      }
-    ]
-  },
-  {
     "name": "geti_2.13.0_models/SegmentationSemantic/LiteHRNet-X/onnx/model.onnx",
     "type": "SegmentationModel",
     "test_data": [
@@ -3140,16 +4498,6 @@
         "reference": [
           "0: 0.467, 1: 0.076, 2: 0.457, [300,400,3], [300,400,3], [1,638]; cat: 0.503, 2, 0, cat: 0.513, 8, 0, cat: 0.516, 1, 0, cat: 0.709, 165, 1, cat: 0.506, 25, 0, cat: 0.370, 2, 0, cat: 0.523, 8, 0, cat: 0.483, 7, 0, cat: 0.383, 1, 0, cat: 0.414, 2, 0, cat: 0.533, 3, 0, cat: 0.511, 1, 0, cat: 0.476, 2, 0, cat: 0.448, 1, 0, cat: 0.656, 62, 0, cat: 0.591, 14, 0, cat: 0.514, 2, 0, cat: 0.481, 5, 0, cat: 0.539, 2, 0, cat: 0.546, 5, 0, cat: 0.572, 71, 1, cat: 0.622, 43, 0, cat: 0.484, 5, 0, cat: 0.583, 12, 0, cat: 0.542, 8, 0, cat: 0.559, 5, 0, cat: 0.543, 6, 0, cat: 0.666, 14, 0, cat: 0.650, 83, 0, cat: 0.505, 1, 0, cat: 0.631, 83, 1, cat: 0.561, 8, 0, cat: 0.645, 14, 0, cat: 0.465, 9, 0, cat: 0.634, 30, 0, cat: 0.541, 1, 0, cat: 0.591, 11, 0, cat: 0.465, 5, 0, cat: 0.567, 4, 0, cat: 0.755, 85, 1, cat: 0.503, 1, 0, cat: 0.540, 1, 0, cat: 0.595, 4, 0, cat: 0.548, 40, 0, cat: 0.630, 28, 0, cat: 0.654, 14, 0, cat: 0.526, 1, 0, cat: 0.844, 264, 4, cat: 0.724, 89, 0, cat: 0.601, 4, 0, cat: 0.563, 4, 0, cat: 0.518, 1, 0, cat: 0.513, 2, 0, cat: 0.554, 2, 0, cat: 0.588, 11, 0, cat: 0.602, 44, 0, cat: 0.529, 2, 0, cat: 0.510, 3, 0, cat: 0.478, 42, 0, cat: 0.512, 3, 0, cat: 0.505, 2, 0, cat: 0.671, 50, 0, cat: 0.774, 77, 2, cat: 0.562, 4, 0, cat: 0.614, 13, 0, cat: 0.832, 280, 3, cat: 0.735, 57, 0, cat: 0.397, 1, 0, cat: 0.747, 41, 0, cat: 0.721, 28, 0, cat: 0.572, 9, 0, cat: 0.584, 97, 1, cat: 0.549, 19, 0, cat: 0.414, 1, 0, cat: 0.590, 40, 0, cat: 0.491, 1, 0, cat: 0.553, 1, 0, cat: 0.561, 5, 0, cat: 0.551, 4, 0, cat: 0.548, 23, 0, cat: 0.542, 12, 0, cat: 0.348, 1, 0, cat: 0.595, 23, 0, cat: 0.608, 6, 0, cat: 0.346, 2, 0, cat: 0.574, 6, 0, cat: 0.613, 71, 0, cat: 0.503, 1, 0, cat: 0.516, 4, 0, cat: 0.722, 184, 1, cat: 0.472, 2, 0, cat: 0.498, 3, 0, cat: 0.705, 121, 1, dog: 0.536, 1, 0, dog: 0.528, 1, 0, dog: 0.561, 29, 0, dog: 0.600, 25, 1, dog: 0.549, 4, 0, dog: 0.506, 1, 0, dog: 0.394, 4, 0, dog: 0.543, 16, 0, dog: 0.559, 6, 0, dog: 0.666, 52, 0, dog: 0.558, 2, 0, dog: 0.569, 2, 0, dog: 0.547, 5, 0, dog: 0.531, 1, 0, dog: 0.535, 6, 0, dog: 0.531, 14, 0, dog: 0.537, 6, 0, dog: 0.498, 4, 0, dog: 0.497, 8, 0, dog: 0.664, 29, 0, dog: 0.918, 2346, 67, dog: 0.567, 15, 0, "
         ]
-      }
-    ]
-  },
-  {
-    "name": "geti_2.13.0_models/SegmentationSemantic/LiteHRNet-X/torch/weights.pth",
-    "type": "SegmentationModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
       }
     ]
   },
@@ -3214,16 +4562,6 @@
     ]
   },
   {
-    "name": "geti_2.13.0_models/SegmentationSemantic/SegNext-B/torch/weights.pth",
-    "type": "SegmentationModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
-      }
-    ]
-  },
-  {
     "name": "geti_2.13.0_models/SegmentationSemantic/SegNext-S/onnx/model.onnx",
     "type": "SegmentationModel",
     "test_data": [
@@ -3284,16 +4622,6 @@
     ]
   },
   {
-    "name": "geti_2.13.0_models/SegmentationSemantic/SegNext-S/torch/weights.pth",
-    "type": "SegmentationModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
-      }
-    ]
-  },
-  {
     "name": "geti_2.13.0_models/SegmentationSemantic/SegNext-T/onnx/model.onnx",
     "type": "SegmentationModel",
     "test_data": [
@@ -3350,16 +4678,6 @@
         "reference": [
           "0: 0.657, 1: 0.058, 2: 0.286, [300,400,3], [300,400,3], [1,512]; cat: 0.340, 2, 0, cat: 0.367, 100, 0, cat: 0.475, 215, 0, cat: 0.377, 209, 0, cat: 0.357, 68, 0, cat: 0.372, 109, 0, cat: 0.409, 133, 0, dog: 0.655, 789, 0, dog: 0.383, 93, 0, "
         ]
-      }
-    ]
-  },
-  {
-    "name": "geti_2.13.0_models/SegmentationSemantic/SegNext-T/torch/weights.pth",
-    "type": "SegmentationModel",
-    "test_data": [
-      {
-        "image": "images/dog_50.jpg",
-        "reference": [""]
       }
     ]
   }
