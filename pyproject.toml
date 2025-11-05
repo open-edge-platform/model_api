@@ -32,7 +32,6 @@ dependencies = [
 
 [project.optional-dependencies]
 tests = [
-    "pre-commit",
     "httpx",
     "pytest",
     "pytest-cov",
