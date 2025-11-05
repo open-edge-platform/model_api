@@ -12,6 +12,10 @@
     "type": "SegmentationModel"
   },
   {
+    "name": "otx_models/cls_mobilenetv3_large_cars.onnx",
+    "type": "ClassificationModel"
+  },
+  {
     "name": "otx_models/tinynet_imagenet.xml",
     "type": "ClassificationModel"
   },
