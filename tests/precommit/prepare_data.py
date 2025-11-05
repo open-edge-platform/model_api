@@ -70,7 +70,7 @@ def prepare_data(data_dir="./data"):
     from io import BytesIO
     from zipfile import ZipFile
 
-    COCO128_URL = "https://ultralytics.com/assets/coco128.zip"
+    COCO128_URL = "https://storage.geti.intel.com/geti_predict/test/images/coco128.zip"
 
     with urlopen(COCO128_URL) as zipresp, ZipFile(BytesIO(zipresp.read())) as zfile:  # noqa: S310
         zfile.extractall(data_dir)
