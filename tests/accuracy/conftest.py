@@ -2,10 +2,6 @@
 # Copyright (C) 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
-import json
-from pathlib import Path
-
-import pytest
 
 
 def pytest_addoption(parser):
@@ -23,12 +19,6 @@ def pytest_addoption(parser):
         help="device to run tests on (in case of OpenvinoAdapter)",
     )
     parser.addoption(
-        "--dump",
-        action="store_true",
-        default=False,
-        help="whether to dump results into json file",
-    )
-    parser.addoption(
         "--results-dir",
         action="store",
         default="",
@@ -38,14 +28,3 @@ def pytest_addoption(parser):
 
 def pytest_configure(config):
     config.test_results = []
-
-
-@pytest.hookimpl(tryfirst=True, hookwrapper=True)
-def pytest_runtest_makereport(item, call):
-    outcome = yield
-    result = outcome.get_result()
-
-    if result.when == "call":
-        test_results = item.config.test_results
-        with Path("test_scope.json").open("w") as outfile:
-            json.dump(test_results, outfile, indent=4)

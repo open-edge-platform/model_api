@@ -123,11 +123,6 @@ def device(pytestconfig):
 
 
 @pytest.fixture(scope="session")
-def dump(pytestconfig):
-    return pytestconfig.getoption("dump")
-
-
-@pytest.fixture(scope="session")
 def result(pytestconfig):
     return pytestconfig.test_results
 
@@ -183,30 +178,6 @@ def compare_classification_result(outputs: ClassificationResult, reference: dict
         assert np.allclose(outputs.raw_scores, expected_scores, rtol=1e-2, atol=1e-1), "raw_scores mismatch"
 
 
-def create_classification_result_dump(outputs: ClassificationResult) -> dict:
-    """Create a JSON-serializable dump of ClassificationResult.
-
-    Args:
-        outputs: The ClassificationResult to serialize
-
-    Returns:
-        Dictionary containing top_labels and raw_scores in JSON-serializable format
-    """
-    return {
-        "top_labels": [
-            {
-                "id": int(label.id) if label.id is not None else None,
-                "name": label.name,
-                "confidence": float(label.confidence) if label.confidence is not None else None,
-            }
-            for label in outputs.top_labels
-        ]
-        if outputs.top_labels
-        else None,
-        "raw_scores": [float(x) for x in outputs.raw_scores.tolist()] if outputs.raw_scores is not None else None,
-    }
-
-
 def compare_detection_result(outputs: DetectionResult, reference: dict) -> None:
     """Compare DetectionResult with reference data.
 
@@ -259,24 +230,7 @@ def compare_detection_result(outputs: DetectionResult, reference: dict) -> None:
     assert outputs.label_names == reference["label_names"], "label_names mismatch"
 
 
-def create_detection_result_dump(outputs: DetectionResult) -> dict:
-    """Create a JSON-serializable dump of DetectionResult.
-
-    Args:
-        outputs: The DetectionResult to serialize
-
-    Returns:
-        Dictionary containing bboxes, labels, scores, and label_names in JSON-serializable format
-    """
-    return {
-        "bboxes": outputs.bboxes.tolist() if outputs.bboxes is not None else None,
-        "labels": outputs.labels.tolist() if outputs.labels is not None else None,
-        "scores": [float(x) for x in outputs.scores.tolist()] if outputs.scores is not None else None,
-        "label_names": outputs.label_names if outputs.label_names is not None else None,
-    }
-
-
-def test_image_models(data, device, dump, result, model_data, results_dir):  # noqa: C901
+def test_image_models(data, device, result, model_data, results_dir):  # noqa: C901
     name = model_data["name"]
     if name.endswith((".xml", ".onnx")):
         name = f"{data}/{name}"
@@ -321,10 +275,6 @@ def test_image_models(data, device, dump, result, model_data, results_dir):  # n
                 preload=True,
             )
             model = MODEL_TYPE_MAPPING[model_data["prompter"]](encoder_model, model)
-
-        if dump:
-            result.append(model_data)
-            inference_results = []
 
         for test_data in model_data["test_data"]:
             image_path = Path(data) / test_data["image"]
@@ -377,10 +327,8 @@ def test_image_models(data, device, dump, result, model_data, results_dir):  # n
 
             if isinstance(outputs, ClassificationResult):
                 compare_classification_result(outputs, test_data["reference"])
-                image_result = create_classification_result_dump(outputs)
             elif type(outputs) is DetectionResult:
                 compare_detection_result(outputs, test_data["reference"])
-                image_result = create_detection_result_dump(outputs)
             elif isinstance(outputs, ImageResultWithSoftPrediction):
                 assert len(test_data["reference"]) == 1
                 if hasattr(model, "get_contours"):
@@ -392,7 +340,6 @@ def test_image_models(data, device, dump, result, model_data, results_dir):  # n
                     contour_str += str(contour) + ", "
                 output_str = str(outputs) + contour_str
                 assert test_data["reference"][0] == output_str
-                image_result = [output_str]
             elif type(outputs) is InstanceSegmentationResult:
                 assert len(test_data["reference"]) == 1
                 output_str = str(add_rotated_rects(outputs)) + "; "
@@ -401,22 +348,15 @@ def test_image_models(data, device, dump, result, model_data, results_dir):  # n
                     # That doesn't hold for some models
                     output_str += "; ".join(str(contour) for contour in get_contours(outputs)) + "; "
                 assert test_data["reference"][0] == output_str
-                image_result = [output_str]
             elif isinstance(outputs, AnomalyResult):
                 assert len(test_data["reference"]) == 1
                 output_str = str(outputs)
                 assert test_data["reference"][0] == output_str
-                image_result = [output_str]
             elif isinstance(outputs, (ZSLVisualPromptingResult, VisualPromptingResult, DetectedKeypoints)):
                 output_str = str(outputs)
                 assert test_data["reference"][0] == output_str
-                image_result = [output_str]
             else:
                 pytest.fail(f"Unexpected output type: {type(outputs)}")
-            if dump:
-                inference_results.append(
-                    {"image": test_data["image"], "reference": image_result},
-                )
     save_name = Path(name).name if name.endswith(".xml") else name + ".xml"
 
     if not model_data.get("force_ort", False):
@@ -433,9 +373,6 @@ def test_image_models(data, device, dump, result, model_data, results_dir):  # n
                     .get_rt_info(["model_info", "label_ids"])
                     .astype(str)
                 )
-
-    if dump:
-        result[-1]["test_data"] = inference_results
 
 
 def store_outputs(name, image, device, result, results_dir: str) -> None:
