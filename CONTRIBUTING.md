@@ -54,7 +54,7 @@ Set up your development environment to start contributing. This involves install
 4. **Pass Tests and Quality Checks:** Ensure the test suite passes and that your code meets quality standards by running:
 
    ```bash
-   uv run pre-commit run --all-files
+   uvx pre-commit run --all-files
    uv run pytest tests/unit
    uv run python tests/accuracy/download_models.py -d data -j tests/precommit/public_scope.json -l
    uv run pytest --data=./data tests/functional
