@@ -27,7 +27,7 @@ jobs:
           uv sync --locked --extra tests --extra-index-url https://download.pytorch.org/whl/cpu
       - name: Prepare test data
         run: |
-          uv run python tests/precommit/prepare_data.py -d data -p tests/precommit/public_scope.json
+          uv run python tests/accuracy/download_models.py -d data -j tests/precommit/public_scope.json -l
       - name: Run test
         run: |
           uv run pytest --data=./data tests/functional
