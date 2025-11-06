@@ -56,9 +56,9 @@ Set up your development environment to start contributing. This involves install
    ```bash
    uv run pre-commit run --all-files
    uv run pytest tests/unit
-   uv run python tests/precommit/prepare_data.py -d data -p tests/precommit/public_scope.json
+   uv run python tests/accuracy/download_models.py -d data -j tests/precommit/public_scope.json -l
    uv run pytest --data=./data tests/functional
-   uv run python tests/accuracy/prepare_data.py -d data
+   uv run python tests/accuracy/download_models.py -d data -j tests/accuracy/public_scope.json -l
    uv run pytest --data=./data tests/accuracy/test_accuracy.py
    ```
 

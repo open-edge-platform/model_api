@@ -28,7 +28,7 @@ To run the pipeline out-of-the box you can download the test data by running the
 
 ```bash
 pip install httpx
-python tests/accuracy/prepare_data.py -d data
+python tests/accuracy/download_models.py -d data -j tests/accuracy/public_scope.json -l
 ```
 
 and then run
