@@ -47,5 +47,9 @@ def pytest_runtest_makereport(item, call):
 
     if result.when == "call":
         test_results = item.config.test_results
+
+        if not test_results:
+            return
+
         with Path("test_scope.json").open("w") as outfile:
             json.dump(test_results, outfile, indent=4)
