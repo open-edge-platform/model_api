@@ -9,8 +9,8 @@ import numpy as np
 from model_api.adapters.inference_adapter import InferenceAdapter
 
 from .image_model import ImageModel
+from .parameters import ParameterRegistry
 from .result import InstanceSegmentationResult
-from .types import BooleanValue, ListValue, NumericalValue, StringValue
 from .utils import load_labels
 
 
@@ -21,13 +21,8 @@ class MaskRCNNModel(ImageModel):
         super().__init__(inference_adapter, configuration, preload)
         self._check_io_number((1, 2), (3, 4, 5, 6, 8))
 
-        self.confidence_threshold: float
-        self.labels: list[str]
-        self.path_to_labels: str
-        self.postprocess_semantic_masks: bool
-
-        if self.path_to_labels:
-            self.labels = load_labels(self.path_to_labels)
+        if self.params.path_to_labels:
+            self._labels = load_labels(self.params.path_to_labels)
         self.is_segmentoly = len(self.inputs) == 2
         self.output_blob_name = self._get_outputs()
 
@@ -35,20 +30,11 @@ class MaskRCNNModel(ImageModel):
     def parameters(cls) -> dict:
         parameters = super().parameters()
         parameters.update(
-            {
-                "confidence_threshold": NumericalValue(
-                    default_value=0.5,
-                    description="Probability threshold value for bounding box filtering",
-                ),
-                "labels": ListValue(description="List of class labels", value_type=str),
-                "path_to_labels": StringValue(
-                    description="Path to file with labels. Overrides the labels, if they sets via `labels` parameter",
-                ),
-                "postprocess_semantic_masks": BooleanValue(
-                    description="Resize and apply 0.5 threshold to instance segmentation masks",
-                    default_value=True,
-                ),
-            },
+            ParameterRegistry.merge(
+                ParameterRegistry.CONFIDENCE_THRESHOLD,
+                ParameterRegistry.LABELS,
+                ParameterRegistry.INSTANCE_SEGMENTATION,
+            ),
         )
         return parameters
 
@@ -160,9 +146,10 @@ class MaskRCNNModel(ImageModel):
             inputImgHeight / self.orig_height,
         )
         padLeft, padTop = 0, 0
-        if self.resize_type == "fit_to_window" or self.resize_type == "fit_to_window_letterbox":
+        resize_type = self.params.resize_type
+        if resize_type == "fit_to_window" or resize_type == "fit_to_window_letterbox":
             invertedScaleX = invertedScaleY = max(invertedScaleX, invertedScaleY)
-            if self.resize_type == "fit_to_window_letterbox":
+            if resize_type == "fit_to_window_letterbox":
                 padLeft = (self.orig_width - round(inputImgWidth / invertedScaleX)) // 2
                 padTop = (self.orig_height - round(inputImgHeight / invertedScaleY)) // 2
 
@@ -177,10 +164,11 @@ class MaskRCNNModel(ImageModel):
         )
 
         has_feature_vector_name = _feature_vector_name in self.outputs
+        labels_list = self.params.labels
         if has_feature_vector_name:
-            if not self.labels:
+            if not labels_list:
                 self.raise_error("Can't get number of classes because labels are empty")
-            saliency_maps: list = [[] for _ in range(len(self.labels))]
+            saliency_maps: list = [[] for _ in range(len(labels_list))]
         else:
             saliency_maps = []
 
@@ -192,10 +180,10 @@ class MaskRCNNModel(ImageModel):
         # Use float64 for area calculation to prevent overflow, then check if area > 1
         box_areas = box_widths.astype(np.float64) * box_heights.astype(np.float64)
 
-        keep = (scores > self.confidence_threshold) & (box_areas > 1)
+        keep = (scores > self.params.confidence_threshold) & (box_areas > 1)
 
-        if self.labels:
-            keep &= labels < len(self.labels)
+        if labels_list:
+            keep &= labels < len(labels_list)
 
         boxes = boxes[keep].astype(np.int32)
         scores = scores[keep]
@@ -204,11 +192,11 @@ class MaskRCNNModel(ImageModel):
 
         resized_masks, label_names = [], []
         for box, label_idx, raw_mask in zip(boxes, labels, masks):
-            if self.labels:
-                label_names.append(self.labels[label_idx])
+            if labels_list:
+                label_names.append(labels_list[label_idx])
 
             raw_cls_mask = raw_mask[label_idx, ...] if self.is_segmentoly else raw_mask
-            if self.postprocess_semantic_masks or has_feature_vector_name:
+            if self.params.postprocess_semantic_masks or has_feature_vector_name:
                 resized_mask = _segm_postprocess(
                     box,
                     raw_cls_mask,
@@ -217,7 +205,7 @@ class MaskRCNNModel(ImageModel):
             else:
                 resized_mask = raw_cls_mask
 
-            output_mask = resized_mask if self.postprocess_semantic_masks else raw_cls_mask
+            output_mask = resized_mask if self.params.postprocess_semantic_masks else raw_cls_mask
             resized_masks.append(output_mask)
             if has_feature_vector_name:
                 saliency_maps[label_idx - 1].append(resized_mask)

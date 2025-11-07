@@ -66,6 +66,8 @@ class NumericalValue(BaseValue):
             return self.default_value
         if not value and self.default_value is None:
             return None
+        if value == "None":
+            return None
         return self.value_type(value)
 
     def validate(self, value):
@@ -121,7 +123,9 @@ class StringValue(BaseValue):
                 msg = f"Incorrect option in choice list - {choice}."
                 raise ValueError(msg)
 
-    def from_str(self, value: str) -> str:
+    def from_str(self, value: str) -> str | None:
+        if value == "None":
+            return None
         return value
 
     def validate(self, value):
@@ -155,7 +159,9 @@ class BooleanValue(BaseValue):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
-    def from_str(self, value: str) -> bool:
+    def from_str(self, value: str) -> bool | None:
+        if value == "None":
+            return None
         return value == "YES" or value == "True"
 
     def validate(self, value):
@@ -181,7 +187,9 @@ class ListValue(BaseValue):
         super().__init__(description, default_value)
         self.value_type = value_type
 
-    def from_str(self, value: str) -> list[Any]:
+    def from_str(self, value: str) -> list[Any] | None:
+        if value == "None":
+            return None
         if self.value_type is str or self.value_type is StringValue:
             return value.split()
         try:
@@ -248,3 +256,26 @@ class DictValue(BaseValue):
                 ),
             )
         return errors
+
+
+def get_python_type(base_value: BaseValue) -> type | type[Any]:
+    """Helper function that extracts the corresponding Python type from a BaseValue instance.
+
+    Args:
+        base_value: An instance of BaseValue or its subclass
+
+    Returns:
+        The corresponding Python type (int, float, bool, str, list, dict, or object)
+    """
+    if isinstance(base_value, NumericalValue):
+        return base_value.value_type if hasattr(base_value, "value_type") else float
+    if isinstance(base_value, BooleanValue):
+        return bool
+    if isinstance(base_value, StringValue):
+        return str
+    if isinstance(base_value, ListValue):
+        return list
+    if isinstance(base_value, DictValue):
+        return dict
+
+    return object

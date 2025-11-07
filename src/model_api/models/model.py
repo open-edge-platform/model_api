@@ -17,6 +17,7 @@ from model_api.adapters.openvino_adapter import (
     get_user_config,
 )
 from model_api.metrics import PerformanceMetrics
+from model_api.models.parameters import ParameterAccessor
 
 if TYPE_CHECKING:
     from os import PathLike
@@ -55,6 +56,7 @@ class Model:
         inputs (dict): keeps the model inputs names and `Metadata` structure for each one
         outputs (dict): keeps the model outputs names and `Metadata` structure for each one
         model_loaded (bool): a flag whether the model is loaded to device
+        params (ParameterAccessor): provides attribute-style access to model parameters
     """
 
     __model__: str = "Model"
@@ -90,13 +92,28 @@ class Model:
 
         self.inputs = self.inference_adapter.get_input_layers()
         self.outputs = self.inference_adapter.get_output_layers()
-        for name, parameter in self.parameters().items():
-            self.__setattr__(name, parameter.default_value)
         self._load_config(configuration)
         self.model_loaded = False
         if preload:
             self.load()
         self.callback_fn = lambda _: None
+        self.params: ParameterAccessor = ParameterAccessor(self)
+
+    def get_param(self, name: str) -> Any:
+        """Gets a parameter value, either from instance attribute (if set by config) or from parameter default.
+
+        Args:
+            name (str): parameter name
+
+        Returns:
+            Any: parameter value
+        """
+        if hasattr(self, f"_{name}"):
+            return getattr(self, f"_{name}")
+        parameters = self.parameters()
+        if name in parameters:
+            return parameters[name].default_value
+        return self.raise_error(f"Parameter '{name}' not found")
 
     def get_model(self) -> Any:
         """
@@ -287,7 +304,7 @@ class Model:
                 value = param.from_str(
                     self.inference_adapter.get_rt_info(["model_info", name]).astype(str),
                 )
-                self.__setattr__(name, value)
+                self.__setattr__(f"_{name}", value)
             except RuntimeError as error:
                 missing_rt_info = "Cannot get runtime attribute. Path to runtime attribute is incorrect." in str(error)
                 if not missing_rt_info:
@@ -304,7 +321,7 @@ class Model:
                         self.logger.error(f"\t{_error}")
                     self.raise_error("Incorrect user configuration")
                 value = parameters[name].get_value(value)
-                self.__setattr__(name, value)
+                self.__setattr__(f"_{name}", value)
             else:
                 self.logger.warning(
                     f'The parameter "{name}" not found in {self.__model__} wrapper, will be omitted',
@@ -602,7 +619,9 @@ class Model:
             "model_type": self.__model__,
         }
         for name in self.parameters():
-            model_info[name] = getattr(self, name)
+            value = getattr(self.params, name)
+            if value is not None:
+                model_info[name] = value
 
         self.inference_adapter.update_model_info(model_info)
         self.inference_adapter.save_model(path, weights_path, version)

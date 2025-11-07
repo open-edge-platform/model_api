@@ -34,7 +34,6 @@ class SAMImageEncoder(ImageModel):
         super().__init__(inference_adapter, configuration, preload)
         self.output_name: str = next(iter(self.outputs.keys()))
         self.resize_type: str
-        self.image_size: int
 
     @classmethod
     def parameters(cls) -> dict[str, Any]:
@@ -57,7 +56,7 @@ class SAMImageEncoder(ImageModel):
     ) -> list[dict]:
         """Update meta for image encoder."""
         dict_inputs, meta = super().preprocess(inputs)
-        meta["resize_type"] = self.resize_type
+        meta["resize_type"] = self.params.resize_type
         return [dict_inputs, meta]
 
     def postprocess(
@@ -83,9 +82,6 @@ class SAMDecoder(SegmentationModel):
 
         self.mask_input = np.zeros((1, 1, 256, 256), dtype=np.float32)
         self.has_mask_input = np.zeros((1, 1), dtype=np.float32)
-        self.image_size: int
-        self.mask_threshold: float
-        self.embed_dim: int
 
     @classmethod
     def parameters(cls) -> dict[str, Any]:
@@ -171,7 +167,7 @@ class SAMDecoder(SegmentationModel):
     ) -> np.ndarray:
         """Process coords according to preprocessed image size using image meta."""
         old_h, old_w = orig_size
-        new_h, new_w = self._get_preprocess_shape(old_h, old_w, self.image_size)
+        new_h, new_w = self._get_preprocess_shape(old_h, old_w, self.params.image_size)
         coords = deepcopy(coords).astype(np.float32)
         coords[..., 0] = coords[..., 0] * (new_w / old_w)
         coords[..., 1] = coords[..., 1] * (new_h / old_h)
@@ -219,7 +215,7 @@ class SAMDecoder(SegmentationModel):
         """
         outputs = deepcopy(outputs)
         probability = np.clip(outputs["scores"], 0.0, 1.0)
-        hard_prediction = outputs[self.output_blob_name].squeeze(0) > self.mask_threshold
+        hard_prediction = outputs[self.output_blob_name].squeeze(0) > self.params.mask_threshold
         soft_prediction = hard_prediction * probability.reshape(-1, 1, 1)
 
         outputs["hard_prediction"] = hard_prediction

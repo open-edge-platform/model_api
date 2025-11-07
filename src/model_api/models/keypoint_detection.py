@@ -10,8 +10,8 @@ from typing import Any
 import numpy as np
 
 from .image_model import ImageModel
+from .parameters import ParameterRegistry
 from .result import DetectedKeypoints, DetectionResult
-from .types import BooleanValue, ListValue
 
 
 class KeypointDetectionModel(ImageModel):
@@ -30,7 +30,6 @@ class KeypointDetectionModel(ImageModel):
         """
         super().__init__(inference_adapter, configuration, preload)
         self._check_io_number(1, 2)
-        self.apply_softmax: bool
 
     def postprocess(
         self,
@@ -50,7 +49,7 @@ class KeypointDetectionModel(ImageModel):
         batch_keypoints, batch_scores = _decode_simcc(
             encoded_kps[0],
             encoded_kps[1],
-            apply_softmax=self.apply_softmax,
+            apply_softmax=self.params.apply_softmax,
         )
         orig_h, orig_w = meta["original_shape"][:2]
         kp_scale_h = orig_h / self.h
@@ -58,10 +57,11 @@ class KeypointDetectionModel(ImageModel):
 
         batch_keypoints = batch_keypoints.squeeze()
 
-        if self.resize_type in ["fit_to_window", "fit_to_window_letterbox"]:
+        resize_type = self.params.resize_type
+        if resize_type in ["fit_to_window", "fit_to_window_letterbox"]:
             inverted_scale = max(kp_scale_h, kp_scale_w)
             kp_scale_h = kp_scale_w = inverted_scale
-            if self.resize_type == "fit_to_window_letterbox":
+            if resize_type == "fit_to_window_letterbox":
                 pad_left = (self.w - round(orig_w / inverted_scale)) // 2
                 pad_top = (self.h - round(orig_h / inverted_scale)) // 2
                 batch_keypoints -= np.array([pad_left, pad_top])
@@ -74,17 +74,10 @@ class KeypointDetectionModel(ImageModel):
     def parameters(cls) -> dict:
         parameters = super().parameters()
         parameters.update(
-            {
-                "labels": ListValue(
-                    description="List of class labels",
-                    value_type=str,
-                    default_value=[],
-                ),
-                "apply_softmax": BooleanValue(
-                    default_value=True,
-                    description="Whether to apply softmax on the heatmap.",
-                ),
-            },
+            ParameterRegistry.merge(
+                ParameterRegistry.LABELS,
+                ParameterRegistry.SOFTMAX,
+            ),
         )
         return parameters
 

@@ -13,7 +13,7 @@ from model_api.adapters.utils import RESIZE_TYPES, InputTransform
 from model_api.models.result import ClassificationResult, Label
 
 from .model import Model
-from .types import BooleanValue, ListValue, NumericalValue, StringValue
+from .parameters import ParameterRegistry
 from .utils import load_labels
 
 if TYPE_CHECKING:
@@ -65,26 +65,19 @@ class ActionClassificationModel(Model):
         self.image_blob_names = self._get_inputs()
         self.image_blob_name = self.image_blob_names[0]
         self.nscthw_layout = "NSCTHW" in self.inputs[self.image_blob_name].layout
-        self.labels: list[str]
-        self.path_to_labels: str
-        self.mean_values: list[int | float]
-        self.pad_value: int
-        self.resize_type: str
-        self.reverse_input_channels: bool
-        self.scale_values: list[int | float]
 
         if self.nscthw_layout:
             self.n, self.s, self.c, self.t, self.h, self.w = self.inputs[self.image_blob_name].shape
         else:
             self.n, self.s, self.t, self.h, self.w, self.c = self.inputs[self.image_blob_name].shape
-        self.resize = RESIZE_TYPES[self.resize_type]
+        self.resize = RESIZE_TYPES[self.params.resize_type]
         self.input_transform = InputTransform(
-            self.reverse_input_channels,
-            self.mean_values,
-            self.scale_values,
+            self.params.reverse_input_channels,
+            self.params.mean_values,
+            self.params.scale_values,
         )
-        if self.path_to_labels:
-            self.labels = load_labels(self.path_to_labels)
+        if self.params.path_to_labels:
+            self._labels = load_labels(self.params.path_to_labels)
 
     @property
     def clip_size(self) -> int:
@@ -94,39 +87,11 @@ class ActionClassificationModel(Model):
     def parameters(cls) -> dict[str, Any]:
         parameters = super().parameters()
         parameters.update(
-            {
-                "labels": ListValue(description="List of class labels"),
-                "path_to_labels": StringValue(
-                    description="Path to file with labels. Overrides the labels, if they sets via 'labels' parameter",
-                ),
-                "mean_values": ListValue(
-                    description=(
-                        "Normalization values, which will be subtracted from image channels "
-                        "for image-input layer during preprocessing"
-                    ),
-                    default_value=[],
-                ),
-                "pad_value": NumericalValue(
-                    int,
-                    min=0,
-                    max=255,
-                    description="Pad value for resize_image_letterbox embedded into a model",
-                    default_value=0,
-                ),
-                "resize_type": StringValue(
-                    default_value="standard",
-                    choices=tuple(RESIZE_TYPES.keys()),
-                    description="Type of input image resizing",
-                ),
-                "reverse_input_channels": BooleanValue(
-                    default_value=False,
-                    description="Reverse the input channel order",
-                ),
-                "scale_values": ListValue(
-                    default_value=[],
-                    description="Normalization values, which will divide the image channels for image-input layer",
-                ),
-            },
+            ParameterRegistry.merge(
+                ParameterRegistry.LABELS,
+                ParameterRegistry.IMAGE_RESIZE,
+                ParameterRegistry.IMAGE_PREPROCESSING,
+            ),
         )
         return parameters
 
@@ -193,7 +158,7 @@ class ActionClassificationModel(Model):
             "original_shape": inputs.shape,
             "resized_shape": (self.n, self.s, self.c, self.t, self.h, self.w),
         }
-        resized_inputs = [self.resize(frame, (self.w, self.h), pad_value=self.pad_value) for frame in inputs]
+        resized_inputs = [self.resize(frame, (self.w, self.h), pad_value=self.params.pad_value) for frame in inputs]
         np_frames = self._change_layout(
             [self.input_transform(inputs) for inputs in resized_inputs],
         )
@@ -222,8 +187,9 @@ class ActionClassificationModel(Model):
         """Post-process."""
         logits = next(iter(outputs.values())).squeeze()
         index = np.argmax(logits)
+        labels = self.params.labels
         return ClassificationResult(
-            [Label(int(index), self.labels[index], logits[index])],
+            [Label(int(index), labels[index], logits[index])],
             np.ndarray(0),
             np.ndarray(0),
             np.ndarray(0),

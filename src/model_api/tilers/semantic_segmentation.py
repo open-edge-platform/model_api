@@ -51,7 +51,7 @@ class SemanticSegmentationTiler(Tiler):
             ImageResultWithSoftPrediction: merged predictions
         """
         height, width = shape[:2]
-        num_classes = len(self.model.labels)
+        num_classes = len(self.model.params.labels)
         full_logits_mask = np.zeros((height, width, num_classes), dtype=np.float32)
         vote_mask = np.zeros((height, width), dtype=np.int32)
         for result in results:
@@ -74,13 +74,13 @@ class SemanticSegmentationTiler(Tiler):
         def setup_segm_model():
             return_soft_prediction_state = None
             if isinstance(self.model, SegmentationModel):
-                return_soft_prediction_state = self.model.return_soft_prediction
-                self.model.return_soft_prediction = True
+                return_soft_prediction_state = self.model.params.return_soft_prediction
+                self.model._return_soft_prediction = True  # noqa: SLF001
             try:
                 yield
             finally:
                 if isinstance(self.model, SegmentationModel):
-                    self.model.return_soft_prediction = return_soft_prediction_state
+                    self.model._return_soft_prediction = return_soft_prediction_state  # noqa: SLF001
 
         with setup_segm_model():
             return super().__call__(inputs)
