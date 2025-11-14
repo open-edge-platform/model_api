@@ -17,7 +17,7 @@ from model_api.adapters.openvino_adapter import (
     get_user_config,
 )
 from model_api.metrics import PerformanceMetrics
-from model_api.models.parameters import ParameterAccessor
+from model_api.models.parameters import ParameterDescriptor
 
 if TYPE_CHECKING:
     from os import PathLike
@@ -56,10 +56,11 @@ class Model:
         inputs (dict): keeps the model inputs names and `Metadata` structure for each one
         outputs (dict): keeps the model outputs names and `Metadata` structure for each one
         model_loaded (bool): a flag whether the model is loaded to device
-        params (ParameterAccessor): provides attribute-style access to model parameters
+        params (ParameterDescriptor): provides attribute-style access to model parameters
     """
 
     __model__: str = "Model"
+    params = ParameterDescriptor()  # Class-level descriptor
 
     def __init__(self, inference_adapter: InferenceAdapter, configuration: dict = {}, preload: bool = False) -> None:
         """Model constructor
@@ -92,12 +93,13 @@ class Model:
 
         self.inputs = self.inference_adapter.get_input_layers()
         self.outputs = self.inference_adapter.get_output_layers()
+        self._parameters_cache: dict | None = None
         self._load_config(configuration)
         self.model_loaded = False
         if preload:
             self.load()
         self.callback_fn = lambda _: None
-        self.params: ParameterAccessor = ParameterAccessor(self)
+        # params is now a class-level descriptor, no need to instantiate
 
     def get_param(self, name: str) -> Any:
         """Gets a parameter value, either from instance attribute (if set by config) or from parameter default.
@@ -110,10 +112,21 @@ class Model:
         """
         if hasattr(self, f"_{name}"):
             return getattr(self, f"_{name}")
-        parameters = self.parameters()
-        if name in parameters:
-            return parameters[name].default_value
+        if self._parameters_cache is None:
+            self._parameters_cache = self.parameters()
+        if name in self._parameters_cache:
+            return self._parameters_cache[name].default_value
         return self.raise_error(f"Parameter '{name}' not found")
+
+    def get_cached_parameters(self) -> dict[str, Any]:
+        """Get cached parameters, initializing cache if needed.
+
+        Returns:
+            dict: Dictionary of parameter definitions
+        """
+        if self._parameters_cache is None:
+            self._parameters_cache = self.parameters()
+        return self._parameters_cache
 
     def get_model(self) -> Any:
         """

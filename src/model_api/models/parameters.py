@@ -16,7 +16,17 @@ if TYPE_CHECKING:
     from model_api.models.model import Model
 
 
-class ParameterAccessor:
+class ParameterDescriptor:
+    """Descriptor that provides parameter access for models."""
+
+    def __get__(self, obj, objtype=None):
+        """Return ParameterView when accessed from model instance."""
+        if obj is None:
+            return self
+        return ParameterView(obj)
+
+
+class ParameterView:
     """Provides attribute-style access to model parameters."""
 
     def __init__(self, model: "Model") -> None:
@@ -33,7 +43,8 @@ class ParameterAccessor:
     def __dir__(self) -> list[str]:
         """Return available parameter names"""
         try:
-            return list(self._model.parameters().keys())
+            parameters = self._model.get_cached_parameters()
+            return list(parameters.keys())
         except (AttributeError, TypeError, ValueError):
             return []
 
