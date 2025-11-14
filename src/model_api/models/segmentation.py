@@ -11,8 +11,8 @@ import cv2
 import numpy as np
 
 from model_api.models.image_model import ImageModel
+from model_api.models.parameters import ParameterRegistry
 from model_api.models.result import Contour, ImageResultWithSoftPrediction
-from model_api.models.types import BooleanValue, ListValue, NumericalValue, StringValue
 from model_api.models.utils import load_labels
 
 if TYPE_CHECKING:
@@ -77,13 +77,8 @@ class SegmentationModel(ImageModel):
     def __init__(self, inference_adapter: InferenceAdapter, configuration: dict = {}, preload: bool = False) -> None:
         super().__init__(inference_adapter, configuration, preload)
         self._check_io_number(1, (1, 2))
-        self.labels: list[str]
-        self.path_to_labels: str
-        self.blur_strength: int
-        self.soft_threshold: float
-        self.return_soft_prediction: bool
-        if self.path_to_labels:
-            self.labels = load_labels(self.path_to_labels)
+        if self.params.path_to_labels:
+            self._labels = load_labels(self.params.path_to_labels)
 
         self.output_blob_name = self._get_outputs()
 
@@ -116,29 +111,10 @@ class SegmentationModel(ImageModel):
     def parameters(cls) -> dict:
         parameters = super().parameters()
         parameters.update(
-            {
-                "labels": ListValue(description="List of class labels", value_type=str),
-                "path_to_labels": StringValue(
-                    description="Path to file with labels. Overrides the labels, if they sets via 'labels' parameter",
-                ),
-                "blur_strength": NumericalValue(
-                    value_type=int,
-                    description="Blurring kernel size. -1 value means no blurring and no soft_threshold",
-                    default_value=-1,
-                ),
-                "soft_threshold": NumericalValue(
-                    value_type=float,
-                    description=(
-                        "Probability threshold value for bounding box filtering. "
-                        "inf value means no blurring and no soft_threshold"
-                    ),
-                    default_value=float("-inf"),
-                ),
-                "return_soft_prediction": BooleanValue(
-                    description="Return raw resized model prediction in addition to processed one",
-                    default_value=True,
-                ),
-            },
+            ParameterRegistry.merge(
+                ParameterRegistry.LABELS,
+                ParameterRegistry.SEGMENTATION_POSTPROCESS,
+            ),
         )
         return parameters
 
@@ -154,8 +130,8 @@ class SegmentationModel(ImageModel):
 
         hard_prediction = create_hard_prediction_from_soft_prediction(
             soft_prediction=soft_prediction,
-            soft_threshold=self.soft_threshold,
-            blur_strength=self.blur_strength,
+            soft_threshold=self.params.soft_threshold,
+            blur_strength=self.params.blur_strength,
         )
 
         hard_prediction = cv2.resize(
@@ -166,7 +142,7 @@ class SegmentationModel(ImageModel):
             interpolation=cv2.INTER_NEAREST,
         )
 
-        if self.return_soft_prediction:
+        if self.params.return_soft_prediction:
             soft_prediction = cv2.resize(
                 soft_prediction,
                 (input_image_width, input_image_height),

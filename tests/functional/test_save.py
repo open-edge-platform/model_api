@@ -23,7 +23,7 @@ def test_detector_save(tmp_path, data):
     assert deserialized.get_model().get_rt_info(["model_info", "embedded_processing"]).astype(bool)
     assert type(detector) is type(deserialized)
     for attr in detector.parameters():
-        assert getattr(detector, attr) == getattr(deserialized, attr)
+        assert getattr(detector.params, attr) == getattr(deserialized.params, attr)
 
 
 def test_classifier_save(tmp_path, data):
@@ -37,7 +37,7 @@ def test_classifier_save(tmp_path, data):
     assert deserialized.get_model().get_rt_info(["model_info", "embedded_processing"]).astype(bool)
     assert type(classifier) is type(deserialized)
     for attr in classifier.parameters():
-        assert getattr(classifier, attr) == getattr(deserialized, attr)
+        assert getattr(classifier.params, attr) == getattr(deserialized.params, attr)
 
 
 def test_segmentor_save(tmp_path, data):
@@ -51,7 +51,7 @@ def test_segmentor_save(tmp_path, data):
     assert deserialized.get_model().get_rt_info(["model_info", "embedded_processing"]).astype(bool)
     assert type(segmenter) is type(deserialized)
     for attr in segmenter.parameters():
-        assert getattr(segmenter, attr) == getattr(deserialized, attr)
+        assert getattr(segmenter.params, attr) == getattr(deserialized.params, attr)
 
 
 def test_onnx_save(tmp_path, data):
@@ -69,7 +69,7 @@ def test_onnx_save(tmp_path, data):
     assert load_parameters_from_onnx(onnx.load(onnx_path))["model_info"]["embedded_processing"] == "True"
     assert type(cls_model) is type(deserialized)
     for attr in cls_model.parameters():
-        assert getattr(cls_model, attr) == getattr(deserialized, attr)
+        assert getattr(cls_model.params, attr) == getattr(deserialized.params, attr)
 
 
 def test_padim_save(tmp_path, data):
@@ -83,7 +83,7 @@ def test_padim_save(tmp_path, data):
     assert not deserialized.get_model().get_rt_info(["model_info", "embedded_processing"]).astype(bool)
     assert type(padim_model) is type(deserialized)
     for attr in padim_model.parameters():
-        assert getattr(padim_model, attr) == getattr(deserialized, attr)
+        assert getattr(padim_model.params, attr) == getattr(deserialized.params, attr)
 
 
 def test_stfpm_save(tmp_path, data):
@@ -97,7 +97,7 @@ def test_stfpm_save(tmp_path, data):
     assert not deserialized.get_model().get_rt_info(["model_info", "embedded_processing"]).astype(bool)
     assert type(stfpm_model) is type(deserialized)
     for attr in stfpm_model.parameters():
-        assert getattr(stfpm_model, attr) == getattr(deserialized, attr)
+        assert getattr(stfpm_model.params, attr) == getattr(deserialized.params, attr)
 
 
 def test_uflow_save(tmp_path, data):
@@ -111,4 +111,4 @@ def test_uflow_save(tmp_path, data):
     assert not deserialized.get_model().get_rt_info(["model_info", "embedded_processing"]).astype(bool)
     assert type(uflow_model) is type(deserialized)
     for attr in uflow_model.parameters():
-        assert getattr(uflow_model, attr) == getattr(deserialized, attr)
+        assert getattr(uflow_model.params, attr) == getattr(deserialized.params, attr)

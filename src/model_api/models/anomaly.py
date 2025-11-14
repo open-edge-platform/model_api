@@ -15,8 +15,8 @@ import cv2
 import numpy as np
 
 from model_api.models.image_model import ImageModel
+from model_api.models.parameters import ParameterRegistry
 from model_api.models.result import AnomalyResult
-from model_api.models.types import ListValue, NumericalValue, StringValue
 
 if TYPE_CHECKING:
     from model_api.adapters.inference_adapter import InferenceAdapter
@@ -67,11 +67,6 @@ class AnomalyDetection(ImageModel):
     ) -> None:
         super().__init__(inference_adapter, configuration, preload)
         self._check_io_number(1, (1, 4))
-        self.normalization_scale: float
-        self.image_threshold: float
-        self.pixel_threshold: float
-        self.task: str
-        self.labels: list[str]
 
     def preprocess(self, inputs: np.ndarray) -> list[dict]:
         """Data preprocess method for Anomalib models.
@@ -103,7 +98,7 @@ class AnomalyDetection(ImageModel):
         else:
             resized_shape = (self.w, self.h, self.c)
             # For fixed models, use standard preprocessing
-            if self.embedded_processing:
+            if self.params.embedded_processing:
                 processed_image = inputs[None]
             else:
                 # Resize image to expected model input dimensions
@@ -148,16 +143,17 @@ class AnomalyDetection(ImageModel):
                 anomaly_map = predictions.squeeze()
                 npred_score = anomaly_map.reshape(-1).max()
 
-            pred_label = self.labels[1] if npred_score > self.image_threshold else self.labels[0]
+            labels_list = self.params.labels
+            pred_label = labels_list[1] if npred_score > self.params.image_threshold else labels_list[0]
 
             assert anomaly_map is not None
-            pred_mask = (anomaly_map >= self.pixel_threshold).astype(np.uint8)
-            anomaly_map = self._normalize(anomaly_map, self.pixel_threshold)
+            pred_mask = (anomaly_map >= self.params.pixel_threshold).astype(np.uint8)
+            anomaly_map = self._normalize(anomaly_map, self.params.pixel_threshold)
 
             # normalize
-            npred_score = self._normalize(npred_score, self.image_threshold)
+            npred_score = self._normalize(npred_score, self.params.image_threshold)
 
-            if pred_label == self.labels[0]:  # normal
+            if pred_label == labels_list[0]:  # normal
                 npred_score = 1 - npred_score  # Score of normal is 1 - score of anomaly
             pred_score = npred_score.item()
         else:
@@ -180,7 +176,7 @@ class AnomalyDetection(ImageModel):
             (meta["original_shape"][1], meta["original_shape"][0]),
         )
 
-        if self.task == "detection":
+        if self.params.task == "detection":
             pred_boxes = self._get_boxes(pred_mask)
 
         return AnomalyResult(
@@ -194,33 +190,13 @@ class AnomalyDetection(ImageModel):
     @classmethod
     def parameters(cls) -> dict:
         parameters = super().parameters()
-        parameters.update(
-            {
-                "image_threshold": NumericalValue(
-                    description="Image threshold",
-                    min=0.0,
-                    default_value=0.5,
-                ),
-                "pixel_threshold": NumericalValue(
-                    description="Pixel threshold",
-                    min=0.0,
-                    default_value=0.5,
-                ),
-                "normalization_scale": NumericalValue(
-                    description="Value used for normalization",
-                ),
-                "task": StringValue(
-                    description="Task type",
-                    default_value="segmentation",
-                ),
-                "labels": ListValue(description="List of class labels", value_type=str),
-            },
-        )
+        parameters.update(ParameterRegistry.ANOMALY)
+        parameters.update(ParameterRegistry.LABELS)
         return parameters
 
     def _normalize(self, tensor: np.ndarray, threshold: float) -> np.ndarray:
         """Currently supports only min-max normalization."""
-        normalized = ((tensor - threshold) / self.normalization_scale) + 0.5
+        normalized = ((tensor - threshold) / self.params.normalization_scale) + 0.5
         return np.clip(normalized, 0, 1)
 
     @staticmethod

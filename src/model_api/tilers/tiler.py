@@ -7,7 +7,7 @@ import abc
 import logging as log
 from itertools import product
 
-from model_api.models.types import BooleanValue, NumericalValue
+from model_api.models.parameters import ParameterRegistry
 from model_api.pipelines import AsyncPipeline
 
 
@@ -63,29 +63,7 @@ class Tiler(abc.ABC):
         Returns:
             - the dictionary with defined wrapper tiler parameters
         """
-        parameters = {}
-        parameters.update(
-            {
-                "tile_size": NumericalValue(
-                    value_type=int,
-                    default_value=400,
-                    min=1,
-                    description="Size of one tile",
-                ),
-                "tiles_overlap": NumericalValue(
-                    value_type=float,
-                    default_value=0.5,
-                    min=0.0,
-                    max=1.0,
-                    description="Overlap of tiles",
-                ),
-                "tile_with_full_img": BooleanValue(
-                    default_value=True,
-                    description="Whether to include full image as a tile",
-                ),
-            },
-        )
-        return parameters
+        return ParameterRegistry.TILER.copy()
 
     def _load_config(self, config):
         """Reads the configuration and creates data attributes

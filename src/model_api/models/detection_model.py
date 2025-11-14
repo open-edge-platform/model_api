@@ -6,8 +6,8 @@
 import numpy as np
 
 from .image_model import ImageModel
+from .parameters import ParameterRegistry
 from .result import DetectionResult
-from .types import ListValue, NumericalValue, StringValue
 from .utils import load_labels
 
 
@@ -39,32 +39,23 @@ class DetectionModel(ImageModel):
             WrapperError: if the model has more than 1 image inputs
         """
         super().__init__(inference_adapter, configuration, preload)
-        self.path_to_labels: str
-        self.confidence_threshold: float
         if not self.image_blob_name:
             self.raise_error(
                 f"The Wrapper supports only one image input, but {len(self.image_blob_names)} found",
             )
 
-        if self.path_to_labels:
-            self.labels = load_labels(self.path_to_labels)
+        if self.params.path_to_labels:
+            self._labels = load_labels(self.params.path_to_labels)
 
     @classmethod
     def parameters(cls):
         parameters = super().parameters()
         parameters.update(
-            {
-                "confidence_threshold": NumericalValue(
-                    default_value=0.5,
-                    description="Probability threshold value for bounding box filtering",
-                ),
-                "labels": ListValue(description="List of class labels", value_type=str),
-                "path_to_labels": StringValue(
-                    description="Path to file with labels. Overrides the labels, if they sets via 'labels' parameter",
-                ),
-            },
+            ParameterRegistry.merge(
+                ParameterRegistry.CONFIDENCE_THRESHOLD,
+                ParameterRegistry.LABELS,
+            ),
         )
-
         return parameters
 
     def _resize_detections(self, detection_result: DetectionResult, meta: dict):
@@ -82,12 +73,13 @@ class DetectionModel(ImageModel):
         inverted_scale_y = input_img_height / self.h
         pad_left = 0
         pad_top = 0
-        if self.resize_type == "fit_to_window" or self.resize_type == "fit_to_window_letterbox":
+        resize_type = self.params.resize_type
+        if resize_type == "fit_to_window" or resize_type == "fit_to_window_letterbox":
             inverted_scale_x = inverted_scale_y = max(
                 inverted_scale_x,
                 inverted_scale_y,
             )
-            if self.resize_type == "fit_to_window_letterbox":
+            if resize_type == "fit_to_window_letterbox":
                 pad_left = (self.w - round(input_img_widht / inverted_scale_x)) // 2
                 pad_top = (self.h - round(input_img_height / inverted_scale_y)) // 2
 
@@ -110,7 +102,7 @@ class DetectionModel(ImageModel):
             - list of detections with confidence above the threshold
         """
         keep = (detection_result.get_obj_sizes() > box_area_threshold) & (
-            detection_result.scores > self.confidence_threshold
+            detection_result.scores > self.params.confidence_threshold
         )
         detection_result.bboxes = detection_result.bboxes[keep]
         detection_result.labels = detection_result.labels[keep]

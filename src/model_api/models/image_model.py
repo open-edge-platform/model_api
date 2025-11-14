@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any
 
 from model_api.adapters.utils import RESIZE_TYPES, InputTransform
 from model_api.models.model import Model
-from model_api.models.types import BooleanValue, ListValue, NumericalValue, StringValue
+from model_api.models.parameters import ParameterRegistry
 
 if TYPE_CHECKING:
     import numpy as np
@@ -58,15 +58,6 @@ class ImageModel(Model):
         super().__init__(inference_adapter, configuration, preload)
         self.image_blob_names, self.image_info_blob_names = self._get_inputs()
         self.image_blob_name = self.image_blob_names[0]
-        self.orig_height: int
-        self.orig_width: int
-        self.pad_value: int
-        self.resize_type: str
-        self.mean_values: list
-        self.scale_values: list
-        self.reverse_input_channels: bool
-        self.embedded_processing: bool
-        self.labels: list[str]
 
         self.nchw_layout = self.inputs[self.image_blob_name].layout == "NCHW"
         if self.nchw_layout:
@@ -78,77 +69,38 @@ class ImageModel(Model):
         if self.h == -1 or self.w == -1:
             self._is_dynamic = True
 
-        self.resize = RESIZE_TYPES[self.resize_type]
+        self.resize = RESIZE_TYPES[self.params.resize_type]
         self.input_transform = InputTransform(
-            self.reverse_input_channels,
-            self.mean_values,
-            self.scale_values,
+            self.params.reverse_input_channels,
+            self.params.mean_values,
+            self.params.scale_values,
         )
 
         layout = self.inputs[self.image_blob_name].layout
-        if self.embedded_processing:
-            self.h, self.w = self.orig_height, self.orig_width
+        if self.params.embedded_processing:
+            self.h, self.w = self.params.orig_height, self.params.orig_width
         elif not self._is_dynamic:
             inference_adapter.embed_preprocessing(
                 layout=layout,
-                resize_mode=self.resize_type,
+                resize_mode=self.params.resize_type,
                 interpolation_mode="LINEAR",
                 target_shape=(self.w, self.h),
-                pad_value=self.pad_value,
-                brg2rgb=self.reverse_input_channels,
-                mean=self.mean_values,
-                scale=self.scale_values,
+                pad_value=self.params.pad_value,
+                brg2rgb=self.params.reverse_input_channels,
+                mean=self.params.mean_values,
+                scale=self.params.scale_values,
             )
-            self.embedded_processing = True
+            self._embedded_processing = True
             self.orig_height, self.orig_width = self.h, self.w
 
     @classmethod
     def parameters(cls) -> dict[str, Any]:
         parameters = super().parameters()
         parameters.update(
-            {
-                "embedded_processing": BooleanValue(
-                    description="Flag that pre/postprocessing embedded",
-                    default_value=False,
-                ),
-                "mean_values": ListValue(
-                    description=(
-                        "Normalization values, which will be subtracted from image "
-                        "channels for image-input layer during preprocessing"
-                    ),
-                    default_value=[],
-                ),
-                "orig_height": NumericalValue(
-                    int,
-                    description="Model input height before embedding processing",
-                    default_value=None,
-                ),
-                "orig_width": NumericalValue(
-                    int,
-                    description="Model input width before embedding processing",
-                    default_value=None,
-                ),
-                "pad_value": NumericalValue(
-                    int,
-                    min=0,
-                    max=255,
-                    description="Pad value for resize_image_letterbox embedded into a model",
-                    default_value=0,
-                ),
-                "resize_type": StringValue(
-                    default_value="standard",
-                    choices=tuple(RESIZE_TYPES.keys()),
-                    description="Type of input image resizing",
-                ),
-                "reverse_input_channels": BooleanValue(
-                    default_value=False,
-                    description="Reverse the input channel order",
-                ),
-                "scale_values": ListValue(
-                    default_value=[],
-                    description="Normalization values, which will divide the image channels for image-input layer",
-                ),
-            },
+            ParameterRegistry.merge(
+                ParameterRegistry.IMAGE_PREPROCESSING,
+                ParameterRegistry.IMAGE_RESIZE,
+            ),
         )
         return parameters
 
@@ -163,11 +115,12 @@ class ImageModel(Model):
         Returns:
             str: label name.
         """
-        if self.labels is None:
+        labels = self.params.labels
+        if labels is None:
             return f"#{label_id}"
-        if label_id >= len(self.labels):
+        if label_id >= len(labels):
             return f"#{label_id}"
-        return self.labels[label_id]
+        return labels[label_id]
 
     def _get_inputs(self) -> tuple[list[str], ...]:
         """Defines the model inputs for images and additional info.
@@ -222,7 +175,7 @@ class ImageModel(Model):
         """
         original_shape = inputs.shape
 
-        if self.embedded_processing:
+        if self.params.embedded_processing:
             processed_image = inputs[None]
             if self._is_dynamic:
                 h, w, c = inputs.shape
@@ -238,7 +191,7 @@ class ImageModel(Model):
             # Fixed model without embedded preprocessing
             resized_shape = (self.w, self.h, self.c)
 
-            resized_image = self.resize(inputs, (self.w, self.h), pad_value=self.pad_value)
+            resized_image = self.resize(inputs, (self.w, self.h), pad_value=self.params.pad_value)
             processed_image = self.input_transform(resized_image)
             processed_image = self._change_layout(processed_image)
 

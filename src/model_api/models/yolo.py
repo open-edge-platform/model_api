@@ -10,8 +10,9 @@ import numpy as np
 from model_api.adapters.utils import INTERPOLATION_TYPES, resize_image_ocv
 
 from .detection_model import DetectionModel
+from .parameters import ParameterRegistry
 from .result import DetectionResult
-from .types import BooleanValue, ListValue, NumericalValue
+from .types import BooleanValue, ListValue
 from .utils import clip_detections, multiclass_nms, nms
 
 DetectionBox = namedtuple("DetectionBox", ["x", "y", "w", "h"])
@@ -177,14 +178,7 @@ class YOLO(DetectionModel):
     @classmethod
     def parameters(cls):
         parameters = super().parameters()
-        parameters.update(
-            {
-                "iou_threshold": NumericalValue(
-                    default_value=0.5,
-                    description="Threshold for non-maximum suppression (NMS) intersection over union (IOU) filtering",
-                ),
-            },
-        )
+        parameters.update(ParameterRegistry.NMS)
         parameters["resize_type"].update_default_value("fit_to_window_letterbox")
         parameters["confidence_threshold"].update_default_value(0.5)
         return parameters
@@ -210,7 +204,7 @@ class YOLO(DetectionModel):
             class_probabilities = self._get_probabilities(prediction, params.classes)
 
             # filter out the proposals with low confidence score
-            keep_idxs = np.nonzero(class_probabilities > self.confidence_threshold)[0]
+            keep_idxs = np.nonzero(class_probabilities > self.params.confidence_threshold)[0]
             class_probabilities = class_probabilities[keep_idxs]
             obj_indx = keep_idxs // params.classes
             class_idx = keep_idxs % params.classes
@@ -367,7 +361,7 @@ class YOLO(DetectionModel):
             scores=scores,
         )
 
-        return self._filter(detection_result, self.iou_threshold)  # type: ignore[attr-defined]
+        return self._filter(detection_result, self.params.iou_threshold)
 
 
 class YoloV4(YOLO):
@@ -527,14 +521,9 @@ class YOLOX(DetectionModel):
     @classmethod
     def parameters(cls):
         parameters = super().parameters()
-        parameters.update(
-            {
-                "iou_threshold": NumericalValue(
-                    default_value=0.65,
-                    description="Threshold for non-maximum suppression (NMS) intersection over union (IOU) filtering",
-                ),
-            },
-        )
+        parameters.update(ParameterRegistry.NMS)
+        # Override default iou_threshold for YOLOX
+        parameters["iou_threshold"].update_default_value(0.65)
         parameters["confidence_threshold"].update_default_value(0.5)
         return parameters
 
@@ -572,11 +561,12 @@ class YOLOX(DetectionModel):
             output[..., :2] = (output[..., :2] + self.grids) * self.expanded_strides
             output[..., 2:4] = np.exp(output[..., 2:4]) * self.expanded_strides
 
-        valid_predictions = output[output[..., 4] > self.confidence_threshold]
+        conf_threshold = self.params.confidence_threshold
+        valid_predictions = output[output[..., 4] > conf_threshold]
         valid_predictions[:, 5:] *= valid_predictions[:, 4:5]
 
         boxes = xywh2xyxy(valid_predictions[:, :4]) / meta["scale"]
-        i, j = (valid_predictions[:, 5:] > self.confidence_threshold).nonzero()
+        i, j = (valid_predictions[:, 5:] > conf_threshold).nonzero()
         x_mins, y_mins, x_maxs, y_maxs = boxes[i].T
         scores = valid_predictions[i, j + 5]
 
@@ -586,7 +576,7 @@ class YOLOX(DetectionModel):
             x_maxs,
             y_maxs,
             scores,
-            self.iou_threshold,  # type: ignore[attr-defined]
+            self.params.iou_threshold,
             include_boundaries=True,
         )
 
@@ -633,7 +623,7 @@ class YoloV3ONNX(DetectionModel):
             self.indices_blob_name,
         ) = self._get_outputs()
 
-        if self.embedded_processing:
+        if self.params.embedded_processing:
             layout = "NHWC" if self.nchw_layout else "NCHW"
             inference_adapter.embed_preprocessing(
                 image_layout=layout,
@@ -681,7 +671,7 @@ class YoloV3ONNX(DetectionModel):
         dict_inputs = {}
         meta = {"original_shape": image.shape}
 
-        if self.embedded_processing:
+        if self.params.embedded_processing:
             meta.update({"resized_shape": (self.w, self.h)})
 
             dict_inputs = {
@@ -737,7 +727,7 @@ class YoloV3ONNX(DetectionModel):
         x_maxs = _boxes[:, 3]
         y_maxs = _boxes[:, 2]
         _boxes = np.stack((x_mins, y_mins, x_maxs, y_maxs)).T
-        mask = np.array(out_scores) > self.confidence_threshold
+        mask = np.array(out_scores) > self.params.confidence_threshold
 
         if mask.size == 0:
             return DetectionResult(
@@ -793,15 +783,11 @@ class YOLOv5(DetectionModel):
                     ),
                     default_value=False,
                 ),
-                "iou_threshold": NumericalValue(
-                    float,
-                    min=0.0,
-                    max=1.0,
-                    default_value=0.7,
-                    description="Threshold for non-maximum suppression (NMS) intersection over union (IOU) filtering",
-                ),
             },
         )
+        parameters.update(ParameterRegistry.NMS)
+        # Override default iou_threshold for YOLOv5
+        parameters["iou_threshold"].update_default_value(0.7)
         return parameters
 
     def postprocess(self, outputs, meta) -> DetectionResult:
@@ -818,7 +804,8 @@ class YOLOv5(DetectionModel):
             msg = "the first dim of the output must be 1"
             raise RuntimeError(msg)
         LABELS_START = 4
-        filtered = prediction[0].T[(prediction[:, LABELS_START:] > self.confidence_threshold).any(1)[0]]
+        conf_threshold = self.params.confidence_threshold
+        filtered = prediction[0].T[(prediction[:, LABELS_START:] > conf_threshold).any(1)[0]]
         confidences = filtered[:, LABELS_START:]
         labels = confidences.argmax(1, keepdims=True)
         confidences = np.take_along_axis(confidences, labels, 1)
@@ -828,6 +815,7 @@ class YOLOv5(DetectionModel):
             dtype=np.float32,
         )
         keep_top_k = 30000
+        iou_threshold = self.params.iou_threshold
         if self.agnostic_nms:  # type: ignore[attr-defined]
             boxes = boxes[
                 nms(
@@ -836,12 +824,12 @@ class YOLOv5(DetectionModel):
                     boxes[:, 4],
                     boxes[:, 5],
                     boxes[:, 1],
-                    self.iou_threshold,  # type: ignore[attr-defined]
+                    iou_threshold,  # type: ignore[attr-defined]
                     keep_top_k=keep_top_k,
                 )
             ]
         else:
-            boxes, _ = multiclass_nms(boxes, self.iou_threshold, keep_top_k)  # type: ignore[attr-defined]
+            boxes, _ = multiclass_nms(boxes, iou_threshold, keep_top_k)  # type: ignore[attr-defined]
         inputImgWidth = meta["original_shape"][1]
         inputImgHeight = meta["original_shape"][0]
         invertedScaleX, invertedScaleY = (
@@ -849,9 +837,10 @@ class YOLOv5(DetectionModel):
             inputImgHeight / self.orig_height,
         )
         padLeft, padTop = 0, 0
-        if self.resize_type == "fit_to_window" or self.resize_type == "fit_to_window_letterbox":
+        resize_type = self.params.resize_type
+        if resize_type == "fit_to_window" or resize_type == "fit_to_window_letterbox":
             invertedScaleX = invertedScaleY = max(invertedScaleX, invertedScaleY)
-            if self.resize_type == "fit_to_window_letterbox":
+            if resize_type == "fit_to_window_letterbox":
                 padLeft = (self.orig_width - round(inputImgWidth / invertedScaleX)) // 2
                 padTop = (self.orig_height - round(inputImgHeight / invertedScaleY)) // 2
         coords = boxes[:, 2:]
