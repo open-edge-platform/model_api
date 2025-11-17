@@ -381,6 +381,17 @@ The keys of the configuration dictionary should be presented in the <cite>parame
 </dl>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_api.models.model.Model.params">
+<span class="sig-name descname"><span class="pre">params</span></span><a class="headerlink" href="#model_api.models.model.Model.params" title="Link to this definition">#</a></dt>
+<dd><p>provides attribute-style access to model parameters</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ParameterDescriptor</p>
+</dd>
+</dl>
+</dd></dl>
+
 <p>Model constructor</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -484,6 +495,20 @@ the inference.</p></li>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="model_api.models.model.Model.get_cached_parameters">
+<span class="sig-name descname"><span class="pre">get_cached_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.model.Model.get_cached_parameters" title="Link to this definition">#</a></dt>
+<dd><p>Get cached parameters, initializing cache if needed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dictionary of parameter definitions</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="model_api.models.model.Model.get_model">
 <span class="sig-name descname"><span class="pre">get_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.model.Model.get_model" title="Link to this definition">#</a></dt>
 <dd><p>Returns underlying adapter-specific model.</p>
@@ -510,6 +535,23 @@ the inference.</p></li>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Type</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_api.models.model.Model.get_param">
+<span class="sig-name descname"><span class="pre">get_param</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.model.Model.get_param" title="Link to this definition">#</a></dt>
+<dd><p>Gets a parameter value, either from instance attribute (if set by config) or from parameter default.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – parameter name</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>parameter value</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -762,6 +804,12 @@ the type, default value and description must be provided.</p>
 </dl>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">params</span></span><a class="headerlink" href="#id0" title="Link to this definition">#</a></dt>
+<dd><p>Descriptor that provides parameter access for models.</p>
+</dd></dl>
+
 </dd></dl>
 
 </section>
@@ -802,14 +850,17 @@ the type, default value and description must be provided.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.inputs"><code class="docutils literal notranslate"><span class="pre">Model.inputs</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.outputs"><code class="docutils literal notranslate"><span class="pre">Model.outputs</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.model_loaded"><code class="docutils literal notranslate"><span class="pre">Model.model_loaded</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.params"><code class="docutils literal notranslate"><span class="pre">Model.params</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.__call__"><code class="docutils literal notranslate"><span class="pre">Model.__call__()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.available_wrappers"><code class="docutils literal notranslate"><span class="pre">Model.available_wrappers()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.await_all"><code class="docutils literal notranslate"><span class="pre">Model.await_all()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.await_any"><code class="docutils literal notranslate"><span class="pre">Model.await_any()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.create_model"><code class="docutils literal notranslate"><span class="pre">Model.create_model()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.detect_model_type"><code class="docutils literal notranslate"><span class="pre">Model.detect_model_type()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.get_cached_parameters"><code class="docutils literal notranslate"><span class="pre">Model.get_cached_parameters()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.get_model"><code class="docutils literal notranslate"><span class="pre">Model.get_model()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.get_model_class"><code class="docutils literal notranslate"><span class="pre">Model.get_model_class()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.get_param"><code class="docutils literal notranslate"><span class="pre">Model.get_param()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.get_performance_metrics"><code class="docutils literal notranslate"><span class="pre">Model.get_performance_metrics()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.get_subclasses"><code class="docutils literal notranslate"><span class="pre">Model.get_subclasses()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.infer_async"><code class="docutils literal notranslate"><span class="pre">Model.infer_async()</span></code></a></li>
@@ -826,6 +877,7 @@ the type, default value and description must be provided.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.reshape"><code class="docutils literal notranslate"><span class="pre">Model.reshape()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.save"><code class="docutils literal notranslate"><span class="pre">Model.save()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.set_callback"><code class="docutils literal notranslate"><span class="pre">Model.set_callback()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id0"><code class="docutils literal notranslate"><span class="pre">Model.params</span></code></a></li>
 </ul>
 </li>
 </ul>
