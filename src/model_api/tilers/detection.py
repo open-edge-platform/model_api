@@ -7,7 +7,7 @@ import cv2 as cv
 import numpy as np
 
 from model_api.models import DetectionResult
-from model_api.models.types import NumericalValue
+from model_api.models.parameters import ParameterRegistry
 from model_api.models.utils import multiclass_nms
 
 from .tiler import Tiler
@@ -30,23 +30,7 @@ class DetectionTiler(Tiler):
             - the dictionary with defined wrapper tiler parameters
         """
         parameters = super().parameters()
-        parameters.update(
-            {
-                "max_pred_number": NumericalValue(
-                    value_type=int,
-                    default_value=100,
-                    min=1,
-                    description="Maximum numbers of prediction per image",
-                ),
-                "iou_threshold": NumericalValue(
-                    value_type=float,
-                    default_value=0.45,
-                    min=0,
-                    max=1.0,
-                    description="IoU threshold which is used to apply NMS to bounding boxes",
-                ),
-            },
-        )
+        parameters.update(ParameterRegistry.DETECTION_TILER)
         return parameters
 
     def _postprocess_tile(

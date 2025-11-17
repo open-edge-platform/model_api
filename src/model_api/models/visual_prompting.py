@@ -170,7 +170,7 @@ class SAMLearnableVisualPrompter:
             raise ValueError(msg)
         self._num_bg_points: int = 1
         self._default_threshold_target: float = 0.0
-        self._image_size: int = self.encoder.image_size
+        self._image_size: int = self.encoder.params.image_size
         self._downsizing: int = 64
         self._default_threshold_reference: float = 0.3
 
@@ -288,7 +288,7 @@ class SAMLearnableVisualPrompter:
                     feats=processed_embedding,
                     masks=ref_mask,
                     threshold_mask=cur_default_threshold_reference,
-                    image_size=self.encoder.image_size,
+                    image_size=self.encoder.params.image_size,
                 )
                 cur_default_threshold_reference -= 0.05
 
@@ -429,7 +429,7 @@ class SAMLearnableVisualPrompter:
     def reset_reference_info(self) -> None:
         """Initialize reference information."""
         self._reference_features = np.zeros(
-            (0, 1, self.decoder.embed_dim),
+            (0, 1, self.decoder.params.embed_dim),
             dtype=np.float32,
         )
         self._used_indices = np.array([], dtype=np.int64)
@@ -534,7 +534,7 @@ class SAMLearnableVisualPrompter:
                 prediction["iou_predictions"],
                 prediction["low_res_masks"],
             )
-            masks = upscaled_masks > self.decoder.mask_threshold
+            masks = upscaled_masks > self.decoder.params.mask_threshold
 
         _, masks, _ = _decide_masks(masks, logits, scores)
         return {"upscaled_masks": masks}

@@ -17,8 +17,8 @@ from openvino import opset10 as opset
 from openvino.preprocess import PrePostProcessor
 
 from model_api.models.image_model import ImageModel
+from model_api.models.parameters import ParameterRegistry
 from model_api.models.result import ClassificationResult, Label
-from model_api.models.types import BooleanValue, ListValue, NumericalValue, StringValue
 from model_api.models.utils import softmax
 
 if TYPE_CHECKING:
@@ -51,34 +51,26 @@ class ClassificationModel(ImageModel):
 
     def __init__(self, inference_adapter: InferenceAdapter, configuration: dict = {}, preload: bool = False) -> None:
         super().__init__(inference_adapter, configuration, preload=False)
-        self.topk: int
-        self.labels: list[str]
-        self.path_to_labels: str
-        self.multilabel: bool
-        self.hierarchical: bool
-        self.hierarchical_config: str
-        self.confidence_threshold: float
-        self.output_raw_scores: bool
-        self.hierarchical_postproc: str
         self.labels_resolver: GreedyLabelsResolver | ProbabilisticLabelsResolver
 
         self._check_io_number(1, (1, 2, 3, 4, 5))
-        if self.path_to_labels:
-            self.labels = self._load_labels(self.path_to_labels)
+        if self.params.path_to_labels:
+            self._labels = self._load_labels(self.params.path_to_labels)
         if len(self.outputs) == 1:
             self._verify_single_output()
 
         self.raw_scores_name = _raw_scores_name
-        if self.hierarchical:
-            self.embedded_processing = True
+        if self.params.hierarchical:
+            self._embedded_processing = True
             self.out_layer_names = _get_non_xai_names(self.outputs.keys())
             _append_xai_names(self.outputs.keys(), self.out_layer_names)
-            if not self.hierarchical_config:
+            hierarchical_config = self.params.hierarchical_config
+            if not hierarchical_config:
                 self.raise_error("Hierarchical classification config is empty.")
             self.raw_scores_name = self.out_layer_names[0]
-            self.hierarchical_info = json.loads(self.hierarchical_config)
+            self.hierarchical_info = json.loads(hierarchical_config)
 
-            if self.hierarchical_postproc == "probabilistic":
+            if self.params.hierarchical_postproc == "probabilistic":
                 self.labels_resolver = ProbabilisticLabelsResolver(
                     self.hierarchical_info,
                 )
@@ -89,8 +81,8 @@ class ClassificationModel(ImageModel):
                 self.load()
             return
 
-        if self.multilabel:
-            self.embedded_processing = True
+        if self.params.multilabel:
+            self._embedded_processing = True
             self.out_layer_names = _get_non_xai_names(self.outputs.keys())
             _append_xai_names(self.outputs.keys(), self.out_layer_names)
             self.raw_scores_name = self.out_layer_names[0]
@@ -101,17 +93,17 @@ class ClassificationModel(ImageModel):
         try:
             addOrFindSoftmaxAndTopkOutputs(
                 self.inference_adapter,
-                self.topk,
-                self.output_raw_scores,
+                self.params.topk,
+                self.params.output_raw_scores,
             )
             self.embedded_topk = True
             self.out_layer_names = ["indices", "scores"]
-            if self.output_raw_scores:
+            if self.params.output_raw_scores:
                 self.out_layer_names.append(self.raw_scores_name)
         except (RuntimeError, AttributeError):
             # exception means we have a non-ov model
             # with already inserted softmax and topk
-            if self.embedded_processing and len(self.outputs) >= 2:
+            if self.params.embedded_processing and len(self.outputs) >= 2:
                 self.embedded_topk = True
                 self.out_layer_names = ["indices", "scores"]
                 self.raw_scores_name = _raw_scores_name
@@ -150,67 +142,40 @@ class ClassificationModel(ImageModel):
                 "The Classification model wrapper supports topologies only with 4D "
                 "output which has last two dimensions of size 1",
             )
-        if self.labels:
-            if layer_shape[1] == len(self.labels) + 1:
-                self.labels.insert(0, "other")
+        labels = self.params.labels
+        if labels:
+            if layer_shape[1] == len(labels) + 1:
+                labels.insert(0, "other")
+                self._labels = labels
                 self.logger.warning("\tInserted 'other' label as first.")
-            if layer_shape[1] > len(self.labels):
+            if layer_shape[1] > len(labels):
                 self.raise_error(
                     "Model's number of classes must be greater then "
-                    f"number of parsed labels ({layer_shape[1]}, {len(self.labels)})",
+                    f"number of parsed labels ({layer_shape[1]}, {len(labels)})",
                 )
 
     @classmethod
     def parameters(cls) -> dict:
         parameters = super().parameters()
         parameters.update(
-            {
-                "topk": NumericalValue(
-                    value_type=int,
-                    default_value=1,
-                    min=1,
-                    description="Number of most likely labels",
-                ),
-                "labels": ListValue(description="List of class labels", value_type=str),
-                "path_to_labels": StringValue(
-                    description="Path to file with labels. Overrides the labels, if they sets via 'labels' parameter",
-                ),
-                "multilabel": BooleanValue(
-                    default_value=False,
-                    description="Predict a set of labels per image",
-                ),
-                "hierarchical": BooleanValue(
-                    default_value=False,
-                    description="Predict a hierarchy if labels per image",
-                ),
-                "hierarchical_config": StringValue(
-                    default_value="",
-                    description="Extra config for decoding hierarchical predictions",
-                ),
-                "confidence_threshold": NumericalValue(
-                    default_value=0.5,
-                    description="Predict a set of labels per image",
-                ),
-                "output_raw_scores": BooleanValue(
-                    default_value=False,
-                    description="Output all scores for multiclass classification",
-                ),
-                "hierarchical_postproc": StringValue(
-                    default_value="greedy",
-                    choices=("probabilistic", "greedy"),
-                    description="Type of hierarchical postprocessing",
-                ),
-            },
+            ParameterRegistry.merge(
+                ParameterRegistry.TOP_K,
+                ParameterRegistry.LABELS,
+                ParameterRegistry.MULTILABEL,
+                ParameterRegistry.HIERARCHICAL,
+                ParameterRegistry.CONFIDENCE_THRESHOLD,
+                ParameterRegistry.OUTPUT_RAW_SCORES,
+            ),
         )
         return parameters
 
     def postprocess(self, outputs: dict, meta: dict) -> ClassificationResult:
         del meta  # unused
-        if self.multilabel:
+        if self.params.multilabel:
             result = self.get_multilabel_predictions(
                 outputs[self.out_layer_names[0]].squeeze(),
             )
-        elif self.hierarchical:
+        elif self.params.hierarchical:
             result = self.get_hierarchical_predictions(
                 outputs[self.out_layer_names[0]].squeeze(),
             )
@@ -218,7 +183,7 @@ class ClassificationModel(ImageModel):
             result = self.get_multiclass_predictions(outputs)
 
         raw_scores = np.ndarray(0)
-        if self.output_raw_scores:
+        if self.params.output_raw_scores:
             raw_scores = self.get_all_probs(outputs[self.raw_scores_name])
 
         return ClassificationResult(
@@ -233,22 +198,23 @@ class ClassificationModel(ImageModel):
         to match the order of labels in .XML meta.
         """
         saliency_maps = outputs.get(_saliency_map_name, np.ndarray(0))
-        if not self.hierarchical:
+        if not self.params.hierarchical:
             return saliency_maps
 
         reordered_saliency_maps: list[list[np.ndarray]] = [[] for _ in range(len(saliency_maps))]
         model_classes = self.hierarchical_info["cls_heads_info"]["class_to_group_idx"]
         label_to_model_out_idx = {lbl: i for i, lbl in enumerate(model_classes.keys())}
+        labels = self.params.labels
         for batch in range(len(saliency_maps)):
-            for label in self.labels:
+            for label in labels:
                 idx = label_to_model_out_idx[label]
                 reordered_saliency_maps[batch].append(saliency_maps[batch][idx])
         return np.array(reordered_saliency_maps)
 
     def get_all_probs(self, logits: np.ndarray) -> np.ndarray:
-        if self.multilabel:
+        if self.params.multilabel:
             probs = sigmoid_numpy(logits.reshape(-1))
-        elif self.hierarchical:
+        elif self.params.hierarchical:
             logits = logits.reshape(-1)
             probs = np.copy(logits)
             cls_heads_info = self.hierarchical_info["cls_heads_info"]
@@ -285,8 +251,9 @@ class ClassificationModel(ImageModel):
             head_logits = logits[logits_begin:]
             head_logits = sigmoid_numpy(head_logits)
 
+            conf_threshold = self.params.confidence_threshold
             for i in range(head_logits.shape[0]):
-                if head_logits[i] > self.confidence_threshold:
+                if head_logits[i] > conf_threshold:
                     label_str = cls_heads_info["all_groups"][cls_heads_info["num_multiclass_heads"] + i][0]
                     predicted_labels.append(label_str)
                     predicted_scores.append(head_logits[i])
@@ -298,23 +265,26 @@ class ClassificationModel(ImageModel):
         logits = sigmoid_numpy(logits)
         scores = []
         indices = []
+        conf_threshold = self.params.confidence_threshold
         for i in range(logits.shape[0]):
-            if logits[i] > self.confidence_threshold:
+            if logits[i] > conf_threshold:
                 indices.append(i)
                 scores.append(logits[i])
-        labels = [self.labels[i] if self.labels else "" for i in indices]
+        labels_list = self.params.labels
+        labels = [labels_list[i] if labels_list else "" for i in indices]
 
         return list(starmap(Label, zip(indices, labels, scores)))
 
     def get_multiclass_predictions(self, outputs: dict) -> list[Label]:
+        labels_list = self.params.labels
         if self.embedded_topk:
             indicesTensor = outputs[self.out_layer_names[0]][0]
             scoresTensor = outputs[self.out_layer_names[1]][0]
-            labels = [self.labels[i] if self.labels else "" for i in indicesTensor]
+            labels = [labels_list[i] if labels_list else "" for i in indicesTensor]
         else:
             scoresTensor = softmax(outputs[self.out_layer_names[0]][0])
             indicesTensor = [int(np.argmax(scoresTensor))]
-            labels = [self.labels[i] if self.labels else "" for i in indicesTensor]
+            labels = [labels_list[i] if labels_list else "" for i in indicesTensor]
         return list(starmap(Label, zip(indicesTensor, labels, scoresTensor)))
 
 

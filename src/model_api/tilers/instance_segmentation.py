@@ -192,13 +192,13 @@ class InstanceSegmentationTiler(DetectionTiler):
         def setup_maskrcnn(*args, **kwds):
             postprocess_state = None
             if isinstance(self.model, MaskRCNNModel):
-                postprocess_state = self.model.postprocess_semantic_masks
-                self.model.postprocess_semantic_masks = False
+                postprocess_state = self.model.params.postprocess_semantic_masks
+                self.model._postprocess_semantic_masks = False  # noqa: SLF001
             try:
                 yield
             finally:
                 if isinstance(self.model, MaskRCNNModel):
-                    self.model.postprocess_semantic_masks = postprocess_state
+                    self.model._postprocess_semantic_masks = postprocess_state  # noqa: SLF001
 
         with setup_maskrcnn():
             return super().__call__(inputs)
