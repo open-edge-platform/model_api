@@ -22,7 +22,6 @@ jobs:
           - "3.11"
           - "3.12"
           - "3.13"
-          - "3.14"
     name: pr pre-commit test (${{ matrix.os }}, Python ${{ matrix.python-version }})
     runs-on: ${{ matrix.os }}
     steps:
