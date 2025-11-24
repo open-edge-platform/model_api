@@ -210,7 +210,7 @@ void KeypointDetectionModel::prepareInputsOutputs(std::shared_ptr<ov::Model>& mo
 std::unique_ptr<ResultBase> KeypointDetectionModel::postprocess(InferenceResult& infResult) {
     KeypointDetectionResult* result = new KeypointDetectionResult(infResult.frameId, infResult.metaData);
 
-    const ov::Tensor& pred_x_tensor = infResult.outputsData.find(outputNames[0])->second;
+    ov::Tensor& pred_x_tensor = infResult.outputsData.find(outputNames[0])->second;
     size_t shape_offset = pred_x_tensor.get_shape().size() == 3 ? 1 : 0;
     auto pred_x_mat = cv::Mat(cv::Size(static_cast<int>(pred_x_tensor.get_shape()[shape_offset + 1]),
                                        static_cast<int>(pred_x_tensor.get_shape()[shape_offset])),
@@ -218,7 +218,7 @@ std::unique_ptr<ResultBase> KeypointDetectionModel::postprocess(InferenceResult&
                               pred_x_tensor.data(),
                               pred_x_tensor.get_strides()[shape_offset]);
 
-    const ov::Tensor& pred_y_tensor = infResult.outputsData.find(outputNames[1])->second;
+    ov::Tensor& pred_y_tensor = infResult.outputsData.find(outputNames[1])->second;
     shape_offset = pred_y_tensor.get_shape().size() == 3 ? 1 : 0;
     auto pred_y_mat = cv::Mat(cv::Size(static_cast<int>(pred_y_tensor.get_shape()[shape_offset + 1]),
                                        static_cast<int>(pred_y_tensor.get_shape()[shape_offset])),

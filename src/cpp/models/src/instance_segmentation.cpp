@@ -312,7 +312,7 @@ std::unique_ptr<ResultBase> MaskRCNNModel::postprocess(InferenceResult& infResul
             padTop = (netInputHeight - int(std::round(floatInputImgHeight / invertedScaleY))) / 2;
         }
     }
-    const Lbm& lbm = filterTensors(infResult.outputsData);
+    Lbm lbm = filterTensors(infResult.outputsData);
     const int64_t* const labels_tensor_ptr = lbm.labels.data<int64_t>();
     const float* const boxes = lbm.boxes.data<float>();
     size_t objectSize = lbm.boxes.get_shape().back();

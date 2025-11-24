@@ -35,16 +35,17 @@ static inline ov::Tensor wrapMat2Tensor(const cv::Mat& mat) {
     }
     auto precision = isMatFloat ? ov::element::f32 : ov::element::u8;
     struct SharedMatAllocator {
-        const cv::Mat mat;
+        cv::Mat mat;
+        SharedMatAllocator(const cv::Mat& m) : mat(m) {}
         void* allocate(size_t bytes, size_t) {
             return bytes <= mat.rows * mat.step[0] ? mat.data : nullptr;
         }
-        void deallocate(void*, size_t, size_t) {}
+        void deallocate(void*, size_t, size_t) noexcept {}
         bool is_equal(const SharedMatAllocator& other) const noexcept {
             return this == &other;
         }
     };
-    return ov::Tensor(precision, ov::Shape{1, height, width, channels}, SharedMatAllocator{mat});
+    return ov::Tensor(precision, ov::Shape{1, height, width, channels}, ov::Allocator(SharedMatAllocator{mat}));
 }
 
 struct IntervalCondition {
