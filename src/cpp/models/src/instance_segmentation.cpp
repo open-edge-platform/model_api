@@ -27,6 +27,7 @@ constexpr char saliency_map_name[]{"saliency_map"};
 constexpr char feature_vector_name[]{"feature_vector"};
 constexpr char labels_name[]{"labels"};
 constexpr char boxes_name[]{"boxes"};
+constexpr char bboxes_name[]{"bboxes"};
 constexpr char masks_name[]{"masks"};
 
 void append_xai_names(const std::vector<ov::Output<ov::Node>>& outputs, std::vector<std::string>& outputNames) {
@@ -93,6 +94,9 @@ Lbm filterTensors(const std::map<std::string, ov::Tensor>& infResult) {
 
     auto labels_it = infResult.find(labels_name);
     auto boxes_it = infResult.find(boxes_name);
+    if (boxes_it == infResult.end()) {
+        boxes_it = infResult.find(bboxes_name);  // Alternative name for boxes
+    }
     auto masks_it = infResult.find(masks_name);
 
     if (labels_it != infResult.end() && boxes_it != infResult.end() && masks_it != infResult.end()) {
