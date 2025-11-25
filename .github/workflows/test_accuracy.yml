@@ -9,7 +9,7 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 jobs:
-  test_accuracy:
+  test_accuracy_parts:
     strategy:
       fail-fast: false
       matrix:
@@ -41,3 +41,5 @@ jobs:
       - name: Run Python Test
         run: |
           uv run pytest --data=./data tests/accuracy/test_accuracy.py
+  test_accuracy:
+    needs: [test_accuracy_parts]
