@@ -42,7 +42,7 @@ jobs:
 #          uv run pytest --data=./data tests/accuracy/test_accuracy.py
   test_accuracy:
     runs-on: ubuntu-latest
-#    needs: test_accuracy / test_accuracy_items
+    needs: test_accuracy_items
     if: always()
     steps:
       - name: All tests ok
