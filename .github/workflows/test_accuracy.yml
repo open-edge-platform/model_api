@@ -46,8 +46,8 @@ jobs:
     if: always()
     steps:
       - name: All tests ok
-#        if: ${{ !(contains(needs.*.result, 'failure')) }}
+        if: ${{ !(contains(needs.*.result, 'failure')) }}
         run: exit 0
-#      - name: Some tests failed
-#        if: ${{ contains(needs.*.result, 'failure') }}
-#        run: exit 1
+      - name: Some tests failed
+        if: ${{ contains(needs.*.result, 'failure') }}
+        run: exit 1
