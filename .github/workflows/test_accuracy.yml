@@ -41,5 +41,3 @@ jobs:
       - name: Run Python Test
         run: |
           uv run pytest --data=./data tests/accuracy/test_accuracy.py
-  test_accuracy:
-    needs: [test_accuracy_parts]
