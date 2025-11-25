@@ -26,20 +26,20 @@ jobs:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           persist-credentials: false
-#      - name: Install uv
-#        uses: astral-sh/setup-uv@85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41 # v7.1.2
-#        with:
-#          enable-cache: false
-#          python-version: ${{ matrix.python-version }}
-#      - name: Install dependencies
-#        run: |
-#          uv sync --locked --extra tests --extra-index-url https://download.pytorch.org/whl/cpu
-#      - name: Prepare test data
-#        run: |
-#          uv run python tests/accuracy/download_models.py -d data -j tests/accuracy/public_scope.json -l
-#      - name: Run Python Test
-#        run: |
-#          uv run pytest --data=./data tests/accuracy/test_accuracy.py
+      - name: Install uv
+        uses: astral-sh/setup-uv@85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41 # v7.1.2
+        with:
+          enable-cache: false
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          uv sync --locked --extra tests --extra-index-url https://download.pytorch.org/whl/cpu
+      - name: Prepare test data
+        run: |
+          uv run python tests/accuracy/download_models.py -d data -j tests/accuracy/public_scope.json -l
+      - name: Run Python Test
+        run: |
+          uv run pytest --data=./data tests/accuracy/test_accuracy.py
   test_accuracy:
     runs-on: ubuntu-latest
     needs: test_accuracy_items
