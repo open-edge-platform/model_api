@@ -217,7 +217,8 @@ Output<Node> cropResizeGraph(const ov::Output<ov::Node>& input,
                                              opset10::Constant::create(element::i64, Shape{1}, {1}),
                                              opset10::Constant::create(element::i64, Shape{1}, {h_axis}));
         auto then_body_res_1 = std::make_shared<opset10::Result>(then_cropped_frame);
-        auto then_body = std::make_shared<Model>(ov::ResultVector{then_body_res_1}, ParameterVector{image_t, iw_t, ih_t});
+        auto then_body =
+            std::make_shared<Model>(ov::ResultVector{then_body_res_1}, ParameterVector{image_t, iw_t, ih_t});
 
         // else_body
         auto image_e = std::make_shared<opset10::Parameter>(element::u8, PartialShape{-1, -1, -1, 3});
@@ -235,7 +236,8 @@ Output<Node> cropResizeGraph(const ov::Output<ov::Node>& input,
                                              opset10::Constant::create(element::i64, Shape{1}, {1}),
                                              opset10::Constant::create(element::i64, Shape{1}, {w_axis}));
         auto else_body_res_1 = std::make_shared<opset10::Result>(else_cropped_frame);
-        auto else_body = std::make_shared<Model>(ov::ResultVector{else_body_res_1}, ParameterVector{image_e, iw_e, ih_e});
+        auto else_body =
+            std::make_shared<Model>(ov::ResultVector{else_body_res_1}, ParameterVector{image_e, iw_e, ih_e});
 
         // if operator
         auto condition = std::make_shared<opset10::Greater>(ih, iw);
