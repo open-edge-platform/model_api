@@ -350,7 +350,7 @@ std::unique_ptr<ResultBase> ClassificationModel::get_hierarchical_predictions(In
                                                                               bool add_raw_scores) {
     ClassificationResult* result = new ClassificationResult(infResult.frameId, infResult.metaData);
 
-    const ov::Tensor& logitsTensor = infResult.outputsData.find(outputNames[0])->second;
+    ov::Tensor& logitsTensor = infResult.outputsData.find(outputNames[0])->second;
     float* logitsPtr = logitsTensor.data<float>();
 
     auto raw_scores = ov::Tensor();
@@ -411,7 +411,7 @@ ov::Tensor ClassificationModel::reorder_saliency_maps(const ov::Tensor& source_m
     }
 
     auto reordered_maps = ov::Tensor(source_maps.get_element_type(), source_maps.get_shape());
-    const std::uint8_t* source_maps_ptr = static_cast<std::uint8_t*>(source_maps.data());
+    const std::uint8_t* source_maps_ptr = static_cast<const std::uint8_t*>(source_maps.data());
     std::uint8_t* reordered_maps_ptr = static_cast<std::uint8_t*>(reordered_maps.data());
 
     size_t shape_offset = (source_maps.get_shape().size() == 4) ? 1 : 0;

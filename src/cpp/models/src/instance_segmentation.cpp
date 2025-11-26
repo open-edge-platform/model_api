@@ -27,6 +27,7 @@ constexpr char saliency_map_name[]{"saliency_map"};
 constexpr char feature_vector_name[]{"feature_vector"};
 constexpr char labels_name[]{"labels"};
 constexpr char boxes_name[]{"boxes"};
+constexpr char bboxes_name[]{"bboxes"};
 constexpr char masks_name[]{"masks"};
 
 void append_xai_names(const std::vector<ov::Output<ov::Node>>& outputs, std::vector<std::string>& outputNames) {
@@ -93,6 +94,9 @@ Lbm filterTensors(const std::map<std::string, ov::Tensor>& infResult) {
 
     auto labels_it = infResult.find(labels_name);
     auto boxes_it = infResult.find(boxes_name);
+    if (boxes_it == infResult.end()) {
+        boxes_it = infResult.find(bboxes_name);  // Alternative name for boxes
+    }
     auto masks_it = infResult.find(masks_name);
 
     if (labels_it != infResult.end() && boxes_it != infResult.end() && masks_it != infResult.end()) {
@@ -308,7 +312,7 @@ std::unique_ptr<ResultBase> MaskRCNNModel::postprocess(InferenceResult& infResul
             padTop = (netInputHeight - int(std::round(floatInputImgHeight / invertedScaleY))) / 2;
         }
     }
-    const Lbm& lbm = filterTensors(infResult.outputsData);
+    Lbm lbm = filterTensors(infResult.outputsData);
     const int64_t* const labels_tensor_ptr = lbm.labels.data<int64_t>();
     const float* const boxes = lbm.boxes.data<float>();
     size_t objectSize = lbm.boxes.get_shape().back();
