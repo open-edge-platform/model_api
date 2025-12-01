@@ -8,7 +8,7 @@ import numpy as np
 from .image_model import ImageModel
 from .parameters import ParameterRegistry
 from .result import DetectionResult
-from .utils import load_labels
+from .utils import ResizeMetadata, load_labels
 
 
 class DetectionModel(ImageModel):
@@ -58,6 +58,18 @@ class DetectionModel(ImageModel):
         )
         return parameters
 
+    def preprocess(self, dict_inputs: dict, meta: dict) -> tuple[dict, dict]:
+        input_img_height, input_img_width = meta["original_shape"][:2]
+        resize_meta = ResizeMetadata.compute(
+            original_width=input_img_width,
+            original_height=input_img_height,
+            model_width=self.w,
+            model_height=self.h,
+            resize_type=self.params.resize_type,
+        )
+        meta["resize_info"] = resize_meta.to_dict()
+        return dict_inputs, meta
+
     def _resize_detections(self, detection_result: DetectionResult, meta: dict):
         """Resizes detection bounding boxes according to initial image shape.
 
@@ -68,26 +80,24 @@ class DetectionModel(ImageModel):
             detection_result (DetectionList): detection result with coordinates in normalized form
             meta (dict): the input metadata obtained from `preprocess` method
         """
-        input_img_height, input_img_widht = meta["original_shape"][:2]
-        inverted_scale_x = input_img_widht / self.w
-        inverted_scale_y = input_img_height / self.h
-        pad_left = 0
-        pad_top = 0
-        resize_type = self.params.resize_type
-        if resize_type == "fit_to_window" or resize_type == "fit_to_window_letterbox":
-            inverted_scale_x = inverted_scale_y = max(
-                inverted_scale_x,
-                inverted_scale_y,
+        input_img_height, input_img_width = meta["original_shape"][:2]
+
+        if "resize_info" in meta:
+            resize_meta = ResizeMetadata.from_dict(meta["resize_info"])
+        else:
+            resize_meta = ResizeMetadata.compute(
+                original_width=input_img_width,
+                original_height=input_img_height,
+                model_width=self.w,
+                model_height=self.h,
+                resize_type=self.params.resize_type,
             )
-            if resize_type == "fit_to_window_letterbox":
-                pad_left = (self.w - round(input_img_widht / inverted_scale_x)) // 2
-                pad_top = (self.h - round(input_img_height / inverted_scale_y)) // 2
 
         boxes = detection_result.bboxes
-        boxes[:, 0::2] = (boxes[:, 0::2] * self.w - pad_left) * inverted_scale_x
-        boxes[:, 1::2] = (boxes[:, 1::2] * self.h - pad_top) * inverted_scale_y
+        boxes[:, 0::2] = (boxes[:, 0::2] * self.w - resize_meta.pad_left) * resize_meta.inverted_scale_x
+        boxes[:, 1::2] = (boxes[:, 1::2] * self.h - resize_meta.pad_top) * resize_meta.inverted_scale_y
         np.round(boxes, out=boxes)
-        boxes[:, 0::2] = np.clip(boxes[:, 0::2], 0, input_img_widht)
+        boxes[:, 0::2] = np.clip(boxes[:, 0::2], 0, input_img_width)
         boxes[:, 1::2] = np.clip(boxes[:, 1::2], 0, input_img_height)
         detection_result.bboxes = boxes.astype(np.int32)
 

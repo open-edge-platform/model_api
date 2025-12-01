@@ -57,7 +57,7 @@ class InstanceSegmentationTiler(DetectionTiler):
             keep_coords = []
             for i, coord in enumerate(tile_coords):
                 tile_img = self._crop_tile(image, coord)
-                tile_dict, _ = self.model.preprocess(tile_img)
+                tile_dict, _ = self.model.base_preprocess(tile_img)
                 cls_outputs = self.tile_classifier_model.infer_sync(tile_dict)
                 if i == 0 or cls_outputs["tile_prob"] > confidence_threshold:
                     keep_coords.append(coord)

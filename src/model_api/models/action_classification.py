@@ -119,7 +119,7 @@ class ActionClassificationModel(Model):
             )
         return image_blob_names
 
-    def preprocess(
+    def base_preprocess(
         self,
         inputs: np.ndarray,
     ) -> tuple[dict[str, np.ndarray], dict[str, tuple[int, ...]]]:

@@ -70,9 +70,9 @@ class SAMVisualPrompter:
 
         outputs: list[dict[str, Any]] = []
 
-        processed_image, meta = self.encoder.preprocess(image)
+        processed_image, meta = self.encoder.base_preprocess(image)
         image_embeddings = self.encoder.infer_sync(processed_image)
-        processed_prompts = self.decoder.preprocess(
+        processed_prompts = self.decoder.base_preprocess(
             {
                 "bboxes": [box.data for box in boxes] if boxes else None,
                 "points": [point.data for point in points] if points else None,
@@ -229,7 +229,7 @@ class SAMLearnableVisualPrompter:
         if reset_features or not self.has_reference_features():
             self.reset_reference_info()
 
-        processed_prompts = self.decoder.preprocess(
+        processed_prompts = self.decoder.base_preprocess(
             {
                 "bboxes": [box.data for box in boxes] if boxes else None,
                 "points": [point.data for point in points] if points else None,

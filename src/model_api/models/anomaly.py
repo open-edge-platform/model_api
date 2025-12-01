@@ -68,13 +68,7 @@ class AnomalyDetection(ImageModel):
         super().__init__(inference_adapter, configuration, preload)
         self._check_io_number(1, (1, 4))
 
-    def preprocess(self, inputs: np.ndarray) -> list[dict]:
-        """Data preprocess method for Anomalib models.
-
-        Anomalib models typically expect inputs in [0,1] range as float32.
-        """
-        original_shape = inputs.shape
-
+    def _resize_image(self, image: np.ndarray) -> tuple[np.ndarray, dict]:
         if (
             self._is_dynamic
             and getattr(self.inference_adapter, "device", "") == "NPU"
@@ -83,40 +77,12 @@ class AnomalyDetection(ImageModel):
             _, self.c, self.h, self.w = self.inference_adapter.compiled_model.inputs[0].get_shape()
             self._is_dynamic = False
 
-        if self._is_dynamic:
-            h, w, c = inputs.shape
-            resized_shape = (w, h, c)
+        return super()._resize_image(image)
 
-            # For anomalib models, convert to float32 and normalize to [0,1] if needed
-            if inputs.dtype == np.uint8:
-                processed_image = inputs.astype(np.float32) / 255.0
-            else:
-                processed_image = inputs.astype(np.float32)
-
-            # Apply layout change but skip InputTransform (which might apply wrong normalization)
-            processed_image = self._change_layout(processed_image)
-        else:
-            resized_shape = (self.w, self.h, self.c)
-            # For fixed models, use standard preprocessing
-            if self.params.embedded_processing:
-                processed_image = inputs[None]
-            else:
-                # Resize image to expected model input dimensions
-                resized_image = self.resize(inputs, (self.w, self.h))
-                # Convert to float32 and normalize for anomalib
-                if resized_image.dtype == np.uint8:
-                    processed_image = resized_image.astype(np.float32) / 255.0
-                else:
-                    processed_image = resized_image.astype(np.float32)
-                processed_image = self._change_layout(processed_image)
-
-        return [
-            {self.image_blob_name: processed_image},
-            {
-                "original_shape": original_shape,
-                "resized_shape": resized_shape,
-            },
-        ]
+    def _input_transform(self, image: np.ndarray) -> np.ndarray:
+        if image.dtype == np.uint8:
+            return image.astype(np.float32) / 255.0
+        return image.astype(np.float32)
 
     def postprocess(self, outputs: dict[str, np.ndarray], meta: dict[str, Any]) -> AnomalyResult:
         """Post-processes the outputs and returns the results.

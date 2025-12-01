@@ -60,36 +60,41 @@ class ClassificationModel(ImageModel):
             self._verify_single_output()
 
         self.raw_scores_name = _raw_scores_name
+
         if self.params.hierarchical:
-            self._embedded_processing = True
-            self.out_layer_names = _get_non_xai_names(self.outputs.keys())
-            _append_xai_names(self.outputs.keys(), self.out_layer_names)
-            hierarchical_config = self.params.hierarchical_config
-            if not hierarchical_config:
-                self.raise_error("Hierarchical classification config is empty.")
-            self.raw_scores_name = self.out_layer_names[0]
-            self.hierarchical_info = json.loads(hierarchical_config)
+            self._setup_hierarchical()
+        elif self.params.multilabel:
+            self._setup_multilabel()
+        else:
+            self._setup_single_label()
 
-            if self.params.hierarchical_postproc == "probabilistic":
-                self.labels_resolver = ProbabilisticLabelsResolver(
-                    self.hierarchical_info,
-                )
-            else:
-                self.labels_resolver = GreedyLabelsResolver(self.hierarchical_info)
+        _append_xai_names(self.outputs.keys(), self.out_layer_names)
+        if preload:
+            self.load()
 
-            if preload:
-                self.load()
-            return
+    def _setup_hierarchical(self) -> None:
+        """Configure model for hierarchical classification."""
+        self._embedded_processing = True
+        self.out_layer_names = _get_non_xai_names(self.outputs.keys())
+        hierarchical_config = self.params.hierarchical_config
+        if not hierarchical_config:
+            self.raise_error("Hierarchical classification config is empty.")
+        self.raw_scores_name = self.out_layer_names[0]
+        self.hierarchical_info = json.loads(hierarchical_config)
 
-        if self.params.multilabel:
-            self._embedded_processing = True
-            self.out_layer_names = _get_non_xai_names(self.outputs.keys())
-            _append_xai_names(self.outputs.keys(), self.out_layer_names)
-            self.raw_scores_name = self.out_layer_names[0]
-            if preload:
-                self.load()
-            return
+        if self.params.hierarchical_postproc == "probabilistic":
+            self.labels_resolver = ProbabilisticLabelsResolver(self.hierarchical_info)
+        else:
+            self.labels_resolver = GreedyLabelsResolver(self.hierarchical_info)
 
+    def _setup_multilabel(self) -> None:
+        """Configure model for multi-label classification."""
+        self._embedded_processing = True
+        self.out_layer_names = _get_non_xai_names(self.outputs.keys())
+        self.raw_scores_name = self.out_layer_names[0]
+
+    def _setup_single_label(self) -> None:
+        """Configure model for single-label classification with TopK."""
         try:
             addOrFindSoftmaxAndTopkOutputs(
                 self.inference_adapter,
@@ -113,10 +118,6 @@ class ClassificationModel(ImageModel):
                 self.raw_scores_name = self.out_layer_names[0]
 
         self.embedded_processing = True
-
-        _append_xai_names(self.outputs.keys(), self.out_layer_names)
-        if preload:
-            self.load()
 
     def _load_labels(self, labels_file: str) -> list:
         with Path(labels_file).open() as f:

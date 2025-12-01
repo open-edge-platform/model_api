@@ -13,7 +13,7 @@ from .detection_model import DetectionModel
 from .parameters import ParameterRegistry
 from .result import DetectionResult
 from .types import BooleanValue, ListValue
-from .utils import clip_detections, multiclass_nms, nms
+from .utils import ResizeMetadata, clip_detections, multiclass_nms, nms
 
 DetectionBox = namedtuple("DetectionBox", ["x", "y", "w", "h"])
 
@@ -527,8 +527,7 @@ class YOLOX(DetectionModel):
         parameters["confidence_threshold"].update_default_value(0.5)
         return parameters
 
-    def preprocess(self, inputs):
-        image = inputs
+    def _resize_image(self, image: np.ndarray) -> tuple[np.ndarray, dict]:
         resized_image = resize_image_ocv(
             image,
             (self.w, self.h),
@@ -540,19 +539,10 @@ class YOLOX(DetectionModel):
 
         meta = {
             "original_shape": image.shape,
+            "resized_shape": padded_image.shape,
             "scale": min(self.w / image.shape[1], self.h / image.shape[0]),
         }
-
-        preprocessed_image = self.input_transform(padded_image)
-        preprocessed_image = preprocessed_image.transpose(
-            (2, 0, 1),
-        )  # Change data layout from HWC to CHW
-        preprocessed_image = preprocessed_image.reshape(
-            (self.n, self.c, self.h, self.w),
-        )
-
-        dict_inputs = {self.image_blob_name: preprocessed_image}
-        return dict_inputs, meta
+        return padded_image, meta
 
     def postprocess(self, outputs, meta) -> DetectionResult:
         output = outputs[self.output_blob_name][0]
@@ -666,37 +656,30 @@ class YoloV3ONNX(DetectionModel):
         parameters["confidence_threshold"].update_default_value(0.5)
         return parameters
 
-    def preprocess(self, inputs):
-        image = inputs
-        dict_inputs = {}
-        meta = {"original_shape": image.shape}
+    def _resize_image(self, image: np.ndarray) -> tuple[np.ndarray, dict]:
+        if self._is_dynamic:
+            return super()._resize_image(image)
 
-        if self.params.embedded_processing:
-            meta.update({"resized_shape": (self.w, self.h)})
+        resized_image = self.resize(
+            image,
+            (self.w, self.h),
+            interpolation=INTERPOLATION_TYPES["CUBIC"],
+        )
+        meta = {
+            "original_shape": image.shape,
+            "resized_shape": resized_image.shape,
+        }
+        return resized_image, meta
 
-            dict_inputs = {
-                self.image_blob_name: np.expand_dims(image, axis=0),
-                self.image_info_blob_name: np.array(
-                    [[image.shape[0], image.shape[1]]],
-                    dtype=np.float32,
-                ),
-            }
-        else:
-            resized_image = self.resize(
-                image,
-                (self.w, self.h),
-                interpolation=INTERPOLATION_TYPES["CUBIC"],
-            )
-            meta.update({"resized_shape": resized_image.shape})
-            resized_image = self._change_layout(resized_image)
-            dict_inputs = {
-                self.image_blob_name: resized_image,
-                self.image_info_blob_name: np.array(
-                    [[image.shape[0], image.shape[1]]],
-                    dtype=np.float32,
-                ),
-            }
+    def _input_transform(self, image: np.ndarray) -> np.ndarray:
+        return image
 
+    def preprocess(self, dict_inputs: dict, meta: dict) -> tuple[dict, dict]:
+        h, w = meta["original_shape"][:2]
+        dict_inputs[self.image_info_blob_name] = np.array(
+            [[h, w]],
+            dtype=np.float32,
+        )
         return dict_inputs, meta
 
     def postprocess(self, outputs, meta) -> DetectionResult:
@@ -832,20 +815,21 @@ class YOLOv5(DetectionModel):
             boxes, _ = multiclass_nms(boxes, iou_threshold, keep_top_k)  # type: ignore[attr-defined]
         inputImgWidth = meta["original_shape"][1]
         inputImgHeight = meta["original_shape"][0]
-        invertedScaleX, invertedScaleY = (
-            inputImgWidth / self.orig_width,
-            inputImgHeight / self.orig_height,
+        resize_meta = ResizeMetadata.compute(
+            original_width=inputImgWidth,
+            original_height=inputImgHeight,
+            model_width=self.orig_width,
+            model_height=self.orig_height,
+            resize_type=self.params.resize_type,
         )
-        padLeft, padTop = 0, 0
-        resize_type = self.params.resize_type
-        if resize_type == "fit_to_window" or resize_type == "fit_to_window_letterbox":
-            invertedScaleX = invertedScaleY = max(invertedScaleX, invertedScaleY)
-            if resize_type == "fit_to_window_letterbox":
-                padLeft = (self.orig_width - round(inputImgWidth / invertedScaleX)) // 2
-                padTop = (self.orig_height - round(inputImgHeight / invertedScaleY)) // 2
         coords = boxes[:, 2:]
-        coords -= (padLeft, padTop, padLeft, padTop)
-        coords *= (invertedScaleX, invertedScaleY, invertedScaleX, invertedScaleY)
+        coords -= (resize_meta.pad_left, resize_meta.pad_top, resize_meta.pad_left, resize_meta.pad_top)
+        coords *= (
+            resize_meta.inverted_scale_x,
+            resize_meta.inverted_scale_y,
+            resize_meta.inverted_scale_x,
+            resize_meta.inverted_scale_y,
+        )
 
         intboxes = np.round(coords, out=coords).astype(np.int32)
         np.clip(

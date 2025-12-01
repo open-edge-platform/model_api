@@ -11,7 +11,7 @@ from model_api.adapters.inference_adapter import InferenceAdapter
 from .image_model import ImageModel
 from .parameters import ParameterRegistry
 from .result import InstanceSegmentationResult
-from .utils import load_labels
+from .utils import ResizeMetadata, load_labels
 
 
 class MaskRCNNModel(ImageModel):
@@ -95,8 +95,7 @@ class MaskRCNNModel(ImageModel):
                 )
         return outputs
 
-    def preprocess(self, inputs: np.ndarray) -> list[dict]:
-        dict_inputs, meta = super().preprocess(inputs)
+    def preprocess(self, dict_inputs: dict, meta: dict) -> tuple[dict, dict]:
         input_image_size = meta["resized_shape"][:2]
         if self.is_segmentoly:
             assert len(self.image_info_blob_names) == 1
@@ -105,7 +104,7 @@ class MaskRCNNModel(ImageModel):
                 dtype=np.float32,
             )
             dict_inputs[self.image_info_blob_names[0]] = input_image_info
-        return [dict_inputs, meta]
+        return dict_inputs, meta
 
     def postprocess(self, outputs: dict, meta: dict) -> InstanceSegmentationResult:
         if (
@@ -141,20 +140,21 @@ class MaskRCNNModel(ImageModel):
             meta["original_shape"][1],
             meta["original_shape"][0],
         )
-        invertedScaleX, invertedScaleY = (
-            inputImgWidth / self.orig_width,
-            inputImgHeight / self.orig_height,
+        resize_meta = ResizeMetadata.compute(
+            original_width=inputImgWidth,
+            original_height=inputImgHeight,
+            model_width=self.orig_width,
+            model_height=self.orig_height,
+            resize_type=self.params.resize_type,
         )
-        padLeft, padTop = 0, 0
-        resize_type = self.params.resize_type
-        if resize_type == "fit_to_window" or resize_type == "fit_to_window_letterbox":
-            invertedScaleX = invertedScaleY = max(invertedScaleX, invertedScaleY)
-            if resize_type == "fit_to_window_letterbox":
-                padLeft = (self.orig_width - round(inputImgWidth / invertedScaleX)) // 2
-                padTop = (self.orig_height - round(inputImgHeight / invertedScaleY)) // 2
 
-        boxes -= (padLeft, padTop, padLeft, padTop)
-        boxes *= (invertedScaleX, invertedScaleY, invertedScaleX, invertedScaleY)
+        boxes -= (resize_meta.pad_left, resize_meta.pad_top, resize_meta.pad_left, resize_meta.pad_top)
+        boxes *= (
+            resize_meta.inverted_scale_x,
+            resize_meta.inverted_scale_y,
+            resize_meta.inverted_scale_x,
+            resize_meta.inverted_scale_y,
+        )
         np.around(boxes, out=boxes)
         np.clip(
             boxes,

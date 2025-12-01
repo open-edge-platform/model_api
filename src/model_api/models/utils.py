@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -15,6 +16,96 @@ from model_api.models.result import Contour, InstanceSegmentationResult, Rotated
 
 if TYPE_CHECKING:
     from model_api.models.result.detection import DetectionResult
+
+
+@dataclass
+class ResizeMetadata:
+    """Image resize transformation metadata.
+
+    Contains parameters needed to transform coordinates (e.g., bounding boxes,
+    keypoints) from model input space back to the original image space. It handles different
+    resize strategies including standard resize, fit-to-window, and letterbox modes.
+
+    Attributes:
+        inverted_scale_x: Scale factor to multiply x-coordinates to map from model to original space.
+        inverted_scale_y: Scale factor to multiply y-coordinates to map from model to original space.
+        pad_left: Left padding added during letterbox resize (0 for other resize types).
+        pad_top: Top padding added during letterbox resize (0 for other resize types).
+    """
+
+    inverted_scale_x: float
+    inverted_scale_y: float
+    pad_left: int = 0
+    pad_top: int = 0
+
+    @classmethod
+    def compute(
+        cls,
+        original_width: int,
+        original_height: int,
+        model_width: int,
+        model_height: int,
+        resize_type: str,
+    ) -> "ResizeMetadata":
+        """Compute resize metadata for coordinate transformation.
+
+        Args:
+            original_width: Width of the original input image.
+            original_height: Height of the original input image.
+            model_width: Width of the model input (after resize).
+            model_height: Height of the model input (after resize).
+            resize_type: Type of resize applied ("standard", "fit_to_window", "fit_to_window_letterbox").
+
+        Returns:
+            ResizeMetadata instance with computed scale factors and padding.
+        """
+        inverted_scale_x = original_width / model_width
+        inverted_scale_y = original_height / model_height
+        pad_left = 0
+        pad_top = 0
+
+        if resize_type in ("fit_to_window", "fit_to_window_letterbox"):
+            inverted_scale_x = inverted_scale_y = max(inverted_scale_x, inverted_scale_y)
+            if resize_type == "fit_to_window_letterbox":
+                pad_left = (model_width - round(original_width / inverted_scale_x)) // 2
+                pad_top = (model_height - round(original_height / inverted_scale_y)) // 2
+
+        return cls(
+            inverted_scale_x=inverted_scale_x,
+            inverted_scale_y=inverted_scale_y,
+            pad_left=pad_left,
+            pad_top=pad_top,
+        )
+
+    def to_dict(self) -> dict[str, float | int]:
+        """Convert to dictionary for storage in metadata.
+
+        Returns:
+            Dictionary with keys matching the legacy resize_info format.
+        """
+        return {
+            "inverted_scale_x": self.inverted_scale_x,
+            "inverted_scale_y": self.inverted_scale_y,
+            "pad_left": self.pad_left,
+            "pad_top": self.pad_top,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, float | int]) -> "ResizeMetadata":
+        """Create from dictionary (e.g., from metadata).
+
+        Args:
+            data: Dictionary with resize info keys.
+
+        Returns:
+            ResizeMetadata instance.
+        """
+        return cls(
+            inverted_scale_x=data["inverted_scale_x"],
+            inverted_scale_y=data["inverted_scale_y"],
+            pad_left=int(data.get("pad_left", 0)),
+            pad_top=int(data.get("pad_top", 0)),
+        )
 
 
 def add_rotated_rects(inst_seg_result: InstanceSegmentationResult) -> RotatedSegmentationResult:

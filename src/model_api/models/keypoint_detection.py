@@ -12,6 +12,7 @@ import numpy as np
 from .image_model import ImageModel
 from .parameters import ParameterRegistry
 from .result import DetectedKeypoints, DetectionResult
+from .utils import ResizeMetadata
 
 
 class KeypointDetectionModel(ImageModel):
@@ -30,6 +31,24 @@ class KeypointDetectionModel(ImageModel):
         """
         super().__init__(inference_adapter, configuration, preload)
         self._check_io_number(1, 2)
+
+    def preprocess(self, dict_inputs: dict, meta: dict) -> tuple[dict, dict]:
+        orig_h, orig_w = meta["original_shape"][:2]
+        resize_meta = ResizeMetadata.compute(
+            original_width=orig_w,
+            original_height=orig_h,
+            model_width=self.w,
+            model_height=self.h,
+            resize_type=self.params.resize_type,
+        )
+        # Store with keypoint-specific naming for backward compatibility
+        meta["resize_info"] = {
+            "kp_scale_h": resize_meta.inverted_scale_y,
+            "kp_scale_w": resize_meta.inverted_scale_x,
+            "pad_left": resize_meta.pad_left,
+            "pad_top": resize_meta.pad_top,
+        }
+        return dict_inputs, meta
 
     def postprocess(
         self,
@@ -51,20 +70,30 @@ class KeypointDetectionModel(ImageModel):
             encoded_kps[1],
             apply_softmax=self.params.apply_softmax,
         )
-        orig_h, orig_w = meta["original_shape"][:2]
-        kp_scale_h = orig_h / self.h
-        kp_scale_w = orig_w / self.w
+
+        if "resize_info" in meta:
+            info = meta["resize_info"]
+            kp_scale_h = info["kp_scale_h"]
+            kp_scale_w = info["kp_scale_w"]
+            pad_left = info["pad_left"]
+            pad_top = info["pad_top"]
+        else:
+            orig_h, orig_w = meta["original_shape"][:2]
+            resize_meta = ResizeMetadata.compute(
+                original_width=orig_w,
+                original_height=orig_h,
+                model_width=self.w,
+                model_height=self.h,
+                resize_type=self.params.resize_type,
+            )
+            kp_scale_h = resize_meta.inverted_scale_y
+            kp_scale_w = resize_meta.inverted_scale_x
+            pad_left = resize_meta.pad_left
+            pad_top = resize_meta.pad_top
 
         batch_keypoints = batch_keypoints.squeeze()
-
-        resize_type = self.params.resize_type
-        if resize_type in ["fit_to_window", "fit_to_window_letterbox"]:
-            inverted_scale = max(kp_scale_h, kp_scale_w)
-            kp_scale_h = kp_scale_w = inverted_scale
-            if resize_type == "fit_to_window_letterbox":
-                pad_left = (self.w - round(orig_w / inverted_scale)) // 2
-                pad_top = (self.h - round(orig_h / inverted_scale)) // 2
-                batch_keypoints -= np.array([pad_left, pad_top])
+        if pad_left != 0 or pad_top != 0:
+            batch_keypoints -= np.array([pad_left, pad_top])
 
         batch_keypoints *= np.array([kp_scale_w, kp_scale_h])
 
