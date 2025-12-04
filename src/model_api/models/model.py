@@ -350,7 +350,7 @@ class Model:
         """
         raise WrapperError(cls.__model__, message)
 
-    def preprocess(self, inputs):
+    def base_preprocess(self, inputs):
         """Interface for preprocess method.
 
         Args:
@@ -367,6 +367,19 @@ class Model:
             - the input metadata, which might be used in `postprocess` method
         """
         raise NotImplementedError
+
+    def preprocess(self, dict_inputs, meta):
+        """Interface for preprocess hook.
+
+        Args:
+            dict_inputs: preprocessed data
+            meta: input metadata
+
+        Returns:
+            - the preprocessed data
+            - the input metadata
+        """
+        return dict_inputs, meta
 
     def postprocess(self, outputs: dict[str, Any], meta: dict[str, Any]):
         """Interface for postprocess method.
@@ -437,7 +450,7 @@ class Model:
         """
         self.perf.total_time.update()
         self.perf.preprocess_time.update()
-        dict_data, input_meta = self.preprocess(inputs)
+        dict_data, input_meta = self.base_preprocess(inputs)
         self.perf.preprocess_time.update()
         self.perf.inference_time.update()
         raw_result = self.infer_sync(dict_data)
@@ -555,7 +568,7 @@ class Model:
             )
         self.perf.total_time.update()
         self.perf.preprocess_time.update()
-        dict_data, meta = self.preprocess(input_data)
+        dict_data, meta = self.base_preprocess(input_data)
         self.perf.preprocess_time.update()
         self.perf.inference_time.update()
         self.inference_adapter.infer_async(

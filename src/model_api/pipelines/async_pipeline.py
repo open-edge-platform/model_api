@@ -26,7 +26,7 @@ class AsyncPipeline:
 
     def submit_data(self, inputs, id, meta={}):
         self.model.perf.preprocess_time.update()
-        inputs, preprocessing_meta = self.model.preprocess(inputs)
+        inputs, preprocessing_meta = self.model.base_preprocess(inputs)
         self.model.perf.preprocess_time.update()
 
         self.model.perf.inference_time.update()

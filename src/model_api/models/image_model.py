@@ -148,7 +148,7 @@ class ImageModel(Model):
             )
         return image_blob_names, image_info_blob_names
 
-    def preprocess(self, inputs: np.ndarray) -> list[dict]:
+    def base_preprocess(self, inputs: np.ndarray) -> list[dict]:
         """Data preprocess method
 
         It performs basic preprocessing of a single image:
@@ -173,35 +173,61 @@ class ImageModel(Model):
                 }
             - the input metadata, which might be used in `postprocess` method
         """
-        original_shape = inputs.shape
-
         if self.params.embedded_processing:
-            processed_image = inputs[None]
-            if self._is_dynamic:
-                h, w, c = inputs.shape
-                resized_shape = (w, h, c)
-            else:
-                resized_shape = (self.w, self.h, self.c)
-        elif self._is_dynamic:
+            dict_inputs, meta = self._preprocess_embedded(inputs)
+            dict_inputs, meta = self.preprocess(dict_inputs, meta)
+            return [dict_inputs, meta]
+
+        # 1. Resize
+        resized_image, meta = self._resize_image(inputs)
+
+        # 2. Transform
+        processed_image = self._input_transform(resized_image)
+
+        # 3. Layout
+        processed_image = self._change_layout(processed_image)
+
+        # 4. Pack
+        dict_inputs = {self.image_blob_name: processed_image}
+
+        # 5. Model-specific preprocess
+        dict_inputs, meta = self.preprocess(dict_inputs, meta)
+
+        return [dict_inputs, meta]
+
+    def _preprocess_embedded(self, inputs: np.ndarray) -> tuple[dict, dict]:
+        original_shape = inputs.shape
+        processed_image = inputs[None]
+        if self._is_dynamic:
             h, w, c = inputs.shape
             resized_shape = (w, h, c)
-            processed_image = self.input_transform(inputs)
-            processed_image = self._change_layout(processed_image)
         else:
-            # Fixed model without embedded preprocessing
             resized_shape = (self.w, self.h, self.c)
 
-            resized_image = self.resize(inputs, (self.w, self.h), pad_value=self.params.pad_value)
-            processed_image = self.input_transform(resized_image)
-            processed_image = self._change_layout(processed_image)
-
-        return [
+        return (
             {self.image_blob_name: processed_image},
             {
                 "original_shape": original_shape,
                 "resized_shape": resized_shape,
             },
-        ]
+        )
+
+    def _resize_image(self, image: np.ndarray) -> tuple[np.ndarray, dict]:
+        original_shape = image.shape
+        if self._is_dynamic:
+            h, w, c = image.shape
+            resized_shape = (w, h, c)
+            return image, {"original_shape": original_shape, "resized_shape": resized_shape}
+
+        resized_shape = (self.w, self.h, self.c)
+        resized_image = self.resize(image, (self.w, self.h), pad_value=self.params.pad_value)
+        return resized_image, {"original_shape": original_shape, "resized_shape": resized_shape}
+
+    def _input_transform(self, image: np.ndarray) -> np.ndarray:
+        return self.input_transform(image)
+
+    def preprocess(self, dict_inputs: dict, meta: dict) -> tuple[dict, dict]:
+        return dict_inputs, meta
 
     def _change_layout(self, image: np.ndarray) -> np.ndarray:
         """Changes the input image layout to fit the layout of the model input layer.

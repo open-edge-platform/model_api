@@ -159,8 +159,7 @@ class SSD(DetectionModel):
         self.image_info_blob_name = self.image_info_blob_names[0] if len(self.image_info_blob_names) == 1 else None
         self.output_parser = self._get_output_parser(self.image_blob_name)
 
-    def preprocess(self, inputs):
-        dict_inputs, meta = super().preprocess(inputs)
+    def preprocess(self, dict_inputs: dict, meta: dict) -> tuple[dict, dict]:
         if self.image_info_blob_name:
             dict_inputs[self.image_info_blob_name] = np.array([[self.h, self.w, 1]])
         return dict_inputs, meta

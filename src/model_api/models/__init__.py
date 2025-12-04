@@ -29,6 +29,7 @@ from .segmentation import SegmentationModel
 from .ssd import SSD
 from .utils import (
     OutputTransform,
+    ResizeMetadata,
     add_rotated_rects,
     get_contours,
 )
@@ -78,6 +79,7 @@ __all__ = [
     "OutputTransform",
     "PredictedMask",
     "Prompt",
+    "ResizeMetadata",
     "RotatedSegmentationResult",
     "SAMDecoder",
     "SAMImageEncoder",
