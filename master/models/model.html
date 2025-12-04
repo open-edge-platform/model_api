@@ -449,6 +449,35 @@ initialization. If <cite>preload=False</cite>, the model must be loaded via <cit
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="model_api.models.model.Model.base_preprocess">
+<span class="sig-name descname"><span class="pre">base_preprocess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.model.Model.base_preprocess" title="Link to this definition">#</a></dt>
+<dd><p>Interface for preprocess method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>inputs</strong> – raw input data, the data type is defined by wrapper</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul>
+<li><dl>
+<dt>the preprocessed data which is submitted to the model for inference</dt><dd><p>and has the following format:
+{</p>
+<blockquote>
+<div><p>’input_layer_name_1’: data_1,
+‘input_layer_name_2’: data_2,
+…</p>
+</div></blockquote>
+<p>}</p>
+</dd>
+</dl>
+</li>
+<li><p>the input metadata, which might be used in <cite>postprocess</cite> method</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="model_api.models.model.Model.create_model">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configuration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preload</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">core</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adaptor_parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'AUTO'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nstreams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'1'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nthreads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_num_requests</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'FP16'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">download_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.model.Model.create_model" title="Link to this definition">#</a></dt>
 <dd><p>Create an instance of the Model API model</p>
@@ -722,27 +751,19 @@ the type, default value and description must be provided.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="model_api.models.model.Model.preprocess">
-<span class="sig-name descname"><span class="pre">preprocess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.model.Model.preprocess" title="Link to this definition">#</a></dt>
-<dd><p>Interface for preprocess method.</p>
+<span class="sig-name descname"><span class="pre">preprocess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dict_inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.model.Model.preprocess" title="Link to this definition">#</a></dt>
+<dd><p>Interface for preprocess hook.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>inputs</strong> – raw input data, the data type is defined by wrapper</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dict_inputs</strong> – preprocessed data</p></li>
+<li><p><strong>meta</strong> – input metadata</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><ul>
-<li><dl>
-<dt>the preprocessed data which is submitted to the model for inference</dt><dd><p>and has the following format:
-{</p>
-<blockquote>
-<div><p>’input_layer_name_1’: data_1,
-‘input_layer_name_2’: data_2,
-…</p>
-</div></blockquote>
-<p>}</p>
-</dd>
-</dl>
-</li>
-<li><p>the input metadata, which might be used in <cite>postprocess</cite> method</p></li>
+<dd class="field-even"><p><ul class="simple">
+<li><p>the preprocessed data</p></li>
+<li><p>the input metadata</p></li>
 </ul>
 </p>
 </dd>
@@ -855,6 +876,7 @@ the type, default value and description must be provided.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.available_wrappers"><code class="docutils literal notranslate"><span class="pre">Model.available_wrappers()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.await_all"><code class="docutils literal notranslate"><span class="pre">Model.await_all()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.await_any"><code class="docutils literal notranslate"><span class="pre">Model.await_any()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.base_preprocess"><code class="docutils literal notranslate"><span class="pre">Model.base_preprocess()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.create_model"><code class="docutils literal notranslate"><span class="pre">Model.create_model()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.detect_model_type"><code class="docutils literal notranslate"><span class="pre">Model.detect_model_type()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.get_cached_parameters"><code class="docutils literal notranslate"><span class="pre">Model.get_cached_parameters()</span></code></a></li>

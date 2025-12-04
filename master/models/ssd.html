@@ -404,43 +404,22 @@ initialization. If <cite>preload=False</cite>, the model must be loaded via <cit
 
 <dl class="py method">
 <dt class="sig sig-object py" id="model_api.models.ssd.SSD.preprocess">
-<span class="sig-name descname"><span class="pre">preprocess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.ssd.SSD.preprocess" title="Link to this definition">#</a></dt>
-<dd><p>Data preprocess method</p>
-<dl class="simple">
-<dt>It performs basic preprocessing of a single image:</dt><dd><ul class="simple">
-<li><p>Resizes the image to fit the model input size via the defined resize type</p></li>
-<li><p>Normalizes the image: subtracts means, divides by scales, switch channels BGR-RGB</p></li>
-<li><p>Changes the image layout according to the model input layout</p></li>
-</ul>
-</dd>
-</dl>
-<p>Also, it keeps the size of original image and resized one as <cite>original_shape</cite> and <cite>resized_shape</cite>
-in the metadata dictionary.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>It supports only models with single image input. If the model has more image inputs or has
-additional supported inputs, the <cite>preprocess</cite> should be overloaded in a specific wrapper.</p>
-</div>
+<span class="sig-name descname"><span class="pre">preprocess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dict_inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.ssd.SSD.preprocess" title="Link to this definition">#</a></dt>
+<dd><p>Interface for preprocess hook.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>inputs</strong> (<em>ndarray</em>) – a single image as 3D array in HWC layout</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><blockquote>
-<div><dl class="simple">
-<dt>{</dt><dd><p>‘input_layer_name’: preprocessed_image</p>
-</dd>
-</dl>
-<p>}</p>
-</div></blockquote>
-<ul class="simple">
-<li><p>the input metadata, which might be used in <cite>postprocess</cite> method</p></li>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dict_inputs</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span>) – preprocessed data</p></li>
+<li><p><strong>meta</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span>) – input metadata</p></li>
 </ul>
-</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p><ul class="simple">
-<li><p>the preprocessed image in the following format</p></li>
+<li><p>the preprocessed data</p></li>
+<li><p>the input metadata</p></li>
 </ul>
 </p>
 </dd>

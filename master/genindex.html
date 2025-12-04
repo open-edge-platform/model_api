@@ -372,12 +372,22 @@
 <h2 id="B">B</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="models/action_classification.html#model_api.models.action_classification.ActionClassificationModel.base_preprocess">base_preprocess() (model_api.models.action_classification.ActionClassificationModel method)</a>
+
+      <ul>
+        <li><a href="models/image_model.html#model_api.models.image_model.ImageModel.base_preprocess">(model_api.models.image_model.ImageModel method)</a>
+</li>
+        <li><a href="models/model.html#model_api.models.model.Model.base_preprocess">(model_api.models.model.Model method)</a>
+</li>
+        <li><a href="models/sam_models.html#model_api.models.sam_models.SAMDecoder.base_preprocess">(model_api.models.sam_models.SAMDecoder method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="models/types.html#model_api.models.types.BaseValue">BaseValue (class in model_api.models.types)</a>
 </li>
       <li><a href="models/types.html#model_api.models.types.BooleanValue">BooleanValue (class in model_api.models.types)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="models/ssd.html#model_api.models.ssd.BoxesLabelsParser">BoxesLabelsParser (class in model_api.models.ssd)</a>
 </li>
       <li><a href="models/types.html#model_api.models.types.BaseValue.build_error">build_error() (model_api.models.types.BaseValue method)</a>
@@ -399,6 +409,8 @@
       <li><a href="models/utils.html#model_api.models.utils.clip_detections">clip_detections() (in module model_api.models.utils)</a>
 </li>
       <li><a href="models/action_classification.html#model_api.models.action_classification.ActionClassificationModel.clip_size">clip_size (model_api.models.action_classification.ActionClassificationModel property)</a>
+</li>
+      <li><a href="models/utils.html#model_api.models.utils.ResizeMetadata.compute">compute() (model_api.models.utils.ResizeMetadata class method)</a>
 </li>
       <li><a href="models/utils.html#model_api.models.utils.OutputTransform.compute_resolution">compute_resolution() (model_api.models.utils.OutputTransform method)</a>
 </li>
@@ -471,6 +483,8 @@
       <li><a href="models/ssd.html#model_api.models.ssd.BoxesLabelsParser.find_layer_bboxes_output">find_layer_bboxes_output() (model_api.models.ssd.BoxesLabelsParser static method)</a>
 </li>
       <li><a href="models/ssd.html#model_api.models.ssd.find_layer_by_name">find_layer_by_name() (in module model_api.models.ssd)</a>
+</li>
+      <li><a href="models/utils.html#model_api.models.utils.ResizeMetadata.from_dict">from_dict() (model_api.models.utils.ResizeMetadata class method)</a>
 </li>
       <li><a href="adapters/utils.html#model_api.adapters.utils.Layout.from_openvino">from_openvino() (model_api.adapters.utils.Layout static method)</a>
 </li>
@@ -681,6 +695,10 @@
       <li><a href="adapters/utils.html#model_api.adapters.utils.InputTransform">InputTransform (class in model_api.adapters.utils)</a>
 </li>
       <li><a href="tilers/instance_segmentation.html#model_api.tilers.instance_segmentation.InstanceSegmentationTiler">InstanceSegmentationTiler (class in model_api.tilers.instance_segmentation)</a>
+</li>
+      <li><a href="models/utils.html#id0">inverted_scale_x (model_api.models.utils.ResizeMetadata attribute)</a>, <a href="models/utils.html#model_api.models.utils.ResizeMetadata.inverted_scale_x">[1]</a>
+</li>
+      <li><a href="models/utils.html#id1">inverted_scale_y (model_api.models.utils.ResizeMetadata attribute)</a>, <a href="models/utils.html#model_api.models.utils.ResizeMetadata.inverted_scale_y">[1]</a>
 </li>
       <li><a href="adapters/inference_adapter.html#model_api.adapters.inference_adapter.InferenceAdapter.is_ready">is_ready() (model_api.adapters.inference_adapter.InferenceAdapter method)</a>
 
@@ -1029,6 +1047,10 @@
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="models/utils.html#id2">pad_left (model_api.models.utils.ResizeMetadata attribute)</a>, <a href="models/utils.html#model_api.models.utils.ResizeMetadata.pad_left">[1]</a>
+</li>
+      <li><a href="models/utils.html#id3">pad_top (model_api.models.utils.ResizeMetadata attribute)</a>, <a href="models/utils.html#model_api.models.utils.ResizeMetadata.pad_top">[1]</a>
+</li>
       <li><a href="models/action_classification.html#model_api.models.action_classification.ActionClassificationModel.parameters">parameters() (model_api.models.action_classification.ActionClassificationModel class method)</a>
 
       <ul>
@@ -1119,26 +1141,22 @@
 </li>
       <li><a href="models/keypoint_detection.html#model_api.models.keypoint_detection.TopDownKeypointDetectionPipeline.predict_crops">predict_crops() (model_api.models.keypoint_detection.TopDownKeypointDetectionPipeline method)</a>
 </li>
-      <li><a href="models/action_classification.html#model_api.models.action_classification.ActionClassificationModel.preprocess">preprocess() (model_api.models.action_classification.ActionClassificationModel method)</a>
+      <li><a href="models/detection_model.html#model_api.models.detection_model.DetectionModel.preprocess">preprocess() (model_api.models.detection_model.DetectionModel method)</a>
 
       <ul>
-        <li><a href="models/anomaly.html#model_api.models.anomaly.AnomalyDetection.preprocess">(model_api.models.anomaly.AnomalyDetection method)</a>
-</li>
         <li><a href="models/image_model.html#model_api.models.image_model.ImageModel.preprocess">(model_api.models.image_model.ImageModel method)</a>
 </li>
         <li><a href="models/instance_segmentation.html#model_api.models.instance_segmentation.MaskRCNNModel.preprocess">(model_api.models.instance_segmentation.MaskRCNNModel method)</a>
 </li>
-        <li><a href="models/model.html#model_api.models.model.Model.preprocess">(model_api.models.model.Model method)</a>
+        <li><a href="models/keypoint_detection.html#model_api.models.keypoint_detection.KeypointDetectionModel.preprocess">(model_api.models.keypoint_detection.KeypointDetectionModel method)</a>
 </li>
-        <li><a href="models/sam_models.html#model_api.models.sam_models.SAMDecoder.preprocess">(model_api.models.sam_models.SAMDecoder method)</a>
+        <li><a href="models/model.html#model_api.models.model.Model.preprocess">(model_api.models.model.Model method)</a>
 </li>
         <li><a href="models/sam_models.html#model_api.models.sam_models.SAMImageEncoder.preprocess">(model_api.models.sam_models.SAMImageEncoder method)</a>
 </li>
         <li><a href="models/ssd.html#model_api.models.ssd.SSD.preprocess">(model_api.models.ssd.SSD method)</a>
 </li>
         <li><a href="models/yolo.html#model_api.models.yolo.YoloV3ONNX.preprocess">(model_api.models.yolo.YoloV3ONNX method)</a>
-</li>
-        <li><a href="models/yolo.html#model_api.models.yolo.YOLOX.preprocess">(model_api.models.yolo.YOLOX method)</a>
 </li>
       </ul></li>
       <li><a href="models/classification.html#model_api.models.classification.ProbabilisticLabelsResolver">ProbabilisticLabelsResolver (class in model_api.models.classification)</a>
@@ -1177,10 +1195,10 @@
       </ul></li>
       <li><a href="models/utils.html#model_api.models.utils.OutputTransform.resize">resize() (model_api.models.utils.OutputTransform method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="adapters/utils.html#model_api.adapters.utils.resize_image">resize_image() (in module model_api.adapters.utils)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="adapters/utils.html#model_api.adapters.utils.resize_image_graph">resize_image_graph() (in module model_api.adapters.utils)</a>
 </li>
       <li><a href="adapters/utils.html#model_api.adapters.utils.resize_image_letterbox">resize_image_letterbox() (in module model_api.adapters.utils)</a>
@@ -1201,6 +1219,8 @@
         <li><a href="models/image_model.html#model_api.models.image_model.ImageModel.resize_type">(model_api.models.image_model.ImageModel attribute)</a>
 </li>
       </ul></li>
+      <li><a href="models/utils.html#model_api.models.utils.ResizeMetadata">ResizeMetadata (class in model_api.models.utils)</a>
+</li>
       <li><a href="models/classification.html#model_api.models.classification.GreedyLabelsResolver.resolve_labels">resolve_labels() (model_api.models.classification.GreedyLabelsResolver method)</a>
 
       <ul>
@@ -1279,10 +1299,12 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="tilers/tiler.html#model_api.tilers.tiler.Tiler">Tiler (class in model_api.tilers.tiler)</a>
 </li>
-      <li><a href="models/keypoint_detection.html#model_api.models.keypoint_detection.TopDownKeypointDetectionPipeline">TopDownKeypointDetectionPipeline (class in model_api.models.keypoint_detection)</a>
+      <li><a href="models/utils.html#model_api.models.utils.ResizeMetadata.to_dict">to_dict() (model_api.models.utils.ResizeMetadata method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="models/keypoint_detection.html#model_api.models.keypoint_detection.TopDownKeypointDetectionPipeline">TopDownKeypointDetectionPipeline (class in model_api.models.keypoint_detection)</a>
+</li>
       <li><a href="models/classification.html#model_api.models.classification.SimpleLabelsGraph.topological_sort">topological_sort() (model_api.models.classification.SimpleLabelsGraph method)</a>
 </li>
       <li><a href="adapters/inference_adapter.html#model_api.adapters.inference_adapter.Metadata.type">type (model_api.adapters.inference_adapter.Metadata attribute)</a>

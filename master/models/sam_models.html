@@ -332,6 +332,17 @@ initialization. If <cite>preload=False</cite>, the model must be loaded via <cit
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="model_api.models.sam_models.SAMDecoder.base_preprocess">
+<span class="sig-name descname"><span class="pre">base_preprocess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.sam_models.SAMDecoder.base_preprocess" title="Link to this definition">#</a></dt>
+<dd><p>Preprocess prompts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="model_api.models.sam_models.SAMDecoder.parameters">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.sam_models.SAMDecoder.parameters" title="Link to this definition">#</a></dt>
 <dd><p>Defines the description and type of configurable data parameters for the wrapper.</p>
@@ -375,17 +386,6 @@ the type, default value and description must be provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>(dict[str, np.ndarray])</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="model_api.models.sam_models.SAMDecoder.preprocess">
-<span class="sig-name descname"><span class="pre">preprocess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.sam_models.SAMDecoder.preprocess" title="Link to this definition">#</a></dt>
-<dd><p>Preprocess prompts.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -474,11 +474,11 @@ the type, default value and description must be provided.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="model_api.models.sam_models.SAMImageEncoder.preprocess">
-<span class="sig-name descname"><span class="pre">preprocess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.sam_models.SAMImageEncoder.preprocess" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">preprocess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dict_inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.sam_models.SAMImageEncoder.preprocess" title="Link to this definition">#</a></dt>
 <dd><p>Update meta for image encoder.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -518,9 +518,9 @@ the type, default value and description must be provided.</p>
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.sam_models.SAMDecoder"><code class="docutils literal notranslate"><span class="pre">SAMDecoder</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.sam_models.SAMDecoder.apply_coords"><code class="docutils literal notranslate"><span class="pre">SAMDecoder.apply_coords()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.sam_models.SAMDecoder.base_preprocess"><code class="docutils literal notranslate"><span class="pre">SAMDecoder.base_preprocess()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.sam_models.SAMDecoder.parameters"><code class="docutils literal notranslate"><span class="pre">SAMDecoder.parameters()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.sam_models.SAMDecoder.postprocess"><code class="docutils literal notranslate"><span class="pre">SAMDecoder.postprocess()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.sam_models.SAMDecoder.preprocess"><code class="docutils literal notranslate"><span class="pre">SAMDecoder.preprocess()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.sam_models.SAMImageEncoder"><code class="docutils literal notranslate"><span class="pre">SAMImageEncoder</span></code></a><ul class="nav section-nav flex-column">

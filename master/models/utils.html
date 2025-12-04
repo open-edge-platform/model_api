@@ -320,6 +320,114 @@
 
 </dd></dl>
 
+<dl class="py class">
+<dt class="sig sig-object py" id="model_api.models.utils.ResizeMetadata">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_api.models.utils.</span></span><span class="sig-name descname"><span class="pre">ResizeMetadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inverted_scale_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inverted_scale_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad_left</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad_top</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.utils.ResizeMetadata" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Image resize transformation metadata.</p>
+<p>Contains parameters needed to transform coordinates (e.g., bounding boxes,
+keypoints) from model input space back to the original image space. It handles different
+resize strategies including standard resize, fit-to-window, and letterbox modes.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_api.models.utils.ResizeMetadata.inverted_scale_x">
+<span class="sig-name descname"><span class="pre">inverted_scale_x</span></span><a class="headerlink" href="#model_api.models.utils.ResizeMetadata.inverted_scale_x" title="Link to this definition">#</a></dt>
+<dd><p>Scale factor to multiply x-coordinates to map from model to original space.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_api.models.utils.ResizeMetadata.inverted_scale_y">
+<span class="sig-name descname"><span class="pre">inverted_scale_y</span></span><a class="headerlink" href="#model_api.models.utils.ResizeMetadata.inverted_scale_y" title="Link to this definition">#</a></dt>
+<dd><p>Scale factor to multiply y-coordinates to map from model to original space.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_api.models.utils.ResizeMetadata.pad_left">
+<span class="sig-name descname"><span class="pre">pad_left</span></span><a class="headerlink" href="#model_api.models.utils.ResizeMetadata.pad_left" title="Link to this definition">#</a></dt>
+<dd><p>Left padding added during letterbox resize (0 for other resize types).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_api.models.utils.ResizeMetadata.pad_top">
+<span class="sig-name descname"><span class="pre">pad_top</span></span><a class="headerlink" href="#model_api.models.utils.ResizeMetadata.pad_top" title="Link to this definition">#</a></dt>
+<dd><p>Top padding added during letterbox resize (0 for other resize types).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_api.models.utils.ResizeMetadata.compute">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">original_width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">original_height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resize_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.utils.ResizeMetadata.compute" title="Link to this definition">#</a></dt>
+<dd><p>Compute resize metadata for coordinate transformation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>original_width</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Width of the original input image.</p></li>
+<li><p><strong>original_height</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Height of the original input image.</p></li>
+<li><p><strong>model_width</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Width of the model input (after resize).</p></li>
+<li><p><strong>model_height</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Height of the model input (after resize).</p></li>
+<li><p><strong>resize_type</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Type of resize applied (“standard”, “fit_to_window”, “fit_to_window_letterbox”).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#model_api.models.utils.ResizeMetadata" title="model_api.models.utils.ResizeMetadata"><code class="xref py py-class docutils literal notranslate"><span class="pre">ResizeMetadata</span></code></a></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ResizeMetadata instance with computed scale factors and padding.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_api.models.utils.ResizeMetadata.from_dict">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.utils.ResizeMetadata.from_dict" title="Link to this definition">#</a></dt>
+<dd><p>Create from dictionary (e.g., from metadata).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code> | <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</span>) – Dictionary with resize info keys.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#model_api.models.utils.ResizeMetadata" title="model_api.models.utils.ResizeMetadata"><code class="xref py py-class docutils literal notranslate"><span class="pre">ResizeMetadata</span></code></a></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ResizeMetadata instance.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_api.models.utils.ResizeMetadata.to_dict">
+<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.utils.ResizeMetadata.to_dict" title="Link to this definition">#</a></dt>
+<dd><p>Convert to dictionary for storage in metadata.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code> | <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary with keys matching the legacy resize_info format.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">inverted_scale_x</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></em><a class="headerlink" href="#id0" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">inverted_scale_y</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></em><a class="headerlink" href="#id1" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id2">
+<span class="sig-name descname"><span class="pre">pad_left</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#id2" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id3">
+<span class="sig-name descname"><span class="pre">pad_top</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#id3" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="model_api.models.utils.add_rotated_rects">
 <span class="sig-prename descclassname"><span class="pre">model_api.models.utils.</span></span><span class="sig-name descname"><span class="pre">add_rotated_rects</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inst_seg_result</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.utils.add_rotated_rects" title="Link to this definition">#</a></dt>
@@ -439,6 +547,20 @@ from different classes do not overlap</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.utils.OutputTransform.compute_resolution"><code class="docutils literal notranslate"><span class="pre">OutputTransform.compute_resolution()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.utils.OutputTransform.resize"><code class="docutils literal notranslate"><span class="pre">OutputTransform.resize()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.utils.OutputTransform.scale"><code class="docutils literal notranslate"><span class="pre">OutputTransform.scale()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.utils.ResizeMetadata"><code class="docutils literal notranslate"><span class="pre">ResizeMetadata</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.utils.ResizeMetadata.inverted_scale_x"><code class="docutils literal notranslate"><span class="pre">ResizeMetadata.inverted_scale_x</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.utils.ResizeMetadata.inverted_scale_y"><code class="docutils literal notranslate"><span class="pre">ResizeMetadata.inverted_scale_y</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.utils.ResizeMetadata.pad_left"><code class="docutils literal notranslate"><span class="pre">ResizeMetadata.pad_left</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.utils.ResizeMetadata.pad_top"><code class="docutils literal notranslate"><span class="pre">ResizeMetadata.pad_top</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.utils.ResizeMetadata.compute"><code class="docutils literal notranslate"><span class="pre">ResizeMetadata.compute()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.utils.ResizeMetadata.from_dict"><code class="docutils literal notranslate"><span class="pre">ResizeMetadata.from_dict()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.utils.ResizeMetadata.to_dict"><code class="docutils literal notranslate"><span class="pre">ResizeMetadata.to_dict()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id0"><code class="docutils literal notranslate"><span class="pre">ResizeMetadata.inverted_scale_x</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1"><code class="docutils literal notranslate"><span class="pre">ResizeMetadata.inverted_scale_y</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id2"><code class="docutils literal notranslate"><span class="pre">ResizeMetadata.pad_left</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3"><code class="docutils literal notranslate"><span class="pre">ResizeMetadata.pad_top</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.utils.add_rotated_rects"><code class="docutils literal notranslate"><span class="pre">add_rotated_rects()</span></code></a></li>

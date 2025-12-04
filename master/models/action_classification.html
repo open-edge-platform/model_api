@@ -383,47 +383,8 @@ initialization. If <cite>preload=False</cite>, the model must be loaded via <cit
 </dd>
 </dl>
 <dl class="py method">
-<dt class="sig sig-object py" id="model_api.models.action_classification.ActionClassificationModel.parameters">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.action_classification.ActionClassificationModel.parameters" title="Link to this definition">#</a></dt>
-<dd><p>Defines the description and type of configurable data parameters for the wrapper.</p>
-<p>See <cite>types.py</cite> to find available types of the data parameter. For each parameter
-the type, default value and description must be provided.</p>
-<dl>
-<dt>The example of possible data parameter:</dt><dd><dl class="simple">
-<dt>‘confidence_threshold’: NumericalValue(</dt><dd><p>default_value=0.5, description=”Threshold value for detection box confidence”</p>
-</dd>
-</dl>
-<p>)</p>
-</dd>
-</dl>
-<p>The method must be implemented in each specific inherited wrapper.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</span></p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><ul class="simple">
-<li><p>the dictionary with defined wrapper data parameters</p></li>
-</ul>
-</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="model_api.models.action_classification.ActionClassificationModel.postprocess">
-<span class="sig-name descname"><span class="pre">postprocess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">outputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.action_classification.ActionClassificationModel.postprocess" title="Link to this definition">#</a></dt>
-<dd><p>Post-process.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClassificationResult</span></code></span></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="model_api.models.action_classification.ActionClassificationModel.preprocess">
-<span class="sig-name descname"><span class="pre">preprocess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.action_classification.ActionClassificationModel.preprocess" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="model_api.models.action_classification.ActionClassificationModel.base_preprocess">
+<span class="sig-name descname"><span class="pre">base_preprocess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.action_classification.ActionClassificationModel.base_preprocess" title="Link to this definition">#</a></dt>
 <dd><p>Data preprocess method</p>
 <dl class="simple">
 <dt>It performs basic preprocessing of a single video:</dt><dd><ul class="simple">
@@ -462,6 +423,45 @@ additional supported inputs, the <cite>preprocess</cite> should be overloaded in
 <li><p>the preprocessed image in the following format</p></li>
 </ul>
 </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_api.models.action_classification.ActionClassificationModel.parameters">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.action_classification.ActionClassificationModel.parameters" title="Link to this definition">#</a></dt>
+<dd><p>Defines the description and type of configurable data parameters for the wrapper.</p>
+<p>See <cite>types.py</cite> to find available types of the data parameter. For each parameter
+the type, default value and description must be provided.</p>
+<dl>
+<dt>The example of possible data parameter:</dt><dd><dl class="simple">
+<dt>‘confidence_threshold’: NumericalValue(</dt><dd><p>default_value=0.5, description=”Threshold value for detection box confidence”</p>
+</dd>
+</dl>
+<p>)</p>
+</dd>
+</dl>
+<p>The method must be implemented in each specific inherited wrapper.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>the dictionary with defined wrapper data parameters</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_api.models.action_classification.ActionClassificationModel.postprocess">
+<span class="sig-name descname"><span class="pre">postprocess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">outputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.action_classification.ActionClassificationModel.postprocess" title="Link to this definition">#</a></dt>
+<dd><p>Post-process.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClassificationResult</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -510,9 +510,9 @@ additional supported inputs, the <cite>preprocess</cite> should be overloaded in
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.action_classification.ActionClassificationModel.resize_type"><code class="docutils literal notranslate"><span class="pre">ActionClassificationModel.resize_type</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.action_classification.ActionClassificationModel.resize"><code class="docutils literal notranslate"><span class="pre">ActionClassificationModel.resize</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.action_classification.ActionClassificationModel.input_transform"><code class="docutils literal notranslate"><span class="pre">ActionClassificationModel.input_transform</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.action_classification.ActionClassificationModel.base_preprocess"><code class="docutils literal notranslate"><span class="pre">ActionClassificationModel.base_preprocess()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.action_classification.ActionClassificationModel.parameters"><code class="docutils literal notranslate"><span class="pre">ActionClassificationModel.parameters()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.action_classification.ActionClassificationModel.postprocess"><code class="docutils literal notranslate"><span class="pre">ActionClassificationModel.postprocess()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.action_classification.ActionClassificationModel.preprocess"><code class="docutils literal notranslate"><span class="pre">ActionClassificationModel.preprocess()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.action_classification.ActionClassificationModel.clip_size"><code class="docutils literal notranslate"><span class="pre">ActionClassificationModel.clip_size</span></code></a></li>
 </ul>
 </li>

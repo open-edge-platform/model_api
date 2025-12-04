@@ -415,6 +415,30 @@ the type, default value and description must be provided.</p>
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="model_api.models.keypoint_detection.KeypointDetectionModel.preprocess">
+<span class="sig-name descname"><span class="pre">preprocess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dict_inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.keypoint_detection.KeypointDetectionModel.preprocess" title="Link to this definition">#</a></dt>
+<dd><p>Interface for preprocess hook.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dict_inputs</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span>) – preprocessed data</p></li>
+<li><p><strong>meta</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span>) – input metadata</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><ul class="simple">
+<li><p>the preprocessed data</p></li>
+<li><p>the input metadata</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
@@ -507,6 +531,7 @@ the type, default value and description must be provided.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.keypoint_detection.KeypointDetectionModel"><code class="docutils literal notranslate"><span class="pre">KeypointDetectionModel</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.keypoint_detection.KeypointDetectionModel.parameters"><code class="docutils literal notranslate"><span class="pre">KeypointDetectionModel.parameters()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.keypoint_detection.KeypointDetectionModel.postprocess"><code class="docutils literal notranslate"><span class="pre">KeypointDetectionModel.postprocess()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.keypoint_detection.KeypointDetectionModel.preprocess"><code class="docutils literal notranslate"><span class="pre">KeypointDetectionModel.preprocess()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.keypoint_detection.TopDownKeypointDetectionPipeline"><code class="docutils literal notranslate"><span class="pre">TopDownKeypointDetectionPipeline</span></code></a><ul class="nav section-nav flex-column">
