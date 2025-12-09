@@ -102,7 +102,7 @@ class ModelConverter:
         self.logger.info(f"Saving to: {cached_file}")
 
         try:
-            urllib.request.urlretrieve(  # noqa: S310  # nosem: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
+            urllib.request.urlretrieve(  # noqa: S310  # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
                 url,
                 cached_file,
             )
@@ -128,7 +128,7 @@ class ModelConverter:
         try:
             module_path, class_name = class_path.rsplit(".", 1)
             self.logger.debug(f"Importing module: {module_path}")
-            module = importlib.import_module(  # nosem: python.lang.security.audit.non-literal-import.non-literal-import
+            module = importlib.import_module(  # nosemgrep: python.lang.security.audit.non-literal-import.non-literal-import
                 module_path,
             )
             model_class = getattr(module, class_name)
@@ -152,7 +152,7 @@ class ModelConverter:
             Checkpoint dictionary
         """
         try:
-            checkpoint = torch.load(  # nosem: trailofbits.python.pickles-in-pytorch.pickles-in-pytorch
+            checkpoint = torch.load(  # nosemgrep: trailofbits.python.pickles-in-pytorch.pickles-in-pytorch
                 checkpoint_path,
                 map_location="cpu",
                 weights_only=True,
