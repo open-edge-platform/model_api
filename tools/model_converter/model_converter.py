@@ -102,7 +102,7 @@ class ModelConverter:
         self.logger.info(f"Saving to: {cached_file}")
 
         try:
-            urllib.request.urlretrieve(  # noqa: S310 # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
+            urllib.request.urlretrieve(  # noqa: S310  # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
                 url,
                 cached_file,
             )
