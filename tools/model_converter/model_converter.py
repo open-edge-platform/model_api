@@ -102,7 +102,8 @@ class ModelConverter:
         self.logger.info(f"Saving to: {cached_file}")
 
         try:
-            urllib.request.urlretrieve(  # noqa: S310 # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
+            # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
+            urllib.request.urlretrieve(  # noqa: S310
                 url,
                 cached_file,
             )
@@ -153,7 +154,8 @@ class ModelConverter:
             Checkpoint dictionary
         """
         try:
-            checkpoint = torch.load(  # nosemgrep: trailofbits.python.pickles-in-pytorch.pickles-in-pytorch
+            # nosemgrep: trailofbits.python.pickles-in-pytorch.pickles-in-pytorch
+            checkpoint = torch.load(
                 checkpoint_path,
                 map_location="cpu",
                 weights_only=True,
