@@ -128,8 +128,10 @@ class ModelConverter:
         try:
             module_path, class_name = class_path.rsplit(".", 1)
             self.logger.debug(f"Importing module: {module_path}")
-            module = importlib.import_module(  # nosemgrep: python.lang.security.audit.non-literal-import.non-literal-import
-                module_path,
+            module = (
+                importlib.import_module(  # nosemgrep: python.lang.security.audit.non-literal-import.non-literal-import
+                    module_path,
+                )
             )
             model_class = getattr(module, class_name)
             self.logger.debug(f"Loaded class: {class_name}")
