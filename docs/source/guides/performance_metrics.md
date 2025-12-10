@@ -16,6 +16,8 @@ Performance metrics are automatically collected during model inference and inclu
 - **Total frames**: Total number of inferences
 - **FPS**: Frames Per Second
 
+All timing statistics are reported in milliseconds (ms).
+
 Each metric provides statistical information including mean, standard deviation, and individual measurements.
 
 ## Basic Usage
@@ -59,21 +61,21 @@ This will output detailed performance information:
 ============================================================
 
 📊 Model Loading:
-   Load Time: 2.497s
+    Load Time: 2497.00 ms
 
 ⚙️  Processing Times (mean ± std):
-   Preprocess:  0.001s ± 0.000s
-   Inference:   0.570s ± 0.020s
-   Postprocess: 0.001s ± 0.000s
+    Preprocess:  1.00 ms ± 0.10 ms
+    Inference:   570.00 ms ± 20.00 ms
+    Postprocess: 1.00 ms ± 0.10 ms
 
 📈 Total Time Statistics:
-   Mean:  0.572s ± 0.020s
-   Min:   0.556s
-   Max:   0.642s
+    Mean:  572.00 ms ± 20.00 ms
+    Min:   556.00 ms
+    Max:   642.00 ms
 
 🎯 Performance Summary:
-   Total Frames: 100
-   FPS:          1.75
+    Total Frames: 100
+    FPS:          1.75
 ============================================================
 ```
 
@@ -94,9 +96,9 @@ total_min_time = metrics.get_total_time_min()
 total_max_time = metrics.get_total_time_max()
 
 # Access statistical information
-print(f"Mean inference time: {inference_time.mean():.3f} seconds")
-print(f"Standard deviation: {inference_time.stddev():.3f} seconds")
-print(f"Total inference time: {inference_time.time:.3f} seconds")
+print(f"Mean inference time: {inference_time.mean():.2f} ms")
+print(f"Standard deviation: {inference_time.stddev():.2f} ms")
+print(f"Total inference time: {inference_time.time:.2f} ms")
 print(f"Number of inferences: {inference_time.count}")
 ```
 
@@ -150,7 +152,7 @@ for i in range(100):
     if (i + 1) % 10 == 0:
         metrics = model.get_performance_metrics()
         print(f"After {i + 1} inferences:")
-        print(f"  Mean inference time: {metrics.get_inference_time().mean():.3f}s")
+        print(f"  Mean inference time: {metrics.get_inference_time().mean():.2f} ms")
         print(f"  Current FPS: {metrics.get_fps():.2f}")
 ```
 
@@ -166,13 +168,12 @@ metrics = model.get_performance_metrics()
 preprocess_time = metrics.get_preprocess_time().mean()
 inference_time = metrics.get_inference_time().mean()
 postprocess_time = metrics.get_postprocess_time().mean()
+total = preprocess_time + inference_time + postprocess_time
 
 print("Time breakdown:")
-print(f"  Preprocessing: {preprocess_time:.3f}s ({preprocess_time/total:.1%})")
-print(f"  Inference:     {inference_time:.3f}s ({inference_time/total:.1%})")
-print(f"  Postprocessing: {postprocess_time:.3f}s ({postprocess_time/total:.1%})")
-
-total = preprocess_time + inference_time + postprocess_time
+print(f"  Preprocessing: {preprocess_time:.2f} ms ({preprocess_time/total:.1%})")
+print(f"  Inference:     {inference_time:.2f} ms ({inference_time/total:.1%})")
+print(f"  Postprocessing: {postprocess_time:.2f} ms ({postprocess_time/total:.1%})")
 ```
 
 ### Warm-up Considerations
@@ -184,8 +185,12 @@ The first few inferences may be slower due to system warm-up. Consider excluding
 for _ in range(5):
     model(image)
 
-# Reset metrics after warm-up
-model.get_performance_metrics().reset()
+# Reset metrics after warm-up (load time stats are preserved by default)
+metrics = model.get_performance_metrics()
+metrics.reset()
+
+# If you also need to clear model load measurements
+# metrics.reset(include_load_time=True)
 
 # Now measure actual performance
 for _ in range(100):
@@ -227,8 +232,9 @@ def analyze_model_performance(model_path, test_images, warmup_runs=5, test_runs=
     for _ in range(warmup_runs):
         model(image)
 
-    # Reset metrics after warm-up
-    model.get_performance_metrics().reset()
+    # Reset metrics after warm-up (keeping load time by default)
+    metrics = model.get_performance_metrics()
+    metrics.reset()
 
     print(f"Running {test_runs} test inferences...")
     # Performance measurement runs
@@ -252,9 +258,11 @@ def analyze_model_performance(model_path, test_images, warmup_runs=5, test_runs=
     # Additional analysis
     inference_time = metrics.get_inference_time()
     print(f"\nInference time analysis:")
-    print(f"  Minimum: {min(inference_time.durations):.3f}s")
-    print(f"  Maximum: {max(inference_time.durations):.3f}s")
-    print(f"  Median: {sorted(inference_time.durations)[len(inference_time.durations)//2]:.3f}s")
+    print(f"  Minimum: {min(inference_time.durations):.2f} ms")
+    print(f"  Maximum: {max(inference_time.durations):.2f} ms")
+    print(
+        f"  Median: {sorted(inference_time.durations)[len(inference_time.durations)//2]:.2f} ms"
+    )
 
     return metrics
 

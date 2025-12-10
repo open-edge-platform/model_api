@@ -4,6 +4,11 @@
 #
 
 from time import perf_counter
+from typing import Any
+
+MS_IN_SECOND = 1000.0
+
+_DEFAULT_TOKEN = object()
 
 
 class TimeStat:
@@ -18,7 +23,7 @@ class TimeStat:
         self.time = 0.0
         self.durations = []
         self.count = 0
-        self.last_update_time = None
+        self._active_tokens: dict[Any, float] = {}
 
     def __add__(self, other):
         """
@@ -36,19 +41,29 @@ class TimeStat:
         new_stat.count = self.count + other.count
         return new_stat
 
-    def update(self) -> None:
+    def update(self, token: Any | None = None) -> Any:
         """
         Updates the statistics with the latest duration.
+
+        Args:
+            token: Identifier for asynchronous measurements.
+
+        Returns:
+            Any: The token associated with the current timing segment.
         """
+
+        key = token if token is not None else _DEFAULT_TOKEN
         time = perf_counter()
-        if self.last_update_time:
-            diff = time - self.last_update_time
-            self.time += diff
-            self.durations.append(diff)
-            self.count += 1
-            self.last_update_time = None
-        else:
-            self.last_update_time = time
+        start_time = self._active_tokens.pop(key, None)
+        if start_time is None:
+            self._active_tokens[key] = time
+            return key
+
+        diff = (time - start_time) * MS_IN_SECOND
+        self.time += diff
+        self.durations.append(diff)
+        self.count += 1
+        return key
 
     def reset(self) -> None:
         """
@@ -57,7 +72,7 @@ class TimeStat:
         self.time = 0.0
         self.durations = []
         self.count = 0
-        self.last_update_time = None
+        self._active_tokens.clear()
 
     def mean(self) -> float:
         """

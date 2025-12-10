@@ -553,11 +553,13 @@ class Model:
                 "The model is not loaded to the device. Please, create the wrapper "
                 "with preload=True option or call load() method before infer_async()",
             )
-        self.perf.total_time.update()
+        total_token = object()
+        inference_token = object()
+        self.perf.total_time.update(total_token)
         self.perf.preprocess_time.update()
         dict_data, meta = self.preprocess(input_data)
         self.perf.preprocess_time.update()
-        self.perf.inference_time.update()
+        self.perf.inference_time.update(inference_token)
         self.inference_adapter.infer_async(
             dict_data,
             (
@@ -567,6 +569,8 @@ class Model:
                 self.postprocess,
                 self.callback_fn,
                 user_data,
+                total_token,
+                inference_token,
             ),
         )
 
@@ -575,13 +579,33 @@ class Model:
         """
         A wrapper for async inference callback.
         """
-        model, meta, get_result_fn, postprocess_fn, callback_fn, user_data = callback_data
+        total_token = None
+        inference_token = None
+        if len(callback_data) >= 8:
+            (
+                model,
+                meta,
+                get_result_fn,
+                postprocess_fn,
+                callback_fn,
+                user_data,
+                total_token,
+                inference_token,
+            ) = callback_data
+        else:
+            model, meta, get_result_fn, postprocess_fn, callback_fn, user_data = callback_data
         raw_result = get_result_fn(request)
-        model.perf.inference_time.update()
+        if inference_token is not None:
+            model.perf.inference_time.update(inference_token)
+        else:
+            model.perf.inference_time.update()
         model.perf.postprocess_time.update()
         result = postprocess_fn(raw_result, meta)
         model.perf.postprocess_time.update()
-        model.perf.total_time.update()
+        if total_token is not None:
+            model.perf.total_time.update(total_token)
+        else:
+            model.perf.total_time.update()
         callback_fn(result, user_data)
 
     def set_callback(self, callback_fn: Callable):

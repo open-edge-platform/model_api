@@ -64,6 +64,16 @@ class TestPerformanceMetrics(unittest.TestCase):
         assert self.metrics.postprocess_time.durations == []
         assert self.metrics.total_time.durations == []
 
+    def test_reset_including_load_time(self):
+        """Test reset clears load time when requested."""
+        self.metrics.load_time.time = 5.0
+        self.metrics.load_time.durations = [5.0]
+
+        self.metrics.reset(include_load_time=True)
+
+        assert self.metrics.load_time.time == 0.0
+        assert self.metrics.load_time.durations == []
+
     def test_get_load_time(self):
         """Test get_load_time method returns the correct TimeStat object."""
         self.metrics.load_time.time = 1.23
@@ -96,6 +106,11 @@ class TestPerformanceMetrics(unittest.TestCase):
         assert isinstance(postprocess_time, TimeStat)
         assert postprocess_time.time == 4.56
 
+    def test_get_total_time(self):
+        """Test get_total_time returns the total TimeStat object."""
+        total_time = self.metrics.get_total_time()
+        assert total_time is self.metrics.total_time
+
     def test_get_total_frames_empty(self):
         """Test get_total_frames returns 0 when no frames processed."""
         assert self.metrics.get_total_frames() == 0
@@ -112,7 +127,8 @@ class TestPerformanceMetrics(unittest.TestCase):
     def test_get_fps_with_data(self):
         """Test get_fps calculates correctly when frames are processed."""
         self.metrics.total_time.durations = [1.0, 2.0, 3.0]
-        expected_fps = 3 / 6.0
+        self.metrics.total_time.time = 6.0
+        expected_fps = 3 / (6.0 / 1000.0)
         assert abs(self.metrics.get_fps() - expected_fps) < 1e-7
 
     def test_get_fps_zero_total_time(self):
@@ -142,6 +158,10 @@ class TestPerformanceMetrics(unittest.TestCase):
         metrics2.inference_time.durations = [2.5]
         metrics2.postprocess_time.time = 3.5
         metrics2.postprocess_time.durations = [3.5]
+        metrics1.total_time.time = 6.0
+        metrics1.total_time.durations = [6.0]
+        metrics2.total_time.time = 4.0
+        metrics2.total_time.durations = [4.0]
 
         result = metrics1 + metrics2
 
@@ -150,10 +170,12 @@ class TestPerformanceMetrics(unittest.TestCase):
         assert result.preprocess_time.time == 3.5
         assert result.inference_time.time == 5.5
         assert result.postprocess_time.time == 7.5
+        assert result.total_time.time == 10.0
         assert result.load_time.durations == [1.0, 0.5]
         assert result.preprocess_time.durations == [2.0, 1.5]
         assert result.inference_time.durations == [3.0, 2.5]
         assert result.postprocess_time.durations == [4.0, 3.5]
+        assert result.total_time.durations == [6.0, 4.0]
 
     def test_add_invalid_type(self):
         """Test adding PerformanceMetrics with invalid type returns NotImplemented."""
@@ -165,21 +187,6 @@ class TestPerformanceMetrics(unittest.TestCase):
 
         result = self.metrics.__add__(None)
         assert result == NotImplemented
-
-    def test_add_missing_total_time_in_result(self):
-        """Test that addition doesn't include total_time in the result."""
-        metrics1 = PerformanceMetrics()
-        metrics2 = PerformanceMetrics()
-
-        metrics1.total_time.time = 10.0
-        metrics1.total_time.durations = [10.0]
-        metrics2.total_time.time = 5.0
-        metrics2.total_time.durations = [5.0]
-
-        result = metrics1 + metrics2
-
-        assert result.total_time.time == 0.0
-        assert result.total_time.durations == []
 
     @patch("model_api.metrics.performance.logger")
     def test_log_metrics_empty(self, mock_logger):
@@ -193,13 +200,13 @@ class TestPerformanceMetrics(unittest.TestCase):
         logged_content = mock_logger.info.call_args[0][0]
 
         assert "🚀 PERFORMANCE METRICS REPORT 🚀" in logged_content
-        assert "Load Time: 0.000s" in logged_content
-        assert "Preprocess:  0.000s ± 0.000s" in logged_content
-        assert "Inference:   0.000s ± 0.000s" in logged_content
-        assert "Postprocess: 0.000s ± 0.000s" in logged_content
-        assert "Mean:  0.000s ± 0.000s" in logged_content
-        assert "Min:   0.000s" in logged_content
-        assert "Max:   0.000s" in logged_content
+        assert "Load Time: 0.00 ms" in logged_content
+        assert "Preprocess:  0.00 ms ± 0.00 ms" in logged_content
+        assert "Inference:   0.00 ms ± 0.00 ms" in logged_content
+        assert "Postprocess: 0.00 ms ± 0.00 ms" in logged_content
+        assert "Mean:  0.00 ms ± 0.00 ms" in logged_content
+        assert "Min:   0.00 ms" in logged_content
+        assert "Max:   0.00 ms" in logged_content
         assert "Total Frames: 0" in logged_content
         assert "FPS:          0.00" in logged_content
 
@@ -227,13 +234,13 @@ class TestPerformanceMetrics(unittest.TestCase):
         logged_content = mock_logger.info.call_args[0][0]
 
         assert "🚀 PERFORMANCE METRICS REPORT 🚀" in logged_content
-        assert "Load Time: 1.234s" in logged_content
-        assert "Preprocess:  2.345s ± 0.123s" in logged_content
-        assert "Inference:   3.456s ± 0.234s" in logged_content
-        assert "Postprocess: 4.567s ± 0.345s" in logged_content
-        assert "Mean:  10.123s ± 0.456s" in logged_content
-        assert "Min:   1.000s" in logged_content
-        assert "Max:   3.000s" in logged_content
+        assert "Load Time: 1.23 ms" in logged_content
+        assert "Preprocess:  2.35 ms ± 0.12 ms" in logged_content
+        assert "Inference:   3.46 ms ± 0.23 ms" in logged_content
+        assert "Postprocess: 4.57 ms ± 0.34 ms" in logged_content  # 0.345 rounds to 0.34
+        assert "Mean:  10.12 ms ± 0.46 ms" in logged_content
+        assert "Min:   1.00 ms" in logged_content
+        assert "Max:   3.00 ms" in logged_content
         assert "Total Frames: 3" in logged_content
         assert "FPS:          12.34" in logged_content
 
