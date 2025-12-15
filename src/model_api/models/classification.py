@@ -19,7 +19,7 @@ from openvino.preprocess import PrePostProcessor
 from model_api.models.image_model import ImageModel
 from model_api.models.parameters import ParameterRegistry
 from model_api.models.result import ClassificationResult, Label
-from model_api.models.utils import softmax
+from model_api.models.utils import softmax, topk
 
 if TYPE_CHECKING:
     from model_api.adapters.inference_adapter import InferenceAdapter
@@ -106,7 +106,7 @@ class ClassificationModel(ImageModel):
             if self.params.output_raw_scores:
                 self.out_layer_names.append(self.raw_scores_name)
         except (RuntimeError, AttributeError):
-            # non OV model
+            # model does not have embedded topk, will be calculated later in postprocessing
             self.embedded_topk = False
             self.out_layer_names = _get_non_xai_names(self.outputs.keys())
             self.raw_scores_name = self.out_layer_names[0]
@@ -275,8 +275,10 @@ class ClassificationModel(ImageModel):
             indicesTensor = outputs[self.out_layer_names[0]][0]
             scoresTensor = outputs[self.out_layer_names[1]][0]
         else:
-            scoresTensor = softmax(outputs[self.out_layer_names[0]][0])
-            indicesTensor = [int(np.argmax(scoresTensor))]
+            softmaxResult = softmax(outputs[self.out_layer_names[0]], axis=1)
+            topKResult = topk(softmaxResult, self.params.topk, 1)
+            scoresTensor = topKResult.values[0]  # noqa: PD011 # silecing false positive - it's not pandas code
+            indicesTensor = topKResult.indices[0]
 
         labels_list = self.params.labels
         labels = [labels_list[i] if labels_list else "" for i in indicesTensor]
@@ -294,8 +296,9 @@ def addOrFindSoftmaxAndTopkOutputs(inference_adapter: InferenceAdapter, topk: in
             return
 
     if softmaxNode is None:
-        logitsNode = inference_adapter.model.get_output_op(0).input(0).get_source_output().get_node()
-        softmaxNode = opset.softmax(logitsNode.output(0), 1)
+        # no softmax found, will be calculated in postprocessing
+        raise RuntimeError
+
     k = opset.constant(topk, np.int32)
     topkNode = opset.topk(softmaxNode, k, 1, "max", "value")
 
