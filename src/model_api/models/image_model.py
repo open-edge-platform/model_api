@@ -79,6 +79,8 @@ class ImageModel(Model):
         layout = self.inputs[self.image_blob_name].layout
         if self.params.embedded_processing:
             self.h, self.w = self.params.orig_height, self.params.orig_width
+            self._embedded_processing = True
+            self.orig_height, self.orig_width = self.h, self.w
         elif not self._is_dynamic:
             inference_adapter.embed_preprocessing(
                 layout=layout,

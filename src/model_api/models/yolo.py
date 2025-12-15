@@ -815,8 +815,9 @@ class YOLOv5(DetectionModel):
             boxes, _ = multiclass_nms(boxes, iou_threshold, keep_top_k)
         inputImgWidth = meta["original_shape"][1]
         inputImgHeight = meta["original_shape"][0]
-        # For dynamic models, use resized_shape; otherwise use orig_width/orig_height
-        if self._is_dynamic:
+        # For dynamic models without embedded processing, use resized_shape
+        # For models with embedded processing, use orig_width/orig_height
+        if self._is_dynamic and not getattr(self, '_embedded_processing', False):
             model_width, model_height = meta["resized_shape"][:2]
         else:
             model_width, model_height = self.orig_width, self.orig_height
