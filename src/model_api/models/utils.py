@@ -288,6 +288,16 @@ def multiclass_nms(
     return det, keep
 
 
+def is_softmaxed(array: np.ndarray, axis: int, atol: float = 1e-5) -> bool:
+    """Check if the input array is softmaxed along the specified axis."""
+    # Check values are in [0, 1]
+    if not np.all((array >= 0) & (array <= 1)):
+        return False
+    # Check sum along axis is close to 1
+    sums = np.sum(array, axis=axis)
+    return np.allclose(sums, 1.0, atol=atol)
+
+
 def softmax(logits: np.ndarray, eps: float = 1e-9, axis=None, keepdims: bool = False) -> np.ndarray:
     exp = np.exp(logits - np.max(logits))
     return exp / (np.sum(exp, axis=axis, keepdims=keepdims) + eps)
