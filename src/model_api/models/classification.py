@@ -271,15 +271,16 @@ class ClassificationModel(ImageModel):
         return list(starmap(Label, zip(indices, labels, scores)))
 
     def get_multiclass_predictions(self, outputs: dict) -> list[Label]:
-        labels_list = self.params.labels
         if self.embedded_topk:
             indicesTensor = outputs[self.out_layer_names[0]][0]
             scoresTensor = outputs[self.out_layer_names[1]][0]
-            labels = [labels_list[i] if labels_list else "" for i in indicesTensor]
         else:
             scoresTensor = softmax(outputs[self.out_layer_names[0]][0])
             indicesTensor = [int(np.argmax(scoresTensor))]
-            labels = [labels_list[i] if labels_list else "" for i in indicesTensor]
+
+        labels_list = self.params.labels
+        labels = [labels_list[i] if labels_list else "" for i in indicesTensor]
+
         return list(starmap(Label, zip(indicesTensor, labels, scoresTensor)))
 
 
