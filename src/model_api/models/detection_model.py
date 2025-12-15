@@ -60,11 +60,16 @@ class DetectionModel(ImageModel):
 
     def preprocess(self, dict_inputs: dict, meta: dict) -> tuple[dict, dict]:
         input_img_height, input_img_width = meta["original_shape"][:2]
+        # For dynamic models, use resized_shape; otherwise use model dimensions
+        if self._is_dynamic:
+            model_width, model_height = meta["resized_shape"][:2]
+        else:
+            model_width, model_height = self.w, self.h
         resize_meta = ResizeMetadata.compute(
             original_width=input_img_width,
             original_height=input_img_height,
-            model_width=self.w,
-            model_height=self.h,
+            model_width=model_width,
+            model_height=model_height,
             resize_type=self.params.resize_type,
         )
         meta["resize_info"] = resize_meta.to_dict()
@@ -81,6 +86,11 @@ class DetectionModel(ImageModel):
             meta (dict): the input metadata obtained from `preprocess` method
         """
         input_img_height, input_img_width = meta["original_shape"][:2]
+        # For dynamic models, use resized_shape; otherwise use model dimensions
+        if self._is_dynamic:
+            model_width, model_height = meta["resized_shape"][:2]
+        else:
+            model_width, model_height = self.w, self.h
 
         if "resize_info" in meta:
             resize_meta = ResizeMetadata.from_dict(meta["resize_info"])
@@ -88,14 +98,14 @@ class DetectionModel(ImageModel):
             resize_meta = ResizeMetadata.compute(
                 original_width=input_img_width,
                 original_height=input_img_height,
-                model_width=self.w,
-                model_height=self.h,
+                model_width=model_width,
+                model_height=model_height,
                 resize_type=self.params.resize_type,
             )
 
         boxes = detection_result.bboxes
-        boxes[:, 0::2] = (boxes[:, 0::2] * self.w - resize_meta.pad_left) * resize_meta.inverted_scale_x
-        boxes[:, 1::2] = (boxes[:, 1::2] * self.h - resize_meta.pad_top) * resize_meta.inverted_scale_y
+        boxes[:, 0::2] = (boxes[:, 0::2] * model_width - resize_meta.pad_left) * resize_meta.inverted_scale_x
+        boxes[:, 1::2] = (boxes[:, 1::2] * model_height - resize_meta.pad_top) * resize_meta.inverted_scale_y
         np.round(boxes, out=boxes)
         boxes[:, 0::2] = np.clip(boxes[:, 0::2], 0, input_img_width)
         boxes[:, 1::2] = np.clip(boxes[:, 1::2], 0, input_img_height)

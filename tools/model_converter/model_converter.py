@@ -23,6 +23,125 @@ from typing import Any, Dict, List, Optional
 
 import torch
 import torch.nn as nn
+from typing import Tuple
+
+
+# =============================================================================
+# Export Wrappers for Detection Models
+# =============================================================================
+# These wrappers convert detection models that return complex dictionary outputs
+# into models that return tuple of tensors, suitable for ONNX/OpenVINO export.
+
+
+class SSDExportWrapper(nn.Module):
+    """Wrapper to make SSD-like models exportable to ONNX.
+
+    Torchvision SSD models return List[Dict] with 'boxes', 'scores', 'labels'.
+    This wrapper converts to tuple output for ONNX compatibility.
+    """
+
+    def __init__(self, model: nn.Module):
+        super().__init__()
+        self.model = model
+
+    def forward(self, images: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Forward pass returning tuple of (boxes, scores, labels)."""
+        # Detection models expect list of tensors
+        image_list = [images[i] for i in range(images.shape[0])]
+        outputs = self.model(image_list)
+        # Return first image's detections (batch size 1 for export)
+        return outputs[0]["boxes"], outputs[0]["scores"], outputs[0]["labels"]
+
+
+class FasterRCNNExportWrapper(nn.Module):
+    """Wrapper to make Faster R-CNN models exportable to ONNX.
+
+    Torchvision Faster R-CNN models return List[Dict] with 'boxes', 'scores', 'labels'.
+    This wrapper converts to tuple output for ONNX compatibility.
+    """
+
+    def __init__(self, model: nn.Module):
+        super().__init__()
+        self.model = model
+
+    def forward(self, images: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Forward pass returning tuple of (boxes, scores, labels)."""
+        image_list = [images[i] for i in range(images.shape[0])]
+        outputs = self.model(image_list)
+        return outputs[0]["boxes"], outputs[0]["scores"], outputs[0]["labels"]
+
+
+class RetinaNetExportWrapper(nn.Module):
+    """Wrapper to make RetinaNet models exportable to ONNX.
+
+    Torchvision RetinaNet models return List[Dict] with 'boxes', 'scores', 'labels'.
+    This wrapper converts to tuple output for ONNX compatibility.
+    """
+
+    def __init__(self, model: nn.Module):
+        super().__init__()
+        self.model = model
+
+    def forward(self, images: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Forward pass returning tuple of (boxes, scores, labels)."""
+        image_list = [images[i] for i in range(images.shape[0])]
+        outputs = self.model(image_list)
+        return outputs[0]["boxes"], outputs[0]["scores"], outputs[0]["labels"]
+
+
+class MaskRCNNExportWrapper(nn.Module):
+    """Wrapper to make Mask R-CNN models exportable to ONNX.
+
+    Torchvision Mask R-CNN models return List[Dict] with 'boxes', 'labels', 'scores', 'masks'.
+    This wrapper converts to tuple output for ONNX compatibility.
+    
+    Output format matches model_api MaskRCNNModel expectations:
+    - boxes: [N, 5] where columns are [x1, y1, x2, y2, score]
+    - labels: [N] 
+    - masks: [N, H, W] - probability masks in [0, 1] range (will be thresholded by postprocessing)
+    """
+
+    def __init__(self, model: nn.Module):
+        super().__init__()
+        self.model = model
+
+    def forward(
+        self, images: torch.Tensor
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Forward pass returning tuple of (boxes_with_scores, labels, masks)."""
+        image_list = [images[i] for i in range(images.shape[0])]
+        outputs = self.model(image_list)
+        
+        boxes = outputs[0]["boxes"]  # [N, 4]
+        scores = outputs[0]["scores"]  # [N]
+        labels = outputs[0]["labels"]  # [N]
+        masks = outputs[0]["masks"]  # [N, 1, H, W] - float probabilities in [0, 1]
+        
+        # Concatenate scores to boxes: [N, 4] + [N, 1] -> [N, 5]
+        boxes_with_scores = torch.cat([boxes, scores.unsqueeze(1)], dim=1)
+        
+        # Squeeze masks from [N, 1, H, W] to [N, H, W]
+        # Keep as float probabilities - postprocessing will threshold at 0.5
+        masks = masks.squeeze(1)
+        
+        return boxes_with_scores, labels, masks
+
+
+# Mapping of model types to their export wrappers
+EXPORT_WRAPPERS = {
+    "SSD": SSDExportWrapper,
+    "FasterRCNNModel": FasterRCNNExportWrapper,
+    "RetinaNet": RetinaNetExportWrapper,
+    "MaskRCNN": MaskRCNNExportWrapper,
+}
+
+# Default output names for detection models
+DETECTION_OUTPUT_NAMES = {
+    "SSD": ["boxes", "scores", "labels"],
+    "FasterRCNNModel": ["boxes", "scores", "labels"],
+    "RetinaNet": ["boxes", "scores", "labels"],
+    "MaskRCNN": ["boxes", "labels", "masks"],  # boxes includes scores as 5th column
+}
 
 
 class ModelConverter:
@@ -60,7 +179,7 @@ class ModelConverter:
         Get label list for a given label set.
 
         Args:
-            label_set: Name of the label set (e.g., "IMAGENET1K_V1")
+            label_set: Name of the label set (e.g., "IMAGENET1K_V1", "COCO")
 
         Returns:
             Space-separated string of labels, or None if not found
@@ -71,6 +190,25 @@ class ModelConverter:
             categories = _IMAGENET_CATEGORIES
             categories = [label.replace(" ", "_") for label in categories]
             return " ".join(categories)
+
+        if label_set == "COCO":
+            # COCO 91 classes (including background at index 0)
+            # TorchVision detection models use 1-indexed labels (1-90)
+            coco_categories = [
+                "background", "person", "bicycle", "car", "motorcycle", "airplane", "bus",
+                "train", "truck", "boat", "traffic_light", "fire_hydrant", "N/A", "stop_sign",
+                "parking_meter", "bench", "bird", "cat", "dog", "horse", "sheep", "cow",
+                "elephant", "bear", "zebra", "giraffe", "N/A", "backpack", "umbrella", "N/A",
+                "N/A", "handbag", "tie", "suitcase", "frisbee", "skis", "snowboard", "sports_ball",
+                "kite", "baseball_bat", "baseball_glove", "skateboard", "surfboard", "tennis_racket",
+                "bottle", "N/A", "wine_glass", "cup", "fork", "knife", "spoon", "bowl", "banana",
+                "apple", "sandwich", "orange", "broccoli", "carrot", "hot_dog", "pizza", "donut",
+                "cake", "chair", "couch", "potted_plant", "bed", "N/A", "dining_table", "N/A",
+                "N/A", "toilet", "N/A", "tv", "laptop", "mouse", "remote", "keyboard", "cell_phone",
+                "microwave", "oven", "toaster", "sink", "refrigerator", "N/A", "book", "clock",
+                "vase", "scissors", "teddy_bear", "hair_drier", "toothbrush"
+            ]
+            return " ".join(coco_categories)
 
         return None
 
@@ -232,6 +370,9 @@ class ModelConverter:
         input_names: Optional[List[str]] = None,
         output_names: Optional[List[str]] = None,
         metadata: Optional[Dict[tuple, str]] = None,
+        export_method: str = "direct",
+        model_type: Optional[str] = None,
+        onnx_opset_version: int = 17,
     ) -> Path:
         """
         Export PyTorch model to OpenVINO format.
@@ -243,6 +384,9 @@ class ModelConverter:
             input_names: Names for input tensors
             output_names: Names for output tensors
             metadata: Metadata to embed in the model
+            export_method: Export method - "direct" or "onnx"
+            model_type: Model type (used for selecting export wrapper)
+            onnx_opset_version: ONNX opset version (default: 17)
 
         Returns:
             Path to the exported .xml file
@@ -251,17 +395,35 @@ class ModelConverter:
 
         try:
             model.eval()
-            dummy_input = torch.randn(*input_shape)
-            self.logger.info("Direct PyTorch to OpenVINO conversion")
-            ov_model = ov.convert_model(model, example_input=dummy_input)
-            self.logger.info("✓ PyTorch to OpenVINO conversion complete")
 
-            # Reshape model to fixed input shape (remove dynamic dimensions)
-            first_input = ov_model.input(0)
-            input_name_for_reshape = next(iter(first_input.get_names())) if first_input.get_names() else 0
+            # Use ONNX export path for detection models or when explicitly requested
+            if export_method == "onnx" or model_type in EXPORT_WRAPPERS:
+                self.logger.info(f"Using ONNX export path (model_type: {model_type})")
+                onnx_path = self.export_to_onnx(
+                    model=model,
+                    input_shape=input_shape,
+                    output_path=output_path,
+                    input_names=input_names,
+                    output_names=output_names,
+                    model_type=model_type,
+                    opset_version=onnx_opset_version,
+                )
+                self.logger.info(f"Converting ONNX to OpenVINO: {onnx_path}")
+                ov_model = ov.convert_model(onnx_path)
+                self.logger.info("✓ ONNX to OpenVINO conversion complete")
+            else:
+                # Direct PyTorch to OpenVINO conversion
+                dummy_input = torch.randn(*input_shape)
+                self.logger.info("Direct PyTorch to OpenVINO conversion")
+                ov_model = ov.convert_model(model, example_input=dummy_input)
+                self.logger.info("✓ PyTorch to OpenVINO conversion complete")
 
-            self.logger.debug(f"Setting fixed input shape: {input_shape}")
-            ov_model.reshape({input_name_for_reshape: input_shape})
+                # Reshape model to fixed input shape (remove dynamic dimensions)
+                first_input = ov_model.input(0)
+                input_name_for_reshape = next(iter(first_input.get_names())) if first_input.get_names() else 0
+
+                self.logger.debug(f"Setting fixed input shape: {input_shape}")
+                ov_model.reshape({input_name_for_reshape: input_shape})
 
             # Post-process the model
             ov_model = self._postprocess_openvino_model(
@@ -280,6 +442,91 @@ class ModelConverter:
 
         except Exception as e:
             self.logger.error(f"Failed to export model: {e}")
+            raise
+
+    def export_to_onnx(
+        self,
+        model: nn.Module,
+        input_shape: List[int],
+        output_path: Path,
+        input_names: Optional[List[str]] = None,
+        output_names: Optional[List[str]] = None,
+        model_type: Optional[str] = None,
+        opset_version: int = 17,
+    ) -> Path:
+        """
+        Export PyTorch model to ONNX format.
+
+        For detection models (SSD, Faster R-CNN, Mask R-CNN, RetinaNet), this method
+        wraps the model to convert dictionary outputs to tensor tuples.
+
+        Args:
+            model: PyTorch model to export
+            input_shape: Input tensor shape [batch, channels, height, width]
+            output_path: Path to save the model (without extension)
+            input_names: Names for input tensors
+            output_names: Names for output tensors
+            model_type: Model type (used for selecting export wrapper)
+            opset_version: ONNX opset version (default: 17)
+
+        Returns:
+            Path to the exported .onnx file
+        """
+        try:
+            model.eval()
+
+            # Wrap detection models for ONNX export
+            if model_type in EXPORT_WRAPPERS:
+                wrapper_class = EXPORT_WRAPPERS[model_type]
+                self.logger.info(f"Wrapping model with {wrapper_class.__name__}")
+                export_model = wrapper_class(model)
+                # Use default output names for detection models if not specified
+                if output_names is None or output_names == ["result"]:
+                    output_names = DETECTION_OUTPUT_NAMES.get(model_type, ["output"])
+            else:
+                export_model = model
+                if output_names is None:
+                    output_names = ["output"]
+
+            if input_names is None:
+                input_names = ["image"]
+
+            # Create dummy input
+            dummy_input = torch.randn(*input_shape)
+
+            # Configure dynamic axes for detection models
+            # Only outputs have variable length (number of detections)
+            # Input should be FIXED to ensure model_api sets orig_width/orig_height properly
+            dynamic_axes = {}
+            if model_type in EXPORT_WRAPPERS:
+                # Detection outputs have variable length
+                for output_name in output_names:
+                    dynamic_axes[output_name] = {0: "num_detections"}
+
+            # Export to ONNX
+            onnx_path = output_path.with_suffix(".onnx")
+            self.logger.info(f"Exporting to ONNX (opset {opset_version}): {onnx_path}")
+
+            # Use legacy TorchScript-based export (dynamo=False) for detection models
+            # The new TorchDynamo export doesn't support data-dependent control flow
+            # in operations like batched_nms
+            torch.onnx.export(
+                export_model,
+                dummy_input,
+                onnx_path,
+                input_names=input_names,
+                output_names=output_names,
+                opset_version=opset_version,
+                dynamic_axes=dynamic_axes,
+                do_constant_folding=True,
+                dynamo=False,
+            )
+
+            self.logger.info(f"✓ ONNX export complete: {onnx_path}")
+            return onnx_path
+
+        except Exception as e:
+            self.logger.error(f"Failed to export to ONNX: {e}")
             raise
 
     def _postprocess_openvino_model(
@@ -363,6 +610,10 @@ class ModelConverter:
             input_names = config.get("input_names", ["input"])
             output_names = config.get("output_names", ["result"])
 
+            # Extract height and width from input_shape [batch, channels, height, width]
+            orig_height = str(input_shape[2])
+            orig_width = str(input_shape[3])
+
             # Prepare metadata from config (with defaults for ImageNet normalization)
             reverse_input_channels = config.get("reverse_input_channels", True)
             mean_values = config.get("mean_values", "123.675 116.28 103.53")
@@ -374,6 +625,8 @@ class ModelConverter:
                 ("model_info", "reverse_input_channels"): str(reverse_input_channels),
                 ("model_info", "mean_values"): mean_values,
                 ("model_info", "scale_values"): scale_values,
+                ("model_info", "orig_height"): orig_height,
+                ("model_info", "orig_width"): orig_width,
             }
 
             # Add labels if specified in config
@@ -385,6 +638,17 @@ class ModelConverter:
                     self.logger.info(f"Added {labels_config} labels to metadata")
                 else:
                     self.logger.warning(f"Could not load labels for: {labels_config}")
+
+            # Get export method and model type
+            model_type = config.get("model_type", "")
+            export_method = config.get("export_method", "direct")
+            onnx_opset_version = config.get("onnx_opset_version", 17)
+
+            # Auto-detect export method for detection models
+            if model_type in EXPORT_WRAPPERS and export_method == "direct":
+                self.logger.info(f"Auto-switching to ONNX export for {model_type} model")
+                export_method = "onnx"
+
             output_path = self.output_dir / model_short_name
             self.export_to_openvino(
                 model=model,
@@ -393,6 +657,9 @@ class ModelConverter:
                 input_names=input_names,
                 output_names=output_names,
                 metadata=metadata,
+                export_method=export_method,
+                model_type=model_type,
+                onnx_opset_version=onnx_opset_version,
             )
 
             self.logger.info(f"✓ Successfully converted {model_short_name}")
