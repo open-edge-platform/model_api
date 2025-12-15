@@ -31,7 +31,7 @@ def get_image_files(dataset_path: str) -> list[str]:
     return test_images
 
 
-def analyze_model_performance(
+def analyze_model_performance(  # noqa: C901
     model_path,
     test_images,
     device,
@@ -49,15 +49,17 @@ def analyze_model_performance(
 
     # Import required components
     import time
+
     import numpy as np
     from openvino import Core
+
     from model_api.adapters.openvino_adapter import OpenvinoAdapter, get_user_config
 
     # Build plugin config
     core = Core()
     plugin_config = get_user_config(
         device,
-        num_streams if num_streams else "1",
+        num_streams or "1",
         num_threads,
     )
 
@@ -80,24 +82,24 @@ def analyze_model_performance(
     if inference_only:
         # Inference-only mode: use pre-filled random data, no I/O or preprocessing
         print("Benchmarking in inference only mode (inputs filling are not included in measurement loop).")
-        
+
         # Get input shape and create random data
         # For image models, we need to create a proper image-like array
-        input_layer_name = list(model.inputs.keys())[0]
+        input_layer_name = next(iter(model.inputs.keys()))
         input_shape = model.inputs[input_layer_name].shape
         input_precision = model.inputs[input_layer_name].precision
         input_layout = model.inputs[input_layer_name].layout
-        
+
         print(f"Input: {input_layer_name}, shape: {input_shape}, precision: {input_precision}, layout: {input_layout}")
-        
+
         # Get actual compiled model input to check for embedded preprocessing
         compiled_inputs = inference_adapter.compiled_model.inputs
         actual_input = compiled_inputs[0]
         actual_partial_shape = actual_input.partial_shape
-        actual_layout = str(actual_input.layout) if hasattr(actual_input, 'layout') else str(input_layout)
-        
+        actual_layout = str(actual_input.layout) if hasattr(actual_input, "layout") else str(input_layout)
+
         print(f"Compiled model input partial_shape: {actual_partial_shape}, layout: {actual_layout}")
-        
+
         # Create random tensor data matching the actual compiled model input
         # If shape has dynamic dimensions, use reasonable defaults
         tensor_shape = []
@@ -106,97 +108,98 @@ def analyze_model_performance(
                 # Dynamic dimension - use reasonable default
                 if i == 0:
                     tensor_shape.append(1)  # Batch
-                elif i == 3 and actual_layout == 'NHWC':
+                elif i == 3 and actual_layout == "NHWC":
                     tensor_shape.append(3)  # Channels for NHWC
                 else:
                     tensor_shape.append(224)  # Height/Width default
             else:
                 tensor_shape.append(dim.get_length())
-        
+
         print(f"Using tensor shape: {tensor_shape}")
-        
-        # Create random tensor data
+
+        # Create random tensor data using Generator API
+        rng = np.random.default_rng()
         if input_precision == "FP32" or input_precision == "f32":
-            random_tensor = np.random.randn(*tensor_shape).astype(np.float32)
+            random_tensor = rng.standard_normal(tensor_shape).astype(np.float32)
         elif input_precision == "FP16" or input_precision == "f16":
-            random_tensor = np.random.randn(*tensor_shape).astype(np.float16)
+            random_tensor = rng.standard_normal(tensor_shape).astype(np.float16)
         elif input_precision == "U8" or input_precision == "u8":
-            random_tensor = np.random.randint(0, 256, size=tensor_shape, dtype=np.uint8)
+            random_tensor = rng.integers(0, 256, size=tensor_shape, dtype=np.uint8)
         elif input_precision == "I8" or input_precision == "i8":
-            random_tensor = np.random.randint(-128, 128, size=tensor_shape, dtype=np.int8)
+            random_tensor = rng.integers(-128, 128, size=tensor_shape, dtype=np.int8)
         else:
-            random_tensor = np.random.randn(*tensor_shape).astype(np.float32)
-        
+            random_tensor = rng.standard_normal(tensor_shape).astype(np.float32)
+
         # Create dict_data directly without preprocessing
         dict_data = {input_layer_name: random_tensor}
-        
+
         print(f"Raw tensor shape: {random_tensor.shape}, dtype: {random_tensor.dtype}")
-        
+
         print("Starting warm-up...")
         # Warm-up using raw inference - bypass model wrapper, use adapter directly
         for _ in range(warmup_runs):
             inference_adapter.infer_sync(dict_data)
-        
+
         if use_async:
             print(f"Running {test_runs} test inferences (async mode, inference only)...")
             completed_count = [0]  # Use list to allow modification in callback
             first_start_time = [None]
             last_end_time = [None]
-            
+
             def callback(request, userdata):
                 completed_count[0] += 1
                 last_end_time[0] = time.perf_counter()
-            
+
             # Set callback on the inference adapter directly
             inference_adapter.set_callback(callback)
-            
+
             # Measure from first submission to last completion
             first_start_time[0] = time.perf_counter()
-            
+
             # Submit all inference requests
             for i in range(test_runs):
                 inference_adapter.infer_async(dict_data, i)
                 if (i + 1) % 10 == 0:
                     print(f"  Submitted {i + 1}/{test_runs}")
-            
+
             # Wait for all requests to complete
-            print(f"  Waiting for all requests to complete...")
+            print("  Waiting for all requests to complete...")
             inference_adapter.await_all()
-            
+
             total_duration = (last_end_time[0] - first_start_time[0]) * 1000  # Convert to ms
-            
+
             print(f"  Completed {completed_count[0]}/{test_runs}")
-            
+
             # Calculate metrics
             avg_latency = total_duration / test_runs
             throughput = test_runs / (total_duration / 1000)
-            
+
             print("\n" + "=" * 60)
             print("           🚀 PERFORMANCE METRICS REPORT 🚀           ")
             print("=" * 60)
             print(f"\n📊 Execution Devices: [{device}]")
             print(f"   Count: {test_runs} iterations")
             print(f"   Duration: {total_duration:.2f} ms")
-            print(f"\n📈 Latency:")
+            print("\n📈 Latency:")
             print(f"   Average: {avg_latency:.2f} ms")
             print(f"\n🎯 Throughput: {throughput:.2f} FPS")
             print("=" * 60 + "\n")
-            
+
         else:
             print(f"Running {test_runs} test inferences (sync mode, inference only)...")
             inference_times = []
-            
+
             # Measure each inference separately for latency statistics
             for i in range(test_runs):
                 start_time = time.perf_counter()
                 inference_adapter.infer_sync(dict_data)
                 end_time = time.perf_counter()
-                
+
                 inference_times.append((end_time - start_time) * 1000)  # Convert to ms
-                
+
                 if (i + 1) % 10 == 0:
                     print(f"  Completed {i + 1}/{test_runs}")
-            
+
             # Calculate statistics
             inference_times = np.array(inference_times)
             total_duration = np.sum(inference_times)
@@ -205,73 +208,72 @@ def analyze_model_performance(
             min_latency = np.min(inference_times)
             max_latency = np.max(inference_times)
             throughput = test_runs / (total_duration / 1000)
-            
+
             print("\n" + "=" * 60)
             print("           🚀 PERFORMANCE METRICS REPORT 🚀           ")
             print("=" * 60)
             print(f"\n📊 Execution Devices: [{device}]")
             print(f"   Count: {test_runs} iterations")
             print(f"   Duration: {total_duration:.2f} ms")
-            print(f"\n📈 Latency:")
+            print("\n📈 Latency:")
             print(f"   Median:  {median_latency:.2f} ms")
             print(f"   Average: {mean_latency:.2f} ms")
             print(f"   Min:     {min_latency:.2f} ms")
             print(f"   Max:     {max_latency:.2f} ms")
             print(f"\n🎯 Throughput: {throughput:.2f} FPS")
             print("=" * 60 + "\n")
-        
+
         return None
-    
+
+    # Regular mode with image loading and full preprocessing
+    # Load test image
+    image = cv2.imread(test_images[0])
+
+    print("Starting warm-up...")
+    # Warm-up runs
+    for _ in range(warmup_runs):
+        model(image)
+
+    # Reset metrics after warm-up
+    model.get_performance_metrics().reset()
+
+    if use_async:
+        print(f"Running {test_runs} test inferences (async mode)...")
+        # Async inference mode - submit all requests concurrently
+        results = {}
+
+        def callback(result, userdata):
+            results[userdata] = result
+
+        model.set_callback(callback)
+
+        # Submit all inference requests without blocking
+        for i, image_path in enumerate(test_images[:test_runs]):
+            image = cv2.imread(image_path)
+            model.infer_async(image, user_data=i)
+            # Log progress
+            if (i + 1) % 10 == 0:
+                print(f"  Submitted {i + 1}/{test_runs}")
+
+        # Wait for all requests to complete
+        print("  Waiting for all requests to complete...")
+        model.await_all()
+        print(f"  Completed {len(results)}/{test_runs}")
     else:
-        # Regular mode with image loading and full preprocessing
-        # Load test image
-        image = cv2.imread(test_images[0])
-
-        print("Starting warm-up...")
-        # Warm-up runs
-        for _ in range(warmup_runs):
+        print(f"Running {test_runs} test inferences (sync mode)...")
+        # Synchronous inference mode - process images sequentially
+        for i, image_path in enumerate(test_images[:test_runs]):
+            image = cv2.imread(image_path)
             model(image)
+            # Log progress
+            if (i + 1) % 10 == 0:
+                print(f"  Completed {i + 1}/{test_runs}")
 
-        # Reset metrics after warm-up
-        model.get_performance_metrics().reset()
+    # Analyze results
+    metrics = model.get_performance_metrics()
+    metrics.log_metrics()
 
-        if use_async:
-            print(f"Running {test_runs} test inferences (async mode)...")
-            # Async inference mode - submit all requests concurrently
-            results = {}
-            
-            def callback(result, userdata):
-                results[userdata] = result
-            
-            model.set_callback(callback)
-            
-            # Submit all inference requests without blocking
-            for i, image_path in enumerate(test_images[:test_runs]):
-                image = cv2.imread(image_path)
-                model.infer_async(image, user_data=i)
-                # Log progress
-                if (i + 1) % 10 == 0:
-                    print(f"  Submitted {i + 1}/{test_runs}")
-            
-            # Wait for all requests to complete
-            print(f"  Waiting for all requests to complete...")
-            model.await_all()
-            print(f"  Completed {len(results)}/{test_runs}")
-        else:
-            print(f"Running {test_runs} test inferences (sync mode)...")
-            # Synchronous inference mode - process images sequentially
-            for i, image_path in enumerate(test_images[:test_runs]):
-                image = cv2.imread(image_path)
-                model(image)
-                # Log progress
-                if (i + 1) % 10 == 0:
-                    print(f"  Completed {i + 1}/{test_runs}")
-
-        # Analyze results
-        metrics = model.get_performance_metrics()
-        metrics.log_metrics()
-
-        return metrics
+    return metrics
 
 
 def main():
