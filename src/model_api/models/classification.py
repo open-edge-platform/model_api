@@ -258,13 +258,13 @@ class ClassificationModel(ImageModel):
         if not is_softmaxed(logits, axis=axis):
             logits = softmax(logits, axis=axis)
         top_k_result = top_k(logits, self.params.topk, axis=axis)
-        scores_tensor = top_k_result.values[0]  # noqa: PD011 # silencing false positive - it's not pandas code
-        indices_tensor = top_k_result.indices[0]
+        scores = top_k_result.values[0]  # noqa: PD011 # silencing false positive - it's not pandas code
+        indices = top_k_result.indices[0]
 
         labels_list = self.params.labels
-        labels = [labels_list[i] if labels_list else "" for i in indices_tensor]
+        labels = [labels_list[i] if labels_list else "" for i in indices]
 
-        return list(starmap(Label, zip(indices_tensor, labels, scores_tensor)))
+        return list(starmap(Label, zip(indices, labels, scores)))
 
 
 def sigmoid_numpy(x: np.ndarray) -> np.ndarray:
