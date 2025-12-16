@@ -305,9 +305,6 @@ def softmax(logits: np.ndarray, eps: float = 1e-9, axis=None, keepdims: bool = F
 
 def top_k(array: np.ndarray, k: int, axis: int) -> topk_namedtuple:
     """Returns the top k values and their indices along the specified axis."""
-    if k <= 0 or k > array.shape[axis]:
-        message = "k must be in the range 1 to the size of the selected axis"
-        raise ValueError(message)
     # Get indices of the top k elements
     indices = np.take(np.argpartition(array, -k, axis=axis), range(-k, 0), axis=axis)
     # Gather the top k values
