@@ -84,7 +84,9 @@ class ImageModel(Model):
                 self.h, self.w = self.params.orig_height, self.params.orig_width
             # If orig_height/orig_width not provided for dynamic models, keep h/w as -1
             self._embedded_processing = True
-            self.orig_height, self.orig_width = self.h, self.w
+            # Only set orig_height/orig_width if they are valid (not -1 for dynamic models)
+            if self.h != -1 and self.w != -1:
+                self.orig_height, self.orig_width = self.h, self.w
         elif not self._is_dynamic:
             inference_adapter.embed_preprocessing(
                 layout=layout,

@@ -820,8 +820,9 @@ class YOLOv5(DetectionModel):
         if self._is_dynamic and not getattr(self, '_embedded_processing', False):
             model_width, model_height = meta["resized_shape"][:2]
         else:
-            # Use orig_width/orig_height if available, otherwise fall back to resized_shape
-            if hasattr(self, 'orig_width') and hasattr(self, 'orig_height'):
+            # Use orig_width/orig_height if available and valid, otherwise fall back to resized_shape
+            if (hasattr(self, 'orig_width') and hasattr(self, 'orig_height') and 
+                self.orig_width != -1 and self.orig_height != -1):
                 model_width, model_height = self.orig_width, self.orig_height
             else:
                 model_width, model_height = meta["resized_shape"][:2]
