@@ -207,8 +207,14 @@ class ImageModel(Model):
         original_shape = inputs.shape
         processed_image = inputs[None]
         if self._is_dynamic:
-            h, w, c = inputs.shape
-            resized_shape = (w, h, c)
+            # For dynamic models with embedded preprocessing, try to get the model's internal resolution
+            # If orig_width/orig_height were set, use them; otherwise infer from model output
+            if hasattr(self, 'orig_width') and hasattr(self, 'orig_height'):
+                resized_shape = (self.orig_width, self.orig_height, inputs.shape[2])
+            else:
+                # Try to infer from model: for YOLOv8, 8400 anchor points = 640x640
+                # Otherwise fall back to input dimensions (no embedded resize)
+                resized_shape = self._infer_embedded_resolution(inputs)
         else:
             # For non-dynamic models, use model dimensions if available,
             # otherwise fall back to input image dimensions
@@ -225,6 +231,23 @@ class ImageModel(Model):
                 "resized_shape": resized_shape,
             },
         )
+
+    def _infer_embedded_resolution(self, image: np.ndarray) -> tuple[int, int, int]:
+        """Infer the internal resolution for models with embedded preprocessing.
+        
+        For YOLOv8 models, 8400 anchor points corresponds to 640x640 resolution.
+        Otherwise, assume the model processes at the input resolution (no resize).
+        """
+        # Check if this is a YOLOv8 model with 8400 anchor points (640x640)
+        for output in self.outputs.values():
+            if len(output.shape) >= 2:
+                # YOLOv8 output shape is typically [1, 84, 8400]
+                if output.shape[-1] == 8400 or (len(output.shape) > 2 and output.shape[-2] * output.shape[-1] == 8400):
+                    return (640, 640, image.shape[2])
+        
+        # Default: assume no embedded resize, use input dimensions
+        h, w, c = image.shape
+        return (w, h, c)
 
     def _resize_image(self, image: np.ndarray) -> tuple[np.ndarray, dict]:
         original_shape = image.shape
