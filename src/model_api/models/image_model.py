@@ -78,7 +78,11 @@ class ImageModel(Model):
 
         layout = self.inputs[self.image_blob_name].layout
         if self.params.embedded_processing:
-            self.h, self.w = self.params.orig_height, self.params.orig_width
+            # For embedded processing, use orig_height/orig_width if provided,
+            # otherwise fall back to model dimensions (which may be -1 for dynamic models)
+            if self.params.orig_height is not None and self.params.orig_width is not None:
+                self.h, self.w = self.params.orig_height, self.params.orig_width
+            # If orig_height/orig_width not provided for dynamic models, keep h/w as -1
             self._embedded_processing = True
             self.orig_height, self.orig_width = self.h, self.w
         elif not self._is_dynamic:
@@ -204,7 +208,13 @@ class ImageModel(Model):
             h, w, c = inputs.shape
             resized_shape = (w, h, c)
         else:
-            resized_shape = (self.w, self.h, self.c)
+            # For non-dynamic models, use model dimensions if available,
+            # otherwise fall back to input image dimensions
+            if self.h is not None and self.w is not None and self.c is not None:
+                resized_shape = (self.w, self.h, self.c)
+            else:
+                h, w, c = inputs.shape
+                resized_shape = (w, h, c)
 
         return (
             {self.image_blob_name: processed_image},

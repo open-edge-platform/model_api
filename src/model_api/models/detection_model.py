@@ -65,6 +65,12 @@ class DetectionModel(ImageModel):
             model_width, model_height = meta["resized_shape"][:2]
         else:
             model_width, model_height = self.w, self.h
+        
+        # Ensure model dimensions are valid before computing resize metadata
+        if model_width is None or model_height is None:
+            # Fall back to resized_shape dimensions if model dimensions are not available
+            model_width, model_height = meta["resized_shape"][:2]
+            
         resize_meta = ResizeMetadata.compute(
             original_width=input_img_width,
             original_height=input_img_height,
@@ -91,6 +97,11 @@ class DetectionModel(ImageModel):
             model_width, model_height = meta["resized_shape"][:2]
         else:
             model_width, model_height = self.w, self.h
+
+        # Ensure model dimensions are valid
+        if model_width is None or model_height is None:
+            # Fall back to resized_shape dimensions if model dimensions are not available
+            model_width, model_height = meta["resized_shape"][:2]
 
         if "resize_info" in meta:
             resize_meta = ResizeMetadata.from_dict(meta["resize_info"])
