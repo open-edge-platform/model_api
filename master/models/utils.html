@@ -428,6 +428,25 @@ resize strategies including standard resize, fit-to-window, and letterbox modes.
 
 </dd></dl>
 
+<dl class="py class">
+<dt class="sig sig-object py" id="model_api.models.utils.topk_namedtuple">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_api.models.utils.</span></span><span class="sig-name descname"><span class="pre">topk_namedtuple</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indices</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.utils.topk_namedtuple" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
+<p>Create new instance of topk_namedtuple(values, indices)</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_api.models.utils.topk_namedtuple.indices">
+<span class="sig-name descname"><span class="pre">indices</span></span><a class="headerlink" href="#model_api.models.utils.topk_namedtuple.indices" title="Link to this definition">#</a></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_api.models.utils.topk_namedtuple.values">
+<span class="sig-name descname"><span class="pre">values</span></span><a class="headerlink" href="#model_api.models.utils.topk_namedtuple.values" title="Link to this definition">#</a></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="model_api.models.utils.add_rotated_rects">
 <span class="sig-prename descclassname"><span class="pre">model_api.models.utils.</span></span><span class="sig-name descname"><span class="pre">add_rotated_rects</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inst_seg_result</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.utils.add_rotated_rects" title="Link to this definition">#</a></dt>
@@ -458,6 +477,17 @@ resize strategies including standard resize, fit-to-window, and letterbox modes.
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Contour</span></code>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="model_api.models.utils.is_softmaxed">
+<span class="sig-prename descclassname"><span class="pre">model_api.models.utils.</span></span><span class="sig-name descname"><span class="pre">is_softmaxed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.utils.is_softmaxed" title="Link to this definition">#</a></dt>
+<dd><p>Check if the input array is softmaxed along the specified axis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -508,6 +538,17 @@ from different classes do not overlap</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="model_api.models.utils.top_k">
+<span class="sig-prename descclassname"><span class="pre">model_api.models.utils.</span></span><span class="sig-name descname"><span class="pre">top_k</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.utils.top_k" title="Link to this definition">#</a></dt>
+<dd><p>Returns the top k values and their indices along the specified axis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#model_api.models.utils.topk_namedtuple" title="model_api.models.utils.topk_namedtuple"><code class="xref py py-class docutils literal notranslate"><span class="pre">topk_namedtuple</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -563,13 +604,20 @@ from different classes do not overlap</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3"><code class="docutils literal notranslate"><span class="pre">ResizeMetadata.pad_top</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.utils.topk_namedtuple"><code class="docutils literal notranslate"><span class="pre">topk_namedtuple</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.utils.topk_namedtuple.indices"><code class="docutils literal notranslate"><span class="pre">topk_namedtuple.indices</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.utils.topk_namedtuple.values"><code class="docutils literal notranslate"><span class="pre">topk_namedtuple.values</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.utils.add_rotated_rects"><code class="docutils literal notranslate"><span class="pre">add_rotated_rects()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.utils.clip_detections"><code class="docutils literal notranslate"><span class="pre">clip_detections()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.utils.get_contours"><code class="docutils literal notranslate"><span class="pre">get_contours()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.utils.is_softmaxed"><code class="docutils literal notranslate"><span class="pre">is_softmaxed()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.utils.load_labels"><code class="docutils literal notranslate"><span class="pre">load_labels()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.utils.multiclass_nms"><code class="docutils literal notranslate"><span class="pre">multiclass_nms()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.utils.nms"><code class="docutils literal notranslate"><span class="pre">nms()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.utils.softmax"><code class="docutils literal notranslate"><span class="pre">softmax()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.utils.top_k"><code class="docutils literal notranslate"><span class="pre">top_k()</span></code></a></li>
 </ul>
   </nav></div>
 
