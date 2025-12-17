@@ -5,7 +5,7 @@
 
 import logging
 
-from .time_stat import TimeStat
+from .time_stat import MS_IN_SECOND, TimeStat
 
 logger = logging.getLogger(__name__)
 
@@ -37,12 +37,19 @@ class PerformanceMetrics:
         new_metrics.preprocess_time = self.preprocess_time + other.preprocess_time
         new_metrics.inference_time = self.inference_time + other.inference_time
         new_metrics.postprocess_time = self.postprocess_time + other.postprocess_time
+        new_metrics.total_time = self.total_time + other.total_time
         return new_metrics
 
-    def reset(self) -> None:
+    def reset(self, include_load_time: bool = False) -> None:
         """
         Resets performance metrics to the initial state.
+
+        Args:
+            include_load_time (bool, optional): Whether to reset the load time statistics as well.
+                Defaults to False to keep model load measurements available across runs.
         """
+        if include_load_time:
+            self.load_time.reset()
         self.preprocess_time.reset()
         self.inference_time.reset()
         self.postprocess_time.reset()
@@ -84,6 +91,10 @@ class PerformanceMetrics:
         """
         return self.postprocess_time
 
+    def get_total_time(self) -> TimeStat:
+        """Returns the total pipeline time statistics."""
+        return self.total_time
+
     def get_total_frames(self) -> int:
         """
         Returns the total number of frames processed.
@@ -100,7 +111,10 @@ class PerformanceMetrics:
         Returns:
             float: Frames Per Second.
         """
-        return self.get_total_frames() / sum(self.total_time.durations) if sum(self.total_time.durations) > 0 else 0.0
+        total_time_ms = self.total_time.time
+        if total_time_ms <= 0:
+            return 0.0
+        return self.get_total_frames() / (total_time_ms / MS_IN_SECOND)
 
     def get_total_time_min(self) -> float:
         """
@@ -132,17 +146,17 @@ class PerformanceMetrics:
             "=" * 60,
             "",
             "📊 Model Loading:",
-            f"   Load Time: {self.load_time.mean():.3f}s",
+            f"   Load Time: {self.load_time.mean():.2f} ms",
             "",
             "⚙️  Processing Times (mean ± std):",
-            f"   Preprocess:  {self.preprocess_time.mean():.3f}s ± {self.preprocess_time.stddev():.3f}s",
-            f"   Inference:   {self.inference_time.mean():.3f}s ± {self.inference_time.stddev():.3f}s",
-            f"   Postprocess: {self.postprocess_time.mean():.3f}s ± {self.postprocess_time.stddev():.3f}s",
+            f"   Preprocess:  {self.preprocess_time.mean():.2f} ms ± {self.preprocess_time.stddev():.2f} ms",
+            f"   Inference:   {self.inference_time.mean():.2f} ms ± {self.inference_time.stddev():.2f} ms",
+            f"   Postprocess: {self.postprocess_time.mean():.2f} ms ± {self.postprocess_time.stddev():.2f} ms",
             "",
             "📈 Total Time Statistics:",
-            f"   Mean:  {self.total_time.mean():.3f}s ± {self.total_time.stddev():.3f}s",
-            f"   Min:   {self.get_total_time_min():.3f}s",
-            f"   Max:   {self.get_total_time_max():.3f}s",
+            f"   Mean:  {self.total_time.mean():.2f} ms ± {self.total_time.stddev():.2f} ms",
+            f"   Min:   {self.get_total_time_min():.2f} ms",
+            f"   Max:   {self.get_total_time_max():.2f} ms",
             "",
             "🎯 Performance Summary:",
             f"   Total Frames: {self.get_total_frames():,}",
