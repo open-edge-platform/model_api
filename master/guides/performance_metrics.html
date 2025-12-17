@@ -323,6 +323,7 @@
 <li><p><strong>Total frames</strong>: Total number of inferences</p></li>
 <li><p><strong>FPS</strong>: Frames Per Second</p></li>
 </ul>
+<p>All timing statistics are reported in milliseconds (ms).</p>
 <p>Each metric provides statistical information including mean, standard deviation, and individual measurements.</p>
 </section>
 <section id="basic-usage">
@@ -361,21 +362,21 @@
 <span class="o">============================================================</span>
 
 📊<span class="w"> </span>Model<span class="w"> </span>Loading:
-<span class="w">   </span>Load<span class="w"> </span>Time:<span class="w"> </span><span class="m">2</span>.497s
+<span class="w">    </span>Load<span class="w"> </span>Time:<span class="w"> </span><span class="m">2497</span>.00<span class="w"> </span>ms
 
 ⚙️<span class="w">  </span>Processing<span class="w"> </span>Times<span class="w"> </span><span class="o">(</span>mean<span class="w"> </span>±<span class="w"> </span>std<span class="o">)</span>:
-<span class="w">   </span>Preprocess:<span class="w">  </span><span class="m">0</span>.001s<span class="w"> </span>±<span class="w"> </span><span class="m">0</span>.000s
-<span class="w">   </span>Inference:<span class="w">   </span><span class="m">0</span>.570s<span class="w"> </span>±<span class="w"> </span><span class="m">0</span>.020s
-<span class="w">   </span>Postprocess:<span class="w"> </span><span class="m">0</span>.001s<span class="w"> </span>±<span class="w"> </span><span class="m">0</span>.000s
+<span class="w">    </span>Preprocess:<span class="w">  </span><span class="m">1</span>.00<span class="w"> </span>ms<span class="w"> </span>±<span class="w"> </span><span class="m">0</span>.10<span class="w"> </span>ms
+<span class="w">    </span>Inference:<span class="w">   </span><span class="m">570</span>.00<span class="w"> </span>ms<span class="w"> </span>±<span class="w"> </span><span class="m">20</span>.00<span class="w"> </span>ms
+<span class="w">    </span>Postprocess:<span class="w"> </span><span class="m">1</span>.00<span class="w"> </span>ms<span class="w"> </span>±<span class="w"> </span><span class="m">0</span>.10<span class="w"> </span>ms
 
 📈<span class="w"> </span>Total<span class="w"> </span>Time<span class="w"> </span>Statistics:
-<span class="w">   </span>Mean:<span class="w">  </span><span class="m">0</span>.572s<span class="w"> </span>±<span class="w"> </span><span class="m">0</span>.020s
-<span class="w">   </span>Min:<span class="w">   </span><span class="m">0</span>.556s
-<span class="w">   </span>Max:<span class="w">   </span><span class="m">0</span>.642s
+<span class="w">    </span>Mean:<span class="w">  </span><span class="m">572</span>.00<span class="w"> </span>ms<span class="w"> </span>±<span class="w"> </span><span class="m">20</span>.00<span class="w"> </span>ms
+<span class="w">    </span>Min:<span class="w">   </span><span class="m">556</span>.00<span class="w"> </span>ms
+<span class="w">    </span>Max:<span class="w">   </span><span class="m">642</span>.00<span class="w"> </span>ms
 
 🎯<span class="w"> </span>Performance<span class="w"> </span>Summary:
-<span class="w">   </span>Total<span class="w"> </span>Frames:<span class="w"> </span><span class="m">100</span>
-<span class="w">   </span>FPS:<span class="w">          </span><span class="m">1</span>.75
+<span class="w">    </span>Total<span class="w"> </span>Frames:<span class="w"> </span><span class="m">100</span>
+<span class="w">    </span>FPS:<span class="w">          </span><span class="m">1</span>.75
 <span class="o">============================================================</span>
 </pre></div>
 </div>
@@ -396,9 +397,9 @@
 <span class="n">total_max_time</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">get_total_time_max</span><span class="p">()</span>
 
 <span class="c1"># Access statistical information</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Mean inference time: </span><span class="si">{</span><span class="n">inference_time</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> seconds&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Standard deviation: </span><span class="si">{</span><span class="n">inference_time</span><span class="o">.</span><span class="n">stddev</span><span class="p">()</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> seconds&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total inference time: </span><span class="si">{</span><span class="n">inference_time</span><span class="o">.</span><span class="n">time</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> seconds&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Mean inference time: </span><span class="si">{</span><span class="n">inference_time</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> ms&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Standard deviation: </span><span class="si">{</span><span class="n">inference_time</span><span class="o">.</span><span class="n">stddev</span><span class="p">()</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> ms&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total inference time: </span><span class="si">{</span><span class="n">inference_time</span><span class="o">.</span><span class="n">time</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> ms&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Number of inferences: </span><span class="si">{</span><span class="n">inference_time</span><span class="o">.</span><span class="n">count</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -452,7 +453,7 @@
     <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">metrics</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_performance_metrics</span><span class="p">()</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;After </span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2"> inferences:&quot;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Mean inference time: </span><span class="si">{</span><span class="n">metrics</span><span class="o">.</span><span class="n">get_inference_time</span><span class="p">()</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Mean inference time: </span><span class="si">{</span><span class="n">metrics</span><span class="o">.</span><span class="n">get_inference_time</span><span class="p">()</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> ms&quot;</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Current FPS: </span><span class="si">{</span><span class="n">metrics</span><span class="o">.</span><span class="n">get_fps</span><span class="p">()</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -468,13 +469,12 @@
 <span class="n">preprocess_time</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">get_preprocess_time</span><span class="p">()</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
 <span class="n">inference_time</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">get_inference_time</span><span class="p">()</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
 <span class="n">postprocess_time</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">get_postprocess_time</span><span class="p">()</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+<span class="n">total</span> <span class="o">=</span> <span class="n">preprocess_time</span> <span class="o">+</span> <span class="n">inference_time</span> <span class="o">+</span> <span class="n">postprocess_time</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Time breakdown:&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Preprocessing: </span><span class="si">{</span><span class="n">preprocess_time</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">s (</span><span class="si">{</span><span class="n">preprocess_time</span><span class="o">/</span><span class="n">total</span><span class="si">:</span><span class="s2">.1%</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Inference:     </span><span class="si">{</span><span class="n">inference_time</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">s (</span><span class="si">{</span><span class="n">inference_time</span><span class="o">/</span><span class="n">total</span><span class="si">:</span><span class="s2">.1%</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Postprocessing: </span><span class="si">{</span><span class="n">postprocess_time</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">s (</span><span class="si">{</span><span class="n">postprocess_time</span><span class="o">/</span><span class="n">total</span><span class="si">:</span><span class="s2">.1%</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
-
-<span class="n">total</span> <span class="o">=</span> <span class="n">preprocess_time</span> <span class="o">+</span> <span class="n">inference_time</span> <span class="o">+</span> <span class="n">postprocess_time</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Preprocessing: </span><span class="si">{</span><span class="n">preprocess_time</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> ms (</span><span class="si">{</span><span class="n">preprocess_time</span><span class="o">/</span><span class="n">total</span><span class="si">:</span><span class="s2">.1%</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Inference:     </span><span class="si">{</span><span class="n">inference_time</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> ms (</span><span class="si">{</span><span class="n">inference_time</span><span class="o">/</span><span class="n">total</span><span class="si">:</span><span class="s2">.1%</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Postprocessing: </span><span class="si">{</span><span class="n">postprocess_time</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> ms (</span><span class="si">{</span><span class="n">postprocess_time</span><span class="o">/</span><span class="n">total</span><span class="si">:</span><span class="s2">.1%</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -485,8 +485,12 @@
 <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
     <span class="n">model</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
 
-<span class="c1"># Reset metrics after warm-up</span>
-<span class="n">model</span><span class="o">.</span><span class="n">get_performance_metrics</span><span class="p">()</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+<span class="c1"># Reset metrics after warm-up (load time stats are preserved by default)</span>
+<span class="n">metrics</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_performance_metrics</span><span class="p">()</span>
+<span class="n">metrics</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+
+<span class="c1"># If you also need to clear model load measurements</span>
+<span class="c1"># metrics.reset(include_load_time=True)</span>
 
 <span class="c1"># Now measure actual performance</span>
 <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">100</span><span class="p">):</span>
@@ -527,8 +531,9 @@
     <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">warmup_runs</span><span class="p">):</span>
         <span class="n">model</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
 
-    <span class="c1"># Reset metrics after warm-up</span>
-    <span class="n">model</span><span class="o">.</span><span class="n">get_performance_metrics</span><span class="p">()</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+    <span class="c1"># Reset metrics after warm-up (keeping load time by default)</span>
+    <span class="n">metrics</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_performance_metrics</span><span class="p">()</span>
+    <span class="n">metrics</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
 
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Running </span><span class="si">{</span><span class="n">test_runs</span><span class="si">}</span><span class="s2"> test inferences...&quot;</span><span class="p">)</span>
     <span class="c1"># Performance measurement runs</span>
@@ -552,9 +557,11 @@
     <span class="c1"># Additional analysis</span>
     <span class="n">inference_time</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">get_inference_time</span><span class="p">()</span>
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Inference time analysis:&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Minimum: </span><span class="si">{</span><span class="nb">min</span><span class="p">(</span><span class="n">inference_time</span><span class="o">.</span><span class="n">durations</span><span class="p">)</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Maximum: </span><span class="si">{</span><span class="nb">max</span><span class="p">(</span><span class="n">inference_time</span><span class="o">.</span><span class="n">durations</span><span class="p">)</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Median: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">inference_time</span><span class="o">.</span><span class="n">durations</span><span class="p">)[</span><span class="nb">len</span><span class="p">(</span><span class="n">inference_time</span><span class="o">.</span><span class="n">durations</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span><span class="p">]</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Minimum: </span><span class="si">{</span><span class="nb">min</span><span class="p">(</span><span class="n">inference_time</span><span class="o">.</span><span class="n">durations</span><span class="p">)</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> ms&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Maximum: </span><span class="si">{</span><span class="nb">max</span><span class="p">(</span><span class="n">inference_time</span><span class="o">.</span><span class="n">durations</span><span class="p">)</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> ms&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;  Median: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">inference_time</span><span class="o">.</span><span class="n">durations</span><span class="p">)[</span><span class="nb">len</span><span class="p">(</span><span class="n">inference_time</span><span class="o">.</span><span class="n">durations</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> ms&quot;</span>
+    <span class="p">)</span>
 
     <span class="k">return</span> <span class="n">metrics</span>
 
