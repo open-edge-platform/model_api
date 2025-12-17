@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+from collections import namedtuple
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -13,6 +14,9 @@ import cv2
 import numpy as np
 
 from model_api.models.result import Contour, InstanceSegmentationResult, RotatedSegmentationResult
+
+topk_namedtuple = namedtuple("topk_namedtuple", ["values", "indices"])
+
 
 if TYPE_CHECKING:
     from model_api.models.result.detection import DetectionResult
@@ -284,6 +288,29 @@ def multiclass_nms(
     return det, keep
 
 
+def is_softmaxed(array: np.ndarray, axis: int, atol: float = 1e-5) -> bool:
+    """Check if the input array is softmaxed along the specified axis."""
+    # Check values are in [0, 1]
+    if not np.all((array >= 0) & (array <= 1)):
+        return False
+    # Check sum along axis is close to 1
+    sums = np.sum(array, axis=axis)
+    return np.allclose(sums, 1.0, atol=atol)
+
+
 def softmax(logits: np.ndarray, eps: float = 1e-9, axis=None, keepdims: bool = False) -> np.ndarray:
     exp = np.exp(logits - np.max(logits))
     return exp / (np.sum(exp, axis=axis, keepdims=keepdims) + eps)
+
+
+def top_k(array: np.ndarray, k: int, axis: int) -> topk_namedtuple:
+    """Returns the top k values and their indices along the specified axis."""
+    # Get indices of the top k elements
+    indices = np.take(np.argpartition(array, -k, axis=axis), range(-k, 0), axis=axis)
+    # Gather the top k values
+    topk_values = np.take_along_axis(array, indices, axis=axis)
+    # Sort the top k values and indices in descending order
+    sorted_order = np.argsort(-topk_values, axis=axis)
+    topk_values = np.take_along_axis(topk_values, sorted_order, axis=axis)
+    indices = np.take_along_axis(indices, sorted_order, axis=axis)
+    return topk_namedtuple(values=topk_values, indices=indices)
