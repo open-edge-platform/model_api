@@ -5,7 +5,6 @@
 
 import numpy as np
 import PIL
-import pytest
 from PIL import ImageDraw
 
 from model_api.visualizer import BoundingBox, Keypoint, Label, Overlay, Polygon
@@ -58,8 +57,11 @@ def test_polygon(mock_image: PIL.Image):
     polygon = Polygon(mask=mask, color="red", opacity=1, outline_width=1)
     assert polygon.compute(mock_image) == expected_image
 
-    with pytest.raises(ValueError, match="No contours found in the mask."):
-        Polygon(mask=np.zeros((100, 100), dtype=np.uint8)).compute(mock_image)
+    # Test with empty mask - should not raise, just return image unchanged
+    empty_mask = np.zeros((100, 100), dtype=np.uint8)
+    polygon_empty = Polygon(mask=empty_mask)
+    result = polygon_empty.compute(mock_image)
+    assert result == mock_image
 
 
 def test_label(mock_image: PIL.Image):
