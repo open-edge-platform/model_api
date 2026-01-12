@@ -13,12 +13,14 @@ from model_api.visualizer.layout import Flatten, HStack, Layout
 from model_api.visualizer.primitive import BoundingBox, Label, Overlay
 
 from .scene import Scene
+from .utils import get_label_color_mapping
 
 
 class DetectionScene(Scene):
     """Detection Scene."""
 
     def __init__(self, image: Image, result: DetectionResult, layout: Union[Layout, None] = None) -> None:
+        self.color_per_label = get_label_color_mapping(result.label_names)
         super().__init__(
             base=image,
             bounding_box=self._get_bounding_boxes(result),
@@ -43,7 +45,9 @@ class DetectionScene(Scene):
         for score, label_name, bbox in zip(result.scores, result.label_names, result.bboxes):
             x1, y1, x2, y2 = bbox
             label = f"{label_name} ({score:.2f})"
-            bounding_boxes.append(BoundingBox(x1=x1, y1=y1, x2=x2, y2=y2, label=label))
+            bounding_boxes.append(
+                BoundingBox(x1=x1, y1=y1, x2=x2, y2=y2, label=label, color=self.color_per_label[label_name]),
+            )
         return bounding_boxes
 
     @property

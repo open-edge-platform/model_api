@@ -69,8 +69,8 @@ class Polygon(Primitive):
         elif mask is not None:
             points_ = self._get_points_from_mask(mask)
         else:
-            msg = "Either points or mask should be provided."
-            raise ValueError(msg)
+            logger.warning("Neither points nor mask provided. Skipping polygon drawing.")
+            return []
         return points_
 
     def _get_points_from_mask(self, mask: np.ndarray) -> list[tuple[int, int]]:
@@ -88,8 +88,8 @@ class Polygon(Primitive):
             logger.warning("Multiple contours found in the mask. Using the largest one.")
             contours = sorted(contours, key=cv2.contourArea, reverse=True)
         if len(contours) == 0:
-            msg = "No contours found in the mask."
-            raise ValueError(msg)
+            logger.warning("No contours found in the mask. Skipping polygon drawing.")
+            return []
         points_ = contours[0].squeeze().tolist()
         return [tuple(point) for point in points_]
 
@@ -102,6 +102,9 @@ class Polygon(Primitive):
         Returns:
             Image with the polygon drawn on it.
         """
+        if len(self.points) == 0:
+            return image
+
         draw = ImageDraw.Draw(image, "RGBA")
         # Draw polygon with darker edge and a semi-transparent fill.
         ink = ImageColor.getrgb(self.color)
