@@ -34,7 +34,7 @@ from .utils import (
     get_contours,
 )
 from .visual_prompting import Prompt, SAMLearnableVisualPrompter, SAMVisualPrompter
-from .yolo import YOLO, YOLOF, YOLOX, YoloV3ONNX, YoloV4, YOLOv5, YOLOv8, YOLO11
+from .yolo import YOLO, YOLO11, YOLOF, YOLOX, YoloV3ONNX, YoloV4, YOLOv5, YOLOv8
 
 classification_models = [
     "resnet-18-pytorch",
