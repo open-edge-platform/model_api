@@ -63,7 +63,6 @@ model.save("serialized.xml")
 
 ModelAPI uses custom field in `rt_info/model_info` section of OpenVINO IR to store metadata required for preprocessing and postprocessing. If you have a generic OpenVINO model without such metadata, you can provide that metadata in `configuration` argument of `create_model()` method:
 
-
 ```python
 from model_api.models import Model
 
