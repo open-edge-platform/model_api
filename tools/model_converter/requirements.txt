@@ -1,0 +1,6 @@
+torch
+torchvision
+openvino
+transformers
+timm
+nncf
