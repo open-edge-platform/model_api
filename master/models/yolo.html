@@ -415,6 +415,29 @@ the type, default value and description must be provided.</p>
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="model_api.models.yolo.YOLO11">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_api.models.yolo.</span></span><span class="sig-name descname"><span class="pre">YOLO11</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inference_adapter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configuration</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preload</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.yolo.YOLO11" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#model_api.models.yolo.YOLOv5" title="model_api.models.yolo.YOLOv5"><code class="xref py py-class docutils literal notranslate"><span class="pre">YOLOv5</span></code></a></p>
+<p>YOLO11 uses the same inference approach as YOLOv5 and YOLOv8</p>
+<p>Detection Model constructor</p>
+<p>It extends the <cite>ImageModel</cite> construtor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inference_adapter</strong> (<a class="reference internal" href="../adapters/inference_adapter.html#model_api.adapters.inference_adapter.InferenceAdapter" title="model_api.adapters.inference_adapter.InferenceAdapter"><em>InferenceAdapter</em></a>) – allows working with the specified executor</p></li>
+<li><p><strong>configuration</strong> (<em>dict</em><em>, </em><em>optional</em>) – it contains values for parameters accepted by specific
+wrapper (<cite>confidence_threshold</cite>, <cite>labels</cite> etc.) which are set as data attributes</p></li>
+<li><p><strong>preload</strong> (<em>bool</em><em>, </em><em>optional</em>) – a flag whether the model is loaded to device while
+initialization. If <cite>preload=False</cite>, the model must be loaded via <cite>load</cite> method before inference</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="model.html#model_api.models.model.WrapperError" title="model_api.models.model.WrapperError"><strong>WrapperError</strong></a> – if the model has more than 1 image inputs</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="model_api.models.yolo.YOLOF">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_api.models.yolo.</span></span><span class="sig-name descname"><span class="pre">YOLOF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inference_adapter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configuration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preload</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.yolo.YOLOF" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#model_api.models.yolo.YOLO" title="model_api.models.yolo.YOLO"><code class="xref py py-class docutils literal notranslate"><span class="pre">YOLO</span></code></a></p>
@@ -867,6 +890,7 @@ the type, default value and description must be provided.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.yolo.YOLO.postprocess"><code class="docutils literal notranslate"><span class="pre">YOLO.postprocess()</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.yolo.YOLO11"><code class="docutils literal notranslate"><span class="pre">YOLO11</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.yolo.YOLOF"><code class="docutils literal notranslate"><span class="pre">YOLOF</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.yolo.YOLOF.Params"><code class="docutils literal notranslate"><span class="pre">YOLOF.Params</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.yolo.YOLOF.parameters"><code class="docutils literal notranslate"><span class="pre">YOLOF.parameters()</span></code></a></li>
