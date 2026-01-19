@@ -71,7 +71,7 @@ from model_api.models import Model
 model = Model.create_model(
     "model.xml",
     configuration={
-        "model_type": "segmentation",
+        "model_type": "Segmentation",
         "blur_strength": 1,
         "labels": ["object"],
         "soft_threshold": 0.5,
