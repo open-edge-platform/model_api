@@ -234,7 +234,7 @@ class Model:
                     ["model_info", "model_type"],
                 ).astype(str)
             except RuntimeError:
-                model_type = cls.detect_model_type(inference_adapter)
+                model_type = configuration.get("model_type", cls.detect_model_type(inference_adapter))
         Model = cls.get_model_class(model_type)
         return Model(inference_adapter, configuration, preload)
 

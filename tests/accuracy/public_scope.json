@@ -36,6 +36,24 @@
     ]
   },
   {
+    "name": "otx_models/Lite-hrnet-s_mod2-without-model-info.xml",
+    "type": "SegmentationModel",
+    "configuration": {
+      "blur_strength": 1,
+      "labels": ["object"],
+      "model_type": "Segmentation",
+      "soft_threshold": 0.5
+    },
+    "test_data": [
+      {
+        "image": "coco128/images/train2017/000000000074.jpg",
+        "reference": [
+          "0: 0.563, 1: 0.437, [426,640,2], [0], [0]; object: 0.520, 26, 0, object: 0.530, 42, 0, object: 0.501, 4, 0, object: 0.507, 27, 0, object: 0.503, 8, 0, object: 0.502, 6, 0, object: 0.505, 18, 0, object: 0.504, 13, 0, object: 0.524, 87, 0, object: 0.521, 89, 0, object: 0.757, 2706, 2, "
+        ]
+      }
+    ]
+  },
+  {
     "name": "otx_models/Lite-hrnet-s_mod2.onnx",
     "type": "SegmentationModel",
     "test_data": [

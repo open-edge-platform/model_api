@@ -78,7 +78,7 @@ def read_config(fname):
         return json.load(f)
 
 
-def create_models(model_type, model_path, download_dir, force_onnx_adapter=False, device="CPU"):
+def create_models(model_type, model_path, download_dir, force_onnx_adapter=False, device="CPU", configuration=None):
     if model_path.endswith(".onnx") and force_onnx_adapter:
         wrapper_type = model_type.get_model_class(
             load_parameters_from_onnx(onnx.load(model_path))["model_info"]["model_type"],
@@ -92,8 +92,10 @@ def create_models(model_type, model_path, download_dir, force_onnx_adapter=False
         model.load()
         return [model]
 
+    configuration = configuration or {}
+
     models = [
-        model_type.create_model(model_path, device=device, download_dir=download_dir),
+        model_type.create_model(model_path, device=device, download_dir=download_dir, configuration=configuration),
     ]
     if model_path.endswith(".xml"):
         model = create_core().read_model(model_path)
@@ -101,7 +103,7 @@ def create_models(model_type, model_path, download_dir, force_onnx_adapter=False
             wrapper_type = model_type.get_model_class(
                 model.get_rt_info(["model_info", "model_type"]).astype(str),
             )
-            model = wrapper_type(OpenvinoAdapter(create_core(), model_path, device=device))
+            model = wrapper_type(OpenvinoAdapter(create_core(), model_path, device=device), configuration=configuration)
             model.load()
             models.append(model)
     return models
@@ -287,6 +289,7 @@ def test_image_models(data, device, dump, result, model_data, results_dir):  # n
         data,
         model_data.get("force_ort", False),
         device=device,
+        configuration=model_data.get("configuration", None),
     ):
         if "tiler" in model_data:
             if "extra_model" in model_data:
