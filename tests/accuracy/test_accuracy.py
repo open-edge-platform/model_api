@@ -92,8 +92,7 @@ def create_models(model_type, model_path, download_dir, force_onnx_adapter=False
         model.load()
         return [model]
 
-    if not configuration:
-        configuration = {}
+    configuration = configuration or {}
 
     models = [
         model_type.create_model(model_path, device=device, download_dir=download_dir, configuration=configuration),
