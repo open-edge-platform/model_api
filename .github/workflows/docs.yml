@@ -1,5 +1,4 @@
 name: Build Docs
-permissions: {} # No permissions by default on workflow level
 
 on:
   workflow_dispatch: # run on request (no need for PR)
@@ -7,34 +6,42 @@ on:
     branches:
       - master
 
+permissions: {} # No permissions by default on workflow level
+
 jobs:
   Build-Docs:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
+
       - name: Set up Python
         uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
         with:
           python-version-file: ".python-version"
+
       - name: Install uv
         uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
+        with:
+          version: "0.9.27"
+
       - name: Install dependencies
         run: |
           uv sync --locked --extra docs
+
       - name: Build Docs
-        run: |
-          cd docs
-          uv run make html
+        working-directory: docs
+        run: uv run make html
+
       - name: Branch name
         id: branch_name
-        shell: bash
         run: |
-          echo ::set-output name=SOURCE_NAME::${GITHUB_REF#refs/*/}
+          echo "SOURCE_NAME=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
+
       - name: Create gh-pages branch
         env:
           SOURCE: ${{steps.branch_name.outputs.SOURCE_NAME}}
@@ -67,6 +74,7 @@ jobs:
           else
             echo "Branch gh-pages already exists"
           fi
+
       - name: Commit docs to gh-pages branch
         env:
           RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
@@ -88,6 +96,7 @@ jobs:
           git add ./latest "$RELEASE_VERSION"
           git add index.html
           git commit -m "Update documentation" -a || true
+
       - name: Push changes
         uses: ad-m/github-push-action@57116acb309081ee57864270b0e3c4cedbe45452
         with:

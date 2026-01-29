@@ -4,9 +4,11 @@
 #####
 
 name: "Pull Request Labeler"
-permissions: {} # No permissions by default on workflow level
+
 on:
   - pull_request_target # zizmor: ignore[dangerous-triggers]
+
+permissions: {} # No permissions by default on workflow level
 
 jobs:
   labeler:

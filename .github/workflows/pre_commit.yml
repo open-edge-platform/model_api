@@ -1,54 +1,123 @@
 name: Pre-Commit Checks
-permissions: {} # No permissions by default on workflow level
 
 on:
-  push:
+  pull_request:
+  merge_group:
     branches:
       - master
-  pull_request:
-    types:
-      - opened
-      - reopened
-      - synchronize
-      - ready_for_review
   workflow_dispatch: # run on request (no need for PR)
 
+permissions: {} # No permissions by default on workflow level
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
-  Code-Quality-Checks:
-    runs-on: ubuntu-24.04
+  code_quality_checks:
+    runs-on: ubuntu-latest
     steps:
-      - name: CHECKOUT REPOSITORY
+      - &checkout
+        name: Checkout code
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
+
       - name: Set up Python
         uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
         with:
           python-version-file: ".python-version"
+
       - name: Install uv
         uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
+        with:
+          enable-cache: false
+          version: "0.9.27"
+
       - name: Install dependencies
-        run: |
-          uv sync --locked --all-extras
+        run: uv sync --locked --all-extras
+
       - name: Run pre-commit checks
-        run: |
-          uvx pre-commit run --all-files
-  Unit-Tests:
-    runs-on: ubuntu-24.04
+        run: uvx pre-commit run --all-files
+
+  accuracy-tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - "ubuntu-latest"
+          - "windows-latest"
+        python-version:
+          - "3.10"
+          - "3.11"
+          - "3.12"
+          - "3.13"
+    runs-on: ${{ matrix.os }}
     steps:
-      - name: CHECKOUT REPOSITORY
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-        with:
-          persist-credentials: false
-      - name: Set up Python
-        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
-        with:
-          python-version-file: ".python-version"
-      - name: Install uv
+      - *checkout
+
+      - &matrix-setup-uv
+        name: Install uv
         uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
-      - name: Install dependencies
-        run: |
-          uv sync --locked --extra tests
+        with:
+          enable-cache: false
+          python-version: ${{ matrix.python-version }}
+          version: "0.9.27"
+
+      - &install-dependencies
+        name: Install dependencies
+        run: uv sync --locked --extra tests --extra-index-url https://download.pytorch.org/whl/cpu
+
+      - name: Prepare test data
+        run: uv run python tests/accuracy/download_models.py -d data -j tests/accuracy/public_scope.json -l
+
+      - name: Run Python Test
+        run: uv run pytest --data=./data tests/accuracy/test_accuracy.py
+
+  unit-functional-tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - "ubuntu-24.04"
+          - "windows-2022"
+        python-version:
+          - "3.10"
+          - "3.11"
+          - "3.12"
+          - "3.13"
+    name: unit & functional tests (${{ matrix.os }}, Python ${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    steps:
+      - *checkout
+
+      - *matrix-setup-uv
+
+      - *install-dependencies
+
       - name: Run python unit tests
+        run: uv run pytest tests/unit --cov
+
+      - name: Prepare test data
         run: |
-          uv run pytest tests/unit --cov
+          uv run python tests/accuracy/download_models.py -d data -j tests/precommit/public_scope.json -l
+
+      - name: Run test
+        run: |
+          uv run pytest --data=./data tests/functional
+
+  pre-commit-result:
+    runs-on: ubuntu-latest
+    needs:
+      - accuracy-tests
+      - code_quality_checks
+      - unit-functional-tests
+    if: always()
+    steps:
+      - name: All tests ok
+        if: ${{ !(contains(needs.*.result, 'failure')) }}
+        run: exit 0
+
+      - name: Some tests failed
+        if: ${{ contains(needs.*.result, 'failure') }}
+        run: exit 1

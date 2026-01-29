@@ -12,27 +12,30 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
+
       - name: Set up Python
         uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
         with:
           python-version-file: ".python-version"
+
       - name: Install pypa/build
-        run: |
-          uv sync --locked
+        run: uv sync --locked
+
       - name: Build sdist
-        run: |
-          uv build --sdist
+        run: uv build --sdist
+
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: artifact-sdist
           path: dist/*.tar.gz
+
       - name: Build wheel
-        run: |
-          uv build --wheel
+        run: uv build --wheel
+
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: artifact-wheel
@@ -53,13 +56,19 @@ jobs:
           path: dist
           pattern: artifact-*
           merge-multiple: true
+
       # to determine where to publish the package distribution to PyPI or TestPyPI
       - name: Check tag
         id: check-tag
-        uses: actions-ecosystem/action-regex-match@9e6c4fb3d5e898f505be7a1fb6e7b0a278f6665b # v2.0.2
-        with:
-          text: ${{ github.ref }}
-          regex: '^refs/tags/[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)+(\.[0-9]+rc[0-9]+|rc[0-9]+)?$'
+        env:
+          GITHUB_REF: ${{ github.ref }}
+        run: |
+          if [[ "${GITHUB_REF}" =~ ^refs/tags/[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)+(\.[0-9]+rc[0-9]+|rc[0-9]+)?$ ]]; then
+            echo "match=${GITHUB_REF}" >> $GITHUB_OUTPUT
+          else
+            echo "match=" >> $GITHUB_OUTPUT
+          fi
+
       - name: Upload package distributions to github
         if: ${{ steps.check-tag.outputs.match != '' }}
         uses: svenstaro/upload-release-action@6b7fa9f267e90b50a19fef07b3596790bb941741 # 2.11.3
@@ -69,9 +78,11 @@ jobs:
           tag: ${{ github.ref }}
           overwrite: true
           file_glob: true
+
       - name: Publish package distributions to PyPI
         if: ${{ steps.check-tag.outputs.match != '' }}
         uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e # v1.13.0
+
       - name: Publish package distributions to TestPyPI
         if: ${{ steps.check-tag.outputs.match == '' }}
         uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e # v1.13.0
