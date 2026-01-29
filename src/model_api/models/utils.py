@@ -124,7 +124,16 @@ def add_rotated_rects(inst_seg_result: InstanceSegmentationResult) -> RotatedSeg
         # Check if contours were found before processing
         if contours:
             contour = np.vstack(contours)
-            objects_with_rects.append(cv2.minAreaRect(contour))
+            rotated_rect = cv2.minAreaRect(contour)
+            # Adjust angle to be in (0, 90] range
+            (cx, cy), (w, h), angle = rotated_rect
+            while angle <= 0:
+                (w, h) = (h, w)
+                angle += 90
+            while angle > 90:
+                (w, h) = (h, w)
+                angle -= 90
+            objects_with_rects.append(((cx, cy), (w, h), angle))
         else:
             objects_with_rects.append(((0, 0), (0, 0), 0))
     return RotatedSegmentationResult(
