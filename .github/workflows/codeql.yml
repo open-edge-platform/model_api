@@ -2,11 +2,13 @@ name: "CodeQL Scan"
 
 on:
   push:
-    branches: ["master"]
+    branches:
+      - "master"
   pull_request:
-    branches: ["master"]
+    branches:
+      - "master"
   schedule:
-    - cron: "37 3 * * 0"
+    - cron: "0 2 * * 0"
 
 permissions: {} # No permissions by default on workflow level
 
@@ -16,18 +18,14 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       security-events: write # required to publish sarif
-
     strategy:
       fail-fast: false
       matrix:
         include:
           - language: actions
-            build-mode: none
           - language: python
-            build-mode: none
-
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
@@ -37,7 +35,7 @@ jobs:
         uses: github/codeql-action/init@5d4e8d1aca955e8d8589aabd499c5cae939e33c7 # v4.31.9
         with:
           languages: ${{ matrix.language }}
-          build-mode: ${{ matrix.build-mode }}
+          build-mode: none
           queries: security-extended
 
       - name: Perform CodeQL Analysis

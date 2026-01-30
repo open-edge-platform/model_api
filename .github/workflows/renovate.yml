@@ -36,12 +36,10 @@
 # Note: Renovate maintains and updates Dependency dashboard that is available in GitHub issues.
 
 name: Renovate
+
 on:
   schedule:
-    # daily
     - cron: "0 2 * * *"
-
-  # allow to manually trigger this workflow
   workflow_dispatch:
     inputs:
       dry-run:
@@ -59,7 +57,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
@@ -79,6 +77,6 @@ jobs:
         env:
           LOG_LEVEL: ${{ github.event_name == 'workflow_dispatch' && 'debug' || 'info' }}
           # Dry run if the event is workflow_dispatch AND the dry-run input is true
-          RENOVATE_DRY_RUN: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.dry-run == 'true') && 'full' || null }}
+          RENOVATE_DRY_RUN: ${{ inputs.dry-run && 'full' || null }}
           RENOVATE_PLATFORM: github
           RENOVATE_REPOSITORIES: ${{ github.repository }}
