@@ -11,6 +11,8 @@ from typing import TYPE_CHECKING
 import cv2
 from PIL import Image, ImageColor, ImageDraw
 
+from model_api.visualizer.defaults import DEFAULT_OPACITY, DEFAULT_OUTLINE_WIDTH
+
 from .primitive import Primitive
 
 if TYPE_CHECKING:
@@ -41,8 +43,8 @@ class Polygon(Primitive):
         points: list[tuple[int, int]] | None = None,
         mask: np.ndarray | None = None,
         color: str | tuple[int, int, int] = "blue",
-        opacity: float = 0.4,
-        outline_width: int = 2,
+        opacity: float = DEFAULT_OPACITY,
+        outline_width: int = DEFAULT_OUTLINE_WIDTH,
     ) -> None:
         self.points = self._get_points(points, mask)
         self.color = color

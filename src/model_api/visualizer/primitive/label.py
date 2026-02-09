@@ -8,6 +8,8 @@ from typing import Union
 
 from PIL import Image, ImageDraw, ImageFont
 
+from model_api.visualizer.defaults import DEFAULT_FONT_SIZE
+
 from .primitive import Primitive
 
 
@@ -46,7 +48,7 @@ class Label(Primitive):
         fg_color: Union[str, tuple[int, int, int]] = "black",
         bg_color: Union[str, tuple[int, int, int]] = "yellow",
         font_path: Union[str, BytesIO, None] = None,
-        size: int = 16,
+        size: int = DEFAULT_FONT_SIZE,
     ) -> None:
         self.label = f"{label} ({score:.2f})" if score is not None else label
         self.fg_color = fg_color

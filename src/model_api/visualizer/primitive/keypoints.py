@@ -8,6 +8,8 @@ from typing import Union
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
+from model_api.visualizer.defaults import DEFAULT_FONT_SIZE, DEFAULT_KEYPOINT_SIZE
+
 from .primitive import Primitive
 
 
@@ -25,12 +27,14 @@ class Keypoint(Primitive):
         keypoints: np.ndarray,
         scores: Union[np.ndarray, None] = None,
         color: Union[str, tuple[int, int, int]] = "purple",
-        keypoint_size: int = 3,
+        keypoint_size: int = DEFAULT_KEYPOINT_SIZE,
+        font_size: int = DEFAULT_FONT_SIZE,
     ) -> None:
         self.keypoints = self._validate_keypoints(keypoints)
         self.scores = scores
         self.color = color
         self.keypoint_size = keypoint_size
+        self.font_size = font_size
 
     def compute(self, image: Image) -> Image:
         """Draw keypoints on the image."""
@@ -47,7 +51,7 @@ class Keypoint(Primitive):
             )
 
         if self.scores is not None:
-            font = ImageFont.load_default(size=18)
+            font = ImageFont.load_default(size=self.font_size)
             for score, keypoint in zip(self.scores, self.keypoints):
                 textbox = draw.textbbox((0, 0), f"{score:.2f}", font=font)
                 draw.text(
