@@ -3,8 +3,6 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from pathlib import Path
-
 import numpy as np
 import pytest
 from PIL import Image
@@ -93,14 +91,14 @@ class TestVisualizerAutoScale:
         vis = Visualizer()
         assert vis.auto_scale is True
 
-    def test_auto_scale_false_no_scaling(self, small_image, detection_result_small, tmpdir):
+    def test_auto_scale_false_no_scaling(self, small_image, detection_result_small):
         """auto_scale=False should work exactly like before."""
         vis = Visualizer(auto_scale=False)
         rendered = vis.render(small_image, detection_result_small)
         assert isinstance(rendered, Image.Image)
         assert rendered.size == small_image.size
 
-    def test_auto_scale_true_small_image_no_scaling(self, small_image, detection_result_small, tmpdir):
+    def test_auto_scale_true_small_image_no_scaling(self, small_image, detection_result_small):
         """auto_scale=True on a <=720p image should produce same results as False."""
         vis_off = Visualizer(auto_scale=False)
         vis_on = Visualizer(auto_scale=True)
@@ -122,13 +120,13 @@ class TestVisualizerAutoScale:
         assert isinstance(rendered, np.ndarray)
         assert rendered.shape == np.array(large_image).shape
 
-    def test_auto_scale_save(self, large_image, detection_result_large, tmpdir):
+    def test_auto_scale_save(self, large_image, detection_result_large, tmp_path):
         vis = Visualizer(auto_scale=True)
-        path = Path(tmpdir) / "test_auto_scale.jpg"
+        path = tmp_path / "test_auto_scale.jpg"
         vis.save(large_image, detection_result_large, path)
         assert path.exists()
 
-    def test_auto_scale_classification(self, large_image, tmpdir):
+    def test_auto_scale_classification(self, large_image, tmp_path):
         result = ClassificationResult(
             top_labels=[
                 ResultLabel(name="cat", confidence=0.95),
@@ -137,11 +135,11 @@ class TestVisualizerAutoScale:
             saliency_map=np.array([]),
         )
         vis = Visualizer(auto_scale=True)
-        path = Path(tmpdir) / "test_cls_auto_scale.jpg"
+        path = tmp_path / "test_cls_auto_scale.jpg"
         vis.save(large_image, result, path)
         assert path.exists()
 
-    def test_auto_scale_instance_segmentation(self, large_image, tmpdir):
+    def test_auto_scale_instance_segmentation(self, large_image, tmp_path):
         result = InstanceSegmentationResult(
             bboxes=np.array([[100, 100, 2000, 1500]]),
             labels=np.array([0]),
@@ -152,7 +150,7 @@ class TestVisualizerAutoScale:
             feature_vector=np.array([1, 2, 3]),
         )
         vis = Visualizer(auto_scale=True)
-        path = Path(tmpdir) / "test_iseg_auto_scale.jpg"
+        path = tmp_path / "test_iseg_auto_scale.jpg"
         vis.save(large_image, result, path)
         assert path.exists()
 
