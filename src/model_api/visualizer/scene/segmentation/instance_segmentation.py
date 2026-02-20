@@ -13,7 +13,7 @@ from model_api.visualizer.defaults import DEFAULT_FONT_SIZE, DEFAULT_OUTLINE_WID
 from model_api.visualizer.layout import Flatten, HStack, Layout
 from model_api.visualizer.primitive import BoundingBox, Label, Overlay, Polygon
 from model_api.visualizer.scene import Scene
-from model_api.visualizer.scene.utils import get_label_color_mapping
+from model_api.visualizer.utils import get_label_color_mapping
 
 
 class InstanceSegmentationScene(Scene):
