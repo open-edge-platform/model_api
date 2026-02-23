@@ -1,0 +1,5 @@
+torch>=2.0.0
+timm>=0.9.0
+optimum[openvino]>=1.16.0
+nncf>=2.7.0
+huggingface-hub>=0.20.0

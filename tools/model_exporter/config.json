@@ -1,0 +1,32 @@
+[
+  {
+    "huggingface_repo": "timm/mobilenetv2_050.lamb_in1k"
+  },
+  {
+    "huggingface_repo": "timm/mobilenetv2_100.ra_in1k"
+  },
+  {
+    "huggingface_repo": "timm/mobilenetv2_110d.ra_in1k"
+  },
+  {
+    "huggingface_repo": "timm/mobilenetv2_120d.ra_in1k"
+  },
+  {
+    "huggingface_repo": "timm/mobilenetv2_140.ra_in1k"
+  },
+  {
+    "huggingface_repo": "timm/efficientnet_b0.ra_in1k"
+  },
+  {
+    "huggingface_repo": "timm/efficientnet_b0.ra4_e3600_r224_in1k"
+  },
+  {
+    "huggingface_repo": "timm/efficientnet_b1.ft_in1k"
+  },
+  {
+    "huggingface_repo": "timm/efficientnet_b1_pruned.in1k"
+  },
+  {
+    "huggingface_repo": "timm/efficientnet_b1.ra4_e3600_r240_in1k"
+  }
+]
