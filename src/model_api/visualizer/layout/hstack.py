@@ -34,7 +34,11 @@ class HStack(Layout):
             for _primitive in scene.get_primitives(primitive):
                 image_ = _primitive.compute(image.copy())
                 if isinstance(_primitive, Overlay):
-                    image_ = Overlay.overlay_labels(image=image_, labels=_primitive.label)
+                    image_ = Overlay.overlay_labels(
+                        image=image_,
+                        labels=_primitive.label,
+                        font_size=_primitive.font_size,
+                    )
                 images.append(image_)
             return self._stitch(*images)
         return None

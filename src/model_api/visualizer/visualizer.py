@@ -20,6 +20,7 @@ from model_api.models.result import (
     Result,
 )
 
+from .defaults import SCALE_BASELINE
 from .scene import (
     AnomalyScene,
     ClassificationScene,
@@ -37,10 +38,33 @@ if TYPE_CHECKING:
 
 
 class Visualizer:
-    """Utility class to automatically select the correct scene and render/show it."""
+    """Utility class to automatically select the correct scene and render/show it.
 
-    def __init__(self, layout: Layout | None = None) -> None:
+    Args:
+        layout: Optional layout to use for rendering.
+        auto_scale: When True, drawing sizes (line widths, font sizes, etc.) are
+            automatically scaled relative to 720p so that annotations remain
+            visible on high-resolution images.  Defaults to True.
+    """
+
+    def __init__(self, layout: Layout | None = None, auto_scale: bool = True) -> None:
         self.layout = layout
+        self.auto_scale = auto_scale
+
+    @staticmethod
+    def compute_scale_factor(image: Image.Image) -> float:
+        """Compute a scale factor based on the image's longer edge relative to 720p (1280px).
+
+        Returns 1.0 for images ≤ 720p; for larger images the factor grows proportionally.
+
+        Args:
+            image: PIL Image whose dimensions determine the scale.
+
+        Returns:
+            Scale factor (>= 1.0).
+        """
+        longer_edge = max(image.width, image.height)
+        return max(1.0, longer_edge / SCALE_BASELINE)
 
     def show(self, image: Image.Image | np.ndarray, result: Result) -> None:
         if isinstance(image, np.ndarray):
@@ -69,21 +93,23 @@ class Visualizer:
         return result_img
 
     def _scene_from_result(self, image: Image, result: Result) -> Scene:
+        scale = self.compute_scale_factor(image) if self.auto_scale else 1.0
+
         scene: Scene
         if isinstance(result, AnomalyResult):
-            scene = AnomalyScene(image, result, self.layout)
+            scene = AnomalyScene(image, result, self.layout, scale=scale)
         elif isinstance(result, ClassificationResult):
-            scene = ClassificationScene(image, result, self.layout)
+            scene = ClassificationScene(image, result, self.layout, scale=scale)
         elif isinstance(result, InstanceSegmentationResult):
             # Note: This has to be before DetectionScene because InstanceSegmentationResult is a subclass
             # of DetectionResult
-            scene = InstanceSegmentationScene(image, result, self.layout)
+            scene = InstanceSegmentationScene(image, result, self.layout, scale=scale)
         elif isinstance(result, ImageResultWithSoftPrediction):
-            scene = SegmentationScene(image, result, self.layout)
+            scene = SegmentationScene(image, result, self.layout, scale=scale)
         elif isinstance(result, DetectionResult):
-            scene = DetectionScene(image, result, self.layout)
+            scene = DetectionScene(image, result, self.layout, scale=scale)
         elif isinstance(result, DetectedKeypoints):
-            scene = KeypointScene(image, result, self.layout)
+            scene = KeypointScene(image, result, self.layout, scale=scale)
         else:
             msg = f"Unsupported result type: {type(result)}"
             raise ValueError(msg)
