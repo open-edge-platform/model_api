@@ -189,8 +189,7 @@ class ModelConverter:
                 elif "state_dict" in checkpoint:
                     # Cannot reconstruct architecture from state_dict alone
                     error_msg = (
-                        "Checkpoint contains only state_dict. "
-                        "Please specify the model class instead of torch.nn.Module"
+                        "Checkpoint contains only state_dict. Please specify the model class instead of torch.nn.Module"
                     )
                     raise ValueError(error_msg)
                 else:

@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import copy
 import json
-from itertools import starmap
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -251,7 +250,7 @@ class ClassificationModel(ImageModel):
         labels_list = self.params.labels
         labels = [labels_list[i] if labels_list else "" for i in indices]
 
-        return list(starmap(Label, zip(indices, labels, scores)))
+        return list(map(Label, indices, labels, scores))
 
     def get_multiclass_predictions(self, outputs: dict) -> list[Label]:
         axis = 1
@@ -259,13 +258,13 @@ class ClassificationModel(ImageModel):
         if not is_softmaxed(logits, axis=axis):
             logits = softmax(logits, axis=axis)
         top_k_result = top_k(logits, self.params.topk, axis=axis)
-        scores = top_k_result.values[0]  # noqa: PD011 # silencing false positive - it's not pandas code
+        scores = top_k_result.values[0]
         indices = top_k_result.indices[0]
 
         labels_list = self.params.labels
         labels = [labels_list[i] if labels_list else "" for i in indices]
 
-        return list(starmap(Label, zip(indices, labels, scores)))
+        return list(map(Label, indices, labels, scores))
 
 
 def sigmoid_numpy(x: np.ndarray) -> np.ndarray:
