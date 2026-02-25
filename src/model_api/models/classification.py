@@ -258,7 +258,7 @@ class ClassificationModel(ImageModel):
         if not is_softmaxed(logits, axis=axis):
             logits = softmax(logits, axis=axis)
         top_k_result = top_k(logits, self.params.topk, axis=axis)
-        scores = top_k_result.values[0]
+        scores = top_k_result.values[0]  # noqa: PD011 # silencing false positive - it's not pandas code
         indices = top_k_result.indices[0]
 
         labels_list = self.params.labels

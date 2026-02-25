@@ -188,17 +188,6 @@ lint.ignore = [
 
     # flake8-fixme (`FIX`)
     "FIX002", # Line contains TODO, consider resolving the issue
-
-    # upgraded to most recent ruff, remove the following rules for now
-    "LOG015",
-    "RUF005",
-    "RUF052",
-    "RUF067",
-    "RUF069",
-    "TC001",
-    "TC002",
-    "TC003",
-
 ]
 
 # Allow autofix for all enabled rules (when `--fix`) is provided.
@@ -235,8 +224,8 @@ line-length = 120
 # Allow unused variables when underscore-prefixed.
 lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
-# Assume Python 3.14.
-target-version = "py314"
+# Assume Python 3.11.
+target-version = "py311"
 
 # Allow imports relative to the "src" and "tests" directories.
 src = ["src", "tests"]

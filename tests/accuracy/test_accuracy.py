@@ -223,9 +223,9 @@ def compare_detection_result(outputs: DetectionResult, reference: dict) -> None:
     if expected_bboxes.size == 0 and outputs.bboxes.size == 0:
         expected_bboxes = expected_bboxes.reshape(0, 4)
 
-    assert outputs.bboxes.shape == expected_bboxes.shape, (
-        f"bboxes shape mismatch: {outputs.bboxes.shape} vs {expected_bboxes.shape}"
-    )
+    assert (
+        outputs.bboxes.shape == expected_bboxes.shape
+    ), f"bboxes shape mismatch: {outputs.bboxes.shape} vs {expected_bboxes.shape}"
 
     # Sort both outputs and expected by bbox coordinates (x1, y1, x2, y2) for deterministic comparison
     output_sort_indices = np.lexsort((
