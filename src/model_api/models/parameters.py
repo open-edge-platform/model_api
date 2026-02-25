@@ -45,7 +45,7 @@ class ParameterView:
         try:
             parameters = self._model.get_cached_parameters()
             return list(parameters.keys())
-        except (AttributeError, TypeError, ValueError):
+        except AttributeError, TypeError, ValueError:
             return []
 
 
