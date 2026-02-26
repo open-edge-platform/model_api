@@ -5,9 +5,10 @@
 
 from __future__ import annotations
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw
 
 from model_api.visualizer.defaults import DEFAULT_FONT_SIZE, DEFAULT_OUTLINE_WIDTH
+from model_api.visualizer.utils import default_font
 
 from .primitive import Primitive
 
@@ -49,7 +50,7 @@ class BoundingBox(Primitive):
         self.color = color
         self.outline_width = outline_width
         self.font_size = font_size
-        self.font = ImageFont.load_default(size=self.font_size)
+        self.font = default_font(size=self.font_size)
         self.y_buffer = max(3, font_size // 3)  # Text at the bottom of the text box is clipped. This prevents that.
 
     def compute(self, image: Image) -> Image:

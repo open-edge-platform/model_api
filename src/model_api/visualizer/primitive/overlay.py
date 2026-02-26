@@ -9,9 +9,9 @@ from typing import Union
 
 import numpy as np
 import PIL
-from PIL import ImageFont
 
 from model_api.visualizer.defaults import DEFAULT_FONT_SIZE, DEFAULT_OPACITY
+from model_api.visualizer.utils import default_font
 
 from .primitive import Primitive
 
@@ -66,7 +66,7 @@ class Overlay(Primitive):
         """
         if labels is not None:
             labels = [labels] if isinstance(labels, str) else labels
-            font = ImageFont.load_default(size=font_size)
+            font = default_font(size=font_size)
             buffer_y = max(3, font_size // 3)
             dummy_image = PIL.Image.new("RGB", (1, 1))
             draw = PIL.ImageDraw.Draw(dummy_image)

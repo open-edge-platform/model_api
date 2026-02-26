@@ -6,9 +6,10 @@
 from typing import Union
 
 import numpy as np
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw
 
 from model_api.visualizer.defaults import DEFAULT_FONT_SIZE, DEFAULT_KEYPOINT_SIZE
+from model_api.visualizer.utils import default_font
 
 from .primitive import Primitive
 
@@ -51,7 +52,7 @@ class Keypoint(Primitive):
             )
 
         if self.scores is not None:
-            font = ImageFont.load_default(size=self.font_size)
+            font = default_font(size=self.font_size)
             for score, keypoint in zip(self.scores, self.keypoints):
                 textbox = draw.textbbox((0, 0), f"{score:.2f}", font=font)
                 draw.text(

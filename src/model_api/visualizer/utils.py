@@ -1,5 +1,9 @@
 """Visualizer utilities."""
 
+from functools import lru_cache
+
+from PIL import ImageFont
+
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
@@ -38,3 +42,28 @@ def get_label_color_mapping(labels: list[str]) -> dict[str, str]:
     """
     unique_labels = sorted(set(labels))
     return {label: COLOR_PALETTE[i % len(COLOR_PALETTE)] for i, label in enumerate(unique_labels)}
+
+
+@lru_cache(maxsize=5)
+def default_font(size: int = 10):
+    """Get the default font with the specified size using cache to store the object.
+
+    Args:
+        size: Font size.
+
+    Returns:
+        A PIL ImageFont instance with the default font and specified size.
+    """
+    return ImageFont.load_default(size=size)
+
+
+@lru_cache(maxsize=5)
+def truetype_font(font_path: str, size: int = 10):
+    """Get a TrueType font from the specified path and size using cache to store the object.
+
+    Args:
+        font_path: Path to the .ttf font file.
+        size: Font size.
+    """
+
+    return ImageFont.truetype(font_path, size)

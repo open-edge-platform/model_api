@@ -6,9 +6,10 @@
 from io import BytesIO
 from typing import Union
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw
 
 from model_api.visualizer.defaults import DEFAULT_FONT_SIZE
+from model_api.visualizer.utils import default_font, truetype_font
 
 from .primitive import Primitive
 
@@ -53,7 +54,7 @@ class Label(Primitive):
         self.label = f"{label} ({score:.2f})" if score is not None else label
         self.fg_color = fg_color
         self.bg_color = bg_color
-        self.font = ImageFont.load_default(size=size) if font_path is None else ImageFont.truetype(font_path, size)
+        self.font = default_font(size=size) if font_path is None else truetype_font(font_path, size)
 
     def compute(self, image: Image, buffer_y: int = 5) -> Image:
         """Generate label on top of the image.

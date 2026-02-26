@@ -12,9 +12,9 @@ from model_api.models.result import DetectionResult
 from model_api.visualizer.defaults import DEFAULT_FONT_SIZE, DEFAULT_OUTLINE_WIDTH
 from model_api.visualizer.layout import Flatten, HStack, Layout
 from model_api.visualizer.primitive import BoundingBox, Label, Overlay
+from model_api.visualizer.utils import get_label_color_mapping
 
 from .scene import Scene
-from .utils import get_label_color_mapping
 
 
 class DetectionScene(Scene):
