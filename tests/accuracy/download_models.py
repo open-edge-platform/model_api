@@ -37,8 +37,7 @@ async def stream_file(client, url, filename, semaphore):
 
 async def download_single_image(client, url, filename):
     image = await client.get(url)
-    with Path(filename).open("wb") as im:
-        im.write(image.content)
+    Path(filename).write_bytes(image.content)
 
 
 async def download_images(data_dir):

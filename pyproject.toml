@@ -10,7 +10,7 @@ build-backend = "hatchling.build"
 [project]
 name = "openvino_model_api"
 version = "0.4.0.0"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 authors = [
   {name = "Intel(R) Corporation"},
 ]
@@ -20,13 +20,17 @@ maintainers = [
 description = "Model API: model wrappers and pipelines for inference with OpenVINO"
 readme = "README.md"
 classifiers = [
-  "License :: OSI Approved :: Apache Software License",
-  "Programming Language :: Python :: 3.10"
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
     "numpy>=1.16.6",
+    "onnxruntime",
     "opencv-python-headless",
-    "openvino>=2025.3",
+    "openvino==2025.4.1",
     "pillow",
 ]
 
@@ -220,8 +224,8 @@ line-length = 120
 # Allow unused variables when underscore-prefixed.
 lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
-# Assume Python 3.10.
-target-version = "py310"
+# Assume Python 3.11.
+target-version = "py311"
 
 # Allow imports relative to the "src" and "tests" directories.
 src = ["src", "tests"]
