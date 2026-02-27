@@ -97,7 +97,8 @@ class Tiler(abc.ABC):
                 self.__setattr__(name, value)
             except RuntimeError as error:
                 missing_rt_info = "Cannot get runtime attribute. Path to runtime attribute is incorrect." in str(error)
-                if not missing_rt_info:
+                is_OVMSAdapter = str(error) == "OVMSAdapter does not support RT info getting"
+                if not missing_rt_info and not is_OVMSAdapter:
                     raise
 
         for name, value in config.items():

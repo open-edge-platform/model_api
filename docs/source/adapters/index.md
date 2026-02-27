@@ -11,6 +11,10 @@
 [todo]
 :::
 
+:::{grid-item-card} Ovms Adapter
+:link: ./ovms_adapter
+:link-type: doc
+
 [todo]
 :::
 :::{grid-item-card} Onnx Adapter
@@ -41,5 +45,6 @@
 ./inference_adapter
 ./onnx_adapter
 ./openvino_adapter
+./ovms_adapter
 ./utils
 ```
