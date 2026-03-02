@@ -68,11 +68,11 @@ jobs:
         name: Install dependencies
         run: uv sync --locked --extra tests --extra-index-url https://download.pytorch.org/whl/cpu
 
-  #      - name: Prepare test data
-  #        run: uv run python tests/accuracy/download_models.py -d data -j tests/accuracy/public_scope.json -l
-  #
-  #      - name: Run Python Test
-  #        run: uv run pytest --data=./data tests/accuracy/test_accuracy.py
+      - name: Prepare test data
+        run: uv run python tests/accuracy/download_models.py -d data -j tests/accuracy/public_scope.json -l
+
+      - name: Run Python Test
+        run: uv run pytest --data=./data tests/accuracy/test_accuracy.py
 
   unit-functional-tests:
     strategy:
@@ -95,17 +95,17 @@ jobs:
 
       - *install-dependencies
 
-      #      - name: Run python unit tests
-      #        run: uv run pytest tests/unit --cov
+      - name: Run python unit tests
+        run: uv run pytest tests/unit --cov
 
       - &prepare-test-data
         name: Prepare test data
         run: |
           uv run python tests/accuracy/download_models.py -d data -j tests/precommit/public_scope.json -l
 
-  #      - name: Run test
-  #        run: |
-  #          uv run pytest --data=./data tests/functional
+      - name: Run test
+        run: |
+          uv run pytest --data=./data tests/functional
 
   serving_api:
     strategy:
