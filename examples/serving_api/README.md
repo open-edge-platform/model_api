@@ -11,10 +11,10 @@ This example demonstrates how to use a Python API of OpenVINO Model API for a re
 
 - Install Model API from source. Please refer to the main [README](../../../README.md) for details.
 - Install Docker. Please refer to the [official documentation](https://docs.docker.com/get-docker/) for details.
-- Install OVMS client into the Python environment:
+- Install Triton HTTP client (used by the OVMS adapter) into the Python environment:
 
   ```bash
-  pip install ovmsclient
+  pip install 'tritonclient[http]'
   ```
 
 - Download a model by running a Python code with Model API, see Python [example](../../synchronous_api/README.md) and resave a configured model at OVMS friendly folder layout:
