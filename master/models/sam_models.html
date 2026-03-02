@@ -42,8 +42,8 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
     <script src="../_static/documentation_options.js?v=cb975c41"></script>
-    <script src="../_static/doctools.js?v=9bcbadda"></script>
-    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=6dbb43f8"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -301,7 +301,7 @@
 <span id="sam-models"></span><h1>Sam Models<a class="headerlink" href="#module-model_api.models.sam_models" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="model_api.models.sam_models.SAMDecoder">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_api.models.sam_models.</span></span><span class="sig-name descname"><span class="pre">SAMDecoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_adapter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configuration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preload</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.sam_models.SAMDecoder" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">model_api.models.sam_models.</span></span><span class="sig-name descname"><span class="pre">SAMDecoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_adapter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configuration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preload</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.sam_models.SAMDecoder" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="segmentation.html#model_api.models.segmentation.SegmentationModel" title="model_api.models.segmentation.SegmentationModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">SegmentationModel</span></code></a></p>
 <p>Image Decoder for SAM: <a class="reference external" href="https://arxiv.org/abs/2304.02643">https://arxiv.org/abs/2304.02643</a></p>
 <p>Image model constructor</p>
@@ -321,30 +321,8 @@ initialization. If <cite>preload=False</cite>, the model must be loaded via <cit
 </dd>
 </dl>
 <dl class="py method">
-<dt class="sig sig-object py" id="model_api.models.sam_models.SAMDecoder.apply_coords">
-<span class="sig-name descname"><span class="pre">apply_coords</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orig_size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.sam_models.SAMDecoder.apply_coords" title="Link to this definition">#</a></dt>
-<dd><p>Process coords according to preprocessed image size using image meta.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></span></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="model_api.models.sam_models.SAMDecoder.base_preprocess">
-<span class="sig-name descname"><span class="pre">base_preprocess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.sam_models.SAMDecoder.base_preprocess" title="Link to this definition">#</a></dt>
-<dd><p>Preprocess prompts.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="model_api.models.sam_models.SAMDecoder.parameters">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.sam_models.SAMDecoder.parameters" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.sam_models.SAMDecoder.parameters" title="Link to this definition">#</a></dt>
 <dd><p>Defines the description and type of configurable data parameters for the wrapper.</p>
 <p>See <cite>types.py</cite> to find available types of the data parameter. For each parameter
 the type, default value and description must be provided.</p>
@@ -366,6 +344,28 @@ the type, default value and description must be provided.</p>
 <li><p>the dictionary with defined wrapper data parameters</p></li>
 </ul>
 </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_api.models.sam_models.SAMDecoder.apply_coords">
+<span class="sig-name descname"><span class="pre">apply_coords</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orig_size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.sam_models.SAMDecoder.apply_coords" title="Link to this definition">#</a></dt>
+<dd><p>Process coords according to preprocessed image size using image meta.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_api.models.sam_models.SAMDecoder.base_preprocess">
+<span class="sig-name descname"><span class="pre">base_preprocess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.sam_models.SAMDecoder.base_preprocess" title="Link to this definition">#</a></dt>
+<dd><p>Preprocess prompts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -394,7 +394,7 @@ the type, default value and description must be provided.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="model_api.models.sam_models.SAMImageEncoder">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_api.models.sam_models.</span></span><span class="sig-name descname"><span class="pre">SAMImageEncoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inference_adapter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configuration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preload</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.sam_models.SAMImageEncoder" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">model_api.models.sam_models.</span></span><span class="sig-name descname"><span class="pre">SAMImageEncoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inference_adapter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configuration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preload</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.sam_models.SAMImageEncoder" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="image_model.html#model_api.models.image_model.ImageModel" title="model_api.models.image_model.ImageModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImageModel</span></code></a></p>
 <p>Image Encoder for SAM: <a class="reference external" href="https://arxiv.org/abs/2304.02643">https://arxiv.org/abs/2304.02643</a></p>
 <p>Image model constructor</p>
@@ -415,7 +415,7 @@ initialization. If <cite>preload=False</cite>, the model must be loaded via <cit
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="model_api.models.sam_models.SAMImageEncoder.parameters">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.sam_models.SAMImageEncoder.parameters" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.sam_models.SAMImageEncoder.parameters" title="Link to this definition">#</a></dt>
 <dd><p>Defines the description and type of configurable data parameters for the wrapper.</p>
 <p>See <cite>types.py</cite> to find available types of the data parameter. For each parameter
 the type, default value and description must be provided.</p>
@@ -517,9 +517,9 @@ the type, default value and description must be provided.</p>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.sam_models.SAMDecoder"><code class="docutils literal notranslate"><span class="pre">SAMDecoder</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.sam_models.SAMDecoder.parameters"><code class="docutils literal notranslate"><span class="pre">SAMDecoder.parameters()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.sam_models.SAMDecoder.apply_coords"><code class="docutils literal notranslate"><span class="pre">SAMDecoder.apply_coords()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.sam_models.SAMDecoder.base_preprocess"><code class="docutils literal notranslate"><span class="pre">SAMDecoder.base_preprocess()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.sam_models.SAMDecoder.parameters"><code class="docutils literal notranslate"><span class="pre">SAMDecoder.parameters()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.sam_models.SAMDecoder.postprocess"><code class="docutils literal notranslate"><span class="pre">SAMDecoder.postprocess()</span></code></a></li>
 </ul>
 </li>
@@ -575,7 +575,7 @@ the type, default value and description must be provided.</p>
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
     <br/>
   </p>
 </div>

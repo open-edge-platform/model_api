@@ -42,8 +42,8 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
     <script src="../_static/documentation_options.js?v=cb975c41"></script>
-    <script src="../_static/doctools.js?v=9bcbadda"></script>
-    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=6dbb43f8"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -316,7 +316,7 @@
 </ul>
 <dl class="py class" id="module-model_api.models.segmentation">
 <dt class="sig sig-object py" id="model_api.models.segmentation.SegmentationModel">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_api.models.segmentation.</span></span><span class="sig-name descname"><span class="pre">SegmentationModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inference_adapter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configuration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preload</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.segmentation.SegmentationModel" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">model_api.models.segmentation.</span></span><span class="sig-name descname"><span class="pre">SegmentationModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inference_adapter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configuration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preload</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.segmentation.SegmentationModel" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="image_model.html#model_api.models.image_model.ImageModel" title="model_api.models.image_model.ImageModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImageModel</span></code></a></p>
 <p>Segmentation Model.</p>
 <dl class="field-list simple">
@@ -356,28 +356,8 @@ initialization. If <cite>preload=False</cite>, the model must be loaded via <cit
 </dd>
 </dl>
 <dl class="py method">
-<dt class="sig sig-object py" id="model_api.models.segmentation.SegmentationModel.get_contours">
-<span class="sig-name descname"><span class="pre">get_contours</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prediction</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_nested_contours</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.segmentation.SegmentationModel.get_contours" title="Link to this definition">#</a></dt>
-<dd><p>Represents existing masks with contours.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>prediction</strong> (<em>ImageResultWithSoftPrediction</em>) – Input segmentation prediction.</p></li>
-<li><p><strong>include_nested_contours</strong> (<em>bool</em><em>, </em><em>optional</em>) – Enables searching for holes in masks. Defaults to True.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Contours found.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>list[Contour]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="model_api.models.segmentation.SegmentationModel.parameters">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.segmentation.SegmentationModel.parameters" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.segmentation.SegmentationModel.parameters" title="Link to this definition">#</a></dt>
 <dd><p>Defines the description and type of configurable data parameters for the wrapper.</p>
 <p>See <cite>types.py</cite> to find available types of the data parameter. For each parameter
 the type, default value and description must be provided.</p>
@@ -399,6 +379,26 @@ the type, default value and description must be provided.</p>
 <li><p>the dictionary with defined wrapper data parameters</p></li>
 </ul>
 </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_api.models.segmentation.SegmentationModel.get_contours">
+<span class="sig-name descname"><span class="pre">get_contours</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prediction</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_nested_contours</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.segmentation.SegmentationModel.get_contours" title="Link to this definition">#</a></dt>
+<dd><p>Represents existing masks with contours.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>prediction</strong> (<em>ImageResultWithSoftPrediction</em>) – Input segmentation prediction.</p></li>
+<li><p><strong>include_nested_contours</strong> (<em>bool</em><em>, </em><em>optional</em>) – Enables searching for holes in masks. Defaults to True.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Contours found.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[Contour]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -500,8 +500,8 @@ segmentation output will be, but less accurate</p></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#inputs">Inputs</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#outputs">Outputs</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.segmentation.SegmentationModel"><code class="docutils literal notranslate"><span class="pre">SegmentationModel</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.segmentation.SegmentationModel.get_contours"><code class="docutils literal notranslate"><span class="pre">SegmentationModel.get_contours()</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.segmentation.SegmentationModel.parameters"><code class="docutils literal notranslate"><span class="pre">SegmentationModel.parameters()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.segmentation.SegmentationModel.get_contours"><code class="docutils literal notranslate"><span class="pre">SegmentationModel.get_contours()</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.segmentation.SegmentationModel.postprocess"><code class="docutils literal notranslate"><span class="pre">SegmentationModel.postprocess()</span></code></a></li>
 </ul>
 </li>
@@ -556,7 +556,7 @@ segmentation output will be, but less accurate</p></li>
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
     <br/>
   </p>
 </div>

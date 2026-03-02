@@ -42,8 +42,8 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
     <script src="../_static/documentation_options.js?v=cb975c41"></script>
-    <script src="../_static/doctools.js?v=9bcbadda"></script>
-    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=6dbb43f8"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -320,7 +320,7 @@
 </ul>
 <dl class="py class" id="module-model_api.models.classification">
 <dt class="sig sig-object py" id="model_api.models.classification.ClassificationModel">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_api.models.classification.</span></span><span class="sig-name descname"><span class="pre">ClassificationModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inference_adapter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configuration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preload</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.classification.ClassificationModel" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">model_api.models.classification.</span></span><span class="sig-name descname"><span class="pre">ClassificationModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inference_adapter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configuration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preload</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.classification.ClassificationModel" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="image_model.html#model_api.models.image_model.ImageModel" title="model_api.models.image_model.ImageModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImageModel</span></code></a></p>
 <p>Classification Model.</p>
 <dl class="field-list simple">
@@ -362,6 +362,34 @@ initialization. If <cite>preload=False</cite>, the model must be loaded via <cit
 <dd class="field-even"><p><a class="reference internal" href="model.html#model_api.models.model.WrapperError" title="model_api.models.model.WrapperError"><strong>WrapperError</strong></a> – if the wrapper failed to define appropriate inputs for images</p>
 </dd>
 </dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="model_api.models.classification.ClassificationModel.parameters">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.classification.ClassificationModel.parameters" title="Link to this definition">#</a></dt>
+<dd><p>Defines the description and type of configurable data parameters for the wrapper.</p>
+<p>See <cite>types.py</cite> to find available types of the data parameter. For each parameter
+the type, default value and description must be provided.</p>
+<dl>
+<dt>The example of possible data parameter:</dt><dd><dl class="simple">
+<dt>‘confidence_threshold’: NumericalValue(</dt><dd><p>default_value=0.5, description=”Threshold value for detection box confidence”</p>
+</dd>
+</dl>
+<p>)</p>
+</dd>
+</dl>
+<p>The method must be implemented in each specific inherited wrapper.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>the dictionary with defined wrapper data parameters</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="model_api.models.classification.ClassificationModel.get_all_probs">
 <span class="sig-name descname"><span class="pre">get_all_probs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logits</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.classification.ClassificationModel.get_all_probs" title="Link to this definition">#</a></dt>
@@ -415,34 +443,6 @@ to match the order of labels in .XML meta.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="model_api.models.classification.ClassificationModel.parameters">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.classification.ClassificationModel.parameters" title="Link to this definition">#</a></dt>
-<dd><p>Defines the description and type of configurable data parameters for the wrapper.</p>
-<p>See <cite>types.py</cite> to find available types of the data parameter. For each parameter
-the type, default value and description must be provided.</p>
-<dl>
-<dt>The example of possible data parameter:</dt><dd><dl class="simple">
-<dt>‘confidence_threshold’: NumericalValue(</dt><dd><p>default_value=0.5, description=”Threshold value for detection box confidence”</p>
-</dd>
-</dl>
-<p>)</p>
-</dd>
-</dl>
-<p>The method must be implemented in each specific inherited wrapper.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><ul class="simple">
-<li><p>the dictionary with defined wrapper data parameters</p></li>
-</ul>
-</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="model_api.models.classification.ClassificationModel.postprocess">
 <span class="sig-name descname"><span class="pre">postprocess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">outputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.classification.ClassificationModel.postprocess" title="Link to this definition">#</a></dt>
 <dd><p>Interface for postprocess method.</p>
@@ -477,7 +477,7 @@ the type, default value and description must be provided.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="model_api.models.classification.GreedyLabelsResolver">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_api.models.classification.</span></span><span class="sig-name descname"><span class="pre">GreedyLabelsResolver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hierarchical_config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.classification.GreedyLabelsResolver" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">model_api.models.classification.</span></span><span class="sig-name descname"><span class="pre">GreedyLabelsResolver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hierarchical_config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.classification.GreedyLabelsResolver" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="model_api.models.classification.GreedyLabelsResolver.resolve_labels">
@@ -500,7 +500,7 @@ The following two steps are taken:
 
 <dl class="py class">
 <dt class="sig sig-object py" id="model_api.models.classification.ProbabilisticLabelsResolver">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_api.models.classification.</span></span><span class="sig-name descname"><span class="pre">ProbabilisticLabelsResolver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hierarchical_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warmup_cache</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.classification.ProbabilisticLabelsResolver" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">model_api.models.classification.</span></span><span class="sig-name descname"><span class="pre">ProbabilisticLabelsResolver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hierarchical_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warmup_cache</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.classification.ProbabilisticLabelsResolver" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#model_api.models.classification.GreedyLabelsResolver" title="model_api.models.classification.GreedyLabelsResolver"><code class="xref py py-class docutils literal notranslate"><span class="pre">GreedyLabelsResolver</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="model_api.models.classification.ProbabilisticLabelsResolver.resolve_labels">
@@ -525,7 +525,7 @@ The following two steps are taken:
 
 <dl class="py class">
 <dt class="sig sig-object py" id="model_api.models.classification.SimpleLabelsGraph">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_api.models.classification.</span></span><span class="sig-name descname"><span class="pre">SimpleLabelsGraph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertices</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.classification.SimpleLabelsGraph" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">model_api.models.classification.</span></span><span class="sig-name descname"><span class="pre">SimpleLabelsGraph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertices</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.classification.SimpleLabelsGraph" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Class representing a tree. It implements basic operations
 like adding edges, getting children and parents.</p>
@@ -649,12 +649,12 @@ like adding edges, getting children and parents.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#inputs">Inputs</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#outputs">Outputs</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.classification.ClassificationModel"><code class="docutils literal notranslate"><span class="pre">ClassificationModel</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.classification.ClassificationModel.parameters"><code class="docutils literal notranslate"><span class="pre">ClassificationModel.parameters()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.classification.ClassificationModel.get_all_probs"><code class="docutils literal notranslate"><span class="pre">ClassificationModel.get_all_probs()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.classification.ClassificationModel.get_hierarchical_predictions"><code class="docutils literal notranslate"><span class="pre">ClassificationModel.get_hierarchical_predictions()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.classification.ClassificationModel.get_multiclass_predictions"><code class="docutils literal notranslate"><span class="pre">ClassificationModel.get_multiclass_predictions()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.classification.ClassificationModel.get_multilabel_predictions"><code class="docutils literal notranslate"><span class="pre">ClassificationModel.get_multilabel_predictions()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.classification.ClassificationModel.get_saliency_maps"><code class="docutils literal notranslate"><span class="pre">ClassificationModel.get_saliency_maps()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.classification.ClassificationModel.parameters"><code class="docutils literal notranslate"><span class="pre">ClassificationModel.parameters()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.classification.ClassificationModel.postprocess"><code class="docutils literal notranslate"><span class="pre">ClassificationModel.postprocess()</span></code></a></li>
 </ul>
 </li>
@@ -725,7 +725,7 @@ like adding edges, getting children and parents.</p>
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
     <br/>
   </p>
 </div>

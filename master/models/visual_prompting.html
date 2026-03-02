@@ -42,8 +42,8 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
     <script src="../_static/documentation_options.js?v=cb975c41"></script>
-    <script src="../_static/doctools.js?v=9bcbadda"></script>
-    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=6dbb43f8"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -301,18 +301,18 @@
 <span id="visual-prompting"></span><h1>Visual Prompting<a class="headerlink" href="#module-model_api.models.visual_prompting" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="model_api.models.visual_prompting.Prompt">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_api.models.visual_prompting.</span></span><span class="sig-name descname"><span class="pre">Prompt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.visual_prompting.Prompt" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">model_api.models.visual_prompting.</span></span><span class="sig-name descname"><span class="pre">Prompt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.visual_prompting.Prompt" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">NamedTuple</span></code></p>
 <p>Create new instance of Prompt(data, label)</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="model_api.models.visual_prompting.Prompt.data">
-<span class="sig-name descname"><span class="pre">data</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></em><a class="headerlink" href="#model_api.models.visual_prompting.Prompt.data" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">data</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></span><a class="headerlink" href="#model_api.models.visual_prompting.Prompt.data" title="Link to this definition">#</a></dt>
 <dd><p>Alias for field number 0</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="model_api.models.visual_prompting.Prompt.label">
-<span class="sig-name descname"><span class="pre">label</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code> <span class="pre">|</span> <code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></em><a class="headerlink" href="#model_api.models.visual_prompting.Prompt.label" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">label</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span><a class="headerlink" href="#model_api.models.visual_prompting.Prompt.label" title="Link to this definition">#</a></dt>
 <dd><p>Alias for field number 1</p>
 </dd></dl>
 
@@ -320,7 +320,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="model_api.models.visual_prompting.SAMLearnableVisualPrompter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_api.models.visual_prompting.</span></span><span class="sig-name descname"><span class="pre">SAMLearnableVisualPrompter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoder_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.65</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.visual_prompting.SAMLearnableVisualPrompter" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">model_api.models.visual_prompting.</span></span><span class="sig-name descname"><span class="pre">SAMLearnableVisualPrompter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoder_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.65</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.visual_prompting.SAMLearnableVisualPrompter" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>A wrapper that provides ZSL Visual Prompting workflow.
 To obtain segmentation results, one should run learn() first to obtain the reference features,
@@ -409,7 +409,7 @@ consequent learn() calls.</p>
 and their labels (ints, one per box). Defaults to None.</p></li>
 <li><p><strong>points</strong> (<em>list</em><em>[</em><a class="reference internal" href="#model_api.models.visual_prompting.Prompt" title="model_api.models.visual_prompting.Prompt"><em>Prompt</em></a><em>] </em><em>| </em><em>None</em><em>, </em><em>optional</em>) – Prompts containing points (in XY format)
 and their labels (ints, one per point). Defaults to None.</p></li>
-<li><p><strong>polygons</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<a class="reference internal" href="#model_api.models.visual_prompting.Prompt" title="model_api.models.visual_prompting.Prompt"><code class="xref py py-class docutils literal notranslate"><span class="pre">Prompt</span></code></a>]]</span>) – (list[Prompt] | None): Prompts containing polygons (a sequence of points in XY format)
+<li><p><strong>polygons</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<a class="reference internal" href="#model_api.models.visual_prompting.Prompt" title="model_api.models.visual_prompting.Prompt"><code class="xref py py-class docutils literal notranslate"><span class="pre">Prompt</span></code></a>] | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – (list[Prompt] | None): Prompts containing polygons (a sequence of points in XY format)
 and their labels (ints, one per polygon).
 Polygon prompts are used to mask out the source features without implying decoder usage. Defaults to None.</p></li>
 <li><p><strong>reset_features</strong> (<em>bool</em><em>, </em><em>optional</em>) – Forces learning from scratch. Defaults to False.</p></li>
@@ -442,7 +442,7 @@ Polygon prompts are used to mask out the source features without implying decode
 
 <dl class="py property">
 <dt class="sig sig-object py" id="model_api.models.visual_prompting.SAMLearnableVisualPrompter.reference_features">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">reference_features</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#model_api.models.visual_prompting.VisualPromptingFeatures" title="model_api.models.visual_prompting.VisualPromptingFeatures"><span class="pre">VisualPromptingFeatures</span></a></em><a class="headerlink" href="#model_api.models.visual_prompting.SAMLearnableVisualPrompter.reference_features" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">reference_features</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#model_api.models.visual_prompting.VisualPromptingFeatures" title="model_api.models.visual_prompting.VisualPromptingFeatures"><span class="pre">VisualPromptingFeatures</span></a></span><a class="headerlink" href="#model_api.models.visual_prompting.SAMLearnableVisualPrompter.reference_features" title="Link to this definition">#</a></dt>
 <dd><p>Property represents reference features. An exception is thrown if called when
 the features are not presented in the internal object state.</p>
 </dd></dl>
@@ -451,7 +451,7 @@ the features are not presented in the internal object state.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="model_api.models.visual_prompting.SAMVisualPrompter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_api.models.visual_prompting.</span></span><span class="sig-name descname"><span class="pre">SAMVisualPrompter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoder_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder_model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.visual_prompting.SAMVisualPrompter" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">model_api.models.visual_prompting.</span></span><span class="sig-name descname"><span class="pre">SAMVisualPrompter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoder_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder_model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.visual_prompting.SAMVisualPrompter" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>A wrapper that implements SAM Visual Prompter.</p>
 <p>Segmentation results can be obtained by calling infer() method
@@ -494,18 +494,18 @@ and their labels (ints, one per point). Defaults to None.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="model_api.models.visual_prompting.VisualPromptingFeatures">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_api.models.visual_prompting.</span></span><span class="sig-name descname"><span class="pre">VisualPromptingFeatures</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_vectors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">used_indices</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.visual_prompting.VisualPromptingFeatures" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">model_api.models.visual_prompting.</span></span><span class="sig-name descname"><span class="pre">VisualPromptingFeatures</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_vectors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">used_indices</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.visual_prompting.VisualPromptingFeatures" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">NamedTuple</span></code></p>
 <p>Create new instance of VisualPromptingFeatures(feature_vectors, used_indices)</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="model_api.models.visual_prompting.VisualPromptingFeatures.feature_vectors">
-<span class="sig-name descname"><span class="pre">feature_vectors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></em><a class="headerlink" href="#model_api.models.visual_prompting.VisualPromptingFeatures.feature_vectors" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">feature_vectors</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></span><a class="headerlink" href="#model_api.models.visual_prompting.VisualPromptingFeatures.feature_vectors" title="Link to this definition">#</a></dt>
 <dd><p>Alias for field number 0</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="model_api.models.visual_prompting.VisualPromptingFeatures.used_indices">
-<span class="sig-name descname"><span class="pre">used_indices</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></em><a class="headerlink" href="#model_api.models.visual_prompting.VisualPromptingFeatures.used_indices" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">used_indices</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></span><a class="headerlink" href="#model_api.models.visual_prompting.VisualPromptingFeatures.used_indices" title="Link to this definition">#</a></dt>
 <dd><p>Alias for field number 1</p>
 </dd></dl>
 
@@ -612,7 +612,7 @@ and their labels (ints, one per point). Defaults to None.</p></li>
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
     <br/>
   </p>
 </div>

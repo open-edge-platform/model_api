@@ -42,8 +42,8 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
     <script src="../_static/documentation_options.js?v=cb975c41"></script>
-    <script src="../_static/doctools.js?v=9bcbadda"></script>
-    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=6dbb43f8"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -301,14 +301,14 @@
 <span id="model"></span><h1>Model<a class="headerlink" href="#module-model_api.models.model" title="Link to this heading">#</a></h1>
 <dl class="py exception">
 <dt class="sig sig-object py" id="model_api.models.model.WrapperError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_api.models.model.</span></span><span class="sig-name descname"><span class="pre">WrapperError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wrapper_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.model.WrapperError" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">model_api.models.model.</span></span><span class="sig-name descname"><span class="pre">WrapperError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wrapper_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.model.WrapperError" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
 <p>The class for errors occurred in Model API wrappers</p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="model_api.models.model.Model">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_api.models.model.</span></span><span class="sig-name descname"><span class="pre">Model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inference_adapter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configuration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preload</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.model.Model" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">model_api.models.model.</span></span><span class="sig-name descname"><span class="pre">Model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inference_adapter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configuration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preload</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.model.Model" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>An abstract model wrapper</p>
 <p>The abstract model wrapper is free from any executor dependencies.
@@ -408,6 +408,135 @@ initialization. If <cite>preload=False</cite>, the model must be loaded via <cit
 </dd>
 </dl>
 <dl class="py method">
+<dt class="sig sig-object py" id="model_api.models.model.Model.available_wrappers">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">available_wrappers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.model.Model.available_wrappers" title="Link to this definition">#</a></dt>
+<dd><p>Prepares a list of all discoverable wrapper names
+(including custom ones inherited from the core wrappers).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_api.models.model.Model.create_model">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">create_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configuration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preload</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">core</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adaptor_parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'AUTO'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nstreams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'1'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nthreads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_num_requests</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'FP16'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">download_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.model.Model.create_model" title="Link to this definition">#</a></dt>
+<dd><p>Create an instance of the Model API model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>str</em><em>| </em><a class="reference internal" href="../adapters/inference_adapter.html#model_api.adapters.inference_adapter.InferenceAdapter" title="model_api.adapters.inference_adapter.InferenceAdapter"><em>InferenceAdapter</em></a>) – model name from OpenVINO Model Zoo, path to model, or an adapter</p></li>
+<li><p><strong>configuration</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code>, optional) – dictionary of model config with model properties, for example
+confidence_threshold, labels</p></li>
+<li><p><strong>model_type</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>, optional) – name of model wrapper to create (e.g. “ssd”)</p></li>
+<li><p><strong>preload</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code>, optional) – whether to call load_model(). Can be set to false to reshape model before
+loading.</p></li>
+<li><p><strong>core</strong> (<em>optional</em>) – openvino.Core instance, passed to OpenvinoAdapter</p></li>
+<li><p><strong>weights_path</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>, optional) – path to .bin file with model weights</p></li>
+<li><p><strong>adaptor_parameters</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code>, optional) – parameters of ModelAdaptor</p></li>
+<li><p><strong>device</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>, optional) – name of OpenVINO device (e.g. “CPU, GPU”)</p></li>
+<li><p><strong>nstreams</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>, optional) – number of inference streams</p></li>
+<li><p><strong>nthreads</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>, optional) – number of threads to use for inference on CPU</p></li>
+<li><p><strong>max_num_requests</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>, optional) – number of infer requests for asynchronous inference</p></li>
+<li><p><strong>precision</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>, optional) – inference precision (e.g. “FP16”)</p></li>
+<li><p><strong>download_dir</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>, optional) – directory where to store downloaded models</p></li>
+<li><p><strong>cache_dir</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>, optional) – directory where to store compiled models to reduce the load time before
+the inference.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Model object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_api.models.model.Model.detect_model_type">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">detect_model_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inference_adapter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.model.Model.detect_model_type" title="Link to this definition">#</a></dt>
+<dd><p>Detects model type on available information</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_api.models.model.Model.get_model_class">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_model_class</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.model.Model.get_model_class" title="Link to this definition">#</a></dt>
+<dd><p>Retrieves a wrapper class by a given wrapper name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Wrapper name.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Model class.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Type</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_api.models.model.Model.get_subclasses">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_subclasses</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.model.Model.get_subclasses" title="Link to this definition">#</a></dt>
+<dd><p>Retrieves all the subclasses of the model class given.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_api.models.model.Model.parameters">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.model.Model.parameters" title="Link to this definition">#</a></dt>
+<dd><p>Defines the description and type of configurable data parameters for the wrapper.</p>
+<p>See <cite>types.py</cite> to find available types of the data parameter. For each parameter
+the type, default value and description must be provided.</p>
+<dl>
+<dt>The example of possible data parameter:</dt><dd><dl class="simple">
+<dt>‘confidence_threshold’: NumericalValue(</dt><dd><p>default_value=0.5, description=”Threshold value for detection box confidence”</p>
+</dd>
+</dl>
+<p>)</p>
+</dd>
+</dl>
+<p>The method must be implemented in each specific inherited wrapper.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>the dictionary with defined wrapper data parameters</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_api.models.model.Model.raise_error">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">raise_error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.model.Model.raise_error" title="Link to this definition">#</a></dt>
+<dd><p>Raises the WrapperError.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>message</strong> (<em>str</em>) – error message to be shown in the following format:
+“WrapperName: message”</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">NoReturn</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="model_api.models.model.Model.__call__">
 <span class="sig-name descname"><span class="pre">__call__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.model.Model.__call__" title="Link to this definition">#</a></dt>
 <dd><p>Applies preprocessing, synchronous inference, postprocessing routines while one call.</p>
@@ -420,18 +549,6 @@ initialization. If <cite>preload=False</cite>, the model must be loaded via <cit
 <li><p>postprocessed data in the format defined by wrapper</p></li>
 </ul>
 </p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="model_api.models.model.Model.available_wrappers">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">available_wrappers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.model.Model.available_wrappers" title="Link to this definition">#</a></dt>
-<dd><p>Prepares a list of all discoverable wrapper names
-(including custom ones inherited from the core wrappers).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -478,52 +595,6 @@ initialization. If <cite>preload=False</cite>, the model must be loaded via <cit
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="model_api.models.model.Model.create_model">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configuration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preload</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">core</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adaptor_parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'AUTO'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nstreams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'1'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nthreads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_num_requests</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'FP16'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">download_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.model.Model.create_model" title="Link to this definition">#</a></dt>
-<dd><p>Create an instance of the Model API model</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<em>str</em><em>| </em><a class="reference internal" href="../adapters/inference_adapter.html#model_api.adapters.inference_adapter.InferenceAdapter" title="model_api.adapters.inference_adapter.InferenceAdapter"><em>InferenceAdapter</em></a>) – model name from OpenVINO Model Zoo, path to model, or an adapter</p></li>
-<li><p><strong>configuration</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code>, optional) – dictionary of model config with model properties, for example
-confidence_threshold, labels</p></li>
-<li><p><strong>model_type</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>, optional) – name of model wrapper to create (e.g. “ssd”)</p></li>
-<li><p><strong>preload</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code>, optional) – whether to call load_model(). Can be set to false to reshape model before
-loading.</p></li>
-<li><p><strong>core</strong> (<em>optional</em>) – openvino.Core instance, passed to OpenvinoAdapter</p></li>
-<li><p><strong>weights_path</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>, optional) – path to .bin file with model weights</p></li>
-<li><p><strong>adaptor_parameters</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code>, optional) – parameters of ModelAdaptor</p></li>
-<li><p><strong>device</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>, optional) – name of OpenVINO device (e.g. “CPU, GPU”)</p></li>
-<li><p><strong>nstreams</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>, optional) – number of inference streams</p></li>
-<li><p><strong>nthreads</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>, optional) – number of threads to use for inference on CPU</p></li>
-<li><p><strong>max_num_requests</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>, optional) – number of infer requests for asynchronous inference</p></li>
-<li><p><strong>precision</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>, optional) – inference precision (e.g. “FP16”)</p></li>
-<li><p><strong>download_dir</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>, optional) – directory where to store downloaded models</p></li>
-<li><p><strong>cache_dir</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>, optional) – directory where to store compiled models to reduce the load time before
-the inference.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></span></p>
-</dd>
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Model object</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="model_api.models.model.Model.detect_model_type">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">detect_model_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inference_adapter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.model.Model.detect_model_type" title="Link to this definition">#</a></dt>
-<dd><p>Detects model type on available information</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="model_api.models.model.Model.get_cached_parameters">
 <span class="sig-name descname"><span class="pre">get_cached_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.model.Model.get_cached_parameters" title="Link to this definition">#</a></dt>
 <dd><p>Get cached parameters, initializing cache if needed.</p>
@@ -547,23 +618,6 @@ the inference.</p></li>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Any</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="model_api.models.model.Model.get_model_class">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_model_class</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.model.Model.get_model_class" title="Link to this definition">#</a></dt>
-<dd><p>Retrieves a wrapper class by a given wrapper name.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Wrapper name.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Model class.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Type</p>
 </dd>
 </dl>
 </dd></dl>
@@ -595,17 +649,6 @@ the inference.</p></li>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>PerformanceMetrics</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="model_api.models.model.Model.get_subclasses">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_subclasses</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.model.Model.get_subclasses" title="Link to this definition">#</a></dt>
-<dd><p>Retrieves all the subclasses of the model class given.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -694,34 +737,6 @@ See InferenceAdapter documentation for details.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="model_api.models.model.Model.parameters">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.model.Model.parameters" title="Link to this definition">#</a></dt>
-<dd><p>Defines the description and type of configurable data parameters for the wrapper.</p>
-<p>See <cite>types.py</cite> to find available types of the data parameter. For each parameter
-the type, default value and description must be provided.</p>
-<dl>
-<dt>The example of possible data parameter:</dt><dd><dl class="simple">
-<dt>‘confidence_threshold’: NumericalValue(</dt><dd><p>default_value=0.5, description=”Threshold value for detection box confidence”</p>
-</dd>
-</dl>
-<p>)</p>
-</dd>
-</dl>
-<p>The method must be implemented in each specific inherited wrapper.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</span></p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><ul class="simple">
-<li><p>the dictionary with defined wrapper data parameters</p></li>
-</ul>
-</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="model_api.models.model.Model.postprocess">
 <span class="sig-name descname"><span class="pre">postprocess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">outputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.model.Model.postprocess" title="Link to this definition">#</a></dt>
 <dd><p>Interface for postprocess method.</p>
@@ -766,21 +781,6 @@ the type, default value and description must be provided.</p>
 <li><p>the input metadata</p></li>
 </ul>
 </p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="model_api.models.model.Model.raise_error">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">raise_error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.model.Model.raise_error" title="Link to this definition">#</a></dt>
-<dd><p>Raises the WrapperError.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>message</strong> (<em>str</em>) – error message to be shown in the following format:
-“WrapperName: message”</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">NoReturn</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -872,19 +872,21 @@ the type, default value and description must be provided.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.outputs"><code class="docutils literal notranslate"><span class="pre">Model.outputs</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.model_loaded"><code class="docutils literal notranslate"><span class="pre">Model.model_loaded</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.params"><code class="docutils literal notranslate"><span class="pre">Model.params</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.__call__"><code class="docutils literal notranslate"><span class="pre">Model.__call__()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.available_wrappers"><code class="docutils literal notranslate"><span class="pre">Model.available_wrappers()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.create_model"><code class="docutils literal notranslate"><span class="pre">Model.create_model()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.detect_model_type"><code class="docutils literal notranslate"><span class="pre">Model.detect_model_type()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.get_model_class"><code class="docutils literal notranslate"><span class="pre">Model.get_model_class()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.get_subclasses"><code class="docutils literal notranslate"><span class="pre">Model.get_subclasses()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.parameters"><code class="docutils literal notranslate"><span class="pre">Model.parameters()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.raise_error"><code class="docutils literal notranslate"><span class="pre">Model.raise_error()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.__call__"><code class="docutils literal notranslate"><span class="pre">Model.__call__()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.await_all"><code class="docutils literal notranslate"><span class="pre">Model.await_all()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.await_any"><code class="docutils literal notranslate"><span class="pre">Model.await_any()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.base_preprocess"><code class="docutils literal notranslate"><span class="pre">Model.base_preprocess()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.create_model"><code class="docutils literal notranslate"><span class="pre">Model.create_model()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.detect_model_type"><code class="docutils literal notranslate"><span class="pre">Model.detect_model_type()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.get_cached_parameters"><code class="docutils literal notranslate"><span class="pre">Model.get_cached_parameters()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.get_model"><code class="docutils literal notranslate"><span class="pre">Model.get_model()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.get_model_class"><code class="docutils literal notranslate"><span class="pre">Model.get_model_class()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.get_param"><code class="docutils literal notranslate"><span class="pre">Model.get_param()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.get_performance_metrics"><code class="docutils literal notranslate"><span class="pre">Model.get_performance_metrics()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.get_subclasses"><code class="docutils literal notranslate"><span class="pre">Model.get_subclasses()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.infer_async"><code class="docutils literal notranslate"><span class="pre">Model.infer_async()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.infer_async_raw"><code class="docutils literal notranslate"><span class="pre">Model.infer_async_raw()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.infer_batch"><code class="docutils literal notranslate"><span class="pre">Model.infer_batch()</span></code></a></li>
@@ -892,10 +894,8 @@ the type, default value and description must be provided.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.is_ready"><code class="docutils literal notranslate"><span class="pre">Model.is_ready()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.load"><code class="docutils literal notranslate"><span class="pre">Model.load()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.log_layers_info"><code class="docutils literal notranslate"><span class="pre">Model.log_layers_info()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.parameters"><code class="docutils literal notranslate"><span class="pre">Model.parameters()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.postprocess"><code class="docutils literal notranslate"><span class="pre">Model.postprocess()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.preprocess"><code class="docutils literal notranslate"><span class="pre">Model.preprocess()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.raise_error"><code class="docutils literal notranslate"><span class="pre">Model.raise_error()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.reshape"><code class="docutils literal notranslate"><span class="pre">Model.reshape()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.save"><code class="docutils literal notranslate"><span class="pre">Model.save()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.model.Model.set_callback"><code class="docutils literal notranslate"><span class="pre">Model.set_callback()</span></code></a></li>
@@ -948,7 +948,7 @@ the type, default value and description must be provided.</p>
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
     <br/>
   </p>
 </div>
