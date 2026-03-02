@@ -137,10 +137,10 @@ jobs:
       - *prepare-test-data
 
       - name: serving_api
-          run: |
-            uv run python -c "from model_api.models import DetectionModel; DetectionModel.create_model('./data/otx_models/detection_model_with_xai_head.xml').save('ovms_models/ssd_mobilenet_v1_fpn_coco/1/ssd_mobilenet_v1_fpn_coco.xml')"
-            docker run -d --rm -v $GITHUB_WORKSPACE/ovms_models/:/models -p 8000:8000 openvino/model_server:latest --model_path /models/ssd_mobilenet_v1_fpn_coco/ --model_name ssd_mobilenet_v1_fpn_coco --rest_port 8000 --log_level DEBUG --target_device CPU
-            uv run python examples/serving_api/run.py data/coco128/images/train2017/000000000009.jpg  # detects 4 objects
+        run: |
+          uv run python -c "from model_api.models import DetectionModel; DetectionModel.create_model('./data/otx_models/detection_model_with_xai_head.xml').save('ovms_models/ssd_mobilenet_v1_fpn_coco/1/ssd_mobilenet_v1_fpn_coco.xml')"
+          docker run -d --rm -v $GITHUB_WORKSPACE/ovms_models/:/models -p 8000:8000 openvino/model_server:latest --model_path /models/ssd_mobilenet_v1_fpn_coco/ --model_name ssd_mobilenet_v1_fpn_coco --rest_port 8000 --log_level DEBUG --target_device CPU
+          uv run python examples/serving_api/run.py data/coco128/images/train2017/000000000009.jpg  # detects 4 objects
 
   pre-commit-result:
     runs-on: ubuntu-latest
