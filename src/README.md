@@ -79,12 +79,24 @@ The following tasks can be solved with wrappers usage:
 
 Model API wrappers are executor-agnostic, meaning it does not implement the specific model inference or model loading, instead it can be used with different executors having the implementation of common interface methods in adapter class respectively.
 
-Currently, `OpenvinoAdapter` and `ONNXRuntimeAdapter` are supported.
+Currently, `OpenvinoAdapter` and `OVMSAdapter` are supported.
 
 ### OpenVINO Adapter
 
 `OpenvinoAdapter` hides the OpenVINO™ toolkit API, which allows Model API wrappers launching with models represented in Intermediate Representation (IR) format.
 It accepts a path to either `xml` model file or `onnx` model file.
+
+### OpenVINO Model Server Adapter
+
+`OVMSAdapter` hides the OpenVINO Model Server python client API, which allows Model API wrappers launching with models served by OVMS.
+
+Refer to **[`OVMSAdapter`](adapters/ovms_adapter.md)** to learn about running demos with OVMS.
+
+For using OpenVINO Model Server Adapter you need to install the package with extra module:
+
+```sh
+pip install <omz_dir>/demos/common/python[ovms]
+```
 
 ### ONNXRuntime Adapter
 
