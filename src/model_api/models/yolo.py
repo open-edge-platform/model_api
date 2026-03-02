@@ -761,8 +761,7 @@ class YOLOv5(DetectionModel):
             {
                 "agnostic_nms": BooleanValue(
                     description=(
-                        "If True, the model is agnostic to the number of classes, "
-                        "and all classes are considered as one"
+                        "If True, the model is agnostic to the number of classes, and all classes are considered as one"
                     ),
                     default_value=False,
                 ),

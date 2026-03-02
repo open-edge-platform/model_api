@@ -16,6 +16,7 @@ from model_api.adapters.openvino_adapter import (
     create_core,
     get_user_config,
 )
+from model_api.adapters.ovms_adapter import OVMSAdapter
 from model_api.metrics import PerformanceMetrics
 from model_api.models.parameters import ParameterDescriptor
 
@@ -88,7 +89,7 @@ class Model:
             "Segmentation",
         }:
             self.raise_error(
-                "this type of wrapper only supports OpenVINO inference adapters",
+                "this type of wrapper only supports OpenVINO and OVMS inference adapters",
             )
 
         self.inputs = self.inference_adapter.get_input_layers()
@@ -112,6 +113,8 @@ class Model:
         """
         if hasattr(self, f"_{name}"):
             return getattr(self, f"_{name}")
+        if hasattr(self, name):
+            return getattr(self, name)
         if self._parameters_cache is None:
             self._parameters_cache = self.parameters()
         if name in self._parameters_cache:
@@ -188,7 +191,7 @@ class Model:
         """Create an instance of the Model API model
 
         Args:
-            model (str| InferenceAdapter): model name from OpenVINO Model Zoo, path to model, or an adapter
+            model (str| InferenceAdapter): model name from OpenVINO Model Zoo, path to model, OVMS URL, or an adapter
             configuration (:obj:`dict`, optional): dictionary of model config with model properties, for example
                 confidence_threshold, labels
             model_type (:obj:`str`, optional): name of model wrapper to create (e.g. "ssd")
@@ -212,6 +215,8 @@ class Model:
         inference_adapter: InferenceAdapter
         if isinstance(model, InferenceAdapter):
             inference_adapter = model
+        elif isinstance(model, str) and OVMSAdapter.is_ovms_model(model):
+            inference_adapter = OVMSAdapter(model)
         else:
             if core is None:
                 core = create_core()
