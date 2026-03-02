@@ -14,7 +14,7 @@ repos:
       - id: detect-private-key
 
   # Ruff version.
-  - repo: https://github.com/charliermarsh/ruff-pre-commit
+  - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: "v0.6.2"
     hooks:
       # Run the linter.

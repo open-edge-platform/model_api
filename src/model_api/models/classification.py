@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import copy
 import json
-from itertools import starmap
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -251,7 +250,7 @@ class ClassificationModel(ImageModel):
         labels_list = self.params.labels
         labels = [labels_list[i] if labels_list else "" for i in indices]
 
-        return list(starmap(Label, zip(indices, labels, scores)))
+        return list(map(Label, indices, labels, scores))
 
     def get_multiclass_predictions(self, outputs: dict) -> list[Label]:
         axis = 1
@@ -265,7 +264,7 @@ class ClassificationModel(ImageModel):
         labels_list = self.params.labels
         labels = [labels_list[i] if labels_list else "" for i in indices]
 
-        return list(starmap(Label, zip(indices, labels, scores)))
+        return list(map(Label, indices, labels, scores))
 
 
 def sigmoid_numpy(x: np.ndarray) -> np.ndarray:
