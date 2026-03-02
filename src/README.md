@@ -79,7 +79,7 @@ The following tasks can be solved with wrappers usage:
 
 Model API wrappers are executor-agnostic, meaning it does not implement the specific model inference or model loading, instead it can be used with different executors having the implementation of common interface methods in adapter class respectively.
 
-Currently, `OpenvinoAdapter` and `OVMSAdapter` are supported.
+Currently, `OpenvinoAdapter`, `OVMSAdapter`, and `ONNXRuntimeAdapter` are supported.
 
 ### OpenVINO Adapter
 
