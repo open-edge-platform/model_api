@@ -113,6 +113,8 @@ class Model:
         """
         if hasattr(self, f"_{name}"):
             return getattr(self, f"_{name}")
+        if hasattr(self, name):
+            return getattr(self, name)
         if self._parameters_cache is None:
             self._parameters_cache = self.parameters()
         if name in self._parameters_cache:
