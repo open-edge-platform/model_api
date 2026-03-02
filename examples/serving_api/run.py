@@ -16,11 +16,11 @@ def main():
         usage_message = f"Usage: {sys.argv[0]} <path_to_image>"
         raise RuntimeError(usage_message)
 
-    image = cv2.cvtColor(cv2.imread(sys.argv[1]), cv2.COLOR_BGR2RGB)
+    image = cv2.imread(sys.argv[1])
     if image is None:
         error_message = f"Failed to read the image: {sys.argv[1]}"
         raise RuntimeError(error_message)
-
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     # Create Object Detection model specifying the OVMS server URL
     model = DetectionModel.create_model(
         "localhost:8000/v2/models/ssd_mobilenet_v1_fpn_coco",
