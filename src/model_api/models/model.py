@@ -111,13 +111,13 @@ class Model:
         Returns:
             Any: parameter value
         """
-        if hasattr(self, f"_{name}"):
-            return getattr(self, f"_{name}")
-        if hasattr(self, name):
-            return getattr(self, name)
         if self._parameters_cache is None:
             self._parameters_cache = self.parameters()
         if name in self._parameters_cache:
+            if hasattr(self, f"_{name}"):
+                return getattr(self, f"_{name}")
+            if hasattr(self, name):
+                return getattr(self, name)
             return self._parameters_cache[name].default_value
         return self.raise_error(f"Parameter '{name}' not found")
 
