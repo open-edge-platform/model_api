@@ -37,7 +37,7 @@ jobs:
           persist-credentials: false
 
       - name: Run Zizmor scan
-        uses: open-edge-platform/geti-ci/actions/zizmor@3a4b81ea648711eb638b34757427cd3ef71d19f1
+        uses: open-edge-platform/geti-ci/actions/zizmor@4d46c7fb444d8fae6390348e76d96bb0749c5632
         with:
           scan-scope: ${{ (github.event_name == 'pull_request' || github.event_name == 'merge_group') && 'changed' || 'all' }}
           severity-level: "LOW"
@@ -53,7 +53,7 @@ jobs:
       - *checkout
 
       - name: Run Bandit scan
-        uses: open-edge-platform/geti-ci/actions/bandit@3a4b81ea648711eb638b34757427cd3ef71d19f1
+        uses: open-edge-platform/geti-ci/actions/bandit@4d46c7fb444d8fae6390348e76d96bb0749c5632
         with:
           scan-scope: ${{ (github.event_name == 'pull_request' || github.event_name == 'merge_group') && 'changed' || 'all' }}
           severity-level: "LOW"
@@ -71,7 +71,7 @@ jobs:
       - *checkout
 
       - name: Run Trivy scan
-        uses: open-edge-platform/geti-ci/actions/trivy@3a4b81ea648711eb638b34757427cd3ef71d19f1
+        uses: open-edge-platform/geti-ci/actions/trivy@4d46c7fb444d8fae6390348e76d96bb0749c5632
         with:
           scan_type: "fs"
           scan-scope: all
@@ -94,7 +94,7 @@ jobs:
           fetch-depth: 0
 
       - name: Run Semgrep scan
-        uses: open-edge-platform/geti-ci/actions/semgrep@3a4b81ea648711eb638b34757427cd3ef71d19f1
+        uses: open-edge-platform/geti-ci/actions/semgrep@4d46c7fb444d8fae6390348e76d96bb0749c5632
         with:
           scan-scope: ${{ (github.event_name == 'pull_request' || github.event_name == 'merge_group') && 'changed' || 'all' }}
           severity: "LOW"
