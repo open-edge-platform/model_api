@@ -42,7 +42,7 @@ class OVMSAdapter(InferenceAdapter):
         Initializes OVMS adapter.
 
         Args:
-            target_model (str): Model URL. Expected format: <address>:<port>/v2/models/<model_name>[:<model_version>]
+            target_model (str): Model URL. Expected format: <address>:<port>/v2/models/<model_name>[/versions/<model_version>]
         """
         import tritonclient.http as httpclient
 
