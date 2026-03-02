@@ -549,4 +549,3 @@ def _append_xai_names(outputs: dict, output_names: list[str]) -> None:
         output_names.append(_saliency_map_name)
     if _feature_vector_name in outputs:
         output_names.append(_feature_vector_name)
-
