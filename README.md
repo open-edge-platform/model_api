@@ -1,4 +1,3 @@
-
 # OpenVINO Model API
 
 [![PyPI](https://img.shields.io/pypi/v/otx)](https://pypi.org/project/openvino-model-api)

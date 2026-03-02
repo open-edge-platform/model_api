@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
+import os
 import sys
 
 import cv2
@@ -12,6 +13,7 @@ from model_api.models import DetectionModel
 
 
 def main():
+    print(f"{os.getenv('DOCKER_HOST')=}")
     if len(sys.argv) != 2:
         usage_message = f"Usage: {sys.argv[0]} <path_to_image>"
         raise RuntimeError(usage_message)
