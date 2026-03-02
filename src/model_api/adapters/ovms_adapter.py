@@ -140,7 +140,7 @@ class OVMSAdapter(InferenceAdapter):
         pass
 
     def get_model(self):
-        """Return the reference to the GrpcClient."""
+        """Return the underlying Triton HTTP inference server client used by this adapter."""
         return self.client
 
     def await_all(self):
