@@ -1,4 +1,4 @@
-# Ovms Adapter
+# OVMS Adapter
 
 ```{eval-rst}
 .. automodule:: model_api.adapters.ovms_adapter
