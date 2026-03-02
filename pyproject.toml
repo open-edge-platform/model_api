@@ -30,7 +30,7 @@ dependencies = [
     "numpy>=1.16.6",
     "onnxruntime",
     "opencv-python-headless",
-    "openvino==2025.4.1",
+    "openvino>=2025.3",
     "pillow",
 ]
 
@@ -194,6 +194,9 @@ lint.ignore = [
 lint.fixable = ["ALL"]
 lint.unfixable = []
 
+# Allow unused variables when underscore-prefixed.
+lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
 # Exclude a variety of commonly ignored directories.
 exclude = [
     ".bzr",
@@ -220,9 +223,6 @@ exclude = [
 
 # Same as Black.
 line-length = 120
-
-# Allow unused variables when underscore-prefixed.
-lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 # Assume Python 3.11.
 target-version = "py311"
