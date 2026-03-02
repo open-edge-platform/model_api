@@ -89,7 +89,7 @@ class Model:
             "Segmentation",
         }:
             self.raise_error(
-                "this type of wrapper only supports OpenVINO and OVMS inference adapters",
+                "ONNXRuntimeAdapter is only supported for Classification, MaskRCNN, SSD, and Segmentation wrappers",
             )
 
         self.inputs = self.inference_adapter.get_input_layers()
