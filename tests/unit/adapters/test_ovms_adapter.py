@@ -64,6 +64,7 @@ class TestParseModelArg:
         assert service_url == "localhost:8000"
         assert model_name == "my_model"
         assert version == "123"
+
     @pytest.mark.parametrize(
         ("target_model", "description"),
         [
