@@ -56,6 +56,14 @@ class TestParseModelArg:
         assert model_name == "test_model"
         assert version == "1"
 
+    def test_valid_scheme_less_url_with_version(self):
+        """Test parsing a valid scheme-less URL with version specified."""
+        target_model = "localhost:9000/v2/models/my_model/versions/123"
+        service_url, model_name, version = OVMSAdapter.parse_model_arg(target_model)
+
+        assert service_url == "localhost:9000"
+        assert model_name == "my_model"
+        assert version == "123"
     @pytest.mark.parametrize(
         ("target_model", "description"),
         [
