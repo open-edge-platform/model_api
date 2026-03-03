@@ -34,7 +34,7 @@ See [model server configuration parameters](https://github.com/openvinotoolkit/m
 ### Example OVMS startup command
 
 ```bash
-docker run -d --rm -v /home/user/models:/models -p 9000:9000 openvino/model_server:latest --model_path /models/model1 --model_name model1 --port 9000 --shape auto --nireq 32 --target_device CPU --plugin_config "{\"CPU_THROUGHPUT_STREAMS\": \"CPU_THROUGHPUT_AUTO\"}"
+docker run -d --rm -v /home/user/models:/models -p 8000:8000 openvino/model_server:latest --model_path /models/model1 --model_name model1 --port 8000 --shape auto --nireq 32 --target_device CPU --plugin_config "{\"CPU_THROUGHPUT_STREAMS\": \"CPU_THROUGHPUT_AUTO\"}"
 ```
 
 > **Note**: In demos, while using `--adapter ovms`, inference options like: `-nireq`, `-nstreams` `-nthreads` as well as device specification with `-d` will be ignored.
@@ -49,10 +49,10 @@ To run the demo with model served in OpenVINO Model Server, you would have to pr
 - `<model_name>` - name of the target model (the one specified by `model_name` parameter in the model server startup command)
 - `<model_version>` _(optional)_ - version of the target model specified in the `/versions/<model_version>` path segment (default: latest)
 
-Assuming that model server runs on the same machine as the demo, exposes gRPC service on port 9000 and serves model called `model1`, the value of `-m` parameter would be:
+Assuming that model server runs on the same machine as the demo, exposes service on port 8000 and serves model called `model1`, the value of `-m` parameter would be:
 
-- `localhost:9000/v2/models/model1` - requesting latest model version
-- `localhost:9000/v2/models/model1/versions/2` - requesting model version number 2 (an optional trailing slash, e.g. `/versions/2/`, is also accepted)
+- `localhost:8000/v2/models/model1` - requesting latest model version
+- `localhost:8000/v2/models/model1/versions/2` - requesting model version number 2 (an optional trailing slash, e.g. `/versions/2/`, is also accepted)
 
 ## See Also
 
