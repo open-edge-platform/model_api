@@ -119,17 +119,8 @@ class OVMSAdapter(InferenceAdapter):
 
     def infer_async(self, dict_data: dict, callback_data: Any):
         """A stub method imitating async inference with a blocking call."""
-        inputs = self._prepare_inputs(dict_data)
-        raw_result = self.client.infer(
-            model_name=self.model_name,
-            model_version=self.model_version,
-            inputs=inputs,
-        )
-        inference_results = {}
-        for output in self.metadata["outputs"]:
-            inference_results[output["name"]] = raw_result.as_numpy(output["name"])
-
-        self.callback_fn(inference_results, (lambda x: x, callback_data))
+        inference_results = self.infer_sync(dict_data)
+        self.callback_fn(inference_results, callback_data)
 
     def set_callback(self, callback_fn: Callable):
         self.callback_fn = callback_fn
