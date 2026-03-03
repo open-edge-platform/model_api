@@ -219,7 +219,15 @@ class OVMSAdapter(InferenceAdapter):
                 msg = "Input data does not match model inputs"
                 raise ValueError(msg)
             input_info = self.inputs[input_name]
-            model_precision = self._triton2np_precision[input_info.precision]
+            try:
+                model_precision = self._triton2np_precision[input_info.precision]
+            except KeyError as exc:
+                msg = (
+                    f"Unsupported input precision '{input_info.precision}' "
+                    f"for input '{input_name}'. Supported precisions are: "
+                    f"{', '.join(sorted(self._triton2np_precision.keys()))}"
+                )
+                raise ValueError(msg) from exc
             if isinstance(input_data, np.ndarray) and input_data.dtype != model_precision:
                 input_data = input_data.astype(model_precision)
             elif isinstance(input_data, list):
