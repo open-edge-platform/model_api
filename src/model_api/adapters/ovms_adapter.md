@@ -4,7 +4,7 @@ The `OVMSAdapter` implements `InferenceAdapter` interface. The `OVMSAdapter` mak
 
 ## Prerequisites
 
-`OVMSAdapter` enables inference via gRPC calls to OpenVINO Model Server, so in order to use it you need two things:
+`OVMSAdapter` enables inference via calls to OpenVINO Model Server, so in order to use it you need two things:
 
 - OpenVINO Model Server that serves your model
 - [`tritonclient[http]`](https://pypi.org/project/tritonclient/) package installed to enable communication with the model server: `python3 -m pip install tritonclient[http]`
@@ -45,7 +45,7 @@ To run the demo with model served in OpenVINO Model Server, you would have to pr
 
 `<service_address>/v2/models/<model_name>[/versions/<model_version>[/]]`
 
-- `<service_address>` - OVMS gRPC service address in form `<address>:<port>`
+- `<service_address>` - OVMS service address in form `<address>:<port>`
 - `<model_name>` - name of the target model (the one specified by `model_name` parameter in the model server startup command)
 - `<model_version>` _(optional)_ - version of the target model specified in the `/versions/<model_version>` path segment (default: latest)
 
