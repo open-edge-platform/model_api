@@ -307,7 +307,7 @@
 <p>Initializes OVMS adapter.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>target_model</strong> (<em>str</em>) – Model URL.
+<dd class="field-odd"><p><strong>target_model</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Model URL.
 Expected format: &lt;address&gt;:&lt;port&gt;/v2/models/&lt;model_name&gt;[/versions/&lt;model_version&gt;]</p>
 </dd>
 </dl>
@@ -352,7 +352,7 @@ instaed actuall of embedding it into the model representation.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>layout</strong> (<em>str</em>) – Layout, for instance NCHW.</p></li>
-<li><p><strong>resize_mode</strong> (<em>str</em>) – Resize type to use for preprocessing.</p></li>
+<li><p><strong>resize_mode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Resize type to use for preprocessing.</p></li>
 <li><p><strong>interpolation_mode</strong> (<em>str</em>) – Resize interpolation mode.</p></li>
 <li><p><strong>target_shape</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>...</em><em>]</em>) – Target resize shape.</p></li>
 <li><p><strong>pad_value</strong> (<em>int</em>) – Value to pad with if resize implies padding.</p></li>
@@ -376,7 +376,7 @@ instaed actuall of embedding it into the model representation.</p>
 <dd class="field-odd"><p>metadata for each input.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>dict[str, <a class="reference internal" href="inference_adapter.html#model_api.adapters.inference_adapter.Metadata" title="model_api.adapters.inference_adapter.Metadata">Metadata</a>]</p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <a class="reference internal" href="inference_adapter.html#model_api.adapters.inference_adapter.Metadata" title="model_api.adapters.inference_adapter.Metadata"><code class="xref py py-class docutils literal notranslate"><span class="pre">Metadata</span></code></a>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -396,7 +396,7 @@ instaed actuall of embedding it into the model representation.</p>
 <dd class="field-odd"><p>metadata for each output.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>dict[str, <a class="reference internal" href="inference_adapter.html#model_api.adapters.inference_adapter.Metadata" title="model_api.adapters.inference_adapter.Metadata">Metadata</a>]</p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <a class="reference internal" href="inference_adapter.html#model_api.adapters.inference_adapter.Metadata" title="model_api.adapters.inference_adapter.Metadata"><code class="xref py py-class docutils literal notranslate"><span class="pre">Metadata</span></code></a>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -407,7 +407,7 @@ instaed actuall of embedding it into the model representation.</p>
 <dd><p>Gets raw results from the internal inference framework representation as a dict.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>infer_result</strong> (<em>-</em>) – framework-specific result of inference from the model</p>
+<dd class="field-odd"><p><strong>infer_result</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span>) – framework-specific result of inference from the model</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><dl class="simple">
@@ -451,13 +451,13 @@ instaed actuall of embedding it into the model representation.</p>
 <dd><p>Performs the synchronous model inference. The infer is a blocking method.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>dict_data</strong> (<em>dict</em>) – data for each input layer.</p>
+<dd class="field-odd"><p><strong>dict_data</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span>) – data for each input layer.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>model raw outputs.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>dict</p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -505,7 +505,7 @@ to the model for inference, or all infer requests are busy.</p>
 <dd><p>Sets callback that grabs results of async inference.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>callback_fn</strong> (<em>Callable</em>) – Callback function.</p>
+<dd class="field-odd"><p><strong>callback_fn</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></span>) – Callback function.</p>
 </dd>
 </dl>
 </dd></dl>

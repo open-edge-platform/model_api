@@ -371,10 +371,10 @@ For that reason, postprocessing operations such as resize and normalize are cond
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inference_adapter</strong> (<a class="reference internal" href="../adapters/inference_adapter.html#model_api.adapters.inference_adapter.InferenceAdapter" title="model_api.adapters.inference_adapter.InferenceAdapter"><em>InferenceAdapter</em></a>) – allows working with the specified executor</p></li>
-<li><p><strong>configuration</strong> (<em>dict</em><em>, </em><em>optional</em>) – it contains values for parameters accepted by specific
+<li><p><strong>inference_adapter</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../adapters/inference_adapter.html#model_api.adapters.inference_adapter.InferenceAdapter" title="model_api.adapters.inference_adapter.InferenceAdapter"><code class="xref py py-class docutils literal notranslate"><span class="pre">InferenceAdapter</span></code></a></span>) – allows working with the specified executor</p></li>
+<li><p><strong>configuration</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</span>) – it contains values for parameters accepted by specific
 wrapper (<cite>labels</cite> <cite>mean_values</cite>, etc.) which are set as data attributes</p></li>
-<li><p><strong>preload</strong> (<em>bool</em><em>, </em><em>optional</em>) – a flag whether the model is loaded to device while
+<li><p><strong>preload</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – a flag whether the model is loaded to device while
 initialization. If <cite>preload=False</cite>, the model must be loaded via <cite>load</cite> method before inference</p></li>
 </ul>
 </dd>
@@ -431,7 +431,7 @@ additional supported inputs, the <cite>preprocess</cite> should be overloaded in
 </div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>inputs</strong> (<em>ndarray</em>) – a single image as 4D array.</p>
+<dd class="field-odd"><p><strong>inputs</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></span>) – a single image as 4D array.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><blockquote>
@@ -447,10 +447,7 @@ additional supported inputs, the <cite>preprocess</cite> should be overloaded in
 </p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><ul class="simple">
-<li><p>the preprocessed image in the following format</p></li>
-</ul>
-</p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">...</span></code>]]]</span></p>
 </dd>
 </dl>
 </dd></dl>

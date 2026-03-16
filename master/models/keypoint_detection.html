@@ -361,7 +361,7 @@ and a keypoints regression model acting on crops.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>inference_adapter</strong> (<a class="reference internal" href="../adapters/inference_adapter.html#model_api.adapters.inference_adapter.InferenceAdapter" title="model_api.adapters.inference_adapter.InferenceAdapter"><em>InferenceAdapter</em></a>) – inference adapter containing the underlying model.</p></li>
-<li><p><strong>configuration</strong> (<em>dict</em><em>, </em><em>optional</em>) – configuration overrides the model parameters (see parameters() method).
+<li><p><strong>configuration</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span>) – configuration overrides the model parameters (see parameters() method).
 Defaults to {}.</p></li>
 <li><p><strong>preload</strong> (<em>bool</em><em>, </em><em>optional</em>) – forces inference adapter to load the model. Defaults to False.</p></li>
 </ul>
@@ -402,15 +402,15 @@ the type, default value and description must be provided.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>outputs</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>np.ndarray</em><em>]</em>) – raw outputs of the model</p></li>
-<li><p><strong>meta</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – meta information about the input data</p></li>
+<li><p><strong>outputs</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>]</span>) – raw outputs of the model</p></li>
+<li><p><strong>meta</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</span>) – meta information about the input data</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>detected keypoints</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>DetectedKeypoints</p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DetectedKeypoints</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -453,15 +453,15 @@ the type, default value and description must be provided.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>image</strong> (<em>np.ndarray</em>) – input full-size image</p></li>
-<li><p><strong>detection_result</strong> (<em>detection_result</em>) – detections located within the given image</p></li>
+<li><p><strong>image</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></span>) – input full-size image</p></li>
+<li><p><strong>detection_result</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DetectionResult</span></code></span>) – detections located within the given image</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>per detection keypoints in detection coordinates</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>list[DetectedKeypoints]</p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">DetectedKeypoints</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -472,13 +472,13 @@ the type, default value and description must be provided.</p>
 <dd><p>Predicts keypoints for the given crops.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>crops</strong> (<em>list</em><em>[</em><em>np.ndarray</em><em>]</em>) – list of cropped object images</p>
+<dd class="field-odd"><p><strong>crops</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>]</span>) – list of cropped object images</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>per crop keypoints</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>list[DetectedKeypoints]</p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">DetectedKeypoints</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>

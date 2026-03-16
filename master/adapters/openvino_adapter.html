@@ -427,10 +427,7 @@ in OpenVINO format, meta (optional)</p>
 </p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><ul class="simple">
-<li><p>raw result (dict) - model raw output in the following format</p></li>
-</ul>
-</p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -441,13 +438,13 @@ in OpenVINO format, meta (optional)</p>
 <dd><p>Gets an attribute value from OV.model_info structure.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>path</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – a suquence of tag names leading to the attribute.</p>
+<dd class="field-odd"><p><strong>path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – a suquence of tag names leading to the attribute.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>attribute value wrapped into OVAny object.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>OVAny</p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">OVAny</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -486,7 +483,7 @@ of inference from the model.</p>
 <dd><p>Performs the synchronous model inference. The infer is a blocking method.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>dict_data</strong> (<em>-</em>) – <p>it’s submitted to the model for inference and has the following format:
+<dd class="field-odd"><p><strong>dict_data</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>]</span>) – <p>it’s submitted to the model for inference and has the following format:
 {</p>
 <blockquote>
 <div><p>’input_layer_name_1’: data_1,
@@ -507,10 +504,7 @@ of inference from the model.</p>
 </p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><ul class="simple">
-<li><p>raw result (dict) - model raw output in the following format</p></li>
-</ul>
-</p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -601,9 +595,9 @@ list of new shape as values in the following format:
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>path</strong> (<em>str</em>) – path to save the model files (.xml and .bin).</p></li>
-<li><p><strong>weights_path</strong> (<em>str</em><em>, </em><em>optional</em>) – Optional path to save .bin if it differs from .xml path. Defaults to None.</p></li>
-<li><p><strong>version</strong> (<em>str</em><em>, </em><em>optional</em>) – Output IR model version (for instance, IR_V10). Defaults to None.</p></li>
+<li><p><strong>path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – path to save the model files (.xml and .bin).</p></li>
+<li><p><strong>weights_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Optional path to save .bin if it differs from .xml path. Defaults to None.</p></li>
+<li><p><strong>version</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Output IR model version (for instance, IR_V10). Defaults to None.</p></li>
 </ul>
 </dd>
 </dl>
@@ -615,7 +609,7 @@ list of new shape as values in the following format:
 <dd><p>Sets callback that grabs results of async inference.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>callback_fn</strong> (<em>Callable</em>) – Callback function.</p>
+<dd class="field-odd"><p><strong>callback_fn</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></span>) – Callback function.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -626,7 +620,7 @@ list of new shape as values in the following format:
 <dd><p>Populates OV IR RT info with the given model info.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>model_info</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – a dict representing the serialized parameters.</p>
+<dd class="field-odd"><p><strong>model_info</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</span>) – a dict representing the serialized parameters.</p>
 </dd>
 </dl>
 </dd></dl>

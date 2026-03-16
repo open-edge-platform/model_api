@@ -329,12 +329,12 @@ or use previously generated ones.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>encoder_model</strong> (<a class="reference internal" href="sam_models.html#model_api.models.sam_models.SAMImageEncoder" title="model_api.models.sam_models.SAMImageEncoder"><em>SAMImageEncoder</em></a>) – initialized decoder wrapper</p></li>
-<li><p><strong>decoder_model</strong> (<a class="reference internal" href="sam_models.html#model_api.models.sam_models.SAMDecoder" title="model_api.models.sam_models.SAMDecoder"><em>SAMDecoder</em></a>) – initialized encoder wrapper</p></li>
-<li><p><strong>reference_features</strong> (<a class="reference internal" href="#model_api.models.visual_prompting.VisualPromptingFeatures" title="model_api.models.visual_prompting.VisualPromptingFeatures"><em>VisualPromptingFeatures</em></a><em> | </em><em>None</em><em>, </em><em>optional</em>) – Previously generated reference features.
+<li><p><strong>encoder_model</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="sam_models.html#model_api.models.sam_models.SAMImageEncoder" title="model_api.models.sam_models.SAMImageEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">SAMImageEncoder</span></code></a></span>) – initialized decoder wrapper</p></li>
+<li><p><strong>decoder_model</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="sam_models.html#model_api.models.sam_models.SAMDecoder" title="model_api.models.sam_models.SAMDecoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">SAMDecoder</span></code></a></span>) – initialized encoder wrapper</p></li>
+<li><p><strong>reference_features</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#model_api.models.visual_prompting.VisualPromptingFeatures" title="model_api.models.visual_prompting.VisualPromptingFeatures"><code class="xref py py-class docutils literal notranslate"><span class="pre">VisualPromptingFeatures</span></code></a> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Previously generated reference features.
 Once the features are passed, one can skip learn() method, and start predicting masks right away.
 Defaults to None.</p></li>
-<li><p><strong>threshold</strong> (<em>float</em><em>, </em><em>optional</em>) – Threshold to match vs reference features on infer(). Greater value means a</p></li>
+<li><p><strong>threshold</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Threshold to match vs reference features on infer(). Greater value means a</p></li>
 <li><p><strong>0.65.</strong> (<em>stricter matching. Defaults to</em>)</p></li>
 </ul>
 </dd>
@@ -370,11 +370,11 @@ If the features are not passed, instance internal state will be used as a source
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>image</strong> (<em>np.ndarray</em>) – HWC-shaped image</p></li>
-<li><p><strong>reference_features</strong> (<a class="reference internal" href="#model_api.models.visual_prompting.VisualPromptingFeatures" title="model_api.models.visual_prompting.VisualPromptingFeatures"><em>VisualPromptingFeatures</em></a><em> | </em><em>None</em><em>, </em><em>optional</em>) – Reference features object obtained during
+<li><p><strong>image</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></span>) – HWC-shaped image</p></li>
+<li><p><strong>reference_features</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#model_api.models.visual_prompting.VisualPromptingFeatures" title="model_api.models.visual_prompting.VisualPromptingFeatures"><code class="xref py py-class docutils literal notranslate"><span class="pre">VisualPromptingFeatures</span></code></a> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Reference features object obtained during
 previous learn() calls. If not passed, object internal state is used, which reflects the last learn()
 call. Defaults to None.</p></li>
-<li><p><strong>apply_masks_refinement</strong> (<em>bool</em><em>, </em><em>optional</em>) – Flag controlling additional refinement stage on inference.</p></li>
+<li><p><strong>apply_masks_refinement</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Flag controlling additional refinement stage on inference.</p></li>
 <li><p><strong>enabled</strong> (<em>Once</em>)</p></li>
 <li><p><strong>decoder</strong> (<em>decoder will be launched 2 extra times to refine the masks obtained with the first</em>)</p></li>
 <li><p><strong>True.</strong> (<em>call. Defaults to</em>)</p></li>
@@ -389,7 +389,7 @@ obtained by applying OR operation to all mask corresponding to one label.</p>
 </p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ZSLVisualPromptingResult</p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">ZSLVisualPromptingResult</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -404,15 +404,15 @@ consequent learn() calls.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>image</strong> (<em>np.ndarray</em>) – HWC-shaped image</p></li>
-<li><p><strong>boxes</strong> (<em>list</em><em>[</em><a class="reference internal" href="#model_api.models.visual_prompting.Prompt" title="model_api.models.visual_prompting.Prompt"><em>Prompt</em></a><em>] </em><em>| </em><em>None</em><em>, </em><em>optional</em>) – Prompts containing bounding boxes (in XYXY torchvision format)
+<li><p><strong>image</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></span>) – HWC-shaped image</p></li>
+<li><p><strong>boxes</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<a class="reference internal" href="#model_api.models.visual_prompting.Prompt" title="model_api.models.visual_prompting.Prompt"><code class="xref py py-class docutils literal notranslate"><span class="pre">Prompt</span></code></a>] | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Prompts containing bounding boxes (in XYXY torchvision format)
 and their labels (ints, one per box). Defaults to None.</p></li>
-<li><p><strong>points</strong> (<em>list</em><em>[</em><a class="reference internal" href="#model_api.models.visual_prompting.Prompt" title="model_api.models.visual_prompting.Prompt"><em>Prompt</em></a><em>] </em><em>| </em><em>None</em><em>, </em><em>optional</em>) – Prompts containing points (in XY format)
+<li><p><strong>points</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<a class="reference internal" href="#model_api.models.visual_prompting.Prompt" title="model_api.models.visual_prompting.Prompt"><code class="xref py py-class docutils literal notranslate"><span class="pre">Prompt</span></code></a>] | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Prompts containing points (in XY format)
 and their labels (ints, one per point). Defaults to None.</p></li>
 <li><p><strong>polygons</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<a class="reference internal" href="#model_api.models.visual_prompting.Prompt" title="model_api.models.visual_prompting.Prompt"><code class="xref py py-class docutils literal notranslate"><span class="pre">Prompt</span></code></a>] | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – (list[Prompt] | None): Prompts containing polygons (a sequence of points in XY format)
 and their labels (ints, one per polygon).
 Polygon prompts are used to mask out the source features without implying decoder usage. Defaults to None.</p></li>
-<li><p><strong>reset_features</strong> (<em>bool</em><em>, </em><em>optional</em>) – Forces learning from scratch. Defaults to False.</p></li>
+<li><p><strong>reset_features</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Forces learning from scratch. Defaults to False.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -424,7 +424,7 @@ Polygon prompts are used to mask out the source features without implying decode
 </p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>tuple[<a class="reference internal" href="#model_api.models.visual_prompting.VisualPromptingFeatures" title="model_api.models.visual_prompting.VisualPromptingFeatures">VisualPromptingFeatures</a>, np.ndarray]</p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<a class="reference internal" href="#model_api.models.visual_prompting.VisualPromptingFeatures" title="model_api.models.visual_prompting.VisualPromptingFeatures"><code class="xref py py-class docutils literal notranslate"><span class="pre">VisualPromptingFeatures</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -474,10 +474,10 @@ with corresponding parameters.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>image</strong> (<em>np.ndarray</em>) – HWC-shaped image</p></li>
-<li><p><strong>boxes</strong> (<em>list</em><em>[</em><a class="reference internal" href="#model_api.models.visual_prompting.Prompt" title="model_api.models.visual_prompting.Prompt"><em>Prompt</em></a><em>] </em><em>| </em><em>None</em><em>, </em><em>optional</em>) – Prompts containing bounding boxes (in XYXY torchvision format)
+<li><p><strong>image</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></span>) – HWC-shaped image</p></li>
+<li><p><strong>boxes</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<a class="reference internal" href="#model_api.models.visual_prompting.Prompt" title="model_api.models.visual_prompting.Prompt"><code class="xref py py-class docutils literal notranslate"><span class="pre">Prompt</span></code></a>] | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Prompts containing bounding boxes (in XYXY torchvision format)
 and their labels (ints, one per box). Defaults to None.</p></li>
-<li><p><strong>points</strong> (<em>list</em><em>[</em><a class="reference internal" href="#model_api.models.visual_prompting.Prompt" title="model_api.models.visual_prompting.Prompt"><em>Prompt</em></a><em>] </em><em>| </em><em>None</em><em>, </em><em>optional</em>) – Prompts containing points (in XY format)
+<li><p><strong>points</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<a class="reference internal" href="#model_api.models.visual_prompting.Prompt" title="model_api.models.visual_prompting.Prompt"><code class="xref py py-class docutils literal notranslate"><span class="pre">Prompt</span></code></a>] | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Prompts containing points (in XY format)
 and their labels (ints, one per point). Defaults to None.</p></li>
 </ul>
 </dd>
@@ -485,7 +485,7 @@ and their labels (ints, one per point). Defaults to None.</p></li>
 <dd class="field-even"><p>result object containing predicted masks and aux information.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>VisualPromptingResult</p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">VisualPromptingResult</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>

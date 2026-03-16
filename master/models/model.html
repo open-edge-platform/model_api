@@ -396,10 +396,10 @@ The keys of the configuration dictionary should be presented in the <cite>parame
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>inference_adapter</strong> (<a class="reference internal" href="../adapters/inference_adapter.html#model_api.adapters.inference_adapter.InferenceAdapter" title="model_api.adapters.inference_adapter.InferenceAdapter"><em>InferenceAdapter</em></a>) – allows working with the specified executor</p></li>
-<li><p><strong>configuration</strong> (<em>dict</em><em>, </em><em>optional</em>) – it contains values for parameters accepted by specific
+<li><p><strong>inference_adapter</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../adapters/inference_adapter.html#model_api.adapters.inference_adapter.InferenceAdapter" title="model_api.adapters.inference_adapter.InferenceAdapter"><code class="xref py py-class docutils literal notranslate"><span class="pre">InferenceAdapter</span></code></a></span>) – allows working with the specified executor</p></li>
+<li><p><strong>configuration</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span>) – it contains values for parameters accepted by specific
 wrapper (<cite>confidence_threshold</cite>, <cite>labels</cite> etc.) which are set as data attributes</p></li>
-<li><p><strong>preload</strong> (<em>bool</em><em>, </em><em>optional</em>) – a flag whether the model is loaded to device while
+<li><p><strong>preload</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – a flag whether the model is loaded to device while
 initialization. If <cite>preload=False</cite>, the model must be loaded via <cite>load</cite> method before inference</p></li>
 </ul>
 </dd>
@@ -426,22 +426,22 @@ initialization. If <cite>preload=False</cite>, the model must be loaded via <cit
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<em>str</em><em>| </em><a class="reference internal" href="../adapters/inference_adapter.html#model_api.adapters.inference_adapter.InferenceAdapter" title="model_api.adapters.inference_adapter.InferenceAdapter"><em>InferenceAdapter</em></a>) – model name from OpenVINO Model Zoo, path to model, OVMS URL, or an adapter</p></li>
-<li><p><strong>configuration</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code>, optional) – dictionary of model config with model properties, for example
+<li><p><strong>model</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code> | <a class="reference internal" href="../adapters/inference_adapter.html#model_api.adapters.inference_adapter.InferenceAdapter" title="model_api.adapters.inference_adapter.InferenceAdapter"><code class="xref py py-class docutils literal notranslate"><span class="pre">InferenceAdapter</span></code></a></span>) – model name from OpenVINO Model Zoo, path to model, OVMS URL, or an adapter</p></li>
+<li><p><strong>configuration</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</span>) – dictionary of model config with model properties, for example
 confidence_threshold, labels</p></li>
-<li><p><strong>model_type</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>, optional) – name of model wrapper to create (e.g. “ssd”)</p></li>
-<li><p><strong>preload</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code>, optional) – whether to call load_model(). Can be set to false to reshape model before
+<li><p><strong>model_type</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – name of model wrapper to create (e.g. “ssd”)</p></li>
+<li><p><strong>preload</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – whether to call load_model(). Can be set to false to reshape model before
 loading.</p></li>
-<li><p><strong>core</strong> (<em>optional</em>) – openvino.Core instance, passed to OpenvinoAdapter</p></li>
-<li><p><strong>weights_path</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>, optional) – path to .bin file with model weights</p></li>
-<li><p><strong>adaptor_parameters</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code>, optional) – parameters of ModelAdaptor</p></li>
-<li><p><strong>device</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>, optional) – name of OpenVINO device (e.g. “CPU, GPU”)</p></li>
-<li><p><strong>nstreams</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>, optional) – number of inference streams</p></li>
-<li><p><strong>nthreads</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>, optional) – number of threads to use for inference on CPU</p></li>
-<li><p><strong>max_num_requests</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>, optional) – number of infer requests for asynchronous inference</p></li>
-<li><p><strong>precision</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>, optional) – inference precision (e.g. “FP16”)</p></li>
-<li><p><strong>download_dir</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>, optional) – directory where to store downloaded models</p></li>
-<li><p><strong>cache_dir</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>, optional) – directory where to store compiled models to reduce the load time before
+<li><p><strong>core</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – openvino.Core instance, passed to OpenvinoAdapter</p></li>
+<li><p><strong>weights_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">PathLike</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – path to .bin file with model weights</p></li>
+<li><p><strong>adaptor_parameters</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</span>) – parameters of ModelAdaptor</p></li>
+<li><p><strong>device</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – name of OpenVINO device (e.g. “CPU, GPU”)</p></li>
+<li><p><strong>nstreams</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – number of inference streams</p></li>
+<li><p><strong>nthreads</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – number of threads to use for inference on CPU</p></li>
+<li><p><strong>max_num_requests</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – number of infer requests for asynchronous inference</p></li>
+<li><p><strong>precision</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – inference precision (e.g. “FP16”)</p></li>
+<li><p><strong>download_dir</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">PathLike</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – directory where to store downloaded models</p></li>
+<li><p><strong>cache_dir</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">PathLike</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – directory where to store compiled models to reduce the load time before
 the inference.</p></li>
 </ul>
 </dd>
@@ -471,13 +471,13 @@ the inference.</p></li>
 <dd><p>Retrieves a wrapper class by a given wrapper name.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Wrapper name.</p>
+<dd class="field-odd"><p><strong>name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Wrapper name.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Model class.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Type</p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -603,7 +603,7 @@ the type, default value and description must be provided.</p>
 <dd class="field-odd"><p>Dictionary of parameter definitions</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>dict</p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -617,7 +617,7 @@ the type, default value and description must be provided.</p>
 <dd class="field-odd"><p>Model object.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>Any</p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -628,13 +628,13 @@ the type, default value and description must be provided.</p>
 <dd><p>Gets a parameter value, either from instance attribute (if set by config) or from parameter default.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – parameter name</p>
+<dd class="field-odd"><p><strong>name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – parameter name</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>parameter value</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Any</p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -648,7 +648,7 @@ the type, default value and description must be provided.</p>
 <dd class="field-odd"><p>Performance metrics object.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>PerformanceMetrics</p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">PerformanceMetrics</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -660,8 +660,8 @@ the type, default value and description must be provided.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>input_data</strong> (<em>dict</em>) – Input dict containing model input name as keys and data object as values.</p></li>
-<li><p><strong>user_data</strong> (<em>Any</em>) – data to be passed to the callback alongside with inference results.</p></li>
+<li><p><strong>input_data</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span>) – Input dict containing model input name as keys and data object as values.</p></li>
+<li><p><strong>user_data</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></span>) – data to be passed to the callback alongside with inference results.</p></li>
 </ul>
 </dd>
 </dl>
@@ -674,8 +674,8 @@ the type, default value and description must be provided.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>dict_data</strong> (<em>dict</em>) – data to be passed to the model</p></li>
-<li><p><strong>callback_data</strong> (<em>Any</em>) – data to be passed to the callback alongside with inference results.</p></li>
+<li><p><strong>dict_data</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span>) – data to be passed to the model</p></li>
+<li><p><strong>callback_data</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></span>) – data to be passed to the callback alongside with inference results.</p></li>
 </ul>
 </dd>
 </dl>
@@ -687,13 +687,13 @@ the type, default value and description must be provided.</p>
 <dd><p>Applies preprocessing, asynchronous inference, postprocessing routines to a collection of inputs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>inputs</strong> (<em>list</em>) – a list of inputs for inference</p>
+<dd class="field-odd"><p><strong>inputs</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></span>) – a list of inputs for inference</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>a list of inference results</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>list</p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -722,7 +722,7 @@ See InferenceAdapter documentation for details.</p>
 <dd><p>Prepares the model to be executed by the inference adapter.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>force</strong> (<em>bool</em><em>, </em><em>optional</em>) – Forces the process even if the model is ready. Defaults to False.</p>
+<dd class="field-odd"><p><strong>force</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Forces the process even if the model is ready. Defaults to False.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
@@ -743,7 +743,7 @@ See InferenceAdapter documentation for details.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>outputs</strong> (<em>dict</em>) – <p>model raw output in the following format:
+<li><p><strong>outputs</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</span>) – <p>model raw output in the following format:
 {</p>
 <blockquote>
 <div><p>’output_layer_name_1’: raw_result_1,
@@ -752,7 +752,7 @@ See InferenceAdapter documentation for details.</p>
 </div></blockquote>
 <p>}</p>
 </p></li>
-<li><p><strong>meta</strong> (<em>dict</em>) – the input metadata obtained from <cite>preprocess</cite> method</p></li>
+<li><p><strong>meta</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</span>) – the input metadata obtained from <cite>preprocess</cite> method</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -792,7 +792,7 @@ See InferenceAdapter documentation for details.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>new_shape</strong> (<em>dict</em>) – a dictionary with inputs names as keys and</p></li>
+<li><p><strong>new_shape</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span>) – a dictionary with inputs names as keys and</p></li>
 <li><p><strong>format.</strong> (<em>list</em><em> of </em><em>new shape as values in the following</em>)</p></li>
 </ul>
 </dd>
@@ -806,9 +806,9 @@ See InferenceAdapter documentation for details.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>path</strong> (<em>str</em>) – Path to write the resulting model.</p></li>
-<li><p><strong>weights_path</strong> (<em>str</em><em> | </em><em>None</em>) – Optional path to save weights if they are stored separately.</p></li>
-<li><p><strong>version</strong> (<em>str</em><em> | </em><em>None</em>) – Optional model version.</p></li>
+<li><p><strong>path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Path to write the resulting model.</p></li>
+<li><p><strong>weights_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Optional path to save weights if they are stored separately.</p></li>
+<li><p><strong>version</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Optional model version.</p></li>
 </ul>
 </dd>
 </dl>
@@ -820,7 +820,7 @@ See InferenceAdapter documentation for details.</p>
 <dd><p>Sets callback that grabs results of async inference.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>callback_fn</strong> (<em>Callable</em>) – _description_</p>
+<dd class="field-odd"><p><strong>callback_fn</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></span>) – _description_</p>
 </dd>
 </dl>
 </dd></dl>

@@ -339,17 +339,17 @@ instaed actuall of embedding it into the model representation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>layout</strong> (<em>str</em>) – Layout, for instance NCHW.</p></li>
-<li><p><strong>resize_mode</strong> (<em>str</em>) – Resize type to use for preprocessing.</p></li>
-<li><p><strong>interpolation_mode</strong> (<em>str</em>) – Resize interpolation mode.</p></li>
-<li><p><strong>target_shape</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>...</em><em>]</em>) – Target resize shape.</p></li>
-<li><p><strong>pad_value</strong> (<em>int</em>) – Value to pad with if resize implies padding.</p></li>
-<li><p><strong>dtype</strong> (<a class="reference internal" href="#model_api.adapters.inference_adapter.Metadata.type" title="model_api.adapters.inference_adapter.Metadata.type"><em>type</em></a><em>, </em><em>optional</em>) – Input data type for the preprocessing module. Defaults to int.</p></li>
+<li><p><strong>layout</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Layout, for instance NCHW.</p></li>
+<li><p><strong>resize_mode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Resize type to use for preprocessing.</p></li>
+<li><p><strong>interpolation_mode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Resize interpolation mode.</p></li>
+<li><p><strong>target_shape</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">...</span></code>]</span>) – Target resize shape.</p></li>
+<li><p><strong>pad_value</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Value to pad with if resize implies padding.</p></li>
+<li><p><strong>dtype</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">type</span></code></span>) – Input data type for the preprocessing module. Defaults to int.</p></li>
 <li><p><strong>bgr2rgb</strong> (<em>bool</em><em>, </em><em>optional</em>) – Defines if we need to swap R and B channels in case of image input.</p></li>
 <li><p><strong>False.</strong> (<em>Defaults to</em>)</p></li>
-<li><p><strong>mean</strong> (<em>list</em><em>[</em><em>Any</em><em>] </em><em>| </em><em>None</em><em>, </em><em>optional</em>) – Mean values to perform input normalization. Defaults to None.</p></li>
-<li><p><strong>scale</strong> (<em>list</em><em>[</em><em>Any</em><em>] </em><em>| </em><em>None</em><em>, </em><em>optional</em>) – Scale values to perform input normalization. Defaults to None.</p></li>
-<li><p><strong>input_idx</strong> (<em>int</em><em>, </em><em>optional</em>) – Index of the model input to apply preprocessing to. Defaults to 0.</p></li>
+<li><p><strong>mean</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>] | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Mean values to perform input normalization. Defaults to None.</p></li>
+<li><p><strong>scale</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>] | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Scale values to perform input normalization. Defaults to None.</p></li>
+<li><p><strong>input_idx</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Index of the model input to apply preprocessing to. Defaults to 0.</p></li>
 </ul>
 </dd>
 </dl>
@@ -403,7 +403,7 @@ in OpenVINO format, meta (optional)</p>
 <dd><p>Gets raw results from the internal inference framework representation as a dict.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>infer_result</strong> (<em>-</em>) – framework-specific result of inference from the model</p>
+<dd class="field-odd"><p><strong>infer_result</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span>) – framework-specific result of inference from the model</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><dl class="simple">
@@ -416,10 +416,7 @@ in OpenVINO format, meta (optional)</p>
 </p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><ul class="simple">
-<li><p>raw result (dict) - model raw output in the following format</p></li>
-</ul>
-</p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -430,13 +427,13 @@ in OpenVINO format, meta (optional)</p>
 <dd><p>Returns an attribute stored in model info.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>path</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – a sequence of tag names leading to the attribute.</p>
+<dd class="field-odd"><p><strong>path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – a sequence of tag names leading to the attribute.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>a value stored under corresponding tag sequence.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Any</p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -451,7 +448,7 @@ of inference from the model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>dict_data</strong> (<em>-</em>) – <p>it’s submitted to the model for inference and has the following format:
+<li><p><strong>dict_data</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span>) – <p>it’s submitted to the model for inference and has the following format:
 {</p>
 <blockquote>
 <div><p>’input_layer_name_1’: data_1,
@@ -460,7 +457,7 @@ of inference from the model.</p>
 </div></blockquote>
 <p>}</p>
 </p></li>
-<li><p><strong>callback_data</strong> (<em>-</em>) – the data for callback, that will be taken after the model inference is ended</p></li>
+<li><p><strong>callback_data</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></span>) – the data for callback, that will be taken after the model inference is ended</p></li>
 </ul>
 </dd>
 </dl>
@@ -472,7 +469,7 @@ of inference from the model.</p>
 <dd><p>Performs the synchronous model inference. The infer is a blocking method.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>dict_data</strong> (<em>-</em>) – <p>it’s submitted to the model for inference and has the following format:
+<dd class="field-odd"><p><strong>dict_data</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span>) – <p>it’s submitted to the model for inference and has the following format:
 {</p>
 <blockquote>
 <div><p>’input_layer_name_1’: data_1,
@@ -493,10 +490,7 @@ of inference from the model.</p>
 </p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><ul class="simple">
-<li><p>raw result (dict) - model raw output in the following format</p></li>
-</ul>
-</p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -535,7 +529,7 @@ to the model for inference, or all infer requests are busy.</p>
 <dd><p>Reshapes the model inputs to fit the new input shape.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>new_shape</strong> (<em>-</em>) – <p>the dictionary with inputs names as keys and
+<dd class="field-odd"><p><strong>new_shape</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span>) – <p>the dictionary with inputs names as keys and
 list of new shape as values in the following format:
 {</p>
 <blockquote>
@@ -556,9 +550,9 @@ list of new shape as values in the following format:
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>path</strong> (<em>str</em>) – Path to write the resulting model.</p></li>
-<li><p><strong>weights_path</strong> (<em>str</em><em> | </em><em>None</em>) – Optional path to save weights if they are stored separately.</p></li>
-<li><p><strong>version</strong> (<em>str</em><em> | </em><em>None</em>) – Optional model version.</p></li>
+<li><p><strong>path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Path to write the resulting model.</p></li>
+<li><p><strong>weights_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Optional path to save weights if they are stored separately.</p></li>
+<li><p><strong>version</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Optional model version.</p></li>
 </ul>
 </dd>
 </dl>
@@ -570,7 +564,7 @@ list of new shape as values in the following format:
 <dd><p>Sets callback that grabs results of async inference.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>callback_fn</strong> (<em>Callable</em>) – Callback function.</p>
+<dd class="field-odd"><p><strong>callback_fn</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></span>) – Callback function.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -582,7 +576,7 @@ list of new shape as values in the following format:
 also contain nested dicts.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>model_info</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – model info dict to write to the model.</p>
+<dd class="field-odd"><p><strong>model_info</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</span>) – model info dict to write to the model.</p>
 </dd>
 </dl>
 </dd></dl>
