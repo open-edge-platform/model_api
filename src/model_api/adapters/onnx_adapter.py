@@ -34,6 +34,8 @@ class ONNXRuntimeAdapter(InferenceAdapter):
     Models scope is limited to `SSD`, `MaskRCNNModel`, `SegmentationModel`,
     and `ClassificationModel` wrappers.
     Also, this adapter doesn't provide asynchronous inference functionality and model reshaping.
+
+    Requires optional dependencies: ``uv pip install openvino-model-api[onnx]``
     """
 
     def __init__(self, model: str, ort_options: dict = {}):
@@ -41,6 +43,12 @@ class ONNXRuntimeAdapter(InferenceAdapter):
         model (str): Filename or serialized ONNX model in a byte string.
         ort_options (dict): parameters that will be forwarded to onnxruntime.InferenceSession
         """
+        if onnxrt_absent:
+            msg = (
+                "ONNXRuntimeAdapter requires 'onnx' and 'onnxruntime' packages. "
+                "Install them with: uv pip install openvino-model-api[onnx]"
+            )
+            raise ImportError(msg)
         loaded_model = onnx.load(model)
 
         inferred_model = SymbolicShapeInference.infer_shapes(

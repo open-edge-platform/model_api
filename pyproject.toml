@@ -28,13 +28,16 @@ classifiers = [
 ]
 dependencies = [
     "numpy>=1.16.6",
-    "onnxruntime",
     "opencv-python-headless",
     "openvino>=2025.3",
     "pillow",
 ]
 
 [project.optional-dependencies]
+onnx = [
+  "onnx",
+  "onnxruntime",
+]
 ovms = [
   "tritonclient[http]<2.59",
 ]
