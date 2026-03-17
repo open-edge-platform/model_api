@@ -52,7 +52,6 @@ tests = [
 ]
 docs = [
   "myst-parser",
-  "nbsphinx",
   "pandoc",
   "sphinx",
   "sphinx_autodoc_typehints",
