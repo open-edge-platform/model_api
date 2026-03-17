@@ -32,7 +32,6 @@ extensions = [
     "sphinx.ext.mathjax",
     "sphinx_design",
     "myst_parser",
-    "nbsphinx",
     "sphinx.ext.napoleon",
     "sphinx_autodoc_typehints",
     "sphinx_copybutton",
