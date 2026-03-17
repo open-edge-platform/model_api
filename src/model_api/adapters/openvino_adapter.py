@@ -154,7 +154,14 @@ class OpenvinoAdapter(InferenceAdapter):
                     'The "weights_path" will be omitted',
                 )
             if Path(self.model_path).suffix == ".onnx" and not weights_path:
-                import onnx
+                try:
+                    import onnx
+                except ImportError:
+                    msg = (
+                        "Loading ONNX models requires the 'onnx' package. "
+                        "Install it with: uv pip install openvino-model-api[onnx]"
+                    )
+                    raise ImportError(msg) from None
 
                 self.is_onnx_file = True
                 self.onnx_metadata = load_parameters_from_onnx(

@@ -664,10 +664,10 @@ wheels = [
 
 [[package]]
 name = "cuda-pathfinder"
-version = "1.4.2"
+version = "1.4.3"
 source = { registry = "https://pypi.org/simple" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/92/de/8ca2b613042550dcf9ef50c596c8b1f602afda92cf9032ac28a73f6ee410/cuda_pathfinder-1.4.2-py3-none-any.whl", hash = "sha256:eb354abc20278f8609dc5b666a24648655bef5613c6dfe78a238a6fd95566754", size = 44779, upload-time = "2026-03-10T21:57:30.974Z" },
+    { url = "https://files.pythonhosted.org/packages/c0/59/911a1a597264f1fb7ac176995a0f0b6062e37f8c1b6e0f23071a76838507/cuda_pathfinder-1.4.3-py3-none-any.whl", hash = "sha256:4345d8ead1f701c4fb8a99be6bc1843a7348b6ba0ef3b031f5a2d66fb128ae4c", size = 47951, upload-time = "2026-03-16T21:31:25.526Z" },
 ]
 
 [[package]]
@@ -2108,7 +2108,6 @@ version = "0.4.0.0"
 source = { editable = "." }
 dependencies = [
     { name = "numpy" },
-    { name = "onnxruntime" },
     { name = "opencv-python-headless" },
     { name = "openvino" },
     { name = "pillow" },
@@ -2128,6 +2127,10 @@ docs = [
     { name = "sphinx-autodoc-typehints", version = "3.9.8", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "sphinx-copybutton" },
     { name = "sphinx-design" },
+]
+onnx = [
+    { name = "onnx" },
+    { name = "onnxruntime" },
 ]
 ovms = [
     { name = "tritonclient", extra = ["http"] },
@@ -2150,8 +2153,9 @@ requires-dist = [
     { name = "myst-parser", marker = "extra == 'docs'" },
     { name = "nbsphinx", marker = "extra == 'docs'" },
     { name = "numpy", specifier = ">=1.16.6" },
+    { name = "onnx", marker = "extra == 'onnx'" },
     { name = "onnx", marker = "extra == 'tests'" },
-    { name = "onnxruntime" },
+    { name = "onnxruntime", marker = "extra == 'onnx'" },
     { name = "onnxruntime", marker = "extra == 'tests'" },
     { name = "opencv-python-headless" },
     { name = "openvino", specifier = ">=2025.3" },
@@ -2168,7 +2172,7 @@ requires-dist = [
     { name = "tritonclient", extras = ["http"], marker = "extra == 'ovms'", specifier = "<2.59" },
     { name = "ultralytics", marker = "extra == 'tests'", specifier = ">=8.0.114,<=8.0.205" },
 ]
-provides-extras = ["ovms", "tests", "docs"]
+provides-extras = ["onnx", "ovms", "tests", "docs"]
 
 [[package]]
 name = "openvino-telemetry"

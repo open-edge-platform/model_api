@@ -95,7 +95,7 @@ Refer to **[`OVMSAdapter`](adapters/ovms_adapter.md)** to learn about running de
 For using OpenVINO Model Server Adapter you need to install the package with extra module:
 
 ```sh
-pip install <omz_dir>/demos/common/python[ovms]
+uv install <omz_dir>/demos/common/python[ovms]
 ```
 
 ### ONNXRuntime Adapter
@@ -104,10 +104,10 @@ pip install <omz_dir>/demos/common/python[ovms]
 It accepts a path to `onnx` file. This adapter's functionality is limited: it doesn't support model reshaping, asynchronous inference and
 was tested only on limited scope of models. Supported model wrappers: `SSD`, `MaskRCNNModel`, `SegmentationModel`, and `ClassificationModel`.
 
-To use this adapter, install extra dependencies:
+To use this adapter, install the optional dependencies:
 
 ```sh
-pip install onnx onnxruntime
+uv pip install openvino-model-api[onnx]
 ```
 
 ## Model API Pipelines

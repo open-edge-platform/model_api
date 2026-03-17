@@ -4,10 +4,10 @@ The `ONNXRuntimeAdapter` implements `InferenceAdapter` interface. The `ONNXRunti
 
 ## Prerequisites
 
-`ONNXRuntimeAdapter` enables inference via ONNX Runtime, and we need to install it first:
+`ONNXRuntimeAdapter` enables inference via ONNX Runtime, and we need to install the optional dependencies first:
 
 ```sh
-pip install onnx onnxruntime
+pip install openvino-model-api[onnx]
 ```
 
 ### ONNX metadata
