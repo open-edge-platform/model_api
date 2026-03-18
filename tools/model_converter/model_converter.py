@@ -108,14 +108,13 @@ class ModelConverter:
                 )
                 self.logger.info(f"✓ Downloaded file: {cached_file}")
                 return Path(cached_file)
-            else:
-                # Download the entire repository
-                cached_dir = snapshot_download(
-                    repo_id=repo_id,
-                    cache_dir=self.cache_dir,
-                )
-                self.logger.info(f"✓ Downloaded repository to: {cached_dir}")
-                return Path(cached_dir)
+            # Download the entire repository
+            cached_dir = snapshot_download(
+                repo_id=repo_id,
+                cache_dir=self.cache_dir,
+            )
+            self.logger.info(f"✓ Downloaded repository to: {cached_dir}")
+            return Path(cached_dir)
         except Exception as e:
             self.logger.error(f"Failed to download from Hugging Face: {e}")
             raise
@@ -230,6 +229,7 @@ class ModelConverter:
         try:
             if model_library == "timm":
                 import timm
+
                 self.logger.info(f"Loading timm model: {repo_id}")
                 model = timm.create_model(
                     repo_id,
@@ -238,6 +238,7 @@ class ModelConverter:
                 )
             elif model_library == "transformers":
                 from transformers import AutoModel
+
                 self.logger.info(f"Loading transformers model: {repo_id}")
                 model = AutoModel.from_pretrained(
                     repo_id,
@@ -334,22 +335,22 @@ class ModelConverter:
             # Determine which README template to use based on model library
             template_name = f"README-{model_library}-{variant}.md"
             template_path = Path(__file__).parent / "templates" / template_name
-            
+
             if not template_path.exists():
                 self.logger.warning(f"README template not found: {template_path}")
                 return
-            
+
             # Read template
             readme_content = template_path.read_text()
-            
+
             # Replace {model_name} placeholder
             readme_content = readme_content.replace("{model_name}", model_name)
-            
+
             # Write to model folder
             output_readme = output_folder / "README.md"
             output_readme.write_text(readme_content)
             self.logger.debug(f"Copied README to: {output_readme}")
-            
+
         except Exception as e:
             self.logger.warning(f"Failed to copy README: {e}")
 
@@ -544,7 +545,7 @@ class ModelConverter:
                 "mixed": nncf.QuantizationPreset.MIXED,
             }
             nncf_preset = preset_map.get(preset.lower(), nncf.QuantizationPreset.MIXED)
-            
+
             # Quantize the model
             quantized_model = nncf.quantize(
                 model,
@@ -559,35 +560,35 @@ class ModelConverter:
             # Remove _fp32 suffix if present
             if model_name.endswith("_fp32"):
                 model_name = model_name[:-5]
-            
+
             # Create output folder with -int8-ov suffix
             output_folder = model_path.parent.parent / f"{model_name}-int8-ov"
             output_folder.mkdir(parents=True, exist_ok=True)
-            
+
             # Save quantized model with model name inside the folder
             output_path = output_folder / f"{model_name}.xml"
             ov.save_model(quantized_model, output_path, True)
             self.logger.info(f"✓ Quantized model saved: {output_path}")
-            
+
             # Validate accuracy if validation data provided
             if validation_data and validation_labels:
                 self.logger.info("Validating FP32 model accuracy...")
                 fp32_accuracy = self.validate_model(model_path, validation_data, validation_labels)
                 self.logger.info(f"FP32 Top-1 Accuracy: {fp32_accuracy * 100:.2f}%")
-                
+
                 self.logger.info("Validating INT8 model accuracy...")
                 int8_accuracy = self.validate_model(output_path, validation_data, validation_labels)
                 self.logger.info(f"INT8 Top-1 Accuracy: {int8_accuracy * 100:.2f}%")
-                
+
                 accuracy_drop = (fp32_accuracy - int8_accuracy) * 100
                 self.logger.info(f"Accuracy Drop: {accuracy_drop:.2f}%")
-            
+
             # Copy .gitattributes file
             gitattributes_template = Path(__file__).parent / "templates" / ".gitattributes"
             if gitattributes_template.exists():
                 shutil.copy2(gitattributes_template, output_folder / ".gitattributes")
                 self.logger.debug(f"Copied .gitattributes to: {output_folder}")
-            
+
             # Copy README for INT8 model
             self.copy_readme(model_name, output_folder, variant="int8", model_library=model_library)
 
@@ -599,6 +600,7 @@ class ModelConverter:
         except Exception as e:
             self.logger.error(f"Failed to quantize model: {e}")
             import traceback
+
             self.logger.debug(traceback.format_exc())
             return model_path
 
@@ -655,23 +657,23 @@ class ModelConverter:
             model_name = output_path.name
             output_folder = output_path.parent / f"{model_name}-fp16-ov"
             output_folder.mkdir(parents=True, exist_ok=True)
-            
+
             # Save FP32 model for quantization (temporary)
             fp32_xml_path = output_folder / f"{model_name}_fp32.xml"
             ov.save_model(ov_model, fp32_xml_path, compress_to_fp16=False)
             self.logger.debug(f"Saved FP32 model for quantization: {fp32_xml_path}")
-            
+
             # Save the FP16 model (final)
             xml_path = output_folder / f"{model_name}.xml"
             ov.save_model(ov_model, xml_path, compress_to_fp16=True)
             self.logger.info(f"✓ Model saved: {xml_path}")
-            
+
             # Copy .gitattributes file
             gitattributes_template = Path(__file__).parent / "templates" / ".gitattributes"
             if gitattributes_template.exists():
                 shutil.copy2(gitattributes_template, output_folder / ".gitattributes")
                 self.logger.debug(f"Copied .gitattributes to: {output_folder}")
-            
+
             # Copy README for FP16 model
             self.copy_readme(model_name, output_folder, variant="fp16", model_library=model_library)
 
@@ -737,7 +739,7 @@ class ModelConverter:
         # Check if both FP16 and INT8 models already exist
         fp16_model_path = self.output_dir / f"{model_short_name}-fp16-ov" / f"{model_short_name}.xml"
         int8_model_path = self.output_dir / f"{model_short_name}-int8-ov" / f"{model_short_name}.xml"
-        
+
         if fp16_model_path.exists() and int8_model_path.exists():
             self.logger.info(f"Skipping {model_short_name}: FP16 and INT8 models already exist")
             return True
@@ -805,10 +807,10 @@ class ModelConverter:
                     self.logger.info(f"Added {labels_config} labels to metadata")
                 else:
                     self.logger.warning(f"Could not load labels for: {labels_config}")
-            
+
             # Get model library (default to 'timm' for backward compatibility)
             model_library = config.get("model_library", "timm")
-            
+
             output_path = self.output_dir / model_short_name
             fp16_model_path, fp32_model_path = self.export_to_openvino(
                 model=model,
@@ -844,7 +846,7 @@ class ModelConverter:
                         validation_data=validation_data if validation_labels else None,
                         validation_labels=validation_labels,
                     )
-                
+
                 # Clean up temporary FP32 model after quantization
                 try:
                     if fp32_model_path.exists():

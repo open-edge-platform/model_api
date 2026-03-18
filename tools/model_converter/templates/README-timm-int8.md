@@ -1,17 +1,17 @@
 ---
 license: apache-2.0
 tags:
-- image-classification
-- vision
+  - image-classification
+  - vision
 base_model:
-- timm/{model_name}
+  - timm/{model_name}
 base_model_relation: quantized
 ---
 
 # {model_name}
 
-* Model creator: [timm](https://huggingface.co/timm)
-* Original model: [timm/{model_name}](https://huggingface.co/timm/{model_name})
+- Model creator: [timm](https://huggingface.co/timm)
+- Original model: [timm/{model_name}](https://huggingface.co/timm/{model_name})
 
 ## Description
 
@@ -21,9 +21,9 @@ This is [https://huggingface.co/timm/{model_name}](https://huggingface.co/timm/{
 
 Weight compression was performed using nncf.quantize with the following parameters:
 
-* **Quantization method**: Post-Training Quantization (PTQ)
-* **Precision**: INT8 for both weights and activations
-* **Calibration dataset**: ImageNet validation subset
+- **Quantization method**: Post-Training Quantization (PTQ)
+- **Precision**: INT8 for both weights and activations
+- **Calibration dataset**: ImageNet validation subset
 
 For more information on quantization, check the [OpenVINO model optimization guide](https://docs.openvino.ai/2025/openvino-workflow/model-optimization-guide/quantizing-models-post-training.html).
 
@@ -31,8 +31,8 @@ For more information on quantization, check the [OpenVINO model optimization gui
 
 The provided OpenVINO™ IR model is compatible with:
 
-* OpenVINO version 2025.4.0 and higher
-* Model API 0.4.0 and higher
+- OpenVINO version 2025.4.0 and higher
+- Model API 0.4.0 and higher
 
 ## Running Model Inference with [Model API](https://github.com/open-edge-platform/model_api)
 

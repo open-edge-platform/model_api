@@ -304,7 +304,7 @@
       "mean_values": "123.675 116.28 103.53",
       "scale_values": "58.395 57.12 57.375",
       "labels": "IMAGENET1K_V1"
-    },    
+    },
     {
       "model_short_name": "resnet101",
       "model_class_name": "torchvision.models.resnet.resnet101",

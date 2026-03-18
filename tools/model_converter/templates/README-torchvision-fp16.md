@@ -1,14 +1,14 @@
 ---
 license: bsd-3-clause
 tags:
-- image-classification
-- vision
+  - image-classification
+  - vision
 ---
 
 # {model_name}
 
-* Model creator: [torchvision](https://github.com/pytorch/vision)
-* Original model: [{model_name}](https://github.com/pytorch/vision)
+- Model creator: [torchvision](https://github.com/pytorch/vision)
+- Original model: [{model_name}](https://github.com/pytorch/vision)
 
 ## Description
 
@@ -18,8 +18,8 @@ This is a torchvision version of [{model_name}](https://github.com/pytorch/visio
 
 The provided OpenVINO™ IR model is compatible with:
 
-* OpenVINO version 2025.4.0 and higher
-* Model API 0.4.0 and higher
+- OpenVINO version 2025.4.0 and higher
+- Model API 0.4.0 and higher
 
 ## Running Model Inference with [Model API](https://github.com/open-edge-platform/model_api)
 
