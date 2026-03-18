@@ -20,7 +20,7 @@ import shutil
 import sys
 import urllib.request
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import cv2
 import numpy as np
@@ -37,7 +37,7 @@ class ModelConverter:
         output_dir: Path,
         cache_dir: Path,
         verbose: bool = False,
-        dataset_path: Optional[Path] = None,
+        dataset_path: Path | None = None,
     ):
         """
         Initialize the ModelConverter.
@@ -62,7 +62,7 @@ class ModelConverter:
         )
         self.logger = logging.getLogger(__name__)
 
-    def get_labels(self, label_set: str) -> Optional[str]:
+    def get_labels(self, label_set: str) -> str | None:
         """
         Get label list for a given label set.
 
@@ -84,7 +84,7 @@ class ModelConverter:
     def download_from_huggingface(
         self,
         repo_id: str,
-        filename: Optional[str] = None,
+        filename: str | None = None,
     ) -> Path:
         """
         Download model from Hugging Face Hub with caching.
@@ -122,7 +122,7 @@ class ModelConverter:
     def download_weights(
         self,
         url: str,
-        filename: Optional[str] = None,
+        filename: str | None = None,
     ) -> Path:
         """
         Download model weights from URL with caching.
@@ -187,7 +187,7 @@ class ModelConverter:
     def load_checkpoint(
         self,
         checkpoint_path: Path,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Load PyTorch checkpoint file.
 
@@ -213,7 +213,7 @@ class ModelConverter:
         self,
         repo_id: str,
         model_library: str = "timm",
-        model_params: Optional[Dict[str, Any]] = None,
+        model_params: dict[str, Any] | None = None,
     ) -> nn.Module:
         """
         Load a model from Hugging Face Hub.
@@ -259,8 +259,8 @@ class ModelConverter:
     def create_model(
         self,
         model_class: type,
-        checkpoint: Dict[str, Any],
-        model_params: Optional[Dict[str, Any]] = None,
+        checkpoint: dict[str, Any],
+        model_params: dict[str, Any] | None = None,
     ) -> nn.Module:
         """
         Create and initialize model instance.
@@ -351,18 +351,53 @@ class ModelConverter:
             output_readme.write_text(readme_content)
             self.logger.debug(f"Copied README to: {output_readme}")
 
-        except Exception as e:
+        except (OSError, UnicodeError) as e:
             self.logger.warning(f"Failed to copy README: {e}")
+
+    def _collect_dataset_entries(self, image_dir: Path) -> list[tuple[Path, int]]:
+        """Collect dataset image paths with their class labels."""
+        image_entries: list[tuple[Path, int]] = []
+        for class_dir in sorted(image_dir.iterdir()):
+            if class_dir.is_dir():
+                class_label = int(class_dir.name)
+                for pattern in ["*.JPEG", "*.jpg", "*.png"]:
+                    for img_path in class_dir.glob(pattern):
+                        image_entries.append((img_path, class_label))
+        return image_entries
+
+    def _preprocess_calibration_image(
+        self,
+        img_path: Path,
+        width: int,
+        height: int,
+        mean: np.ndarray,
+        scale: np.ndarray,
+        reverse_input_channels: bool,
+    ) -> np.ndarray | None:
+        """Load and preprocess a single calibration image."""
+        img = cv2.imread(str(img_path))
+        if img is None:
+            return None
+
+        img = cv2.resize(img, (width, height))
+        img = img.astype(np.float32)
+
+        if reverse_input_channels:
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+        img = (img - mean) / scale
+        img = img.transpose(2, 0, 1)
+        return np.expand_dims(img, axis=0)
 
     def create_calibration_dataset(
         self,
-        input_shape: List[int],
-        mean_values: Optional[str] = None,
-        scale_values: Optional[str] = None,
+        input_shape: list[int],
+        mean_values: str | None = None,
+        scale_values: str | None = None,
         reverse_input_channels: bool = True,
         subset_size: int = 5000,
         return_labels: bool = False,
-    ) -> tuple[List[np.ndarray], List[int]] | List[np.ndarray]:
+    ) -> tuple[list[np.ndarray], list[int]] | list[np.ndarray]:
         """
         Create calibration dataset from ImageNet validation images.
 
@@ -386,8 +421,7 @@ class ModelConverter:
         scale = np.array([float(x) for x in scale_values.split()]) if scale_values else np.array([1, 1, 1])
 
         _, _, height, width = input_shape
-        calibration_data = []
-        labels = [] if return_labels else None
+        calibration_data: list[np.ndarray] = []
 
         # Find all images in the dataset
         image_dir = self.dataset_path / "ILSVRC2012_img_val_subset"
@@ -395,71 +429,72 @@ class ModelConverter:
             self.logger.error(f"Image directory not found: {image_dir}")
             return ([], []) if return_labels else []
 
-        image_files = []
-        image_labels = [] if return_labels else None
-        for class_dir in sorted(image_dir.iterdir()):
-            if class_dir.is_dir():
-                class_label = int(class_dir.name)  # Directory name is the class ID
-                for pattern in ["*.JPEG", "*.jpg", "*.png"]:
-                    for img_path in class_dir.glob(pattern):
-                        image_files.append(img_path)
-                        if return_labels:
-                            image_labels.append(class_label)
-
-        if not image_files:
+        image_entries = self._collect_dataset_entries(image_dir)
+        if not image_entries:
             self.logger.error("No images found in dataset")
             return ([], []) if return_labels else []
 
-        self.logger.info(f"Found {len(image_files)} images in dataset")
-        self.logger.info(f"Using {min(subset_size, len(image_files))} images for calibration")
+        self.logger.info(f"Found {len(image_entries)} images in dataset")
+        self.logger.info(f"Using {min(subset_size, len(image_entries))} images for calibration")
 
-        # Process images
-        for i in range(min(subset_size, len(image_files))):
-            img_path = image_files[i]
+        if return_labels:
+            labels: list[int] = []
+            for i, (img_path, class_label) in enumerate(image_entries[:subset_size]):
+                try:
+                    img = self._preprocess_calibration_image(
+                        img_path=img_path,
+                        width=width,
+                        height=height,
+                        mean=mean,
+                        scale=scale,
+                        reverse_input_channels=reverse_input_channels,
+                    )
+                    if img is None:
+                        continue
+
+                    calibration_data.append(img)
+                    labels.append(class_label)
+
+                    if (i + 1) % 50 == 0:
+                        self.logger.debug(f"Processed {i + 1}/{subset_size} images")
+
+                except (cv2.error, OSError, TypeError, ValueError) as e:
+                    self.logger.warning(f"Failed to process {img_path}: {e}")
+                    continue
+
+            self.logger.info(f"✓ Created calibration dataset with {len(calibration_data)} images")
+            return calibration_data, labels
+
+        for i, (img_path, _) in enumerate(image_entries[:subset_size]):
             try:
-                # Read and resize image
-                img = cv2.imread(str(img_path))
+                img = self._preprocess_calibration_image(
+                    img_path=img_path,
+                    width=width,
+                    height=height,
+                    mean=mean,
+                    scale=scale,
+                    reverse_input_channels=reverse_input_channels,
+                )
                 if img is None:
                     continue
 
-                # Resize to target size
-                img = cv2.resize(img, (width, height))
-
-                # Convert to float32
-                img = img.astype(np.float32)
-
-                # Reverse channels if needed (BGR to RGB)
-                if reverse_input_channels:
-                    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
-                # Normalize: (img - mean) / scale
-                img = (img - mean) / scale
-
-                # Transpose to NCHW format
-                img = img.transpose(2, 0, 1)
-
-                # Add batch dimension
-                img = np.expand_dims(img, axis=0)
-
                 calibration_data.append(img)
-                if return_labels:
-                    labels.append(image_labels[i])
 
                 if (i + 1) % 50 == 0:
                     self.logger.debug(f"Processed {i + 1}/{subset_size} images")
 
-            except Exception as e:
+            except (cv2.error, OSError, TypeError, ValueError) as e:
                 self.logger.warning(f"Failed to process {img_path}: {e}")
                 continue
 
         self.logger.info(f"✓ Created calibration dataset with {len(calibration_data)} images")
-        return (calibration_data, labels) if return_labels else calibration_data
+        return calibration_data
 
     def validate_model(
         self,
         model_path: Path,
-        validation_data: List[np.ndarray],
-        labels: List[int],
+        validation_data: list[np.ndarray],
+        labels: list[int],
     ) -> float:
         """
         Validate OpenVINO model and compute top-1 accuracy.
@@ -480,30 +515,28 @@ class ModelConverter:
             compiled_model = core.compile_model(model, device_name="CPU")
             output_layer = compiled_model.outputs[0]
 
-            predictions = []
+            predictions: list[int] = []
             for img in validation_data:
                 result = compiled_model(img)[output_layer]
                 pred_class = np.argmax(result, axis=1)[0]
                 predictions.append(pred_class)
 
             # Compute accuracy
-            correct = sum(p == l for p, l in zip(predictions, labels))
-            accuracy = correct / len(labels)
+            correct = sum(predicted == label for predicted, label in zip(predictions, labels))
+            return correct / len(labels)
 
-            return accuracy
-
-        except Exception as e:
+        except (ImportError, OSError, RuntimeError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to validate model: {e}")
             return 0.0
 
     def quantize_model(
         self,
         model_path: Path,
-        calibration_data: List[np.ndarray],
+        calibration_data: list[np.ndarray],
         preset: str = "accuracy",
         model_library: str = "timm",
-        validation_data: Optional[List[np.ndarray]] = None,
-        validation_labels: Optional[List[int]] = None,
+        validation_data: list[np.ndarray] | None = None,
+        validation_labels: list[int] | None = None,
     ) -> Path:
         """
         Quantize OpenVINO model to INT8 using NNCF.
@@ -567,7 +600,7 @@ class ModelConverter:
 
             # Save quantized model with model name inside the folder
             output_path = output_folder / f"{model_name}.xml"
-            ov.save_model(quantized_model, output_path, True)
+            ov.save_model(quantized_model, output_path, compress_to_fp16=True)
             self.logger.info(f"✓ Quantized model saved: {output_path}")
 
             # Validate accuracy if validation data provided
@@ -597,7 +630,7 @@ class ModelConverter:
         except ImportError:
             self.logger.error("NNCF not installed. Install with: pip install nncf")
             return model_path
-        except Exception as e:
+        except (OSError, RuntimeError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to quantize model: {e}")
             import traceback
 
@@ -607,11 +640,11 @@ class ModelConverter:
     def export_to_openvino(
         self,
         model: nn.Module,
-        input_shape: List[int],
+        input_shape: list[int],
         output_path: Path,
-        input_names: Optional[List[str]] = None,
-        output_names: Optional[List[str]] = None,
-        metadata: Optional[Dict[tuple, str]] = None,
+        input_names: list[str] | None = None,
+        output_names: list[str] | None = None,
+        metadata: dict[tuple[str, str], str] | None = None,
         model_library: str = "timm",
     ) -> tuple[Path, Path]:
         """
@@ -686,9 +719,9 @@ class ModelConverter:
     def _postprocess_openvino_model(
         self,
         model: Any,
-        input_names: Optional[List[str]] = None,
-        output_names: Optional[List[str]] = None,
-        metadata: Optional[Dict[tuple, str]] = None,
+        input_names: list[str] | None = None,
+        output_names: list[str] | None = None,
+        metadata: dict[tuple[str, str], str] | None = None,
     ) -> Any:
         """
         Post-process OpenVINO model (set names, add metadata).
@@ -724,7 +757,7 @@ class ModelConverter:
 
         return model
 
-    def process_model_config(self, config: Dict[str, Any]) -> bool:
+    def process_model_config(self, config: dict[str, Any]) -> bool:
         """
         Process a single model configuration.
 
@@ -857,7 +890,7 @@ class ModelConverter:
                     if fp32_bin_path.exists():
                         fp32_bin_path.unlink()
                         self.logger.debug(f"Removed temporary FP32 weights: {fp32_bin_path}")
-                except Exception as e:
+                except OSError as e:
                     self.logger.warning(f"Failed to remove temporary FP32 files: {e}")
 
             self.logger.info(f"✓ Successfully converted {model_short_name}")
@@ -873,7 +906,7 @@ class ModelConverter:
     def process_config_file(
         self,
         config_path: Path,
-        model_filter: Optional[str] = None,
+        model_filter: str | None = None,
     ) -> tuple[int, int]:
         """
         Process models from a configuration file.
@@ -996,7 +1029,10 @@ Examples:
         "--dataset",
         type=Path,
         default=Path.home() / "model_api" / "Small-ImageNet-Validation-Dataset-1000-Classes",
-        help="Path to calibration dataset for INT8 quantization (default: ~/model_api/Small-ImageNet-Validation-Dataset-1000-Classes)",
+        help=(
+            "Path to calibration dataset for INT8 quantization "
+            "(default: ~/model_api/Small-ImageNet-Validation-Dataset-1000-Classes)"
+        ),
     )
 
     parser.add_argument(

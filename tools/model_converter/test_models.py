@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+#
+# Copyright (C) 2024-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """
 Test script to run inference on all converted models.
 
@@ -103,7 +108,7 @@ def test_model(model_path: Path, image_path: Path, output_dir: Path, device: str
 
         return True
 
-    except Exception as e:
+    except (OSError, RuntimeError, TypeError, ValueError, cv2.error) as e:
         logger.error(f"✗ Failed to test model {model_name}: {e}")
         import traceback
 

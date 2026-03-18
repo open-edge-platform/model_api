@@ -223,6 +223,7 @@ exclude = [
     "build",
     "dist",
     "node_modules",
+    "tools/model_converter/yolo/yolo.py",
     "venv",
 ]
 
@@ -250,6 +251,7 @@ notice-rgx = """
 """
 
 [tool.bandit]
+exclude_dirs = ["tools/model_converter/yolo/yolo.py"]
 skips = ["B101", "B310"]
 
 [tool.coverage.report]
