@@ -1,5 +1,5 @@
 ---
-license: bsd-3-clause
+license: { license }
 tags:
   - image-classification
   - vision
@@ -8,11 +8,11 @@ tags:
 # {model_name}
 
 - Model creator: [torchvision](https://github.com/pytorch/vision)
-- Original model: [{model_name}](https://github.com/pytorch/vision)
+- Original model: [{model_name}]({docs})
 
 ## Description
 
-This is a torchvision version of [{model_name}](https://github.com/pytorch/vision) model converted to the [OpenVINO™ IR](https://docs.openvino.ai/2025/documentation/openvino-ir-format.html) (Intermediate Representation) format with weights compressed to FP16.
+This is a torchvision version of [{model_name}]({docs}) model converted to the [OpenVINO™ IR](https://docs.openvino.ai/2025/documentation/openvino-ir-format.html) (Intermediate Representation) format with weights compressed to FP16.
 
 ## Compatibility
 
@@ -58,7 +58,7 @@ Check the original [model implementation](https://github.com/pytorch/vision) for
 
 ## Legal information
 
-The original model is distributed under [BSD 3-Clause "New" or "Revised" License](https://choosealicense.com/licenses/bsd-3-clause/) license. More details can be found in [https://github.com/pytorch/vision](https://github.com/pytorch/vision).
+The original model is distributed under the [{license}]({license_link}) license. More details can be found in [https://github.com/pytorch/vision](https://github.com/pytorch/vision).
 
 ## Disclaimer
 

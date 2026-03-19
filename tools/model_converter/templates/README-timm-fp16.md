@@ -1,21 +1,21 @@
 ---
-license: apache-2.0
+license: { license }
 tags:
   - image-classification
   - vision
 base_model:
-  - timm/{model_name}
+  - { huggingface_repo }
 base_model_relation: quantized
 ---
 
 # {model_name}
 
 - Model creator: [timm](https://huggingface.co/timm)
-- Original model: [timm/{model_name}](https://huggingface.co/timm/{model_name})
+- Original model: [{huggingface_repo}](https://huggingface.co/{huggingface_repo})
 
 ## Description
 
-This is [https://huggingface.co/timm/{model_name}](https://huggingface.co/timm/{model_name}) model converted to the [OpenVINO™ IR](https://docs.openvino.ai/2025/documentation/openvino-ir-format.html) (Intermediate Representation) format with weights compressed to FP16.
+This is [https://huggingface.co/{huggingface_repo}](https://huggingface.co/{huggingface_repo}) model converted to the [OpenVINO™ IR](https://docs.openvino.ai/2025/documentation/openvino-ir-format.html) (Intermediate Representation) format with weights compressed to FP16.
 
 ## Compatibility
 
@@ -57,11 +57,11 @@ For more examples and possible optimizations, refer to the [Model API Documentat
 
 ## Limitations
 
-Check the original [model card](https://huggingface.co/timm/{model_name}) for limitations.
+Check the original [model card](https://huggingface.co/{huggingface_repo}) for limitations.
 
 ## Legal information
 
-The original model is distributed under [Apache License 2.0](https://choosealicense.com/licenses/apache-2.0/) license. More details can be found in [timm/{model_name}](https://huggingface.co/timm/{model_name}).
+The original model is distributed under the [{license}]({license_link}) license. More details can be found in [{huggingface_repo}](https://huggingface.co/{huggingface_repo})
 
 ## Disclaimer
 

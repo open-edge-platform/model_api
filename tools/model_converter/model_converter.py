@@ -327,21 +327,45 @@ class ModelConverter:
 
     def copy_readme(
         self,
-        model_name: str,
+        model_config: dict[str, Any],
         output_folder: Path,
         variant: str = "fp16",
-        model_library: str = "timm",
     ) -> None:
         """
         Copy README template to model folder and replace placeholders.
 
         Args:
-            model_name: Name of the model
+            model_config: Model configuration used to fill template placeholders
             output_folder: Folder where the model is saved
             variant: Model variant ('fp16' or 'int8')
-            model_library: Model library ('timm' or 'torchvision')
         """
         try:
+            model_short_name = str(model_config.get("model_short_name", "")).strip()
+            model_library = str(model_config.get("model_library", "timm")).strip()
+            model_license = str(model_config.get("license", "")).strip()
+            model_license_link = str(model_config.get("license_link", "")).strip()
+            docs = str(model_config.get("docs", "")).strip()
+
+            def template_placeholder(name: str) -> str:
+                return f"{{{name}}}"
+
+            if not model_short_name:
+                error_msg = "Model config must define a non-empty model_short_name"
+                raise ValueError(error_msg)
+
+            if not model_license_link:
+                error_msg = f"Model '{model_short_name}' must define a non-empty license_link"
+                raise ValueError(error_msg)
+
+            if not model_license:
+                error_msg = f"Model '{model_short_name}' must define a non-empty license"
+                raise ValueError(error_msg)
+
+            if not docs:
+                self.logger.warning(
+                    f"Model '{model_short_name}' does not define 'docs' field. Placeholder will be empty.",
+                )
+
             # Determine which README template to use based on model library
             template_name = f"README-{model_library}-{variant}.md"
             template_path = Path(__file__).parent / "templates" / template_name
@@ -353,15 +377,30 @@ class ModelConverter:
             # Read template
             readme_content = template_path.read_text()
 
-            # Replace {model_name} placeholder
-            readme_content = readme_content.replace("{model_name}", model_name)
+            placeholders = {
+                template_placeholder("license"): model_license,
+                template_placeholder("license_link"): model_license_link,
+                template_placeholder("model_name"): model_short_name,
+                template_placeholder("model_short_name"): model_short_name,
+                template_placeholder("variant"): variant,
+                template_placeholder("docs"): docs,
+            }
+
+            for key, value in model_config.items():
+                if value is None:
+                    continue
+                if isinstance(value, (str, int, float, bool)):
+                    placeholders[template_placeholder(key)] = str(value)
+
+            for placeholder, value in placeholders.items():
+                readme_content = readme_content.replace(placeholder, value)
 
             # Write to model folder
             output_readme = output_folder / "README.md"
             output_readme.write_text(readme_content)
             self.logger.debug(f"Copied README to: {output_readme}")
 
-        except (OSError, UnicodeError) as e:
+        except (OSError, UnicodeError, ValueError) as e:
             self.logger.warning(f"Failed to copy README: {e}")
 
     def _collect_dataset_entries(self, image_dir: Path) -> list[tuple[Path, int]]:
@@ -543,8 +582,8 @@ class ModelConverter:
         self,
         model_path: Path,
         calibration_data: list[np.ndarray],
+        model_config: dict[str, Any],
         preset: str = "accuracy",
-        model_library: str = "timm",
         validation_data: list[np.ndarray] | None = None,
         validation_labels: list[int] | None = None,
     ) -> Path:
@@ -554,8 +593,8 @@ class ModelConverter:
         Args:
             model_path: Path to the FP32 OpenVINO model (.xml)
             calibration_data: List of calibration images
+            model_config: Model configuration used for README rendering
             preset: Quantization preset ('accuracy', 'performance', 'mixed')
-            model_library: Model library ('timm' or 'torchvision')
             validation_data: Optional validation images for accuracy measurement
             validation_labels: Optional validation labels for accuracy measurement
 
@@ -633,7 +672,11 @@ class ModelConverter:
                 self.logger.debug(f"Copied .gitattributes to: {output_folder}")
 
             # Copy README for INT8 model
-            self.copy_readme(model_name, output_folder, variant="int8", model_library=model_library)
+            self.copy_readme(
+                model_config,
+                output_folder,
+                variant="int8",
+            )
 
             return output_path
 
@@ -652,10 +695,10 @@ class ModelConverter:
         model: nn.Module,
         input_shape: list[int],
         output_path: Path,
+        model_config: dict[str, Any],
         input_names: list[str] | None = None,
         output_names: list[str] | None = None,
         metadata: dict[tuple[str, str], str] | None = None,
-        model_library: str = "timm",
     ) -> tuple[Path, Path]:
         """
         Export PyTorch model to OpenVINO format.
@@ -664,10 +707,10 @@ class ModelConverter:
             model: PyTorch model to export
             input_shape: Input tensor shape [batch, channels, height, width]
             output_path: Path to save the model (without extension)
+            model_config: Model configuration used for README rendering
             input_names: Names for input tensors
             output_names: Names for output tensors
             metadata: Metadata to embed in the model
-            model_library: Model library ('timm' or 'torchvision')
 
         Returns:
             Tuple of (fp16_model_path, fp32_model_path) - FP16 for final use, FP32 for quantization
@@ -718,7 +761,11 @@ class ModelConverter:
                 self.logger.debug(f"Copied .gitattributes to: {output_folder}")
 
             # Copy README for FP16 model
-            self.copy_readme(model_name, output_folder, variant="fp16", model_library=model_library)
+            self.copy_readme(
+                model_config,
+                output_folder,
+                variant="fp16",
+            )
 
             return xml_path, fp32_xml_path
 
@@ -778,6 +825,8 @@ class ModelConverter:
             True if successful, False otherwise
         """
         model_short_name = config.get("model_short_name", "unknown")
+        model_license = config.get("license")
+        model_license_link = config.get("license_link")
 
         # Check if both FP16 and INT8 models already exist
         fp16_model_path = self.output_dir / f"{model_short_name}-fp16-ov" / f"{model_short_name}.xml"
@@ -788,6 +837,13 @@ class ModelConverter:
             return True
 
         try:
+            if not model_license:
+                error_msg = f"Model '{model_short_name}' must define 'license' in configuration"
+                raise ValueError(error_msg)
+            if not model_license_link:
+                error_msg = f"Model '{model_short_name}' must define 'license_link' in configuration"
+                raise ValueError(error_msg)
+
             self.logger.info("=" * 80)
             self.logger.info(f"Processing model: {config.get('model_full_name', model_short_name)}")
             self.logger.info(f"Short name: {model_short_name}")
@@ -865,10 +921,10 @@ class ModelConverter:
                 model=model,
                 input_shape=input_shape,
                 output_path=output_path,
+                model_config=config,
                 input_names=input_names,
                 output_names=output_names,
                 metadata=metadata,
-                model_library=model_library,
             )
 
             # Quantize the model if dataset is available
@@ -890,8 +946,8 @@ class ModelConverter:
                     self.quantize_model(
                         model_path=fp32_model_path,
                         calibration_data=validation_data,
+                        model_config=config,
                         preset="mixed",
-                        model_library=model_library,
                         validation_data=validation_data if validation_labels else None,
                         validation_labels=validation_labels,
                     )

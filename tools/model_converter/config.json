@@ -16,6 +16,8 @@
       "reverse_input_channels": true,
       "mean_values": "123.675 116.28 103.53",
       "scale_values": "58.395 57.12 57.375",
+      "license": "bsd-3-clause",
+      "license_link": "https://spdx.org/licenses/BSD-3-Clause.html",
       "labels": "IMAGENET1K_V1"
     },
     {
@@ -34,6 +36,8 @@
       "reverse_input_channels": true,
       "mean_values": "123.675 116.28 103.53",
       "scale_values": "58.395 57.12 57.375",
+      "license": "bsd-3-clause",
+      "license_link": "https://spdx.org/licenses/BSD-3-Clause.html",
       "labels": "IMAGENET1K_V1"
     },
     {
@@ -52,6 +56,8 @@
       "reverse_input_channels": true,
       "mean_values": "123.675 116.28 103.53",
       "scale_values": "58.395 57.12 57.375",
+      "license": "bsd-3-clause",
+      "license_link": "https://spdx.org/licenses/BSD-3-Clause.html",
       "labels": "IMAGENET1K_V1"
     },
     {
@@ -70,6 +76,8 @@
       "reverse_input_channels": true,
       "mean_values": "123.675 116.28 103.53",
       "scale_values": "58.395 57.12 57.375",
+      "license": "bsd-3-clause",
+      "license_link": "https://spdx.org/licenses/BSD-3-Clause.html",
       "labels": "IMAGENET1K_V1"
     },
     {
@@ -88,6 +96,8 @@
       "reverse_input_channels": true,
       "mean_values": "123.675 116.28 103.53",
       "scale_values": "58.395 57.12 57.375",
+      "license": "bsd-3-clause",
+      "license_link": "https://spdx.org/licenses/BSD-3-Clause.html",
       "labels": "IMAGENET1K_V1"
     },
     {
@@ -106,6 +116,8 @@
       "reverse_input_channels": true,
       "mean_values": "123.675 116.28 103.53",
       "scale_values": "58.395 57.12 57.375",
+      "license": "bsd-3-clause",
+      "license_link": "https://spdx.org/licenses/BSD-3-Clause.html",
       "labels": "IMAGENET1K_V1"
     },
     {
@@ -124,6 +136,8 @@
       "reverse_input_channels": true,
       "mean_values": "123.675 116.28 103.53",
       "scale_values": "58.395 57.12 57.375",
+      "license": "bsd-3-clause",
+      "license_link": "https://spdx.org/licenses/BSD-3-Clause.html",
       "labels": "IMAGENET1K_V1"
     },
     {
@@ -142,6 +156,8 @@
       "reverse_input_channels": true,
       "mean_values": "123.675 116.28 103.53",
       "scale_values": "58.395 57.12 57.375",
+      "license": "bsd-3-clause",
+      "license_link": "https://spdx.org/licenses/BSD-3-Clause.html",
       "labels": "IMAGENET1K_V1"
     },
     {
@@ -160,6 +176,8 @@
       "reverse_input_channels": true,
       "mean_values": "123.675 116.28 103.53",
       "scale_values": "58.395 57.12 57.375",
+      "license": "bsd-3-clause",
+      "license_link": "https://spdx.org/licenses/BSD-3-Clause.html",
       "labels": "IMAGENET1K_V1"
     },
     {
@@ -178,6 +196,8 @@
       "reverse_input_channels": true,
       "mean_values": "123.675 116.28 103.53",
       "scale_values": "58.395 57.12 57.375",
+      "license": "bsd-3-clause",
+      "license_link": "https://spdx.org/licenses/BSD-3-Clause.html",
       "labels": "IMAGENET1K_V1"
     },
     {
@@ -196,6 +216,8 @@
       "reverse_input_channels": true,
       "mean_values": "123.675 116.28 103.53",
       "scale_values": "58.395 57.12 57.375",
+      "license": "bsd-3-clause",
+      "license_link": "https://spdx.org/licenses/BSD-3-Clause.html",
       "labels": "IMAGENET1K_V1"
     },
     {
@@ -214,6 +236,8 @@
       "reverse_input_channels": true,
       "mean_values": "123.675 116.28 103.53",
       "scale_values": "58.395 57.12 57.375",
+      "license": "bsd-3-clause",
+      "license_link": "https://spdx.org/licenses/BSD-3-Clause.html",
       "labels": "IMAGENET1K_V1"
     },
     {
@@ -232,6 +256,8 @@
       "reverse_input_channels": false,
       "mean_values": "123.675 116.28 103.53",
       "scale_values": "58.395 57.12 57.375",
+      "license": "bsd-3-clause",
+      "license_link": "https://spdx.org/licenses/BSD-3-Clause.html",
       "labels": "IMAGENET1K_V1"
     },
     {
@@ -250,6 +276,8 @@
       "reverse_input_channels": true,
       "mean_values": "123.675 116.28 103.53",
       "scale_values": "58.395 57.12 57.375",
+      "license": "bsd-3-clause",
+      "license_link": "https://spdx.org/licenses/BSD-3-Clause.html",
       "labels": "IMAGENET1K_V1"
     },
     {
@@ -268,6 +296,8 @@
       "reverse_input_channels": true,
       "mean_values": "123.675 116.28 103.53",
       "scale_values": "58.395 57.12 57.375",
+      "license": "bsd-3-clause",
+      "license_link": "https://spdx.org/licenses/BSD-3-Clause.html",
       "labels": "IMAGENET1K_V1"
     },
     {
@@ -286,6 +316,8 @@
       "reverse_input_channels": true,
       "mean_values": "123.675 116.28 103.53",
       "scale_values": "58.395 57.12 57.375",
+      "license": "bsd-3-clause",
+      "license_link": "https://spdx.org/licenses/BSD-3-Clause.html",
       "labels": "IMAGENET1K_V1"
     },
     {
@@ -303,6 +335,8 @@
       "reverse_input_channels": true,
       "mean_values": "123.675 116.28 103.53",
       "scale_values": "58.395 57.12 57.375",
+      "license": "bsd-3-clause",
+      "license_link": "https://spdx.org/licenses/BSD-3-Clause.html",
       "labels": "IMAGENET1K_V1"
     },
     {
@@ -321,6 +355,8 @@
       "reverse_input_channels": true,
       "mean_values": "123.675 116.28 103.53",
       "scale_values": "58.395 57.12 57.375",
+      "license": "bsd-3-clause",
+      "license_link": "https://spdx.org/licenses/BSD-3-Clause.html",
       "labels": "IMAGENET1K_V1"
     },
     {
@@ -339,6 +375,8 @@
       "reverse_input_channels": true,
       "mean_values": "123.675 116.28 103.53",
       "scale_values": "58.395 57.12 57.375",
+      "license": "bsd-3-clause",
+      "license_link": "https://spdx.org/licenses/BSD-3-Clause.html",
       "labels": "IMAGENET1K_V1"
     },
 
@@ -358,6 +396,8 @@
       "reverse_input_channels": false,
       "mean_values": "123.675 116.28 103.53",
       "scale_values": "58.395 57.12 57.375",
+      "license": "apache-2.0",
+      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
       "labels": "IMAGENET1K_V1"
     },
     {
@@ -376,6 +416,8 @@
       "reverse_input_channels": false,
       "mean_values": "123.675 116.28 103.53",
       "scale_values": "58.395 57.12 57.375",
+      "license": "apache-2.0",
+      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
       "labels": "IMAGENET1K_V1"
     },
     {
@@ -394,6 +436,8 @@
       "reverse_input_channels": false,
       "mean_values": "123.675 116.28 103.53",
       "scale_values": "58.395 57.12 57.375",
+      "license": "apache-2.0",
+      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
       "labels": "IMAGENET1K_V1"
     },
     {
@@ -412,6 +456,8 @@
       "reverse_input_channels": false,
       "mean_values": "123.675 116.28 103.53",
       "scale_values": "58.395 57.12 57.375",
+      "license": "apache-2.0",
+      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
       "labels": "IMAGENET1K_V1"
     },
     {
@@ -430,6 +476,8 @@
       "reverse_input_channels": false,
       "mean_values": "123.675 116.28 103.53",
       "scale_values": "58.395 57.12 57.375",
+      "license": "apache-2.0",
+      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
       "labels": "IMAGENET1K_V1"
     },
     {
@@ -448,6 +496,8 @@
       "reverse_input_channels": false,
       "mean_values": "123.675 116.28 103.53",
       "scale_values": "58.395 57.12 57.375",
+      "license": "apache-2.0",
+      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
       "labels": "IMAGENET1K_V1"
     },
     {
@@ -466,6 +516,8 @@
       "reverse_input_channels": false,
       "mean_values": "123.675 116.28 103.53",
       "scale_values": "58.395 57.12 57.375",
+      "license": "apache-2.0",
+      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
       "labels": "IMAGENET1K_V1"
     },
     {
@@ -484,6 +536,8 @@
       "reverse_input_channels": false,
       "mean_values": "123.675 116.28 103.53",
       "scale_values": "58.395 57.12 57.375",
+      "license": "apache-2.0",
+      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
       "labels": "IMAGENET1K_V1"
     },
     {
@@ -502,6 +556,8 @@
       "reverse_input_channels": false,
       "mean_values": "123.675 116.28 103.53",
       "scale_values": "58.395 57.12 57.375",
+      "license": "apache-2.0",
+      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
       "labels": "IMAGENET1K_V1"
     },
     {
@@ -520,6 +576,8 @@
       "reverse_input_channels": false,
       "mean_values": "123.675 116.28 103.53",
       "scale_values": "58.395 57.12 57.375",
+      "license": "apache-2.0",
+      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
       "labels": "IMAGENET1K_V1"
     }
   ]

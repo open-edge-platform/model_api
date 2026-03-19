@@ -91,6 +91,8 @@ The configuration file is a JSON file with the following structure:
   "models": [
     {
       "model_short_name": "resnet50",
+      "license": "bsd-3-clause",
+      "license_link": "https://spdx.org/licenses/BSD-3-Clause.html",
       "model_class_name": "torchvision.models.resnet.resnet50",
       "model_full_name": "ResNet-50",
       "description": "ResNet-50 image classification model",
@@ -119,6 +121,8 @@ Common `model_type` values:
 #### Required Fields
 
 - **`model_short_name`** (string): Short identifier for the model (used for output filename)
+- **`license`** (string): SPDX license identifier for the upstream model (for example `bsd-3-clause` or `apache-2.0`)
+- **`license_link`** (string): URL to the upstream license text used in generated README files
 - **`model_class_name`** (string): Full Python path to the model class (e.g., `torchvision.models.resnet.resnet50`)
 - **`weights_url`** (string): URL to download the PyTorch weights (.pth file)
 
