@@ -1,18 +1,18 @@
 ---
-license: { license }
+license: <<license>>
 tags:
   - image-classification
   - vision
 ---
 
-# {model_name}
+# <<model_name>>
 
 - Model creator: [torchvision](https://github.com/pytorch/vision)
-- Original model: [{model_name}]({docs})
+- Original model: [<<model_name>>](<<docs>>)
 
 ## Description
 
-This is a torchvision version of [{model_name}]({docs}) model converted to the [OpenVINO™ IR](https://docs.openvino.ai/2025/documentation/openvino-ir-format.html) (Intermediate Representation) format with weights compressed to FP16.
+This is a torchvision version of [<<model_name>>](<<docs>>) model converted to the [OpenVINO™ IR](https://docs.openvino.ai/2025/documentation/openvino-ir-format.html) (Intermediate Representation) format with weights compressed to FP16.
 
 ## Compatibility
 
@@ -37,7 +37,7 @@ from model_api.models import Model
 from model_api.visualizer import Visualizer
 
 # 1. Load model
-model = Model.create_model("{model_name}.xml", device="AUTO")
+model = Model.create_model("<<model_name>>.xml", device="AUTO")
 
 # 2. Load image
 image = cv2.imread("image.jpg")
@@ -58,7 +58,7 @@ Check the original [model implementation](https://github.com/pytorch/vision) for
 
 ## Legal information
 
-The original model is distributed under the [{license}]({license_link}) license. More details can be found in [https://github.com/pytorch/vision](https://github.com/pytorch/vision).
+The original model is distributed under the [<<license>>](license_link) license. More details can be found in [https://github.com/pytorch/vision](https://github.com/pytorch/vision).
 
 ## Disclaimer
 

@@ -1,21 +1,21 @@
 ---
-license: { license }
+license: <<license>>
 tags:
   - image-classification
   - vision
 base_model:
-  - { huggingface_repo }
+  - <<huggingface_repo>>
 base_model_relation: quantized
 ---
 
-# {model_short_name}
+# <<model_name>>
 
 - Model creator: [timm](https://huggingface.co/timm)
-- Original model: [{huggingface_repo}](https://huggingface.co/{huggingface_repo})
+- Original model: [<<huggingface_repo>>](https://huggingface.co/<<huggingface_repo>>)
 
 ## Description
 
-This is [https://huggingface.co/{huggingface_repo}](https://huggingface.co/{huggingface_repo}) model converted to the [OpenVINO™ IR](https://docs.openvino.ai/2025/documentation/openvino-ir-format.html) (Intermediate Representation) format with weights compressed to INT8 by [NNCF](https://github.com/openvinotoolkit/nncf).
+This is [https://huggingface.co/<<huggingface_repo>>](https://huggingface.co/<<huggingface_repo>>) model converted to the [OpenVINO™ IR](https://docs.openvino.ai/2025/documentation/openvino-ir-format.html) (Intermediate Representation) format with weights compressed to INT8 by [NNCF](https://github.com/openvinotoolkit/nncf).
 
 ## Quantization Parameters
 
@@ -50,7 +50,7 @@ from model_api.models import Model
 from model_api.visualizer import Visualizer
 
 # 1. Load model
-model = Model.create_model("{model_name}.xml", device="AUTO")
+model = Model.create_model("<<model_name>>.xml", device="AUTO")
 
 # 2. Load image
 image = cv2.imread("image.jpg")
@@ -67,11 +67,11 @@ For more examples and possible optimizations, refer to the [Model API Documentat
 
 ## Limitations
 
-Check the original [model card](https://huggingface.co/{huggingface_repo}) for limitations.
+Check the original [model card](https://huggingface.co/<<huggingface_repo>>) for limitations.
 
 ## Legal information
 
-The original model is distributed under the [{license}]({license_link}) license. More details can be found in [{huggingface_repo}](https://huggingface.co/{huggingface_repo})
+The original model is distributed under the [<<license>>](license_link) license. More details can be found in [<<huggingface_repo>>](https://huggingface.co/<<huggingface_repo>>)
 
 ## Disclaimer
 

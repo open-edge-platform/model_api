@@ -347,7 +347,7 @@ class ModelConverter:
             docs = str(model_config.get("docs", "")).strip()
 
             def template_placeholder(name: str) -> str:
-                return f"{{{name}}}"
+                return f"<<{name}>>"
 
             if not model_short_name:
                 error_msg = "Model config must define a non-empty model_short_name"
