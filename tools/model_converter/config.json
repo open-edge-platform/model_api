@@ -345,6 +345,7 @@
     {
       "model_short_name": "mobilenetv2_050_lamb_in1k",
       "huggingface_repo": "timm/mobilenetv2_050.lamb_in1k",
+      "huggingface_revision": "8990230b131c231ad38b217b23cf9d2e7e70e8d0",
       "model_library": "timm",
       "model_full_name": "MobileNetV2-0.5 LAMB ImageNet-1k",
       "description": "MobileNetV2 with 0.5x width multiplier trained with LAMB optimizer on ImageNet-1k",
@@ -362,6 +363,7 @@
     {
       "model_short_name": "mobilenetv2_100_ra_in1k",
       "huggingface_repo": "timm/mobilenetv2_100.ra_in1k",
+      "huggingface_revision": "5afa12513b048c79b9147a5d210e9bdc50035481",
       "model_library": "timm",
       "model_full_name": "MobileNetV2-1.0 RandAugment ImageNet-1k",
       "description": "MobileNetV2 with 1.0x width multiplier trained with RandAugment on ImageNet-1k",
@@ -379,6 +381,7 @@
     {
       "model_short_name": "mobilenetv2_110d_ra_in1k",
       "huggingface_repo": "timm/mobilenetv2_110d.ra_in1k",
+      "huggingface_revision": "143925e3675a13f37d417cde6e73a39a04d81dcd",
       "model_library": "timm",
       "model_full_name": "MobileNetV2-1.1 RandAugment ImageNet-1k",
       "description": "MobileNetV2 with 1.1x width multiplier trained with RandAugment on ImageNet-1k",
@@ -396,6 +399,7 @@
     {
       "model_short_name": "mobilenetv2_120d_ra_in1k",
       "huggingface_repo": "timm/mobilenetv2_120d.ra_in1k",
+      "huggingface_revision": "3e70fb071e6567f136c48aabf1b45eb071b5d471",
       "model_library": "timm",
       "model_full_name": "MobileNetV2-1.2 RandAugment ImageNet-1k",
       "description": "MobileNetV2 with 1.2x width multiplier trained with RandAugment on ImageNet-1k",
@@ -413,6 +417,7 @@
     {
       "model_short_name": "mobilenetv2_140_ra_in1k",
       "huggingface_repo": "timm/mobilenetv2_140.ra_in1k",
+      "huggingface_revision": "008fa2eb59c0080738c65898a7666059e11c0a75",
       "model_library": "timm",
       "model_full_name": "MobileNetV2-1.4 RandAugment ImageNet-1k",
       "description": "MobileNetV2 with 1.4x width multiplier trained with RandAugment on ImageNet-1k",
@@ -430,6 +435,7 @@
     {
       "model_short_name": "efficientnet_b0_ra_in1k",
       "huggingface_repo": "timm/efficientnet_b0.ra_in1k",
+      "huggingface_revision": "1b5383e5f79cc0f7fc067e372f8f26a5fa73f26a",
       "model_library": "timm",
       "model_full_name": "EfficientNet-B0 RandAugment ImageNet-1k",
       "description": "EfficientNet-B0 trained with RandAugment recipe on ImageNet-1k",
@@ -447,6 +453,7 @@
     {
       "model_short_name": "efficientnet_b0_ra4_e3600_r224_in1k",
       "huggingface_repo": "timm/efficientnet_b0.ra4_e3600_r224_in1k",
+      "huggingface_revision": "1efd3beedccfd00f9de56a5875041a709f3058e2",
       "model_library": "timm",
       "model_full_name": "EfficientNet-B0 RA4 3600 Epochs ImageNet-1k",
       "description": "EfficientNet-B0 trained with RA4 recipe for 3600 epochs on ImageNet-1k",
@@ -464,6 +471,7 @@
     {
       "model_short_name": "efficientnet_b1_ft_in1k",
       "huggingface_repo": "timm/efficientnet_b1.ft_in1k",
+      "huggingface_revision": "1d6ddfd0ad535646fdb05bc3834913d93816152e",
       "model_library": "timm",
       "model_full_name": "EfficientNet-B1 Fine-tuned ImageNet-1k",
       "description": "EfficientNet-B1 fine-tuned on ImageNet-1k",
@@ -481,6 +489,7 @@
     {
       "model_short_name": "efficientnet_b1_pruned_in1k",
       "huggingface_repo": "timm/efficientnet_b1_pruned.in1k",
+      "huggingface_revision": "fe6043b912b98d991a070f3070b924ee799694f5",
       "model_library": "timm",
       "model_full_name": "EfficientNet-B1 Pruned ImageNet-1k",
       "description": "EfficientNet-B1 with pruned weights on ImageNet-1k",
@@ -498,6 +507,7 @@
     {
       "model_short_name": "efficientnet_b1_ra4_e3600_r240_in1k",
       "huggingface_repo": "timm/efficientnet_b1.ra4_e3600_r240_in1k",
+      "huggingface_revision": "4e4a9c08eee4bdb118d69d27f87ace8fdf3fc743",
       "model_library": "timm",
       "model_full_name": "EfficientNet-B1 RA4 3600 Epochs ImageNet-1k",
       "description": "EfficientNet-B1 trained with RA4 recipe for 3600 epochs at 240x240 resolution on ImageNet-1k",

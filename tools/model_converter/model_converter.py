@@ -84,6 +84,7 @@ class ModelConverter:
     def download_from_huggingface(
         self,
         repo_id: str,
+        revision: str,
         filename: str | None = None,
     ) -> Path:
         """
@@ -91,6 +92,7 @@ class ModelConverter:
 
         Args:
             repo_id: Hugging Face repository ID (e.g., 'timm/mobilenetv2_050.lamb_in1k')
+            revision: Immutable revision/commit SHA to download from
             filename: Optional specific file to download (if None, downloads the whole repo)
 
         Returns:
@@ -103,6 +105,7 @@ class ModelConverter:
                 # Download a specific file
                 cached_file = hf_hub_download(
                     repo_id=repo_id,
+                    revision=revision,
                     filename=filename,
                     cache_dir=self.cache_dir,
                 )
@@ -111,6 +114,7 @@ class ModelConverter:
             # Download the entire repository
             cached_dir = snapshot_download(
                 repo_id=repo_id,
+                revision=revision,
                 cache_dir=self.cache_dir,
             )
             self.logger.info(f"✓ Downloaded repository to: {cached_dir}")
@@ -212,6 +216,7 @@ class ModelConverter:
     def load_huggingface_model(
         self,
         repo_id: str,
+        revision: str,
         model_library: str = "timm",
         model_params: dict[str, Any] | None = None,
     ) -> nn.Module:
@@ -220,6 +225,7 @@ class ModelConverter:
 
         Args:
             repo_id: Hugging Face repository ID
+            revision: Immutable revision/commit SHA for the Hugging Face repository
             model_library: Library to use ('timm', 'transformers', etc.)
             model_params: Optional parameters for model loading
 
@@ -230,18 +236,22 @@ class ModelConverter:
             if model_library == "timm":
                 import timm
 
-                self.logger.info(f"Loading timm model: {repo_id}")
+                repo_ref = f"hf-hub:{repo_id}@{revision}"
+                self.logger.info(f"Loading timm model: {repo_ref}")
                 model = timm.create_model(
-                    repo_id,
+                    repo_ref,
                     pretrained=True,
+                    cache_dir=self.cache_dir,
                     **(model_params or {}),
                 )
             elif model_library == "transformers":
                 from transformers import AutoModel
 
-                self.logger.info(f"Loading transformers model: {repo_id}")
+                self.logger.info(f"Loading transformers model: {repo_id}@{revision}")
                 model = AutoModel.from_pretrained(
                     repo_id,
+                    revision=revision,
+                    cache_dir=self.cache_dir,
                     **(model_params or {}),
                 )
             else:
@@ -788,11 +798,17 @@ class ModelConverter:
             # Check if this is a Hugging Face model
             huggingface_repo = config.get("huggingface_repo")
             if huggingface_repo:
+                huggingface_revision = config.get("huggingface_revision")
+                if not huggingface_revision:
+                    error_msg = "Hugging Face models must define 'huggingface_revision' with an immutable commit SHA"
+                    raise ValueError(error_msg)
+
                 # Load model from Hugging Face
                 model_library = config.get("model_library", "timm")
                 model_params = config.get("model_params")
                 model = self.load_huggingface_model(
                     repo_id=huggingface_repo,
+                    revision=huggingface_revision,
                     model_library=model_library,
                     model_params=model_params,
                 )
