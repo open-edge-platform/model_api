@@ -55,6 +55,9 @@ tools = [
   "nncf",
   "huggingface-hub",
 ]
+huggingface = [
+  "huggingface_hub",
+]
 tests = [
     "httpx",
     "pytest",
@@ -268,6 +271,6 @@ notice-rgx = """
 skips = ["B101", "B310"]
 
 [tool.coverage.report]
-# Fail if total coverage is below 40%
-fail_under = 40
+# Fail if total coverage is below 45%
+fail_under = 45
 show_missing = true

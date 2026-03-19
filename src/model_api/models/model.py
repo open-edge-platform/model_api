@@ -244,6 +244,121 @@ class Model:
         return Model(inference_adapter, configuration, preload)
 
     @classmethod
+    def from_pretrained(
+        cls,
+        pretrained_model_name_or_path: str,
+        *,
+        # Hugging Face Hub parameters
+        cache_dir: str | PathLike | None = None,
+        force_download: bool = False,
+        local_files_only: bool = False,
+        token: str | bool | None = None,
+        revision: str | None = None,
+        local_dir: str | PathLike | None = None,
+        subfolder: str | None = None,
+        repo_type: str = "model",
+        filename: str | None = None,
+        # create_model parameters
+        model_type: Any | None = None,
+        configuration: dict[str, Any] = {},
+        preload: bool = True,
+        core: Any | None = None,
+        weights_path: PathLike | None = None,
+        adaptor_parameters: dict[str, Any] = {},
+        device: str = "AUTO",
+        nstreams: str = "1",
+        nthreads: int | None = None,
+        max_num_requests: int = 0,
+        precision: str = "FP16",
+    ) -> Any:
+        """Load a model from a Hugging Face Hub repository.
+
+        Downloads the model files from the given Hugging Face repository and
+        creates a Model API wrapper using :meth:`create_model`.  Supports
+        private repositories via *token* authentication and all standard
+        Hugging Face download options.
+
+        Args:
+            pretrained_model_name_or_path (str): Hugging Face repository identifier
+                (e.g. ``"user/model-name"``).
+            cache_dir (:obj:`str`, optional): Custom Hugging Face cache
+                directory.
+            force_download (bool): Re-download even if the files are cached.
+            local_files_only (bool): Only use locally cached files; error if
+                the requested files are not available.
+            token (:obj:`str` or :obj:`bool`, optional): Authentication token for
+                private repos.  ``True`` reads from the cached HF login.
+            revision (:obj:`str`, optional): Git revision — branch, tag, or
+                full-length commit hash.
+            local_dir (:obj:`str`, optional): Download files into this local
+                directory with their original layout.
+            subfolder (:obj:`str`, optional): Subfolder inside the repository
+                to look for the model.
+            repo_type (str): Repository type (``"model"``, ``"dataset"``, or
+                ``"space"``).  Defaults to ``"model"``.
+            filename (:obj:`str`, optional): Model API-specific parameter for
+                selecting a specific model file to download (e.g. ``"model.xml"``).
+                When omitted the repository is scanned for ``.xml`` / ``.onnx``
+                files automatically.
+            model_type (:obj:`str`, optional): name of model wrapper to create
+                (e.g. ``"ssd"``).  Detected automatically when omitted.
+            configuration (:obj:`dict`, optional): dictionary of model config
+                with model properties, e.g. confidence_threshold, labels.
+            preload (bool): Whether to load the model onto the device
+                immediately.
+            core: ``openvino.Core`` instance, passed to ``OpenvinoAdapter``.
+            weights_path (:obj:`str`, optional): explicit path to ``.bin``
+                weights file.
+            adaptor_parameters (:obj:`dict`, optional): extra parameters for
+                the inference adapter.
+            device (str): OpenVINO device name (e.g. ``"CPU"``, ``"GPU"``,
+                ``"AUTO"``).
+            nstreams (str): Number of inference streams.
+            nthreads (:obj:`int`, optional): Number of CPU threads.
+            max_num_requests (int): Maximum number of asynchronous infer
+                requests.
+            precision (str): Inference precision (e.g. ``"FP16"``).
+
+        Returns:
+            A fully initialized Model API wrapper.
+
+        Raises:
+            ImportError: If ``huggingface_hub`` is not installed.
+            FileNotFoundError: If no model file is found in the repository.
+            ValueError: If multiple model files are found and *filename* is
+                not specified.
+        """
+        from model_api.utils.hf_hub_helper import download_from_hf
+
+        model_path = download_from_hf(
+            repo_id=pretrained_model_name_or_path,
+            filename=filename,
+            revision=revision,
+            token=token,
+            cache_dir=cache_dir,
+            local_dir=local_dir,
+            force_download=force_download,
+            local_files_only=local_files_only,
+            subfolder=subfolder,
+            repo_type=repo_type,
+        )
+
+        return cls.create_model(
+            model=str(model_path),
+            model_type=model_type,
+            configuration=configuration,
+            preload=preload,
+            core=core,
+            weights_path=weights_path,
+            adaptor_parameters=adaptor_parameters,
+            device=device,
+            nstreams=nstreams,
+            nthreads=nthreads,
+            max_num_requests=max_num_requests,
+            precision=precision,
+        )
+
+    @classmethod
     def detect_model_type(cls, inference_adapter) -> str:
         """Detects model type on available information"""
         input_layers = inference_adapter.get_input_layers()
