@@ -56,7 +56,7 @@ tests = [
     "pytest-cov",
     "pytest-mock",
     "defusedxml",
-    "ultralytics",
+    "ultralytics>=8.0.114,<=8.0.205",
     "onnx",
     "onnxruntime",
 ]
