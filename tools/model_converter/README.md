@@ -21,7 +21,7 @@ This tool reads a JSON configuration file containing model specifications, downl
 
 ```bash
 # Required packages
-uv pip install torch torchvision openvino
+uv sync --extra tools
 
 ```
 
