@@ -68,7 +68,7 @@ Check the original [model implementation](https://github.com/pytorch/vision) for
 
 ## Legal information
 
-The original model is distributed under the [<<license>>](license_link) license. More details can be found in [https://github.com/pytorch/vision](https://github.com/pytorch/vision).
+The original model is distributed under the [<<license>>](<<license_link>>) license. More details can be found in [https://github.com/pytorch/vision](https://github.com/pytorch/vision).
 
 ## Disclaimer
 

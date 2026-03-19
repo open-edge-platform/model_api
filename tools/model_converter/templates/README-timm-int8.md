@@ -71,7 +71,7 @@ Check the original [model card](https://huggingface.co/<<huggingface_repo>>) for
 
 ## Legal information
 
-The original model is distributed under the [<<license>>](license_link) license. More details can be found in [<<huggingface_repo>>](https://huggingface.co/<<huggingface_repo>>)
+The original model is distributed under the [<<license>>](<<license_link>>) license. More details can be found in [<<huggingface_repo>>](https://huggingface.co/<<huggingface_repo>>)
 
 ## Disclaimer
 
