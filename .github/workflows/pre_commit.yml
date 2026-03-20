@@ -52,6 +52,9 @@ jobs:
           - "3.12"
           - "3.13"
           - "3.14"
+        exclude:
+          - os: "windows-latest"
+            python-version: "3.14" # started to fail with "Windows fatal exception: access violation"
     runs-on: ${{ matrix.os }}
     steps:
       - *checkout
