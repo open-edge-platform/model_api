@@ -178,7 +178,7 @@ class YOLO(DetectionModel):
     @classmethod
     def parameters(cls):
         parameters = super().parameters()
-        parameters.update(ParameterRegistry.NMS)
+        parameters["execute_nms"].update_default_value(True)
         parameters["resize_type"].update_default_value("fit_to_window_letterbox")
         parameters["confidence_threshold"].update_default_value(0.5)
         return parameters
@@ -521,7 +521,7 @@ class YOLOX(DetectionModel):
     @classmethod
     def parameters(cls):
         parameters = super().parameters()
-        parameters.update(ParameterRegistry.NMS)
+        parameters["execute_nms"].update_default_value(True)
         # Override default iou_threshold for YOLOX
         parameters["iou_threshold"].update_default_value(0.65)
         parameters["confidence_threshold"].update_default_value(0.5)
@@ -757,19 +757,10 @@ class YOLOv5(DetectionModel):
         parameters["reverse_input_channels"].update_default_value(True)  # noqa: FBT003 TODO: refactor this piece of code
         parameters["scale_values"].update_default_value([255.0])
         parameters["confidence_threshold"].update_default_value(0.25)
-        parameters.update(
-            {
-                "agnostic_nms": BooleanValue(
-                    description=(
-                        "If True, the model is agnostic to the number of classes, and all classes are considered as one"
-                    ),
-                    default_value=False,
-                ),
-            },
-        )
-        parameters.update(ParameterRegistry.NMS)
+        parameters["execute_nms"].update_default_value(True)
         # Override default iou_threshold for YOLOv5
         parameters["iou_threshold"].update_default_value(0.7)
+        parameters["max_predictions"].update_default_value(30000)
         return parameters
 
     def postprocess(self, outputs, meta) -> DetectionResult:
@@ -796,8 +787,7 @@ class YOLOv5(DetectionModel):
             1,
             dtype=np.float32,
         )
-
-        keep_top_k = 30000
+        keep_top_k = self.params.max_predictions
         iou_threshold = self.params.iou_threshold
 
         if self.params.agnostic_nms:

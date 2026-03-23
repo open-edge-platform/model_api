@@ -54,6 +54,7 @@ class DetectionModel(ImageModel):
             ParameterRegistry.merge(
                 ParameterRegistry.CONFIDENCE_THRESHOLD,
                 ParameterRegistry.LABELS,
+                ParameterRegistry.NMS,
             ),
         )
         return parameters
