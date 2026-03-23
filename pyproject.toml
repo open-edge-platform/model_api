@@ -41,11 +41,21 @@ onnx = [
 ovms = [
   "tritonclient[http]<2.59",
 ]
+tools = [
+  "ultralytics",
+  "torch",
+  "torchvision",
+  "transformers",
+  "timm",
+  "nncf",
+  "huggingface-hub",
+]
 tests = [
     "httpx",
     "pytest",
     "pytest-cov",
     "pytest-mock",
+    "defusedxml",
     "ultralytics>=8.0.114,<=8.0.205",
     "onnx",
     "onnxruntime",

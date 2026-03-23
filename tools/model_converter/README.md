@@ -21,7 +21,7 @@ This tool reads a JSON configuration file containing model specifications, downl
 
 ```bash
 # Required packages
-uv pip install torch torchvision openvino
+uv sync --extra tools
 
 ```
 
@@ -91,6 +91,8 @@ The configuration file is a JSON file with the following structure:
   "models": [
     {
       "model_short_name": "resnet50",
+      "license": "bsd-3-clause",
+      "license_link": "https://spdx.org/licenses/BSD-3-Clause.html",
       "model_class_name": "torchvision.models.resnet.resnet50",
       "model_full_name": "ResNet-50",
       "description": "ResNet-50 image classification model",
@@ -119,13 +121,21 @@ Common `model_type` values:
 #### Required Fields
 
 - **`model_short_name`** (string): Short identifier for the model (used for output filename)
+- **`license`** (string): SPDX license identifier for the upstream model (for example `bsd-3-clause` or `apache-2.0`)
+- **`license_link`** (string): URL to the upstream license text used in generated README files
 - **`model_class_name`** (string): Full Python path to the model class (e.g., `torchvision.models.resnet.resnet50`)
 - **`weights_url`** (string): URL to download the PyTorch weights (.pth file)
+
+For Hugging Face-backed models, use these required fields instead of `model_class_name` / `weights_url`:
+
+- **`huggingface_repo`** (string): Hugging Face repository ID (for example `timm/mobilenetv2_100.ra_in1k`)
+- **`huggingface_revision`** (string): Immutable commit SHA to pin the download and model load to a specific repository state
 
 #### Optional Fields
 
 - **`model_full_name`** (string): Full descriptive name of the model
 - **`description`** (string): Description of the model
+- **`docs`** (string): Documentation URL for the model
 - **`input_shape`** (array of integers): Input tensor shape (default: `[1, 3, 224, 224]`)
 - **`input_names`** (array of strings): Names for input tensors (default: `["input"]`)
 - **`output_names`** (array of strings): Names for output tensors (default: auto-generated)
