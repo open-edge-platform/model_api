@@ -796,22 +796,24 @@ class YOLOv5(DetectionModel):
             1,
             dtype=np.float32,
         )
+
         keep_top_k = 30000
         iou_threshold = self.params.iou_threshold
+
         if self.params.agnostic_nms:
-            boxes = boxes[
-                nms(
-                    boxes[:, 2],
-                    boxes[:, 3],
-                    boxes[:, 4],
-                    boxes[:, 5],
-                    boxes[:, 1],
-                    iou_threshold,
-                    keep_top_k=keep_top_k,
-                )
-            ]
+            keep = nms(
+                boxes[:, 2],
+                boxes[:, 3],
+                boxes[:, 4],
+                boxes[:, 5],
+                boxes[:, 1],
+                iou_threshold,
+                keep_top_k=keep_top_k,
+            )
         else:
-            boxes, _ = multiclass_nms(boxes, iou_threshold, keep_top_k)
+            keep = multiclass_nms(boxes, iou_threshold, keep_top_k)
+        boxes = boxes[keep]
+
         inputImgWidth = meta["original_shape"][1]
         inputImgHeight = meta["original_shape"][0]
         resize_meta = ResizeMetadata.compute(

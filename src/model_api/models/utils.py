@@ -278,7 +278,7 @@ def multiclass_nms(
         max_num (int, optional): Max number of objects filter. Defaults to 200.
 
     Returns:
-        tuple: (dets, indices), Dets are boxes with scores. Indices are indices of kept boxes.
+        indices of kept boxes.
     """
     if not detections.size:
         return detections, []
@@ -293,8 +293,7 @@ def multiclass_nms(
     if max_num > 0:
         keep = keep[:max_num]
     keep = np.array(keep)
-    det = detections[keep]
-    return det, keep
+    return keep
 
 
 def is_softmaxed(array: np.ndarray, axis: int, atol: float = 1e-5) -> bool:
