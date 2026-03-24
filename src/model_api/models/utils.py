@@ -281,7 +281,7 @@ def multiclass_nms(
         indices of kept boxes.
     """
     if not detections.size:
-        return detections, []
+        return []
     labels = detections[:, 0]
     scores = detections[:, 1]
     boxes = detections[:, 2:]
