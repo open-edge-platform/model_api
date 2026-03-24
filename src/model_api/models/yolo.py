@@ -6,6 +6,7 @@
 from collections import namedtuple
 
 import numpy as np
+from onnxruntime.transformers.models.gpt2.gpt2_parity import score
 
 from model_api.adapters.utils import INTERPOLATION_TYPES, resize_image_ocv
 
@@ -807,7 +808,13 @@ class YOLOv5(DetectionModel):
                     keep_top_k=keep_top_k,
                 )
             else:
-                keep = multiclass_nms(boxes, iou_threshold, keep_top_k)
+                keep = multiclass_nms(
+                    boxes=boxes[:, 2:],
+                    scores=boxes[:, 1],
+                    labels=boxes[:, 0],
+                    iou_threshold=iou_threshold,
+                    max_num=keep_top_k,
+                )
 
             boxes = boxes[keep]
 

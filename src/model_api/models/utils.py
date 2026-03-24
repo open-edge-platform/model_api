@@ -261,7 +261,9 @@ def nms(
 
 
 def multiclass_nms(
-    detections: np.ndarray,
+    boxes: np.ndarray,
+    scores: np.ndarray,
+    labels: np.ndarray,
     iou_threshold: float = 0.45,
     max_num: int = 200,
 ):
@@ -273,18 +275,17 @@ def multiclass_nms(
     from different classes do not overlap
 
     Args:
-        detections (np.ndarray): labels, scores and boxes
+        boxes (np.ndarray): boxes in form x1, y1, x2, y2
+        scores (np.ndarray): detection scores
+        labels (np.ndarray): label indices for each box
         iou_threshold (float, optional): IoU threshold. Defaults to 0.45.
         max_num (int, optional): Max number of objects filter. Defaults to 200.
 
     Returns:
         indices of kept boxes.
     """
-    if not detections.size:
+    if not boxes.size:
         return []
-    labels = detections[:, 0]
-    scores = detections[:, 1]
-    boxes = detections[:, 2:]
     max_coordinate = boxes.max()
     offsets = labels.astype(boxes.dtype) * (max_coordinate + 1)
     boxes_for_nms = boxes + offsets[:, None]
