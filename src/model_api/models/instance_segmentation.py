@@ -11,7 +11,7 @@ from model_api.adapters.inference_adapter import InferenceAdapter
 from .image_model import ImageModel
 from .parameters import ParameterRegistry
 from .result import InstanceSegmentationResult
-from .utils import ResizeMetadata, load_labels, calculate_nms
+from .utils import ResizeMetadata, calculate_nms, load_labels
 
 
 class MaskRCNNModel(ImageModel):

@@ -8,7 +8,7 @@ import numpy as np
 from .image_model import ImageModel
 from .parameters import ParameterRegistry
 from .result import DetectionResult
-from .utils import ResizeMetadata, load_labels, calculate_nms
+from .utils import ResizeMetadata, calculate_nms, load_labels
 
 
 class DetectionModel(ImageModel):
@@ -128,12 +128,12 @@ class DetectionModel(ImageModel):
         detection_result.label_names = [self.get_label_name(label_idx) for label_idx in detection_result.labels]
 
     def _calculate_nms(
-            self,
-            boxes: np.ndarray,
-            scores: np.ndarray,
-            labels: np.ndarray,
-            include_boundaries: bool = False,
-        ) -> list[int]:
+        self,
+        boxes: np.ndarray,
+        scores: np.ndarray,
+        labels: np.ndarray,
+        include_boundaries: bool = False,
+    ) -> list[int]:
         """Executes non-maximum suppression for the detection results
 
         Returns:

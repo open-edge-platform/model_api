@@ -301,19 +301,19 @@ def multiclass_nms(
     )
     if max_predictions > 0:
         keep = keep[:max_predictions]
-    keep = np.array(keep)
-    return keep
+    return np.array(keep)
+
 
 def calculate_nms(
-        boxes: np.ndarray,
-        scores: np.ndarray,
-        labels: np.ndarray,
-        iou_threshold: float = 0.45,
-        max_predictions: int = 200,
-        include_boundaries: bool = False,
-        agnostic_nms: bool = False,
-        execute_nms: bool = False,
-    ) -> list[int]:
+    boxes: np.ndarray,
+    scores: np.ndarray,
+    labels: np.ndarray,
+    iou_threshold: float = 0.45,
+    max_predictions: int = 200,
+    include_boundaries: bool = False,
+    agnostic_nms: bool = False,
+    execute_nms: bool = False,
+) -> list[int]:
     if not execute_nms:
         return np.arange(boxes.shape[0])
 
@@ -334,6 +334,7 @@ def calculate_nms(
         max_predictions=max_predictions,
         include_boundaries=include_boundaries,
     )
+
 
 def is_softmaxed(array: np.ndarray, axis: int, atol: float = 1e-5) -> bool:
     """Check if the input array is softmaxed along the specified axis."""
