@@ -8,7 +8,7 @@ import numpy as np
 from .image_model import ImageModel
 from .parameters import ParameterRegistry
 from .result import DetectionResult
-from .utils import ResizeMetadata, load_labels, nms, multiclass_nms
+from .utils import ResizeMetadata, load_labels, calculate_nms
 
 
 class DetectionModel(ImageModel):
@@ -139,26 +139,13 @@ class DetectionModel(ImageModel):
         Returns:
             list[int]: list of indices of detections to keep after NMS
         """
-        if not self.params.execute_nms:
-            return np.arange(boxes.shape[0])
-
-        max_predictions = self.params.max_predictions
-        iou_threshold = self.params.iou_threshold
-
-        if self.params.agnostic_nms:
-            return nms(
-                boxes=boxes,
-                scores=scores,
-                iou_threshold=iou_threshold,
-                max_predictions=max_predictions,
-                include_boundaries=include_boundaries,
-            )
-
-        return multiclass_nms(
+        return calculate_nms(
             boxes=boxes,
             scores=scores,
             labels=labels,
-            iou_threshold=iou_threshold,
-            max_predictions=max_predictions,
             include_boundaries=include_boundaries,
+            execute_nms=self.params.execute_nms,
+            agnostic_nms=self.params.agnostic_nms,
+            iou_threshold=self.params.iou_threshold,
+            max_predictions=self.params.max_predictions,
         )

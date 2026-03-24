@@ -166,6 +166,16 @@ class SSD(DetectionModel):
 
     def postprocess(self, outputs, meta) -> DetectionResult:
         detections = self._parse_outputs(outputs)
+
+        keep_nms = self._calculate_nms(
+            boxes=detections.bboxes,
+            scores=detections.scores,
+            labels=detections.labels,
+        )
+        detections.bboxes = detections.bboxes[keep_nms]
+        detections.labels = detections.labels[keep_nms]
+        detections.scores = detections.scores[keep_nms]
+
         self._resize_detections(detections, meta)
         self._filter_detections(detections, BBOX_AREA_THRESHOLD)
         self._add_label_names(detections)
