@@ -14,7 +14,7 @@ from .detection_model import DetectionModel
 from .parameters import ParameterRegistry
 from .result import DetectionResult
 from .types import BooleanValue, ListValue
-from .utils import ResizeMetadata, clip_detections, multiclass_nms, nms
+from .utils import ResizeMetadata, clip_detections
 
 DetectionBox = namedtuple("DetectionBox", ["x", "y", "w", "h"])
 
@@ -525,6 +525,7 @@ class YOLOX(DetectionModel):
         parameters["execute_nms"].update_default_value(True)
         # Override default iou_threshold for YOLOX
         parameters["iou_threshold"].update_default_value(0.65)
+        parameters["agnostic_nms"].update_default_value(True)
         parameters["confidence_threshold"].update_default_value(0.5)
         return parameters
 
@@ -560,16 +561,12 @@ class YOLOX(DetectionModel):
         i, j = (valid_predictions[:, 5:] > conf_threshold).nonzero()
         scores = valid_predictions[i, j + 5]
 
-        if self.params.execute_nms:
-            if not self.params.agnostic_nms:
-                raise NotImplemented("Class-aware NMS is not implemented yet for YOLOX model")
-
-            keep_nms = nms(
-                boxes=boxes[i],
-                scores=scores,
-                iou_threshold=self.params.iou_threshold,
-                include_boundaries=True,
-            )
+        keep_nms = self._calculate_nms(
+            boxes=boxes[i],
+            scores=scores,
+            labels=j,
+            include_boundaries=True,
+        )
 
         detections = DetectionResult(
             bboxes=boxes[i][keep_nms],
@@ -789,27 +786,12 @@ class YOLOv5(DetectionModel):
             dtype=np.float32,
         )
 
-        if self.params.execute_nms:
-            max_predictions = self.params.max_predictions
-            iou_threshold = self.params.iou_threshold
-
-            if self.params.agnostic_nms:
-                keep = nms(
-                    boxes=boxes[:, 2:],
-                    scores=boxes[:, 1],
-                    iou_threshold=iou_threshold,
-                    max_predictions=max_predictions,
-                )
-            else:
-                keep = multiclass_nms(
-                    boxes=boxes[:, 2:],
-                    scores=boxes[:, 1],
-                    labels=boxes[:, 0],
-                    iou_threshold=iou_threshold,
-                    max_predictions=max_predictions,
-                )
-
-            boxes = boxes[keep]
+        keep = self._calculate_nms(
+            boxes=boxes[:, 2:],
+            scores=boxes[:, 1],
+            labels=boxes[:, 0],
+        )
+        boxes = boxes[keep]
 
         inputImgWidth = meta["original_shape"][1]
         inputImgHeight = meta["original_shape"][0]

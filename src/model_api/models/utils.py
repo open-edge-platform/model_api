@@ -267,6 +267,7 @@ def multiclass_nms(
     labels: np.ndarray,
     iou_threshold: float = 0.45,
     max_predictions: int = 200,
+    include_boundaries: bool = False,
 ):
     """Multi-class NMS.
 
@@ -281,6 +282,7 @@ def multiclass_nms(
         labels (np.ndarray): label indices for each box
         iou_threshold (float, optional): IoU threshold. Defaults to 0.45.
         max_predictions (int, optional): Max number of objects filter. Defaults to 200.
+        include_boundaries (bool, optional): Whether to include box boundaries in IoU calculation. Defaults to False.
 
     Returns:
         indices of kept boxes.
@@ -291,7 +293,12 @@ def multiclass_nms(
     offsets = labels.astype(boxes.dtype) * (max_coordinate + 1)
     boxes_for_nms = boxes + offsets[:, None]
 
-    keep = nms(boxes=boxes_for_nms, scores=scores, iou_threshold=iou_threshold)  # type: ignore[misc]
+    keep = nms(
+        boxes=boxes_for_nms,
+        scores=scores,
+        iou_threshold=iou_threshold,
+        include_boundaries=include_boundaries,
+    )
     if max_predictions > 0:
         keep = keep[:max_predictions]
     keep = np.array(keep)
