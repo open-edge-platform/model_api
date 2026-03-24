@@ -195,10 +195,10 @@ class MaskRCNNModel(ImageModel):
             boxes=boxes,
             scores=scores,
             labels=labels,
-            execute_nms=self.params.execute_nms,
-            agnostic_nms=self.params.agnostic_nms,
+            execute_nms=self.params.nms_execute,
+            agnostic_nms=self.params.nms_class_agnostic,
             iou_threshold=self.params.iou_threshold,
-            max_predictions=self.params.max_predictions,
+            max_predictions=self.params.nms_max_predictions,
         )
 
         boxes = boxes[keep_nms]
