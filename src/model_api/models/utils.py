@@ -281,7 +281,7 @@ def multiclass_nms(
         scores (np.ndarray): detection scores
         labels (np.ndarray): label indices for each box
         iou_threshold (float, optional): IoU threshold. Defaults to 0.45.
-        max_predictions (int, optional): Max number of objects filter. Defaults to 200.
+        max_predictions (int, optional): Max number of objects filter. Zero means no limit. Defaults to 200.
         include_boundaries (bool, optional): Whether to include box boundaries in IoU calculation. Defaults to False.
 
     Returns:

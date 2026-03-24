@@ -206,9 +206,9 @@ class ParameterRegistry:
         ),
         "max_predictions": NumericalValue(
             default_value=500,
-            description="Maximum number of predictions to keep after NMS filtering",
+            description="Maximum number of predictions to keep after NMS filtering. Zero means no limit.",
             value_type=int,
-            min=1,
+            min=0,
         ),
     }
 
