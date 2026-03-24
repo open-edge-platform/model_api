@@ -177,7 +177,6 @@ class YOLO(DetectionModel):
     @classmethod
     def parameters(cls):
         parameters = super().parameters()
-        parameters["execute_nms"].update_default_value(default_value=True)
         parameters["resize_type"].update_default_value("fit_to_window_letterbox")
         parameters["confidence_threshold"].update_default_value(0.5)
         return parameters
@@ -354,10 +353,16 @@ class YOLO(DetectionModel):
             labels = np.empty((0,), dtype=np.int32)
             scores = np.empty((0,), dtype=np.float32)
 
-        detection_result = DetectionResult(
-            bboxes=bboxes,
+        keep_nms = self._calculate_nms(
+            boxes=bboxes,
             labels=labels,
             scores=scores,
+        )
+
+        detection_result = DetectionResult(
+            bboxes=bboxes[keep_nms],
+            labels=labels[keep_nms],
+            scores=scores[keep_nms],
         )
 
         return self._filter(detection_result, self.params.iou_threshold)
@@ -520,8 +525,8 @@ class YOLOX(DetectionModel):
     @classmethod
     def parameters(cls):
         parameters = super().parameters()
-        parameters["execute_nms"].update_default_value(default_value=True)
-        parameters["agnostic_nms"].update_default_value(default_value=True)
+        parameters["nms_execute"].update_default_value(default_value=True)
+        parameters["nms_class_agnostic"].update_default_value(default_value=True)
         parameters["iou_threshold"].update_default_value(0.65)
         parameters["confidence_threshold"].update_default_value(0.5)
         return parameters
@@ -720,10 +725,16 @@ class YoloV3ONNX(DetectionModel):
             _boxes[mask],
         )
 
-        return DetectionResult(
-            bboxes=_boxes,
-            labels=_classes,
+        keep_nms = self._calculate_nms(
+            boxes=_boxes,
             scores=_scores,
+            labels=_classes,
+        )
+
+        return DetectionResult(
+            bboxes=_boxes[keep_nms],
+            labels=_classes[keep_nms],
+            scores=_scores[keep_nms],
         )
 
 
@@ -752,9 +763,9 @@ class YOLOv5(DetectionModel):
         parameters["reverse_input_channels"].update_default_value(True)  # noqa: FBT003 TODO: refactor this piece of code
         parameters["scale_values"].update_default_value([255.0])
         parameters["confidence_threshold"].update_default_value(0.25)
-        parameters["execute_nms"].update_default_value(default_value=True)
+        parameters["nms_execute"].update_default_value(default_value=True)
         parameters["iou_threshold"].update_default_value(0.7)
-        parameters["max_predictions"].update_default_value(30000)
+        parameters["nms_max_predictions"].update_default_value(30000)
         return parameters
 
     def postprocess(self, outputs, meta) -> DetectionResult:
