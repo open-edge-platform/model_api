@@ -330,7 +330,7 @@ class YOLO(DetectionModel):
         return detections
 
     def _parse_outputs(self, outputs, meta) -> DetectionResult:
-        bboxes, scores, labels = [], [], []
+        bboxes_arr, scores_arr, labels_arr = [], [], []
         for layer_name in self.yolo_layer_params:
             out_blob = outputs[layer_name]
             layer_params = self.yolo_layer_params[layer_name]
@@ -340,14 +340,14 @@ class YOLO(DetectionModel):
                 meta["resized_shape"],
                 layer_params[1],
             )
-            bboxes.extend(detection_result.bboxes)
-            scores.extend(detection_result.scores)
-            labels.extend(detection_result.labels)
+            bboxes_arr.extend(detection_result.bboxes)
+            scores_arr.extend(detection_result.scores)
+            labels_arr.extend(detection_result.labels)
 
-        if len(bboxes):
-            bboxes = np.stack(bboxes)
-            labels = np.array(labels)
-            scores = np.array(scores)
+        if len(bboxes_arr):
+            bboxes = np.stack(bboxes_arr)
+            labels = np.array(labels_arr)
+            scores = np.array(scores_arr)
         else:
             bboxes = np.empty((0, 4), dtype=np.float32)
             labels = np.empty((0,), dtype=np.int32)
