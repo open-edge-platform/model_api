@@ -564,7 +564,6 @@ class YOLOX(DetectionModel):
             if not self.params.agnostic_nms:
                 raise NotImplemented("Class-aware NMS is not implemented yet for YOLOX model")
 
-            x_mins, y_mins, x_maxs, y_maxs = boxes[i].T
             keep_nms = nms(
                 boxes=boxes[i],
                 scores=scores,
@@ -791,7 +790,7 @@ class YOLOv5(DetectionModel):
         )
 
         if self.params.execute_nms:
-            keep_top_k = self.params.max_predictions
+            max_predictions = self.params.max_predictions
             iou_threshold = self.params.iou_threshold
 
             if self.params.agnostic_nms:
@@ -799,7 +798,7 @@ class YOLOv5(DetectionModel):
                     boxes=boxes[:, 2:],
                     scores=boxes[:, 1],
                     iou_threshold=iou_threshold,
-                    keep_top_k=keep_top_k,
+                    max_predictions=max_predictions,
                 )
             else:
                 keep = multiclass_nms(
@@ -807,7 +806,7 @@ class YOLOv5(DetectionModel):
                     scores=boxes[:, 1],
                     labels=boxes[:, 0],
                     iou_threshold=iou_threshold,
-                    max_num=keep_top_k,
+                    max_predictions=max_predictions,
                 )
 
             boxes = boxes[keep]

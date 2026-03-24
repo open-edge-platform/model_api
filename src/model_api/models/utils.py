@@ -221,7 +221,7 @@ def nms(
     scores: np.ndarray,
     iou_threshold: float,
     include_boundaries: bool = False,
-    keep_top_k: int = 0,
+    max_predictions: int = 0,
 ) -> list[int]:
     x1 = boxes[:, 0]
     y1 = boxes[:, 1]
@@ -231,8 +231,8 @@ def nms(
     areas = (x2 - x1 + b) * (y2 - y1 + b)
     order = scores.argsort()[::-1]
 
-    if keep_top_k:
-        order = order[:keep_top_k]
+    if max_predictions:
+        order = order[:max_predictions]
 
     keep = []
     while order.size > 0:
@@ -266,7 +266,7 @@ def multiclass_nms(
     scores: np.ndarray,
     labels: np.ndarray,
     iou_threshold: float = 0.45,
-    max_num: int = 200,
+    max_predictions: int = 200,
 ):
     """Multi-class NMS.
 
@@ -280,7 +280,7 @@ def multiclass_nms(
         scores (np.ndarray): detection scores
         labels (np.ndarray): label indices for each box
         iou_threshold (float, optional): IoU threshold. Defaults to 0.45.
-        max_num (int, optional): Max number of objects filter. Defaults to 200.
+        max_predictions (int, optional): Max number of objects filter. Defaults to 200.
 
     Returns:
         indices of kept boxes.
@@ -292,8 +292,8 @@ def multiclass_nms(
     boxes_for_nms = boxes + offsets[:, None]
 
     keep = nms(boxes=boxes_for_nms, scores=scores, iou_threshold=iou_threshold)  # type: ignore[misc]
-    if max_num > 0:
-        keep = keep[:max_num]
+    if max_predictions > 0:
+        keep = keep[:max_predictions]
     keep = np.array(keep)
     return keep
 

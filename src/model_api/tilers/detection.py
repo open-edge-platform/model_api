@@ -92,7 +92,7 @@ class DetectionTiler(Tiler):
                 boxes=detections_array[:, 2:],
                 scores=detections_array[:, 1],
                 labels=detections_array[:, 0],
-                max_num=self.max_pred_number,  # type: ignore[attr-defined]
+                max_predictions=self.max_pred_number,  # type: ignore[attr-defined]
                 iou_threshold=self.iou_threshold,  # type: ignore[attr-defined]
             )
             detections_array = detections_array[keep]
