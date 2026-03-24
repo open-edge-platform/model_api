@@ -566,12 +566,9 @@ class YOLOX(DetectionModel):
 
             x_mins, y_mins, x_maxs, y_maxs = boxes[i].T
             keep_nms = nms(
-                x_mins,
-                y_mins,
-                x_maxs,
-                y_maxs,
-                scores,
-                self.params.iou_threshold,
+                boxes=boxes[i],
+                scores=scores,
+                iou_threshold=self.params.iou_threshold,
                 include_boundaries=True,
             )
 
@@ -799,12 +796,9 @@ class YOLOv5(DetectionModel):
 
             if self.params.agnostic_nms:
                 keep = nms(
-                    boxes[:, 2],
-                    boxes[:, 3],
-                    boxes[:, 4],
-                    boxes[:, 5],
-                    boxes[:, 1],
-                    iou_threshold,
+                    boxes=boxes[:, 2:],
+                    scores=boxes[:, 1],
+                    iou_threshold=iou_threshold,
                     keep_top_k=keep_top_k,
                 )
             else:

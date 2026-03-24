@@ -217,15 +217,16 @@ def load_labels(label_file):
 
 
 def nms(
-    x1: np.ndarray,
-    y1: np.ndarray,
-    x2: np.ndarray,
-    y2: np.ndarray,
+    boxes: np.ndarray,
     scores: np.ndarray,
-    thresh: float,
+    iou_threshold: float,
     include_boundaries: bool = False,
     keep_top_k: int = 0,
 ) -> list[int]:
+    x1 = boxes[:, 0]
+    y1 = boxes[:, 1]
+    x2 = boxes[:, 2]
+    y2 = boxes[:, 3]
     b = 1 if include_boundaries else 0
     areas = (x2 - x1 + b) * (y2 - y1 + b)
     order = scores.argsort()[::-1]
@@ -255,7 +256,7 @@ def nms(
             where=union_areas != 0,
         )
 
-        order = order[np.where(overlap <= thresh)[0] + 1]
+        order = order[np.where(overlap <= iou_threshold)[0] + 1]
 
     return keep
 
@@ -290,7 +291,7 @@ def multiclass_nms(
     offsets = labels.astype(boxes.dtype) * (max_coordinate + 1)
     boxes_for_nms = boxes + offsets[:, None]
 
-    keep = nms(*boxes_for_nms.T, scores=scores, thresh=iou_threshold)  # type: ignore[misc]
+    keep = nms(boxes=boxes_for_nms, scores=scores, iou_threshold=iou_threshold)  # type: ignore[misc]
     if max_num > 0:
         keep = keep[:max_num]
     keep = np.array(keep)
