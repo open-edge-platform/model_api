@@ -557,18 +557,22 @@ class YOLOX(DetectionModel):
 
         boxes = xywh2xyxy(valid_predictions[:, :4]) / meta["scale"]
         i, j = (valid_predictions[:, 5:] > conf_threshold).nonzero()
-        x_mins, y_mins, x_maxs, y_maxs = boxes[i].T
         scores = valid_predictions[i, j + 5]
 
-        keep_nms = nms(
-            x_mins,
-            y_mins,
-            x_maxs,
-            y_maxs,
-            scores,
-            self.params.iou_threshold,
-            include_boundaries=True,
-        )
+        if self.params.execute_nms:
+            if not self.params.agnostic_nms:
+                raise NotImplemented("Class-aware NMS is not implemented yet for YOLOX model")
+
+            x_mins, y_mins, x_maxs, y_maxs = boxes[i].T
+            keep_nms = nms(
+                x_mins,
+                y_mins,
+                x_maxs,
+                y_maxs,
+                scores,
+                self.params.iou_threshold,
+                include_boundaries=True,
+            )
 
         detections = DetectionResult(
             bboxes=boxes[i][keep_nms],
@@ -787,22 +791,25 @@ class YOLOv5(DetectionModel):
             1,
             dtype=np.float32,
         )
-        keep_top_k = self.params.max_predictions
-        iou_threshold = self.params.iou_threshold
 
-        if self.params.agnostic_nms:
-            keep = nms(
-                boxes[:, 2],
-                boxes[:, 3],
-                boxes[:, 4],
-                boxes[:, 5],
-                boxes[:, 1],
-                iou_threshold,
-                keep_top_k=keep_top_k,
-            )
-        else:
-            keep = multiclass_nms(boxes, iou_threshold, keep_top_k)
-        boxes = boxes[keep]
+        if self.params.execute_nms:
+            keep_top_k = self.params.max_predictions
+            iou_threshold = self.params.iou_threshold
+
+            if self.params.agnostic_nms:
+                keep = nms(
+                    boxes[:, 2],
+                    boxes[:, 3],
+                    boxes[:, 4],
+                    boxes[:, 5],
+                    boxes[:, 1],
+                    iou_threshold,
+                    keep_top_k=keep_top_k,
+                )
+            else:
+                keep = multiclass_nms(boxes, iou_threshold, keep_top_k)
+
+            boxes = boxes[keep]
 
         inputImgWidth = meta["original_shape"][1]
         inputImgHeight = meta["original_shape"][0]
