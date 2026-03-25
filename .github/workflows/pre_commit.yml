@@ -134,7 +134,7 @@ jobs:
       - *matrix-setup-uv
 
       - name: Install dependencies
-        run: uv sync --locked --extra download --extra ovms --extra-index-url https://download.pytorch.org/whl/cpu
+        run: uv sync --locked --extra tests --extra ovms --extra-index-url https://download.pytorch.org/whl/cpu
 
       - *prepare-test-data
 

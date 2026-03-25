@@ -41,9 +41,6 @@ onnx = [
 ovms = [
   "tritonclient[http]<2.59",
 ]
-download = [
-  "httpx",
-]
 examples = [
   "httpx",
   "onnx",
