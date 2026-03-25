@@ -47,24 +47,41 @@ The list features only model wrappers which introduce new configuration values i
 1. `confidence_threshold`: float - probability threshold value for bounding box filtering
 1. `labels`: List - List of class labels
 1. `path_to_labels`: str - path to file with labels. Overrides the labels, if they sets via `labels` parameter
+1. `nms_execute`: bool - should non-maximum suppression (NMS) be applied in postprocessing or not. If False, raw model output will be returned without NMS filtering
+1. `iou_threshold`: float - threshold for non-maximum suppression (NMS) intersection over union (IOU) filtering
+1. `nms_class_agnostic`: bool - if True, NMS will be class agnostic, otherwise it will be applied separately for each class
+1. `nms_max_predictions`: int - maximum number of predictions after NMS. If 0, no limit will be applied
 
 ##### `YOLO` and its subclasses
 
+1. `nms_execute`: bool - should non-maximum suppression (NMS) be applied in postprocessing or not. If False, raw model output will be returned without NMS filtering
 1. `iou_threshold`: float - threshold for non-maximum suppression (NMS) intersection over union (IOU) filtering
+1. `nms_class_agnostic`: bool - if True, NMS will be class agnostic, otherwise it will be applied separately for each class
+1. `nms_max_predictions`: int - maximum number of predictions after NMS. If 0, no limit will be applied
 
 ###### `YoloV4`
 
 1. `anchors`: List - list of custom anchor values
 1. `masks`: List - list of mask, applied to anchors for each output layer
+1. `nms_execute`: bool - should non-maximum suppression (NMS) be applied in postprocessing or not. If False, raw model output will be returned without NMS filtering
+1. `iou_threshold`: float - threshold for non-maximum suppression (NMS) intersection over union (IOU) filtering
+1. `nms_class_agnostic`: bool - if True, NMS will be class agnostic, otherwise it will be applied separately for each class
+1. `nms_max_predictions`: int - maximum number of predictions after NMS. If 0, no limit will be applied
 
 ###### `YOLOv5`, `YOLOv8`, `YOLO11`
 
-1. `agnostic_nms`: bool - if True, the model is agnostic to the number of classes, and all classes are considered as one
+1. `nms_execute`: bool - should non-maximum suppression (NMS) be applied in postprocessing or not. If False, raw model output will be returned without NMS filtering
 1. `iou_threshold`: float - threshold for non-maximum suppression (NMS) intersection over union (IOU) filtering
+1. `nms_class_agnostic`: bool - if True, NMS will be class agnostic, otherwise it will be applied separately for each class
+1. `nms_max_predictions`: int - maximum number of predictions after NMS. If 0, no limit will be applied
 
 ###### `YOLOX`
 
+1. `nms_execute`: bool - should non-maximum suppression (NMS) be applied in postprocessing or not. If False, raw model output will be returned without NMS filtering
 1. `iou_threshold`: float - threshold for non-maximum suppression (NMS) intersection over union (IOU) filtering
+1. `nms_class_agnostic`: bool - if True, NMS will be class agnostic, otherwise it will be applied separately for each class
+1. `nms_max_predictions`: int - maximum number of predictions after NMS. If 0, no limit will be applied
+
 
 #### `MaskRCNNModel`
 
@@ -72,6 +89,10 @@ The list features only model wrappers which introduce new configuration values i
 1. `labels`: List - list of class labels
 1. `path_to_labels`: str - path to file with labels. Overrides the labels, if they sets via `labels` parameter
 1. `postprocess_semantic_masks`: bool - resize and apply 0.5 threshold to instance segmentation masks
+1. `nms_execute`: bool - should non-maximum suppression (NMS) be applied in postprocessing or not. If False, raw model output will be returned without NMS filtering
+1. `iou_threshold`: float - threshold for non-maximum suppression (NMS) intersection over union (IOU) filtering
+1. `nms_class_agnostic`: bool - if True, NMS will be class agnostic, otherwise it will be applied separately for each class
+1. `nms_max_predictions`: int - maximum number of predictions after NMS. If 0, no limit will be applied
 
 #### `SegmentationModel` and its subclasses
 
@@ -80,6 +101,10 @@ The list features only model wrappers which introduce new configuration values i
 1. `blur_strength`: int - blurring kernel size. -1 value means no blurring and no soft_threshold
 1. `soft_threshold`: float - probability threshold value for bounding box filtering. inf value means no blurring and no soft_threshold
 1. `return_soft_prediction`: bool - return raw resized model prediction in addition to processed one
+1. `nms_execute`: bool - should non-maximum suppression (NMS) be applied in postprocessing or not. If False, raw model output will be returned without NMS filtering
+1. `iou_threshold`: float - threshold for non-maximum suppression (NMS) intersection over union (IOU) filtering
+1. `nms_class_agnostic`: bool - if True, NMS will be class agnostic, otherwise it will be applied separately for each class
+1. `nms_max_predictions`: int - maximum number of predictions after NMS. If 0, no limit will be applied
 
 ### `ActionClassificationModel`
 
