@@ -6,7 +6,7 @@ The `ActionClassificationModel` is a wrapper class designed for action classific
 This class allows to encapsulate data pre-and post processing for action classification OpenVINO models satisfying
 a certain specifications.
 Note that it isn't a subclass of `ImageModel`. It gets video as input so it is different than ImageModel.
-Also, it doesn't use OV.PrePostProcessor() and therefore performs data preparation steps outside of OV graph.
+Also, it doesn't use `OV.PrePostProcessor()` and therefore performs data preparation steps outside of OV graph.
 
 ## Model parameters
 

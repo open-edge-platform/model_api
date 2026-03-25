@@ -29,6 +29,9 @@ from model_api.models import MaskRCNNModel
 # Load the model
 model = MaskRCNNModel.create_model("model.xml")
 
+# Load image
+image = cv2.imread("image.jpg")
+
 # Forward pass
 predictions = model(image)
 
