@@ -2064,6 +2064,9 @@ docs = [
     { name = "sphinx-copybutton" },
     { name = "sphinx-design" },
 ]
+download = [
+    { name = "httpx" },
+]
 examples = [
     { name = "httpx" },
     { name = "onnx" },
@@ -2101,6 +2104,7 @@ requires-dist = [
     { name = "breathe", marker = "extra == 'docs'" },
     { name = "defusedxml", marker = "extra == 'tests'" },
     { name = "graphviz", marker = "extra == 'docs'" },
+    { name = "httpx", marker = "extra == 'download'" },
     { name = "httpx", marker = "extra == 'examples'" },
     { name = "httpx", marker = "extra == 'tests'" },
     { name = "huggingface-hub", marker = "extra == 'tools'" },
@@ -2133,7 +2137,7 @@ requires-dist = [
     { name = "ultralytics", marker = "extra == 'tests'", specifier = ">=8.0.114,<=8.0.205" },
     { name = "ultralytics", marker = "extra == 'tools'" },
 ]
-provides-extras = ["onnx", "ovms", "examples", "tools", "tests", "docs"]
+provides-extras = ["onnx", "ovms", "download", "examples", "tools", "tests", "docs"]
 
 [[package]]
 name = "openvino-telemetry"

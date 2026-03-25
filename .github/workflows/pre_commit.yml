@@ -134,14 +134,14 @@ jobs:
       - *matrix-setup-uv
 
       - name: Install dependencies
-        run: uv sync --locked --extra tests --extra ovms --extra-index-url https://download.pytorch.org/whl/cpu
+        run: uv sync --locked --extra download --extra ovms --extra-index-url https://download.pytorch.org/whl/cpu
 
       - *prepare-test-data
 
       - name: serving_api
         run: |
-          uv run python -c "from model_api.models import Model; Model.create_model('./data/otx_models/ssd-card-detection.xml.xml').save('ovms_models/ssd-card-detection.xml/1/ssd-card-detection.xml.xml')"
-          docker run -d --rm -v $GITHUB_WORKSPACE/ovms_models/:/models -p 8000:8000 openvino/model_server:latest --model_path /models/ssd-card-detection.xml/ --model_name ssd-card-detection.xml --rest_port 8000 --log_level DEBUG --target_device CPU
+          uv run python -c "from model_api.models import Model; Model.create_model('./data/otx_models/ssd-card-detection.xml').save('ovms_models/ssd-card-detection/1/ssd-card-detection.xml')"
+          docker run -d --rm -v $GITHUB_WORKSPACE/ovms_models/:/models -p 8000:8000 openvino/model_server:latest --model_path /models/ssd-card-detection/ --model_name ssd-card-detection --rest_port 8000 --log_level DEBUG --target_device CPU
           uv run python examples/serving_api/run.py data/coco128/images/train2017/000000000009.jpg  # detects 4 objects
 
   pre-commit-result:
