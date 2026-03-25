@@ -2,21 +2,23 @@
 
 This example demonstrates how to use a Python API of OpenVINO Model API for synchronous inference as well as basic features such as:
 
-- Automatic download and convertion of public models
+- Instantiate a model
 - Preprocessing embedding
 - Creating model from local source
-- Image Classification, Object Detection and Semantic Segmentation use cases
+- Image Classification and Object Detection
 
 ## Prerequisites
 
-Install Model API from source. Please refer to the main [README](../../../README.md) for details.
+Install Model API dependencies with examples by running the following command in the root directory of the repository:
+
+```bash
+uv sync --extra examples
+```
 
 ## Run example
 
-To run the example, please execute the following command:
+To run the example, please execute the following command in the root directory of the repository:
 
 ```bash
-python run.py <path_to_image>
+uv run python examples/synchronous_api/run.py data/cards.png
 ```
-
-> _NOTE_: results of Semantic Segmentation models are saved to `mask.png` file.

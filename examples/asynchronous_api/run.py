@@ -8,23 +8,20 @@ import sys
 
 import cv2
 
-from model_api.models import DetectionModel
+from model_api.models import Model
 
 
 def main():
-    if len(sys.argv) != 2:
-        usage_message = f"Usage: {sys.argv[0]} <path_to_image>"
+    if len(sys.argv) != 3:
+        usage_message = f"Usage: {sys.argv[0]} <path_to_model> <path_to_image>"
         raise RuntimeError(usage_message)
 
-    image = cv2.cvtColor(cv2.imread(sys.argv[1]), cv2.COLOR_BGR2RGB)
+    image = cv2.cvtColor(cv2.imread(sys.argv[2]), cv2.COLOR_BGR2RGB)
     if image is None:
-        error_message = f"Failed to read the image: {sys.argv[1]}"
+        error_message = f"Failed to read the image: {sys.argv[2]}"
         raise RuntimeError(error_message)
 
-    # Create Object Detection model using mode name and download from Open Model Zoo
-    # Replace numpy preprocessing and embed it directly into a model graph to speed up inference
-    # download_dir is used to store downloaded model
-    model = DetectionModel.create_model("yolo-v4-tf")
+    model = Model.create_model(sys.argv[1])
 
     ITERATIONS = 10
     results = {}  # container for results

@@ -12,7 +12,11 @@ This example demonstrates how to use the Python API of OpenVINO Model API for pe
 
 ## Prerequisites
 
-Install Model API from source. Please refer to the main [README](../../../README.md) for details.
+Install Model API dependencies with examples by running the following command in the root directory of the repository:
+
+```bash
+uv sync --extra examples
+```
 
 ## Run example
 
@@ -37,14 +41,21 @@ python benchmark.py <model_path> <dataset_path> [options]
 
 ```bash
 # Basic usage with CPU
-python benchmark.py /path/to/model.xml /path/to/images
+uv run python benchmark.py /path/to/model.xml /path/to/images
 
 # Use GPU with custom parameters
-python benchmark.py /path/to/model.xml /path/to/images --device GPU --warmup-runs 10 --test-runs 50
+uv run python benchmark.py /path/to/model.xml /path/to/images --device GPU --warmup-runs 10 --test-runs 50
 
 # Show help
-python benchmark.py --help
+uv run python benchmark.py --help
 ```
+
+### Example with pre-trained model
+
+In the root directory of the repository:
+
+- download sample models and images by running `uv run python tests/accuracy/download_models.py -d data -j tests/accuracy/examples.json -l`
+- run the example with the following command: `uv run python examples/metrics/benchmark.py data/otx_models/ssd-card-detection.xml data/coco128/images/train2017`
 
 ## Expected Output
 
