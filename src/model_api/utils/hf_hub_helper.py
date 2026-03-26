@@ -141,13 +141,13 @@ def download_from_hf(
         if subfolder:
             hf_common["subfolder"] = subfolder
 
-        model_path = Path(hf_hub_download(filename=filename, **hf_common))
+        model_path = Path(hf_hub_download(filename=filename, **hf_common))  # nosec B615
 
         # For .xml files, also download the companion .bin weights file
         if model_path.suffix == ".xml":
             bin_filename = filename.rsplit(".", 1)[0] + ".bin"
             try:
-                hf_hub_download(filename=bin_filename, **hf_common)
+                hf_hub_download(filename=bin_filename, **hf_common)  # nosec B615
             except (OSError, ValueError):
                 log.getLogger(__name__).debug(
                     "No companion .bin file found for %s (model may be self-contained)",

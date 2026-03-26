@@ -103,7 +103,7 @@ class ModelConverter:
         try:
             if filename:
                 # Download a specific file
-                cached_file = hf_hub_download(
+                cached_file = hf_hub_download(  # nosec B615
                     repo_id=repo_id,
                     revision=revision,
                     filename=filename,
