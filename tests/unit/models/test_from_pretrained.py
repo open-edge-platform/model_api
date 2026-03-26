@@ -102,6 +102,7 @@ class TestDownloadFromHf:
     def test_snapshot_download_called_without_filename(self, mock_find):
         """When filename is None, snapshot_download should be used."""
         mock_find.return_value = Path("/cache/model.xml")
+        auth_value = "test-hf-credential"
 
         with patch.dict("sys.modules", {"huggingface_hub": MagicMock()}) as _:
             import sys
@@ -112,14 +113,14 @@ class TestDownloadFromHf:
             result = download_from_hf(
                 "user/repo",
                 revision="main",
-                token="hf_test",  # noqa: S106
+                token=auth_value,
                 cache_dir="/custom/cache",
             )
 
             mock_hf.snapshot_download.assert_called_once_with(
                 repo_id="user/repo",
                 revision="main",
-                token="hf_test",  # noqa: S106
+                token=auth_value,
                 cache_dir="/custom/cache",
                 local_dir=None,
                 force_download=False,
@@ -131,6 +132,8 @@ class TestDownloadFromHf:
 
     def test_hf_hub_download_called_with_filename(self):
         """When filename is provided, hf_hub_download should be used."""
+        auth_value = "test-hf-credential"
+
         with patch.dict("sys.modules", {"huggingface_hub": MagicMock()}) as _:
             import sys
 
@@ -140,7 +143,7 @@ class TestDownloadFromHf:
             result = download_from_hf(
                 "user/repo",
                 filename="model.xml",
-                token="hf_test",  # noqa: S106
+                token=auth_value,
             )
 
             # Should download both .xml and .bin
@@ -234,13 +237,14 @@ class TestModelFromPretrained:
 
         mock_download.return_value = Path("/cache/model.xml")
         mock_create.return_value = MagicMock()
+        auth_value = "test-hf-credential"
 
         Model.from_pretrained(
             "user/private-repo",
             cache_dir="/my/cache",
             force_download=True,
             local_files_only=False,
-            token="hf_secret",  # noqa: S106
+            token=auth_value,
             revision="v2.0",
             local_dir="/my/local",
             subfolder="openvino",
@@ -252,7 +256,7 @@ class TestModelFromPretrained:
             repo_id="user/private-repo",
             filename="best.xml",
             revision="v2.0",
-            token="hf_secret",  # noqa: S106
+            token=auth_value,
             cache_dir="/my/cache",
             local_dir="/my/local",
             force_download=True,
