@@ -328,6 +328,9 @@
 <span class="c1"># Load the model</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">MaskRCNNModel</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span><span class="s2">&quot;model.xml&quot;</span><span class="p">)</span>
 
+<span class="c1"># Load image</span>
+<span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="s2">&quot;image.jpg&quot;</span><span class="p">)</span>
+
 <span class="c1"># Forward pass</span>
 <span class="n">predictions</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
 

@@ -37,6 +37,7 @@ import cv2
 from model_api.models import TopDownKeypointDetectionPipeline, Detection, KeypointDetectionModel
 
 model = KeypointDetectionModel.create_model("kp_model.xml")
+image = cv2.imread("image.jpg")
 # a list of detections in (x_min, y_min, x_max, y_max, score, class_id) format
 detections = [Detection(0, 0, 100, 100, 1.0, 0)]
 top_down_pipeline = TopDownKeypointDetectionPipeline(model)

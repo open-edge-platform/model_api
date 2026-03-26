@@ -322,18 +322,21 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">mean_values</span></code>: List - normalization values, which will be subtracted from image channels for image-input layer during preprocessing</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">scale_values</span></code>: List - normalization values, which will divide the image channels for image-input layer</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">reverse_input_channels</span></code>: bool - reverse the input channel order</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">resize_type</span></code>: str - crop, standard, fit_to_window or fit_to_window_letterbox</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">resize_type</span></code>: str - <code class="docutils literal notranslate"><span class="pre">crop</span></code>, <code class="docutils literal notranslate"><span class="pre">standard</span></code>, <code class="docutils literal notranslate"><span class="pre">fit_to_window</span></code> or <code class="docutils literal notranslate"><span class="pre">fit_to_window_letterbox</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">embedded_processing</span></code>: bool - flag that pre/postprocessing embedded</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">pad_value</span></code>: int - pad value for resize_image_letterbox embedded into a model</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">orig_height</span></code>: int - model original image height before embedded preprocessing</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">orig_width</span></code>: int - model original image width before embedded preprocessing</p></li>
 </ol>
 <section id="anomalydetection">
 <h4><code class="docutils literal notranslate"><span class="pre">AnomalyDetection</span></code><a class="headerlink" href="#anomalydetection" title="Link to this heading">#</a></h4>
 <ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">image_shape</span></code>: List - Input shape of the model</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">image_threshold</span></code>: float - Image threshold that is used for classifying an image as anomalous</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">pixel_threshold</span></code>: float - Pixel level threshold used to segment anomalous regions in the image</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">normalization_scale</span></code>: float - Scale by which the outputs are divided. Used to apply min-max normalization</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">task</span></code>: str - Outputs segmentation masks, bounding boxes, or anomaly score based on the task type</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">labels</span></code>: List - list of class labels</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">path_to_labels</span></code>: str - path to file with labels. Overrides the labels, if they sets via ‘labels’ parameter</p></li>
 </ol>
 </section>
 <section id="classificationmodel">
@@ -344,8 +347,10 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">path_to_labels</span></code>: str - path to file with labels. Overrides the labels, if they sets via ‘labels’ parameter</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">multilabel</span></code>: bool - predict a set of labels per image</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hierarchical</span></code>: bool - predict a hierarchy of labels per image hierarchical_config</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">confidence_threshold</span></code>: float - probability threshold value for multilabel or hierarchical predictions filtering</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hierarchical_config</span></code>: str - a serialized configuration for decoding hierarchical predictions</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">confidence_threshold</span></code>: float - probability threshold value for multilabel or hierarchical predictions filtering</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hierarchical_postproc</span></code>: str - <code class="docutils literal notranslate"><span class="pre">greedy</span></code> (default) or <code class="docutils literal notranslate"><span class="pre">probabilistic</span></code> postprocessing for hierarchical predictions</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">confidence_threshold</span></code>: float - probability threshold value for bounding box filtering</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">output_raw_scores</span></code>: bool - output all scores for multiclass classification</p></li>
 </ol>
 </section>
@@ -356,32 +361,6 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">labels</span></code>: List - List of class labels</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">path_to_labels</span></code>: str - path to file with labels. Overrides the labels, if they sets via <code class="docutils literal notranslate"><span class="pre">labels</span></code> parameter</p></li>
 </ol>
-<section id="ctpn">
-<h5><code class="docutils literal notranslate"><span class="pre">CTPN</span></code><a class="headerlink" href="#ctpn" title="Link to this heading">#</a></h5>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">iou_threshold</span></code>: float - threshold for non-maximum suppression (NMS) intersection over union (IOU) filtering</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">input_size</span></code>: List - image resolution which is going to be processed. Reshapes network to match a given size</p></li>
-</ol>
-</section>
-<section id="faceboxes">
-<h5><code class="docutils literal notranslate"><span class="pre">FaceBoxes</span></code><a class="headerlink" href="#faceboxes" title="Link to this heading">#</a></h5>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">iou_threshold</span></code>: float - threshold for non-maximum suppression (NMS) intersection over union (IOU) filtering</p></li>
-</ol>
-</section>
-<section id="nanodet">
-<h5><code class="docutils literal notranslate"><span class="pre">NanoDet</span></code><a class="headerlink" href="#nanodet" title="Link to this heading">#</a></h5>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">iou_threshold</span></code>: float - threshold for non-maximum suppression (NMS) intersection over union (IOU) filtering</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">num_classes</span></code>: int - number of classes</p></li>
-</ol>
-</section>
-<section id="ultralightweightfacedetection">
-<h5><code class="docutils literal notranslate"><span class="pre">UltraLightweightFaceDetection</span></code><a class="headerlink" href="#ultralightweightfacedetection" title="Link to this heading">#</a></h5>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">iou_threshold</span></code>: float - threshold for non-maximum suppression (NMS) intersection over union (IOU) filtering</p></li>
-</ol>
-</section>
 <section id="yolo-and-its-subclasses">
 <h5><code class="docutils literal notranslate"><span class="pre">YOLO</span></code> and its subclasses<a class="headerlink" href="#yolo-and-its-subclasses" title="Link to this heading">#</a></h5>
 <ol class="arabic simple">
@@ -394,8 +373,8 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">masks</span></code>: List - list of mask, applied to anchors for each output layer</p></li>
 </ol>
 </section>
-<section id="yolov5-yolov8">
-<h6><code class="docutils literal notranslate"><span class="pre">YOLOv5</span></code>, <code class="docutils literal notranslate"><span class="pre">YOLOv8</span></code><a class="headerlink" href="#yolov5-yolov8" title="Link to this heading">#</a></h6>
+<section id="yolov5-yolov8-yolo11">
+<h6><code class="docutils literal notranslate"><span class="pre">YOLOv5</span></code>, <code class="docutils literal notranslate"><span class="pre">YOLOv8</span></code>, <code class="docutils literal notranslate"><span class="pre">YOLO11</span></code><a class="headerlink" href="#yolov5-yolov8-yolo11" title="Link to this heading">#</a></h6>
 <ol class="arabic simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">agnostic_nms</span></code>: bool - if True, the model is agnostic to the number of classes, and all classes are considered as one</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">iou_threshold</span></code>: float - threshold for non-maximum suppression (NMS) intersection over union (IOU) filtering</p></li>
@@ -408,27 +387,6 @@
 </ol>
 </section>
 </section>
-</section>
-<section id="hpeassociativeembedding">
-<h4><code class="docutils literal notranslate"><span class="pre">HpeAssociativeEmbedding</span></code><a class="headerlink" href="#hpeassociativeembedding" title="Link to this heading">#</a></h4>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">target_size</span></code>: int - image resolution which is going to be processed. Reshapes network to match a given size</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">aspect_ratio</span></code>: float - image aspect ratio which is going to be processed. Reshapes network to match a given size</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">confidence_threshold</span></code>: float - pose confidence threshold</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">delta</span></code>: float</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">size_divisor</span></code>: int - width and height of the reshaped model will be a multiple of this value</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">padding_mode</span></code>: str - center or right_bottom</p></li>
-</ol>
-</section>
-<section id="openpose">
-<h4><code class="docutils literal notranslate"><span class="pre">OpenPose</span></code><a class="headerlink" href="#openpose" title="Link to this heading">#</a></h4>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">target_size</span></code>: int - image resolution which is going to be processed. Reshapes network to match a given size</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">aspect_ratio</span></code>: float - image aspect ratio which is going to be processed. Reshapes network to match a given size</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">confidence_threshold</span></code>: float - pose confidence threshold</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">upsample_ratio</span></code>: int - upsample ratio of a model backbone</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">size_divisor</span></code>: int - width and height of the reshaped model will be a multiple of this value</p></li>
-</ol>
 </section>
 <section id="maskrcnnmodel">
 <h4><code class="docutils literal notranslate"><span class="pre">MaskRCNNModel</span></code><a class="headerlink" href="#maskrcnnmodel" title="Link to this heading">#</a></h4>
@@ -455,34 +413,18 @@
 <ol class="arabic simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">labels</span></code>: List - list of class labels</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">path_to_labels</span></code>: str - path to file with labels. Overrides the labels, if they sets via ‘labels’ parameter</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">mean_values</span></code>: List - normalization values, which will be subtracted from image channels for image-input layer during preprocessing</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">pad_value</span></code>: int - pad value for resize_image_letterbox embedded into a model</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">resize_type</span></code>: str - crop, standard, fit_to_window or fit_to_window_letterbox</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">reverse_input_channels</span></code>: bool - reverse the input channel order</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pad_value</span></code>: int - pad value for resize_image_letterbox embedded into a model</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">orig_height</span></code>: int - model original image height before embedded preprocessing</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">orig_width</span></code>: int - model original image width before embedded preprocessing</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">embedded_processing</span></code>: bool - flag that pre/postprocessing embedded</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mean_values</span></code>: List - normalization values, which will be subtracted from image channels for image-input layer during preprocessing</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">scale_values</span></code>: List - normalization values, which will divide the image channels for image-input layer</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">reverse_input_channels</span></code>: bool - reverse the input channel order</p></li>
 </ol>
 <blockquote>
 <div><p><strong>NOTE</strong> <code class="docutils literal notranslate"><span class="pre">ActionClassificationModel</span></code> isn’t subclass of ImageModel.</p>
 </div></blockquote>
-</section>
-<section id="bert-and-its-subclasses">
-<h3><code class="docutils literal notranslate"><span class="pre">Bert</span></code> and its subclasses<a class="headerlink" href="#bert-and-its-subclasses" title="Link to this heading">#</a></h3>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">vocab</span></code>: Dict - mapping from string token to int</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">input_names</span></code>: str - comma-separated names of input layers</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">enable_padding</span></code>: bool - should be input sequence padded to max sequence len or not</p></li>
-</ol>
-<section id="bertquestionanswering">
-<h4><code class="docutils literal notranslate"><span class="pre">BertQuestionAnswering</span></code><a class="headerlink" href="#bertquestionanswering" title="Link to this heading">#</a></h4>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">output_names</span></code>: str - comma-separated names of output layers</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">max_answer_token_num</span></code>: int</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">squad_ver</span></code>: str - SQuAD dataset version used for training. Affects postprocessing</p></li>
-</ol>
-<blockquote>
-<div><p><strong>NOTE</strong>: OTX <code class="docutils literal notranslate"><span class="pre">AnomalyBase</span></code> model wrapper adds <code class="docutils literal notranslate"><span class="pre">image_threshold</span></code>, <code class="docutils literal notranslate"><span class="pre">pixel_threshold</span></code>, <code class="docutils literal notranslate"><span class="pre">min</span></code>, <code class="docutils literal notranslate"><span class="pre">max</span></code>, <code class="docutils literal notranslate"><span class="pre">threshold</span></code>.</p>
-</div></blockquote>
-</section>
 </section>
 </section>
 </section>
@@ -539,29 +481,19 @@
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#anomalydetection"><code class="docutils literal notranslate"><span class="pre">AnomalyDetection</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#classificationmodel"><code class="docutils literal notranslate"><span class="pre">ClassificationModel</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#detectionmodel-and-its-subclasses"><code class="docutils literal notranslate"><span class="pre">DetectionModel</span></code> and its subclasses</a><ul class="nav section-nav flex-column">
-<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#ctpn"><code class="docutils literal notranslate"><span class="pre">CTPN</span></code></a></li>
-<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#faceboxes"><code class="docutils literal notranslate"><span class="pre">FaceBoxes</span></code></a></li>
-<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#nanodet"><code class="docutils literal notranslate"><span class="pre">NanoDet</span></code></a></li>
-<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#ultralightweightfacedetection"><code class="docutils literal notranslate"><span class="pre">UltraLightweightFaceDetection</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#yolo-and-its-subclasses"><code class="docutils literal notranslate"><span class="pre">YOLO</span></code> and its subclasses</a><ul class="nav section-nav flex-column">
 <li class="toc-h6 nav-item toc-entry"><a class="reference internal nav-link" href="#yolov4"><code class="docutils literal notranslate"><span class="pre">YoloV4</span></code></a></li>
-<li class="toc-h6 nav-item toc-entry"><a class="reference internal nav-link" href="#yolov5-yolov8"><code class="docutils literal notranslate"><span class="pre">YOLOv5</span></code>, <code class="docutils literal notranslate"><span class="pre">YOLOv8</span></code></a></li>
+<li class="toc-h6 nav-item toc-entry"><a class="reference internal nav-link" href="#yolov5-yolov8-yolo11"><code class="docutils literal notranslate"><span class="pre">YOLOv5</span></code>, <code class="docutils literal notranslate"><span class="pre">YOLOv8</span></code>, <code class="docutils literal notranslate"><span class="pre">YOLO11</span></code></a></li>
 <li class="toc-h6 nav-item toc-entry"><a class="reference internal nav-link" href="#yolox"><code class="docutils literal notranslate"><span class="pre">YOLOX</span></code></a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hpeassociativeembedding"><code class="docutils literal notranslate"><span class="pre">HpeAssociativeEmbedding</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#openpose"><code class="docutils literal notranslate"><span class="pre">OpenPose</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#maskrcnnmodel"><code class="docutils literal notranslate"><span class="pre">MaskRCNNModel</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#segmentationmodel-and-its-subclasses"><code class="docutils literal notranslate"><span class="pre">SegmentationModel</span></code> and its subclasses</a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#actionclassificationmodel"><code class="docutils literal notranslate"><span class="pre">ActionClassificationModel</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bert-and-its-subclasses"><code class="docutils literal notranslate"><span class="pre">Bert</span></code> and its subclasses</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#bertquestionanswering"><code class="docutils literal notranslate"><span class="pre">BertQuestionAnswering</span></code></a></li>
-</ul>
-</li>
 </ul>
 </li>
 </ul>
