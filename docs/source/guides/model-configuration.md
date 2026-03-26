@@ -82,7 +82,6 @@ The list features only model wrappers which introduce new configuration values i
 1. `agnostic_nms`: bool - if True, NMS will be class agnostic, otherwise it will be applied separately for each class
 1. `nms_max_predictions`: int - maximum number of predictions after NMS. If 0, no limit will be applied
 
-
 #### `MaskRCNNModel`
 
 1. `confidence_threshold`: float - probability threshold value for bounding box filtering
