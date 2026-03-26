@@ -279,51 +279,34 @@ class Model:
         Hugging Face download options.
 
         Args:
-            pretrained_model_name_or_path (str): Hugging Face repository identifier
-                (e.g. ``"user/model-name"``).
-            cache_dir (:obj:`str`, optional): Custom Hugging Face cache
-                directory.
-            force_download (bool): Re-download even if the files are cached.
-            local_files_only (bool): Only use locally cached files; error if
-                the requested files are not available.
-            token (:obj:`str` or :obj:`bool`, optional): Authentication token for
-                private repos.  ``True`` reads from the cached HF login.
-            revision (:obj:`str`, optional): Git revision — branch, tag, or
-                full-length commit hash.
-            local_dir (:obj:`str`, optional): Download files into this local
-                directory with their original layout.
-            subfolder (:obj:`str`, optional): Subfolder inside the repository
-                to look for the model.
-            repo_type (str): Repository type (``"model"``, ``"dataset"``, or
-                ``"space"``).  Defaults to ``"model"``.
-            filename (:obj:`str`, optional): Model API-specific parameter for
-                selecting a specific model file to download (e.g. ``"model.xml"``).
-                When omitted the repository is scanned for ``.xml`` / ``.onnx``
-                files automatically.
-            model_type (:obj:`str`, optional): name of model wrapper to create
-                (e.g. ``"ssd"``).  Detected automatically when omitted.
-            configuration (:obj:`dict`, optional): dictionary of model config
-                with model properties, e.g. confidence_threshold, labels.
-            preload (bool): Whether to load the model onto the device
-                immediately.
-            core: ``openvino.Core`` instance, passed to ``OpenvinoAdapter``.
-            weights_path (:obj:`str`, optional): explicit path to ``.bin``
-                weights file.
-            adaptor_parameters (:obj:`dict`, optional): extra parameters for
-                the inference adapter.
-            device (str): OpenVINO device name (e.g. ``"CPU"``, ``"GPU"``,
-                ``"AUTO"``).
-            nstreams (str): Number of inference streams.
-            nthreads (:obj:`int`, optional): Number of CPU threads.
-            max_num_requests (int): Maximum number of asynchronous infer
-                requests.
-            precision (str): Inference precision (e.g. ``"FP16"``).
+            pretrained_model_name_or_path: Hugging Face repository identifier (e.g. `user/model-name`).
+            cache_dir: Custom Hugging Face cache directory.
+            force_download: Re-download even if the files are cached.
+            local_files_only: Only use locally cached files; error if the requested files are not available.
+            token: Authentication token for private repos.  `True` reads from the cached HF login.
+            revision: Git revision — branch, tag, or full-length commit hash.
+            local_dir: Download files into this local directory with their original layout.
+            subfolder: Subfolder inside the repository to look for the model.
+            repo_type: Repository type (`model`, `dataset`, or `space`).  Defaults to `model`.
+            filename: Model API-specific parameter for selecting a specific model file to download (e.g. `model.xml`).
+                When omitted the repository is scanned for `xml` / `.onnx` files automatically.
+            model_type: name of model wrapper to create (e.g. `ssd`).  Detected automatically when omitted.
+            configuration: dictionary of model config with model properties, e.g. confidence_threshold, labels.
+            preload: Whether to load the model onto the device immediately.
+            core: `openvino.Core` instance, passed to `OpenvinoAdapter`.
+            weights_path: explicit path to `.bin` weights file.
+            adaptor_parameters: extra parameters for the inference adapter.
+            device: OpenVINO device name (e.g. `CPU`, `GPU`, `AUTO`).
+            nstreams: Number of inference streams.
+            nthreads: Number of CPU threads.
+            max_num_requests: Maximum number of asynchronous inference requests.
+            precision: Inference precision (e.g. `FP16`).
 
         Returns:
             A fully initialized Model API wrapper.
 
         Raises:
-            ImportError: If ``huggingface_hub`` is not installed.
+            ImportError: If `huggingface_hub` is not installed.
             FileNotFoundError: If no model file is found in the repository.
             ValueError: If multiple model files are found and *filename* is
                 not specified.
