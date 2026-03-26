@@ -41,6 +41,11 @@ onnx = [
 ovms = [
   "tritonclient[http]<2.59",
 ]
+examples = [
+  "httpx",
+  "onnx",
+  "onnxruntime",
+]
 tools = [
   "ultralytics",
   "torch",

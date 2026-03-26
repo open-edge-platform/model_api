@@ -2064,6 +2064,11 @@ docs = [
     { name = "sphinx-copybutton" },
     { name = "sphinx-design" },
 ]
+examples = [
+    { name = "httpx" },
+    { name = "onnx" },
+    { name = "onnxruntime" },
+]
 onnx = [
     { name = "onnx" },
     { name = "onnxruntime" },
@@ -2096,13 +2101,16 @@ requires-dist = [
     { name = "breathe", marker = "extra == 'docs'" },
     { name = "defusedxml", marker = "extra == 'tests'" },
     { name = "graphviz", marker = "extra == 'docs'" },
+    { name = "httpx", marker = "extra == 'examples'" },
     { name = "httpx", marker = "extra == 'tests'" },
     { name = "huggingface-hub", marker = "extra == 'tools'" },
     { name = "myst-parser", marker = "extra == 'docs'" },
     { name = "nncf", marker = "extra == 'tools'" },
     { name = "numpy", specifier = ">=1.16.6" },
+    { name = "onnx", marker = "extra == 'examples'" },
     { name = "onnx", marker = "extra == 'onnx'" },
     { name = "onnx", marker = "extra == 'tests'" },
+    { name = "onnxruntime", marker = "extra == 'examples'" },
     { name = "onnxruntime", marker = "extra == 'onnx'" },
     { name = "onnxruntime", marker = "extra == 'tests'" },
     { name = "opencv-python-headless" },
@@ -2125,7 +2133,7 @@ requires-dist = [
     { name = "ultralytics", marker = "extra == 'tests'", specifier = ">=8.0.114,<=8.0.205" },
     { name = "ultralytics", marker = "extra == 'tools'" },
 ]
-provides-extras = ["onnx", "ovms", "tools", "tests", "docs"]
+provides-extras = ["onnx", "ovms", "examples", "tools", "tests", "docs"]
 
 [[package]]
 name = "openvino-telemetry"

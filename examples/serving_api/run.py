@@ -23,7 +23,7 @@ def main():
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     # Create Object Detection model specifying the OVMS server URL
     model = DetectionModel.create_model(
-        "localhost:8000/v2/models/ssd_mobilenet_v1_fpn_coco",
+        "localhost:8000/v2/models/ssd-card-detection",
         model_type="ssd",
     )
     detections = model(image)

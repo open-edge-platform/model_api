@@ -10,14 +10,18 @@ This example demonstrates how to use a Python API implementation of Zero-shot Se
 
 ## Prerequisites
 
-Install Model API from source. Please refer to the main [README](../../../README.md) for details.
+Install Model API dependencies with examples by running the following command in the root directory of the repository:
+
+```bash
+uv sync --extra examples
+```
 
 ## Run example
 
 To run the example, please execute the following command:
 
 ```bash
-python run.py <path_to_source_image> <path_to_target_image> <encoder_path> <decoder_path> <prompts> -t <mask confidence threshold>
+uv run python run.py <path_to_source_image> <path_to_target_image> <encoder_path> <decoder_path> <prompts> -t <mask confidence threshold>
 ```
 
 where prompts are in X Y format. `t` is a threshold to match the reference features from the source image vs features
@@ -27,16 +31,15 @@ Higher thresholds leads to lower mask recall in the final prediction, i.e. low c
 To run the pipeline out-of-the box you can download the test data by running the following command from the repo root:
 
 ```bash
-pip install httpx
-python tests/accuracy/download_models.py -d data -j tests/accuracy/public_scope.json -l
+uv run python tests/accuracy/download_models.py -d data -j tests/accuracy/examples.json -l
 ```
 
 and then run
 
 ```bash
-python run.py ../../../data/coco128/images/train2017/000000000025.jpg \
-     ../../../data/coco128/images/train2017/000000000072.jpg ../../../data/otx_models/sam_vit_b_zsl_encoder.xml \
-     ../../../data/otx_models/sam_vit_b_zsl_decoder.xml 464 202 -t 0.7
+uv run python examples/zsl_visual_prompting/run.py data/coco128/images/train2017/000000000025.jpg \
+     data/coco128/images/train2017/000000000072.jpg data/otx_models/sam_vit_b_zsl_encoder.xml \
+     data/otx_models/sam_vit_b_zsl_decoder.xml 464 202 -t 0.7
 
 ```
 

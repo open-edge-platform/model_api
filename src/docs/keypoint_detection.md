@@ -37,16 +37,18 @@ Two vectors in Simple Coordinate Classification Perspective ([SimCC](https://arx
 import cv2
 from model_api.models import TopDownKeypointDetectionPipeline, Detection, KeypointDetectionModel
 
-    model = KeypointDetectionModel.create_model("kp_model.xml")
-    # a list of detections in (x_min, y_min, x_max, y_max, score, class_id) format
-    detections = [Detection(0, 0, 100, 100, 1.0, 0)]
-    top_down_pipeline = TopDownKeypointDetectionPipeline(model)
-    predictions = top_down_detector.predict(image, detections)
+model = KeypointDetectionModel.create_model("kp_model.xml")
+image = cv2.imread("image.jpg")
 
-    # iterating over a list of DetectedKeypoints. Each of the items corresponds to a detection
-    for obj_keypoints in predictions:
-        for point in obj_keypoints.keypoints.astype(np.int32):
-            cv2.circle(
-                image, point, radius=0, color=(0, 255, 0), thickness=5
-            )
+# a list of detections in (x_min, y_min, x_max, y_max, score, class_id) format
+detections = [Detection(0, 0, 100, 100, 1.0, 0)]
+top_down_pipeline = TopDownKeypointDetectionPipeline(model)
+predictions = top_down_detector.predict(image, detections)
+
+# iterating over a list of DetectedKeypoints. Each of the items corresponds to a detection
+for obj_keypoints in predictions:
+    for point in obj_keypoints.keypoints.astype(np.int32):
+        cv2.circle(
+            image, point, radius=0, color=(0, 255, 0), thickness=5
+        )
 ```
