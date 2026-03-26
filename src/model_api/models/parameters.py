@@ -200,7 +200,7 @@ class ParameterRegistry:
             default_value=0.5,
             description="Threshold for non-maximum suppression (NMS) intersection over union (IOU) filtering",
         ),
-        "nms_class_agnostic": BooleanValue(
+        "agnostic_nms": BooleanValue(
             default_value=False,
             description="Is the model agnostic to the number of classes, and all classes are considered as one",
         ),

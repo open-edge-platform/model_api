@@ -7,7 +7,7 @@ NMS-related parameters are available for `DetectionModel` and its subclasses, `M
 
 1. `nms_execute`: bool - should non-maximum suppression (NMS) be applied in postprocessing or not. If False, raw model output will be returned without NMS filtering
 1. `iou_threshold`: float - threshold for non-maximum suppression (NMS) intersection over union (IOU) filtering
-1. `nms_class_agnostic`: bool - if True, NMS will be class agnostic, otherwise it will be applied separately for each class
+1. `agnostic_nms`: bool - if True, NMS will be class agnostic, otherwise it will be applied separately for each class
 1. `nms_max_predictions`: int - maximum number of predictions after NMS. If 0, no limit will be applied
 
 ## Example of NMS enablement via `model_info` section
@@ -18,7 +18,7 @@ To enable NMS for a model, you may set the parameters described above in the `mo
     (...)
     <nms_execute value="True" />
     <iou_threshold value="0.7" />
-    <nms_class_agnostic value="True" />
+    <agnostic_nms value="True" />
     <nms_max_predictions value="0" />
 </model_info>
 ```
@@ -38,7 +38,7 @@ model = Model.create_model(
     configuration={
         "nms_execute": True,
         "iou_threshold": 0.7,
-        "nms_class_agnostic": True,
+        "agnostic_nms": True,
         "nms_max_predictions": 0,
     }
 )

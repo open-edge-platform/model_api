@@ -526,7 +526,7 @@ class YOLOX(DetectionModel):
     def parameters(cls):
         parameters = super().parameters()
         parameters["nms_execute"].update_default_value(default_value=True)
-        parameters["nms_class_agnostic"].update_default_value(default_value=True)
+        parameters["agnostic_nms"].update_default_value(default_value=True)
         parameters["iou_threshold"].update_default_value(0.65)
         parameters["confidence_threshold"].update_default_value(0.5)
         return parameters

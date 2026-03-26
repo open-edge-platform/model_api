@@ -145,7 +145,7 @@ class DetectionModel(ImageModel):
             labels=labels,
             include_boundaries=include_boundaries,
             execute_nms=self.params.nms_execute,
-            agnostic_nms=self.params.nms_class_agnostic,
+            agnostic_nms=self.params.agnostic_nms,
             iou_threshold=self.params.iou_threshold,
             max_predictions=self.params.nms_max_predictions,
         )
