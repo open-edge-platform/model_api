@@ -93,8 +93,6 @@ class TestDownloadFromHf:
                 raise ImportError
             return real_import(name, *args, **kwargs)
 
-        assert mock_import("math").__name__ == "math"
-
         with patch("builtins.__import__", side_effect=mock_import), pytest.raises(ImportError, match="huggingface_hub"):
             download_from_hf("user/repo")
 

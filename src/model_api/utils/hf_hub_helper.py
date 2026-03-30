@@ -74,7 +74,7 @@ def find_model_file(directory: Path, filename: str | None = None) -> Path:
         raise ValueError(msg)
 
     msg = (
-        f"No model files (.xml or .onnx) found in {directory}. "
+        "No model files (.xml or .onnx) found in the downloaded repository. "
         "Make sure the Hugging Face repository contains an OpenVINO IR (.xml + .bin) "
         "or ONNX (.onnx) model."
     )

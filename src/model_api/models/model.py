@@ -308,6 +308,7 @@ class Model:
         Raises:
             ImportError: If `huggingface_hub` is not installed.
             FileNotFoundError: If no model file is found in the repository.
+            huggingface_hub.errors.RepositoryNotFoundError: If the repository does not exist or is not accessible.
             ValueError: If multiple model files are found and *filename* is
                 not specified.
         """
