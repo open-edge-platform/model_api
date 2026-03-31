@@ -39,7 +39,7 @@ onnx = [
   "onnxruntime",
 ]
 ovms = [
-  "tritonclient[http]<2.59",
+  "tritonclient[http]<2.68",
 ]
 examples = [
   "httpx",
