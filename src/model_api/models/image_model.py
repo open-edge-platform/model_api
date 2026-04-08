@@ -1,19 +1,21 @@
 #
-# Copyright (C) 2020-2024 Intel Corporation
+# Copyright (C) 2020-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
 
 from __future__ import annotations
 
+import functools
+import warnings
 from typing import TYPE_CHECKING, Any
+
+import numpy as np
 
 from model_api.adapters.utils import RESIZE_TYPES, InputTransform
 from model_api.models.model import Model
 from model_api.models.parameters import ParameterRegistry
 
 if TYPE_CHECKING:
-    import numpy as np
-
     from model_api.adapters.inference_adapter import InferenceAdapter
 
 
@@ -92,6 +94,8 @@ class ImageModel(Model):
             )
             self._embedded_processing = True
             self.orig_height, self.orig_width = self.h, self.w
+
+        self._wrap_preprocess_for_backward_compat()
 
     @classmethod
     def parameters(cls) -> dict[str, Any]:
@@ -225,6 +229,26 @@ class ImageModel(Model):
 
     def _input_transform(self, image: np.ndarray) -> np.ndarray:
         return self.input_transform(image)
+
+    def _wrap_preprocess_for_backward_compat(self) -> None:
+        """Wrap preprocess to support legacy single-argument calls."""
+        original_preprocess = self.preprocess
+
+        @functools.wraps(original_preprocess)
+        def _compat_preprocess(dict_inputs, meta=None):
+            if meta is None and isinstance(dict_inputs, np.ndarray):
+                warnings.warn(
+                    "Calling preprocess(image) with a single numpy array is "
+                    "deprecated since model_api v0.4.0 and will be removed in a "
+                    "future version. Use base_preprocess(image) or __call__(image) "
+                    "instead.",
+                    DeprecationWarning,
+                    stacklevel=2,
+                )
+                return self.base_preprocess(dict_inputs)
+            return original_preprocess(dict_inputs, meta)
+
+        self.preprocess = _compat_preprocess  # type: ignore[method-assign]
 
     def preprocess(self, dict_inputs: dict, meta: dict) -> tuple[dict, dict]:
         return dict_inputs, meta
