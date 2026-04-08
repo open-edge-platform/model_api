@@ -473,7 +473,7 @@ class ModelConverter:
         calibration_data: list[np.ndarray] = []
 
         # Find all images in the dataset
-        image_dir = self.dataset_path / "ILSVRC2012_img_val_subset"
+        image_dir = self.dataset_path
         if not image_dir.exists():
             self.logger.error(f"Image directory not found: {image_dir}")
             return ([], []) if return_labels else []
