@@ -15,13 +15,13 @@ base_model_relation: quantized
 
 ## Description
 
-This is [https://huggingface.co/Ultralytics/YOLO11](https://huggingface.co/Ultralytics/YOLO11) model converted to the [OpenVINO™ IR](https://docs.openvino.ai/2025/documentation/openvino-ir-format.html) (Intermediate Representation) format. with weights compressed to FP16.
+This is [https://huggingface.co/Ultralytics/YOLO11](https://huggingface.co/Ultralytics/YOLO11) model converted to the [OpenVINO™ IR](https://docs.openvino.ai/2026/documentation/openvino-ir-format.html) (Intermediate Representation) format. with weights compressed to FP16.
 
 ## Compatibility
 
 The provided OpenVINO™ IR model is compatible with:
 
-- OpenVINO version 2025.4.0 and higher
+- OpenVINO version 2026.1.0 and higher
 - Model API 0.4.0 and higher
 
 ## Running Model Inference with [Model API](https://github.com/open-edge-platform/model_api)

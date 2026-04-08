@@ -15,7 +15,7 @@ base_model_relation: quantized
 
 ## Description
 
-This is [https://huggingface.co/<<huggingface_repo>>](https://huggingface.co/<<huggingface_repo>>) model converted to the [OpenVINO™ IR](https://docs.openvino.ai/2025/documentation/openvino-ir-format.html) (Intermediate Representation) format with weights compressed to INT8 by [NNCF](https://github.com/openvinotoolkit/nncf).
+This is [https://huggingface.co/<<huggingface_repo>>](https://huggingface.co/<<huggingface_repo>>) model converted to the [OpenVINO™ IR](https://docs.openvino.ai/2026/documentation/openvino-ir-format.html) (Intermediate Representation) format with weights compressed to INT8 by [NNCF](https://github.com/openvinotoolkit/nncf).
 
 ## Quantization Parameters
 
@@ -24,13 +24,13 @@ Weight compression was performed using nncf.quantize with the following paramete
 - **Quantization method**: Post-Training Quantization (PTQ)
 - **Precision**: INT8 for both weights and activations
 
-For more information on quantization, check the [OpenVINO model optimization guide](https://docs.openvino.ai/2025/openvino-workflow/model-optimization-guide/quantizing-models-post-training.html).
+For more information on quantization, check the [OpenVINO model optimization guide](https://docs.openvino.ai/2026/openvino-workflow/model-optimization-guide/quantizing-models-post-training.html).
 
 ## Compatibility
 
 The provided OpenVINO™ IR model is compatible with:
 
-- OpenVINO version 2025.4.0 and higher
+- OpenVINO version 2026.1.0 and higher
 - Model API 0.4.0 and higher
 
 ## Running Model Inference with [Model API](https://github.com/open-edge-platform/model_api)
