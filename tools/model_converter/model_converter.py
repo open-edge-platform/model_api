@@ -448,7 +448,7 @@ class ModelConverter:
         return_labels: bool = False,
     ) -> tuple[list[np.ndarray], list[int]] | list[np.ndarray]:
         """
-        Create calibration dataset from ImageNet validation images.
+        Create calibration dataset from sample validation images.
 
         Args:
             input_shape: Target input shape [batch, channels, height, width]
@@ -890,7 +890,7 @@ class ModelConverter:
             input_names = config.get("input_names", ["input"])
             output_names = config.get("output_names", ["result"])
 
-            # Prepare metadata from config (with defaults for ImageNet normalization)
+            # Prepare metadata from config (with defaults for normalization)
             reverse_input_channels = config.get("reverse_input_channels", True)
             mean_values = config.get("mean_values", "123.675 116.28 103.53")
             scale_values = config.get("scale_values", "58.395 57.12 57.375")
@@ -1100,10 +1100,10 @@ Examples:
         "-d",
         "--dataset",
         type=Path,
-        default=Path.home() / "model_api" / "Small-ImageNet-Validation-Dataset-1000-Classes",
+        default=Path.home() / "model_api" / "validation_dataset",
         help=(
             "Path to calibration dataset for INT8 quantization "
-            "(default: ~/model_api/Small-ImageNet-Validation-Dataset-1000-Classes)"
+            "(default: ~/model_api/validation_dataset)"
         ),
     )
 

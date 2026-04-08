@@ -20,7 +20,6 @@ Weight compression was performed using nncf.quantize with the following paramete
 
 - **Quantization method**: Post-Training Quantization (PTQ)
 - **Precision**: INT8 for both weights and activations
-- **Calibration dataset**: ImageNet validation subset
 
 For more information on quantization, check the [OpenVINO model optimization guide](https://docs.openvino.ai/2025/openvino-workflow/model-optimization-guide/quantizing-models-post-training.html).
 
@@ -36,7 +35,7 @@ The provided OpenVINO™ IR model is compatible with:
 1. Install required packages:
 
 ```python
-pip install openvino-model-api
+pip install openvino-model-api[huggingface]
 ```
 
 1. Run model inference:
@@ -47,7 +46,7 @@ from model_api.models import Model
 from model_api.visualizer import Visualizer
 
 # 1. Load model
-model = Model.create_model("<<model_name>>.xml", device="AUTO")
+model = Model.from_pretrained("OpenVINO/<<model_name>>")
 
 # 2. Load image
 image = cv2.imread("image.jpg")

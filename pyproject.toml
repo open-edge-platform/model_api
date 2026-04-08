@@ -54,6 +54,7 @@ tools = [
   "timm",
   "nncf",
   "huggingface-hub",
+  "defusedxml",
 ]
 huggingface = [
   "huggingface_hub",

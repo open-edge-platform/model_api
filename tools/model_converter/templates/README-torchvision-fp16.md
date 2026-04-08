@@ -26,7 +26,7 @@ The provided OpenVINO™ IR model is compatible with:
 1. Install required packages:
 
 ```python
-pip install openvino-model-api
+pip install openvino-model-api[huggingface]
 ```
 
 1. Run model inference:
@@ -37,7 +37,7 @@ from model_api.models import Model
 from model_api.visualizer import Visualizer
 
 # 1. Load model
-model = Model.create_model("<<model_name>>.xml", device="AUTO")
+model = Model.from_pretrained("OpenVINO/<<model_name>>")
 
 # 2. Load image
 image = cv2.imread("image.jpg")
