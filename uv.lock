@@ -2098,7 +2098,6 @@ tests = [
     { name = "ultralytics" },
 ]
 tools = [
-    { name = "defusedxml" },
     { name = "huggingface-hub" },
     { name = "nncf" },
     { name = "timm" },
@@ -2112,7 +2111,6 @@ tools = [
 requires-dist = [
     { name = "breathe", marker = "extra == 'docs'" },
     { name = "defusedxml", marker = "extra == 'tests'" },
-    { name = "defusedxml", marker = "extra == 'tools'" },
     { name = "graphviz", marker = "extra == 'docs'" },
     { name = "httpx", marker = "extra == 'examples'" },
     { name = "httpx", marker = "extra == 'tests'" },

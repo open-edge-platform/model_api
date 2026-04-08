@@ -4,6 +4,14 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
+# /// script
+# requires-python = ">=3.10"
+# dependencies = [
+#     "ultralytics",
+#     "defusedxml",
+# ]
+# ///
+
 import shutil
 from pathlib import Path
 
