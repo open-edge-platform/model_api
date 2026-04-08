@@ -1,17 +1,17 @@
 ---
 license: agpl-3.0
 tags:
-- object-detection
-- vision
+  - object-detection
+  - vision
 base_model:
-- ultralytics/yolo11
+  - ultralytics/yolo11
 base_model_relation: quantized
 ---
 
 # YOLO11<<yolo_size>>-int8-ov
 
-* Model creator: [Ultralytics](https://huggingface.co/Ultralytics)
-* Original model: [Ultralytics/YOLO11](https://huggingface.co/Ultralytics/YOLO11)
+- Model creator: [Ultralytics](https://huggingface.co/Ultralytics)
+- Original model: [Ultralytics/YOLO11](https://huggingface.co/Ultralytics/YOLO11)
 
 ## Description
 
@@ -21,10 +21,10 @@ This is [https://huggingface.co/Ultralytics/YOLO11](https://huggingface.co/Ultra
 
 This model was quantized using **Post-Training Quantization (PTQ)** with the following configuration:
 
-* **Quantization method**: Post-Training Quantization (PTQ)
-* **Precision**: INT8 for both weights and activations
-* **Calibration dataset**: COCO128 (128 images from COCO dataset)
-* **Framework**: Ultralytics with OpenVINO export
+- **Quantization method**: Post-Training Quantization (PTQ)
+- **Precision**: INT8 for both weights and activations
+- **Calibration dataset**: COCO128 (128 images from COCO dataset)
+- **Framework**: Ultralytics with OpenVINO export
 
 For more information on quantization, check the [OpenVINO model optimization guide](https://docs.openvino.ai/2025/openvino-workflow/model-optimization-guide/quantizing-models-post-training.html).
 
@@ -32,8 +32,8 @@ For more information on quantization, check the [OpenVINO model optimization gui
 
 The provided OpenVINO™ IR model is compatible with:
 
-* OpenVINO version 2025.4.0 and higher
-* Model API 0.4.0 and higher
+- OpenVINO version 2025.4.0 and higher
+- Model API 0.4.0 and higher
 
 ## Running Model Inference with [Model API](https://github.com/open-edge-platform/model_api)
 
@@ -42,6 +42,8 @@ The provided OpenVINO™ IR model is compatible with:
 ```python
 pip install openvino-model-api[huggingface]
 ```
+
+<!-- markdownlint-disable MD029 -->
 
 2. Run model inference:
 

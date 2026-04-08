@@ -1101,10 +1101,7 @@ Examples:
         "--dataset",
         type=Path,
         default=Path.home() / "model_api" / "validation_dataset",
-        help=(
-            "Path to calibration dataset for INT8 quantization "
-            "(default: ~/model_api/validation_dataset)"
-        ),
+        help=("Path to calibration dataset for INT8 quantization (default: ~/model_api/validation_dataset)"),
     )
 
     parser.add_argument(

@@ -29,7 +29,9 @@ The provided OpenVINO™ IR model is compatible with:
 pip install openvino-model-api[huggingface]
 ```
 
-1. Run model inference:
+<!-- markdownlint-disable MD029 -->
+
+2. Run model inference:
 
 ```python
 import cv2

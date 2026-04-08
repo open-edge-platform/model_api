@@ -1,17 +1,17 @@
 ---
 license: agpl-3.0
 tags:
-- object-detection
-- vision
+  - object-detection
+  - vision
 base_model:
-- ultralytics/yolo11
+  - ultralytics/yolo11
 base_model_relation: quantized
 ---
 
 # YOLO11<<yolo_size>>-fp16-ov
 
-* Model creator: [Ultralytics](https://huggingface.co/Ultralytics)
-* Original model: [Ultralytics/YOLO11](https://huggingface.co/Ultralytics/YOLO11)
+- Model creator: [Ultralytics](https://huggingface.co/Ultralytics)
+- Original model: [Ultralytics/YOLO11](https://huggingface.co/Ultralytics/YOLO11)
 
 ## Description
 
@@ -21,8 +21,8 @@ This is [https://huggingface.co/Ultralytics/YOLO11](https://huggingface.co/Ultra
 
 The provided OpenVINO™ IR model is compatible with:
 
-* OpenVINO version 2025.4.0 and higher
-* Model API 0.4.0 and higher
+- OpenVINO version 2025.4.0 and higher
+- Model API 0.4.0 and higher
 
 ## Running Model Inference with [Model API](https://github.com/open-edge-platform/model_api)
 
@@ -31,6 +31,8 @@ The provided OpenVINO™ IR model is compatible with:
 ```python
 pip install openvino-model-api[huggingface]
 ```
+
+<!-- markdownlint-disable MD029 -->
 
 2. Run model inference:
 
