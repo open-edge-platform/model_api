@@ -8,7 +8,7 @@ base_model:
 base_model_relation: quantized
 ---
 
-# <<model_name>>
+# <<model_name>>-int8-ov
 
 - Model creator: [timm](https://huggingface.co/timm)
 - Original model: [<<huggingface_repo>>](https://huggingface.co/<<huggingface_repo>>)
@@ -51,7 +51,7 @@ from model_api.models import Model
 from model_api.visualizer import Visualizer
 
 # 1. Load model
-model = Model.from_pretrained("OpenVINO/<<model_name>>")
+model = Model.from_pretrained("OpenVINO/<<model_name>>-int8-ov")
 
 # 2. Load image
 image = cv2.imread("image.jpg")

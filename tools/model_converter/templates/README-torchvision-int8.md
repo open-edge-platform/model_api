@@ -5,7 +5,7 @@ tags:
   - vision
 ---
 
-# <<model_name>>
+# <<model_name>>-int8-ov
 
 - Model creator: [torchvision](https://github.com/pytorch/vision)
 - Original model: [<<model_name>>](<<docs>>)
@@ -48,7 +48,7 @@ from model_api.models import Model
 from model_api.visualizer import Visualizer
 
 # 1. Load model
-model = Model.from_pretrained("OpenVINO/<<model_name>>")
+model = Model.from_pretrained("OpenVINO/<<model_name>>-int8-ov")
 
 # 2. Load image
 image = cv2.imread("image.jpg")
