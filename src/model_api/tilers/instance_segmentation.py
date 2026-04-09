@@ -109,11 +109,14 @@ class InstanceSegmentationTiler(DetectionTiler):
 
         keep_idxs = []
         if np.prod(detections_array.shape):
-            detections_array, keep_idxs = multiclass_nms(
-                detections_array,
-                max_num=self.max_pred_number,  # type: ignore[attr-defined]
+            keep_idxs = multiclass_nms(
+                boxes=detections_array[:, 2:],
+                scores=detections_array[:, 1],
+                labels=detections_array[:, 0],
+                max_predictions=self.max_pred_number,  # type: ignore[attr-defined]
                 iou_threshold=self.iou_threshold,  # type: ignore[attr-defined]
             )
+        detections_array = detections_array[keep_idxs]
         masks = [masks[keep_idx] for keep_idx in keep_idxs]
 
         merged_vector = np.mean(feature_vectors, axis=0) if feature_vectors else np.ndarray(0)

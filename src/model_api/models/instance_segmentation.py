@@ -11,7 +11,7 @@ from model_api.adapters.inference_adapter import InferenceAdapter
 from .image_model import ImageModel
 from .parameters import ParameterRegistry
 from .result import InstanceSegmentationResult
-from .utils import ResizeMetadata, load_labels
+from .utils import ResizeMetadata, calculate_nms, load_labels
 
 
 class MaskRCNNModel(ImageModel):
@@ -34,6 +34,7 @@ class MaskRCNNModel(ImageModel):
                 ParameterRegistry.CONFIDENCE_THRESHOLD,
                 ParameterRegistry.LABELS,
                 ParameterRegistry.INSTANCE_SEGMENTATION,
+                ParameterRegistry.NMS,
             ),
         )
         return parameters
@@ -189,6 +190,21 @@ class MaskRCNNModel(ImageModel):
         scores = scores[keep]
         labels = labels[keep]
         masks = masks[keep]
+
+        keep_nms = calculate_nms(
+            boxes=boxes,
+            scores=scores,
+            labels=labels,
+            execute_nms=self.params.nms_execute,
+            agnostic_nms=self.params.agnostic_nms,
+            iou_threshold=self.params.iou_threshold,
+            max_predictions=self.params.nms_max_predictions,
+        )
+
+        boxes = boxes[keep_nms]
+        scores = scores[keep_nms]
+        labels = labels[keep_nms]
+        masks = masks[keep_nms]
 
         resized_masks, label_names = [], []
         for box, label_idx, raw_mask in zip(boxes, labels, masks):

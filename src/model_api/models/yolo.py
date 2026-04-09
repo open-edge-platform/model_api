@@ -10,10 +10,9 @@ import numpy as np
 from model_api.adapters.utils import INTERPOLATION_TYPES, resize_image_ocv
 
 from .detection_model import DetectionModel
-from .parameters import ParameterRegistry
 from .result import DetectionResult
-from .types import BooleanValue, ListValue
-from .utils import ResizeMetadata, clip_detections, multiclass_nms, nms
+from .types import ListValue
+from .utils import ResizeMetadata, clip_detections
 
 DetectionBox = namedtuple("DetectionBox", ["x", "y", "w", "h"])
 
@@ -178,7 +177,6 @@ class YOLO(DetectionModel):
     @classmethod
     def parameters(cls):
         parameters = super().parameters()
-        parameters.update(ParameterRegistry.NMS)
         parameters["resize_type"].update_default_value("fit_to_window_letterbox")
         parameters["confidence_threshold"].update_default_value(0.5)
         return parameters
@@ -332,7 +330,7 @@ class YOLO(DetectionModel):
         return detections
 
     def _parse_outputs(self, outputs, meta) -> DetectionResult:
-        bboxes, scores, labels = [], [], []
+        bboxes_arr, scores_arr, labels_arr = [], [], []
         for layer_name in self.yolo_layer_params:
             out_blob = outputs[layer_name]
             layer_params = self.yolo_layer_params[layer_name]
@@ -342,23 +340,29 @@ class YOLO(DetectionModel):
                 meta["resized_shape"],
                 layer_params[1],
             )
-            bboxes.extend(detection_result.bboxes)
-            scores.extend(detection_result.scores)
-            labels.extend(detection_result.labels)
+            bboxes_arr.extend(detection_result.bboxes)
+            scores_arr.extend(detection_result.scores)
+            labels_arr.extend(detection_result.labels)
 
-        if len(bboxes):
-            bboxes = np.stack(bboxes)
-            labels = np.array(labels)
-            scores = np.array(scores)
+        if len(bboxes_arr):
+            bboxes = np.stack(bboxes_arr)
+            labels = np.array(labels_arr)
+            scores = np.array(scores_arr)
         else:
             bboxes = np.empty((0, 4), dtype=np.float32)
             labels = np.empty((0,), dtype=np.int32)
             scores = np.empty((0,), dtype=np.float32)
 
-        detection_result = DetectionResult(
-            bboxes=bboxes,
+        keep_nms = self._calculate_nms(
+            boxes=bboxes,
             labels=labels,
             scores=scores,
+        )
+
+        detection_result = DetectionResult(
+            bboxes=bboxes[keep_nms],
+            labels=labels[keep_nms],
+            scores=scores[keep_nms],
         )
 
         return self._filter(detection_result, self.params.iou_threshold)
@@ -521,8 +525,8 @@ class YOLOX(DetectionModel):
     @classmethod
     def parameters(cls):
         parameters = super().parameters()
-        parameters.update(ParameterRegistry.NMS)
-        # Override default iou_threshold for YOLOX
+        parameters["nms_execute"].update_default_value(default_value=True)
+        parameters["agnostic_nms"].update_default_value(default_value=True)
         parameters["iou_threshold"].update_default_value(0.65)
         parameters["confidence_threshold"].update_default_value(0.5)
         return parameters
@@ -557,16 +561,12 @@ class YOLOX(DetectionModel):
 
         boxes = xywh2xyxy(valid_predictions[:, :4]) / meta["scale"]
         i, j = (valid_predictions[:, 5:] > conf_threshold).nonzero()
-        x_mins, y_mins, x_maxs, y_maxs = boxes[i].T
         scores = valid_predictions[i, j + 5]
 
-        keep_nms = nms(
-            x_mins,
-            y_mins,
-            x_maxs,
-            y_maxs,
-            scores,
-            self.params.iou_threshold,
+        keep_nms = self._calculate_nms(
+            boxes=boxes[i],
+            scores=scores,
+            labels=j,
             include_boundaries=True,
         )
 
@@ -725,10 +725,16 @@ class YoloV3ONNX(DetectionModel):
             _boxes[mask],
         )
 
-        return DetectionResult(
-            bboxes=_boxes,
-            labels=_classes,
+        keep_nms = self._calculate_nms(
+            boxes=_boxes,
             scores=_scores,
+            labels=_classes,
+        )
+
+        return DetectionResult(
+            bboxes=_boxes[keep_nms],
+            labels=_classes[keep_nms],
+            scores=_scores[keep_nms],
         )
 
 
@@ -757,19 +763,9 @@ class YOLOv5(DetectionModel):
         parameters["reverse_input_channels"].update_default_value(True)  # noqa: FBT003 TODO: refactor this piece of code
         parameters["scale_values"].update_default_value([255.0])
         parameters["confidence_threshold"].update_default_value(0.25)
-        parameters.update(
-            {
-                "agnostic_nms": BooleanValue(
-                    description=(
-                        "If True, the model is agnostic to the number of classes, and all classes are considered as one"
-                    ),
-                    default_value=False,
-                ),
-            },
-        )
-        parameters.update(ParameterRegistry.NMS)
-        # Override default iou_threshold for YOLOv5
+        parameters["nms_execute"].update_default_value(default_value=True)
         parameters["iou_threshold"].update_default_value(0.7)
+        parameters["nms_max_predictions"].update_default_value(30000)
         return parameters
 
     def postprocess(self, outputs, meta) -> DetectionResult:
@@ -796,22 +792,14 @@ class YOLOv5(DetectionModel):
             1,
             dtype=np.float32,
         )
-        keep_top_k = 30000
-        iou_threshold = self.params.iou_threshold
-        if self.params.agnostic_nms:
-            boxes = boxes[
-                nms(
-                    boxes[:, 2],
-                    boxes[:, 3],
-                    boxes[:, 4],
-                    boxes[:, 5],
-                    boxes[:, 1],
-                    iou_threshold,
-                    keep_top_k=keep_top_k,
-                )
-            ]
-        else:
-            boxes, _ = multiclass_nms(boxes, iou_threshold, keep_top_k)
+
+        keep_nms = self._calculate_nms(
+            boxes=boxes[:, 2:],
+            scores=boxes[:, 1],
+            labels=boxes[:, 0],
+        )
+        boxes = boxes[keep_nms]
+
         inputImgWidth = meta["original_shape"][1]
         inputImgHeight = meta["original_shape"][0]
         resize_meta = ResizeMetadata.compute(

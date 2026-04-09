@@ -192,9 +192,23 @@ class ParameterRegistry:
 
     # NMS parameters
     NMS: ClassVar[dict[str, Any]] = {
+        "nms_execute": BooleanValue(
+            default_value=False,
+            description="Should non-maximum suppression (NMS) be applied to the model outputs",
+        ),
         "iou_threshold": NumericalValue(
             default_value=0.5,
             description="Threshold for non-maximum suppression (NMS) intersection over union (IOU) filtering",
+        ),
+        "agnostic_nms": BooleanValue(
+            default_value=False,
+            description="Is the model agnostic to the number of classes, and all classes are considered as one",
+        ),
+        "nms_max_predictions": NumericalValue(
+            default_value=200,
+            description="Maximum number of predictions to keep after NMS filtering. Zero means no limit.",
+            value_type=int,
+            min=0,
         ),
     }
 

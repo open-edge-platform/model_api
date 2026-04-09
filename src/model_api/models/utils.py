@@ -217,26 +217,27 @@ def load_labels(label_file):
 
 
 def nms(
-    x1: np.ndarray,
-    y1: np.ndarray,
-    x2: np.ndarray,
-    y2: np.ndarray,
+    boxes: np.ndarray,
     scores: np.ndarray,
-    thresh: float,
+    iou_threshold: float,
     include_boundaries: bool = False,
-    keep_top_k: int = 0,
+    max_predictions: int = 0,
 ) -> list[int]:
+    x1 = boxes[:, 0]
+    y1 = boxes[:, 1]
+    x2 = boxes[:, 2]
+    y2 = boxes[:, 3]
     b = 1 if include_boundaries else 0
     areas = (x2 - x1 + b) * (y2 - y1 + b)
     order = scores.argsort()[::-1]
 
-    if keep_top_k:
-        order = order[:keep_top_k]
+    if max_predictions:
+        order = order[:max_predictions]
 
     keep = []
     while order.size > 0:
         i = order[0]
-        keep.append(i)
+        keep.append(i.item())
 
         xx1 = np.maximum(x1[i], x1[order[1:]])
         yy1 = np.maximum(y1[i], y1[order[1:]])
@@ -255,16 +256,19 @@ def nms(
             where=union_areas != 0,
         )
 
-        order = order[np.where(overlap <= thresh)[0] + 1]
+        order = order[np.where(overlap <= iou_threshold)[0] + 1]
 
     return keep
 
 
 def multiclass_nms(
-    detections: np.ndarray,
+    boxes: np.ndarray,
+    scores: np.ndarray,
+    labels: np.ndarray,
     iou_threshold: float = 0.45,
-    max_num: int = 200,
-):
+    max_predictions: int = 200,
+    include_boundaries: bool = False,
+) -> list[int]:
     """Multi-class NMS.
 
     strategy: in order to perform NMS independently per class,
@@ -273,28 +277,63 @@ def multiclass_nms(
     from different classes do not overlap
 
     Args:
-        detections (np.ndarray): labels, scores and boxes
+        boxes (np.ndarray): boxes in form x1, y1, x2, y2
+        scores (np.ndarray): detection scores
+        labels (np.ndarray): label indices for each box
         iou_threshold (float, optional): IoU threshold. Defaults to 0.45.
-        max_num (int, optional): Max number of objects filter. Defaults to 200.
+        max_predictions (int, optional): Max number of objects filter. Zero means no limit. Defaults to 200.
+        include_boundaries (bool, optional): Whether to include box boundaries in IoU calculation. Defaults to False.
 
     Returns:
-        tuple: (dets, indices), Dets are boxes with scores. Indices are indices of kept boxes.
+        indices of kept boxes.
     """
-    if not detections.size:
-        return detections, []
-    labels = detections[:, 0]
-    scores = detections[:, 1]
-    boxes = detections[:, 2:]
+    if not boxes.size:
+        return []
     max_coordinate = boxes.max()
     offsets = labels.astype(boxes.dtype) * (max_coordinate + 1)
     boxes_for_nms = boxes + offsets[:, None]
 
-    keep = nms(*boxes_for_nms.T, scores=scores, thresh=iou_threshold)  # type: ignore[misc]
-    if max_num > 0:
-        keep = keep[:max_num]
-    keep = np.array(keep)
-    det = detections[keep]
-    return det, keep
+    keep = nms(
+        boxes=boxes_for_nms,
+        scores=scores,
+        iou_threshold=iou_threshold,
+        include_boundaries=include_boundaries,
+    )
+    if max_predictions > 0:
+        keep = keep[:max_predictions]
+    return keep
+
+
+def calculate_nms(
+    boxes: np.ndarray,
+    scores: np.ndarray,
+    labels: np.ndarray,
+    iou_threshold: float = 0.45,
+    max_predictions: int = 200,
+    include_boundaries: bool = False,
+    agnostic_nms: bool = False,
+    execute_nms: bool = False,
+) -> list[int]:
+    if not execute_nms:
+        return list(range(boxes.shape[0]))
+
+    if agnostic_nms:
+        return nms(
+            boxes=boxes,
+            scores=scores,
+            iou_threshold=iou_threshold,
+            max_predictions=max_predictions,
+            include_boundaries=include_boundaries,
+        )
+
+    return multiclass_nms(
+        boxes=boxes,
+        scores=scores,
+        labels=labels,
+        iou_threshold=iou_threshold,
+        max_predictions=max_predictions,
+        include_boundaries=include_boundaries,
+    )
 
 
 def is_softmaxed(array: np.ndarray, axis: int, atol: float = 1e-5) -> bool:

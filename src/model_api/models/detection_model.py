@@ -8,7 +8,7 @@ import numpy as np
 from .image_model import ImageModel
 from .parameters import ParameterRegistry
 from .result import DetectionResult
-from .utils import ResizeMetadata, load_labels
+from .utils import ResizeMetadata, calculate_nms, load_labels
 
 
 class DetectionModel(ImageModel):
@@ -54,6 +54,7 @@ class DetectionModel(ImageModel):
             ParameterRegistry.merge(
                 ParameterRegistry.CONFIDENCE_THRESHOLD,
                 ParameterRegistry.LABELS,
+                ParameterRegistry.NMS,
             ),
         )
         return parameters
@@ -125,3 +126,26 @@ class DetectionModel(ImageModel):
             detection_result (List[Detection]): list of detections with coordinates in normalized form
         """
         detection_result.label_names = [self.get_label_name(label_idx) for label_idx in detection_result.labels]
+
+    def _calculate_nms(
+        self,
+        boxes: np.ndarray,
+        scores: np.ndarray,
+        labels: np.ndarray,
+        include_boundaries: bool = False,
+    ) -> list[int]:
+        """Executes non-maximum suppression for the detection results
+
+        Returns:
+            list[int]: list of indices of detections to keep after NMS
+        """
+        return calculate_nms(
+            boxes=boxes,
+            scores=scores,
+            labels=labels,
+            include_boundaries=include_boundaries,
+            execute_nms=self.params.nms_execute,
+            agnostic_nms=self.params.agnostic_nms,
+            iou_threshold=self.params.iou_threshold,
+            max_predictions=self.params.nms_max_predictions,
+        )

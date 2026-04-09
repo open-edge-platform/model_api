@@ -88,11 +88,14 @@ class DetectionTiler(Tiler):
             tiles_coords.append(result["coords"])
 
         if np.prod(detections_array.shape):
-            detections_array, _ = multiclass_nms(
-                detections_array,
-                max_num=self.max_pred_number,  # type: ignore[attr-defined]
+            keep = multiclass_nms(
+                boxes=detections_array[:, 2:],
+                scores=detections_array[:, 1],
+                labels=detections_array[:, 0],
+                max_predictions=self.max_pred_number,  # type: ignore[attr-defined]
                 iou_threshold=self.iou_threshold,  # type: ignore[attr-defined]
             )
+            detections_array = detections_array[keep]
 
         merged_vector = np.mean(feature_vectors, axis=0) if feature_vectors else np.ndarray(0)
         saliency_map = self._merge_saliency_maps(saliency_maps, shape, tiles_coords) if saliency_maps else np.ndarray(0)
