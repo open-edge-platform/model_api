@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Guides &#8212; ModelAPI 2025 documentation</title>
+    <title>NMS Enablement &#8212; ModelAPI 2025 documentation</title>
   
   
   
@@ -47,12 +47,12 @@
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=6dbb43f8"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'guides/index';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'guides/nms-enablement';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="NMS Enablement" href="nms-enablement.html" />
-    <link rel="prev" title="Model API Documentation" href="../index.html" />
+    <link rel="next" title="Model configuration" href="model-configuration.html" />
+    <link rel="prev" title="Guides" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -136,7 +136,7 @@
   <ul class="bd-navbar-elements navbar-nav">
     
 <li class="nav-item current active">
-  <a class="nav-link nav-internal" href="#">
+  <a class="nav-link nav-internal" href="index.html">
     Guides
   </a>
 </li>
@@ -215,7 +215,7 @@
   <ul class="bd-navbar-elements navbar-nav">
     
 <li class="nav-item current active">
-  <a class="nav-link nav-internal" href="#">
+  <a class="nav-link nav-internal" href="index.html">
     Guides
   </a>
 </li>
@@ -255,8 +255,8 @@
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Guides</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="nms-enablement.html">NMS Enablement</a></li>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">NMS Enablement</a></li>
 <li class="toctree-l1"><a class="reference internal" href="model-configuration.html">Model configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="performance_metrics.html">Performance Metrics</a></li>
 </ul>
@@ -299,7 +299,10 @@
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Guides</span></li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Guides</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">NMS Enablement</span></li>
   </ul>
 </nav>
 </div>
@@ -316,10 +319,59 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="guides">
-<h1>Guides<a class="headerlink" href="#guides" title="Link to this heading">#</a></h1>
-<div class="toctree-wrapper compound">
+  <section id="nms-enablement">
+<h1>NMS Enablement<a class="headerlink" href="#nms-enablement" title="Link to this heading">#</a></h1>
+<p>Detection and InstanceSegmentation models support non-maximum suppression (NMS) postprocessing step, which allows to filter model predictions based on confidence scores and bounding box overlap. NMS can be enabled or disabled via model configuration parameters, which are described in details below.</p>
+<section id="model-configuration-parameters-for-nms">
+<h2>Model configuration parameters for NMS<a class="headerlink" href="#model-configuration-parameters-for-nms" title="Link to this heading">#</a></h2>
+<p>NMS-related parameters are available for <code class="docutils literal notranslate"><span class="pre">DetectionModel</span></code> and its subclasses, <code class="docutils literal notranslate"><span class="pre">MaskRCNNModel</span></code> and its subclasses, <code class="docutils literal notranslate"><span class="pre">YOLO</span></code> and its subclasses. Below is the list of NMS-related parameters for these models:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">nms_execute</span></code>: bool - should non-maximum suppression (NMS) be applied in postprocessing or not. If False, raw model output will be returned without NMS filtering</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">iou_threshold</span></code>: float - threshold for non-maximum suppression (NMS) intersection over union (IOU) filtering</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">agnostic_nms</span></code>: bool - if True, NMS will be class agnostic, otherwise it will be applied separately for each class</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nms_max_predictions</span></code>: int - maximum number of predictions after NMS. If 0, no limit will be applied</p></li>
+</ol>
+</section>
+<section id="example-of-nms-enablement-via-model-info-section">
+<h2>Example of NMS enablement via <code class="docutils literal notranslate"><span class="pre">model_info</span></code> section<a class="headerlink" href="#example-of-nms-enablement-via-model-info-section" title="Link to this heading">#</a></h2>
+<p>To enable NMS for a model, you may set the parameters described above in the <code class="docutils literal notranslate"><span class="pre">model_info</span></code> section of the model configuration file. Below is an example of how to enable NMS for a detection model:</p>
+<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;model_info&gt;</span>
+<span class="w">    </span>(...)
+<span class="w">    </span><span class="nt">&lt;nms_execute</span><span class="w"> </span><span class="na">value=</span><span class="s">&quot;True&quot;</span><span class="w"> </span><span class="nt">/&gt;</span>
+<span class="w">    </span><span class="nt">&lt;iou_threshold</span><span class="w"> </span><span class="na">value=</span><span class="s">&quot;0.7&quot;</span><span class="w"> </span><span class="nt">/&gt;</span>
+<span class="w">    </span><span class="nt">&lt;agnostic_nms</span><span class="w"> </span><span class="na">value=</span><span class="s">&quot;True&quot;</span><span class="w"> </span><span class="nt">/&gt;</span>
+<span class="w">    </span><span class="nt">&lt;nms_max_predictions</span><span class="w"> </span><span class="na">value=</span><span class="s">&quot;0&quot;</span><span class="w"> </span><span class="nt">/&gt;</span>
+<span class="nt">&lt;/model_info&gt;</span>
+</pre></div>
 </div>
+<p>In this example, NMS is enabled with an IOU threshold of 0.7, class agnostic filtering (which means all classes are treated as one), and no limit on the number of predictions after NMS.</p>
+</section>
+<section id="example-of-nms-enablement-via-configuration-argument">
+<h2>Example of NMS enablement via configuration argument<a class="headerlink" href="#example-of-nms-enablement-via-configuration-argument" title="Link to this heading">#</a></h2>
+<p>To enable NMS for a model, you may set the parameters described above in <code class="docutils literal notranslate"><span class="pre">configuration</span></code> argument of the model constructor. Below is an example of how to enable NMS for a detection model with the same values as in the previous example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">cv2</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">model_api.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">Model</span>
+
+<span class="c1"># 1. Load model</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span>
+    <span class="s2">&quot;model.xml&quot;</span><span class="p">,</span>
+    <span class="n">device</span><span class="o">=</span><span class="s2">&quot;CPU&quot;</span><span class="p">,</span>
+    <span class="n">configuration</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;nms_execute&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">&quot;iou_threshold&quot;</span><span class="p">:</span> <span class="mf">0.7</span><span class="p">,</span>
+        <span class="s2">&quot;agnostic_nms&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">&quot;nms_max_predictions&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+
+<span class="c1"># 2. Load image</span>
+<span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="s2">&quot;image.jpg&quot;</span><span class="p">)</span>
+
+<span class="c1"># 3. Run inference</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
 </section>
 
 
@@ -333,20 +385,20 @@
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="../index.html"
+       href="index.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Model API Documentation</p>
+        <p class="prev-next-title">Guides</p>
       </div>
     </a>
     <a class="right-next"
-       href="nms-enablement.html"
+       href="model-configuration.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">NMS Enablement</p>
+        <p class="prev-next-title">Model configuration</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -362,9 +414,23 @@
 
 
   <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model-configuration-parameters-for-nms">Model configuration parameters for NMS</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example-of-nms-enablement-via-model-info-section">Example of NMS enablement via <code class="docutils literal notranslate"><span class="pre">model_info</span></code> section</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example-of-nms-enablement-via-configuration-argument">Example of NMS enablement via configuration argument</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../_sources/guides/index.md.txt">
+    <a href="../_sources/guides/nms-enablement.md.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>
