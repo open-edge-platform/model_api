@@ -37,7 +37,7 @@ def _make_adapter(input_shape=(1, 3, 300, 300), layout="NCHW", extra_inputs=None
     adapter.get_input_layers.return_value = inputs
     adapter.get_output_layers.return_value = {"output": FakeMetadata(shape=[1, 1, 200, 7])}
     adapter.get_rt_info.side_effect = RuntimeError(
-        "Cannot get runtime attribute. Path to runtime attribute is incorrect."
+        "Cannot get runtime attribute. Path to runtime attribute is incorrect.",
     )
     adapter.embed_preprocessing = MagicMock()
     return adapter
@@ -52,7 +52,8 @@ class TestPreprocessBackwardCompat:
 
     def test_old_style_single_arg_calls_base_preprocess(self):
         model = self._make_image_model()
-        image = np.random.randint(0, 255, (480, 640, 3), dtype=np.uint8)
+        rng = np.random.default_rng(0)
+        image = rng.integers(0, 255, (480, 640, 3), dtype=np.uint8)
 
         with pytest.warns(DeprecationWarning, match="deprecated since model_api v0.4.0"):
             result = model.preprocess(image)
@@ -94,7 +95,8 @@ class TestSSDPreprocessBackwardCompat:
 
     def test_old_style_call_returns_preprocessed_data(self):
         model = self._make_ssd_model()
-        image = np.random.randint(0, 255, (480, 640, 3), dtype=np.uint8)
+        rng = np.random.default_rng(0)
+        image = rng.integers(0, 255, (480, 640, 3), dtype=np.uint8)
 
         with pytest.warns(DeprecationWarning, match="deprecated since model_api v0.4.0"):
             result = model.preprocess(image)
@@ -114,7 +116,7 @@ class TestSSDPreprocessBackwardCompat:
 
         with warnings.catch_warnings():
             warnings.simplefilter("error", DeprecationWarning)
-            result_inputs, result_meta = model.preprocess(dict_inputs, meta)
+            result_inputs, _ = model.preprocess(dict_inputs, meta)
 
         # SSD should add image_info blob
         assert "image_info" in result_inputs
@@ -123,7 +125,8 @@ class TestSSDPreprocessBackwardCompat:
     def test_unpacking_works_like_old_api(self):
         """Simulate the exact geti_sdk call pattern: preprocessed_image, metadata = model.preprocess(image)."""
         model = self._make_ssd_model()
-        image = np.random.randint(0, 255, (480, 640, 3), dtype=np.uint8)
+        rng = np.random.default_rng(0)
+        image = rng.integers(0, 255, (480, 640, 3), dtype=np.uint8)
 
         with pytest.warns(DeprecationWarning):
             preprocessed_image, metadata = model.preprocess(image)
