@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
 
@@ -84,16 +84,7 @@ class TestDownloadFromHf:
 
     def test_import_error_when_hf_hub_missing(self):
         """Raises ImportError with a helpful message when huggingface_hub is absent."""
-        import builtins
-
-        real_import = builtins.__import__
-
-        def mock_import(name, *args, **kwargs):
-            if name == "huggingface_hub":
-                raise ImportError
-            return real_import(name, *args, **kwargs)
-
-        with patch("builtins.__import__", side_effect=mock_import), pytest.raises(ImportError, match="huggingface_hub"):
+        with patch.dict("sys.modules", {"huggingface_hub": None}), pytest.raises(ImportError, match="huggingface_hub"):
             download_from_hf("user/repo")
 
     @patch("model_api.utils.hf_hub_helper.find_model_file")
