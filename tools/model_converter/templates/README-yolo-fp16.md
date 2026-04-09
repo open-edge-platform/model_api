@@ -1,27 +1,21 @@
 ---
-license: <<license>>
+license: agpl-3.0
 tags:
-  - image-classification
+  - object-detection
   - vision
+base_model:
+  - ultralytics/yolo11
+base_model_relation: quantized
 ---
 
-# <<model_name>>-int8-ov
+# YOLO11<<yolo_size>>-fp16-ov
 
-- Model creator: [torchvision](https://github.com/pytorch/vision)
-- Original model: [<<model_name>>](<<docs>>)
+- Model creator: [Ultralytics](https://huggingface.co/Ultralytics)
+- Original model: [Ultralytics/YOLO11](https://huggingface.co/Ultralytics/YOLO11)
 
 ## Description
 
-This is a torchvision version of [<<model_name>>](<<docs>>) model converted to the [OpenVINO™ IR](https://docs.openvino.ai/2026/documentation/openvino-ir-format.html) (Intermediate Representation) format with weights compressed to INT8.
-
-## Quantization Parameters
-
-Weight compression was performed using nncf.quantize with the following parameters:
-
-- **Quantization method**: Post-Training Quantization (PTQ)
-- **Precision**: INT8 for both weights and activations
-
-For more information on quantization, check the [OpenVINO model optimization guide](https://docs.openvino.ai/2026/openvino-workflow/model-optimization-guide/quantizing-models-post-training.html).
+This is [https://huggingface.co/Ultralytics/YOLO11](https://huggingface.co/Ultralytics/YOLO11) model converted to the [OpenVINO™ IR](https://docs.openvino.ai/2026/documentation/openvino-ir-format.html) (Intermediate Representation) format. with weights compressed to FP16.
 
 ## Compatibility
 
@@ -48,7 +42,7 @@ from model_api.models import Model
 from model_api.visualizer import Visualizer
 
 # 1. Load model
-model = Model.from_pretrained("OpenVINO/<<model_name>>-int8-ov")
+model = Model.from_pretrained("OpenVINO/YOLO11<<yolo_size>>-fp16-ov")
 
 # 2. Load image
 image = cv2.imread("image.jpg")
@@ -65,11 +59,11 @@ For more examples and possible optimizations, refer to the [Model API Documentat
 
 ## Limitations
 
-Check the original [model implementation](https://github.com/pytorch/vision) for limitations.
+Check the original [model card](https://huggingface.co/Ultralytics/YOLO11) for limitations.
 
 ## Legal information
 
-The original model is distributed under the [<<license>>](<<license_link>>) license. More details can be found in [https://github.com/pytorch/vision](https://github.com/pytorch/vision).
+The original model is distributed under [GNU Affero General Public License v3.0](https://choosealicense.com/licenses/agpl-3.0/) license. More details can be found in [Ultralytics/YOLO11](https://huggingface.co/Ultralytics/YOLO11).
 
 ## Disclaimer
 

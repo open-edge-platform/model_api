@@ -4,11 +4,30 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
+# /// script
+# requires-python = ">=3.10"
+# dependencies = [
+#     "ultralytics",
+#     "defusedxml",
+# ]
+# ///
+
 import shutil
 from pathlib import Path
 
 from defusedxml.ElementTree import ParseError, parse
 from ultralytics import YOLO
+
+TEMPLATES_DIR = Path(__file__).resolve().parent.parent / "templates"
+
+
+def copy_readme_template(template_name: str, dest_dir: Path, yolo_size: str) -> None:
+    """Copy a README template to dest_dir/README.md, replacing <<yolo_size>>."""
+    template_path = TEMPLATES_DIR / template_name
+    content = template_path.read_text()
+    content = content.replace("<<yolo_size>>", yolo_size)
+    (dest_dir / "README.md").write_text(content)
+    print(f"Copied {template_name} -> {dest_dir / 'README.md'} (size={yolo_size})")
 
 
 def update_model_type_in_xml(xml_path: Path, model_type: str = "YOLO11") -> None:
@@ -34,6 +53,7 @@ MODEL_VERSIONS = ["yolo11n", "yolo11s", "yolo11m", "yolo11l", "yolo11x"]
 
 for version in MODEL_VERSIONS:
     print(f"Processing {version}...")
+    yolo_size = version[-1]  # n, s, m, l, or x
 
     # Load model
     model = YOLO(f"{version}.pt")
@@ -56,6 +76,9 @@ for version in MODEL_VERSIONS:
         if xml_file.exists():
             update_model_type_in_xml(xml_file, "YOLO11")
 
+        # Copy README template for fp16
+        copy_readme_template("README-yolo-fp16.md", new_name, yolo_size)
+
     # Export INT8 quantized OpenVINO model
     print(f"Exporting {version} to OpenVINO INT8 format...")
     model.export(format="openvino", int8=True, data="coco128.yaml")
@@ -73,5 +96,8 @@ for version in MODEL_VERSIONS:
         xml_file = new_name_int8 / f"{version}.xml"
         if xml_file.exists():
             update_model_type_in_xml(xml_file, "YOLO11")
+
+        # Copy README template for int8
+        copy_readme_template("README-yolo-int8.md", new_name_int8, yolo_size)
 
     print(f"Completed {version}\n")

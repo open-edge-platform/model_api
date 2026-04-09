@@ -5,20 +5,20 @@ tags:
   - vision
 ---
 
-# <<model_name>>
+# <<model_name>>-fp16-ov
 
 - Model creator: [torchvision](https://github.com/pytorch/vision)
 - Original model: [<<model_name>>](<<docs>>)
 
 ## Description
 
-This is a torchvision version of [<<model_name>>](<<docs>>) model converted to the [OpenVINO™ IR](https://docs.openvino.ai/2025/documentation/openvino-ir-format.html) (Intermediate Representation) format with weights compressed to FP16.
+This is a torchvision version of [<<model_name>>](<<docs>>) model converted to the [OpenVINO™ IR](https://docs.openvino.ai/2026/documentation/openvino-ir-format.html) (Intermediate Representation) format with weights compressed to FP16.
 
 ## Compatibility
 
 The provided OpenVINO™ IR model is compatible with:
 
-- OpenVINO version 2025.4.0 and higher
+- OpenVINO version 2026.1.0 and higher
 - Model API 0.4.0 and higher
 
 ## Running Model Inference with [Model API](https://github.com/open-edge-platform/model_api)
@@ -26,10 +26,12 @@ The provided OpenVINO™ IR model is compatible with:
 1. Install required packages:
 
 ```python
-pip install openvino-model-api
+pip install openvino-model-api[huggingface]
 ```
 
-1. Run model inference:
+<!-- markdownlint-disable MD029 -->
+
+2. Run model inference:
 
 ```python
 import cv2
@@ -37,7 +39,7 @@ from model_api.models import Model
 from model_api.visualizer import Visualizer
 
 # 1. Load model
-model = Model.create_model("<<model_name>>.xml", device="AUTO")
+model = Model.from_pretrained("OpenVINO/<<model_name>>-fp16-ov")
 
 # 2. Load image
 image = cv2.imread("image.jpg")
