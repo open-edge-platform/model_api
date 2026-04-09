@@ -237,7 +237,7 @@ def nms(
     keep = []
     while order.size > 0:
         i = order[0]
-        keep.append(i)
+        keep.append(i.item())
 
         xx1 = np.maximum(x1[i], x1[order[1:]])
         yy1 = np.maximum(y1[i], y1[order[1:]])
@@ -268,7 +268,7 @@ def multiclass_nms(
     iou_threshold: float = 0.45,
     max_predictions: int = 200,
     include_boundaries: bool = False,
-):
+) -> list[int]:
     """Multi-class NMS.
 
     strategy: in order to perform NMS independently per class,
@@ -301,7 +301,7 @@ def multiclass_nms(
     )
     if max_predictions > 0:
         keep = keep[:max_predictions]
-    return np.array(keep)
+    return keep
 
 
 def calculate_nms(
@@ -315,7 +315,7 @@ def calculate_nms(
     execute_nms: bool = False,
 ) -> list[int]:
     if not execute_nms:
-        return np.arange(boxes.shape[0])
+        return list(range(boxes.shape[0]))
 
     if agnostic_nms:
         return nms(
