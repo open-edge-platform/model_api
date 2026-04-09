@@ -1,6 +1,6 @@
 # NMS Enablement
 
-Detection and Segmentation models support non-maximum suppression (NMS) postprocessing step, which allows to filter model predictions based on confidence scores and bounding box overlap. NMS can be enabled or disabled via model configuration parameters, which are described in details below.
+Detection and InstanceSegmentation models support non-maximum suppression (NMS) postprocessing step, which allows to filter model predictions based on confidence scores and bounding box overlap. NMS can be enabled or disabled via model configuration parameters, which are described in details below.
 
 ## Model configuration parameters for NMS
 

@@ -100,10 +100,6 @@ The list features only model wrappers which introduce new configuration values i
 1. `blur_strength`: int - blurring kernel size. -1 value means no blurring and no soft_threshold
 1. `soft_threshold`: float - probability threshold value for bounding box filtering. inf value means no blurring and no soft_threshold
 1. `return_soft_prediction`: bool - return raw resized model prediction in addition to processed one
-1. `nms_execute`: bool - should non-maximum suppression (NMS) be applied in postprocessing or not. If False, raw model output will be returned without NMS filtering
-1. `iou_threshold`: float - threshold for non-maximum suppression (NMS) intersection over union (IOU) filtering
-1. `agnostic_nms`: bool - if True, NMS will be class agnostic, otherwise it will be applied separately for each class
-1. `nms_max_predictions`: int - maximum number of predictions after NMS. If 0, no limit will be applied
 
 ### `ActionClassificationModel`
 

@@ -114,7 +114,6 @@ class SegmentationModel(ImageModel):
             ParameterRegistry.merge(
                 ParameterRegistry.LABELS,
                 ParameterRegistry.SEGMENTATION_POSTPROCESS,
-                ParameterRegistry.NMS,
             ),
         )
         return parameters
