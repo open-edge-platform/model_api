@@ -25,7 +25,7 @@ The provided OpenVINO™ IR model is compatible with:
 
 1. Install required packages:
 
-```python
+```
 pip install openvino-model-api[huggingface]
 ```
 
