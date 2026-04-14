@@ -156,6 +156,15 @@ class OVMSAdapter(InferenceAdapter):
         mean=None,
         scale=None,
         input_idx=0,
+        input_dtype="u8",
+        intensity_mode="none",
+        intensity_max_value=None,
+        intensity_window_center=None,
+        intensity_window_width=None,
+        intensity_percentile_low=1.0,
+        intensity_percentile_high=99.0,
+        intensity_scale_factor=1.0,
+        intensity_min_value=0.0,
     ):
         pass
 

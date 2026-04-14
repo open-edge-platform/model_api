@@ -216,6 +216,15 @@ class InferenceAdapter(ABC):
         mean: list[Any] | None = None,
         scale: list[Any] | None = None,
         input_idx: int = 0,
+        input_dtype: str = "u8",
+        intensity_mode: str = "none",
+        intensity_max_value: float | None = None,
+        intensity_window_center: float | None = None,
+        intensity_window_width: float | None = None,
+        intensity_percentile_low: float = 1.0,
+        intensity_percentile_high: float = 99.0,
+        intensity_scale_factor: float = 1.0,
+        intensity_min_value: float = 0.0,
     ):
         """
         Embeds preprocessing into the model if possible with the adapter being used.
@@ -234,4 +243,13 @@ class InferenceAdapter(ABC):
             mean (list[Any] | None, optional): Mean values to perform input normalization. Defaults to None.
             scale (list[Any] | None, optional): Scale values to perform input normalization. Defaults to None.
             input_idx (int, optional): Index of the model input to apply preprocessing to. Defaults to 0.
+            input_dtype (str, optional): Input element type string ("u8", "f32", "u16"). Defaults to "u8".
+            intensity_mode (str, optional): Intensity scaling mode. Defaults to "none".
+            intensity_max_value (float | None, optional): Max value for intensity scaling. Defaults to None.
+            intensity_window_center (float | None, optional): Window center for window mode. Defaults to None.
+            intensity_window_width (float | None, optional): Window width for window mode. Defaults to None.
+            intensity_percentile_low (float, optional): Low percentile for percentile mode. Defaults to 1.0.
+            intensity_percentile_high (float, optional): High percentile for percentile mode. Defaults to 99.0.
+            intensity_scale_factor (float, optional): Scale factor for range_scale mode. Defaults to 1.0.
+            intensity_min_value (float, optional): Min value for range_scale mode. Defaults to 0.0.
         """

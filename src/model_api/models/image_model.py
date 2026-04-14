@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from model_api.adapters.utils import RESIZE_TYPES, InputTransform
+from model_api.adapters.utils import RESIZE_TYPES, InputTransform, create_intensity_fn
 from model_api.models.model import Model
 from model_api.models.parameters import ParameterRegistry
 
@@ -72,13 +72,29 @@ class ImageModel(Model):
             self._is_dynamic = True
 
         self.resize = RESIZE_TYPES[self.params.resize_type]
+
+        # Build Python-side intensity function for non-embeddable modes or fallback paths
+        intensity_mode = self.params.intensity_mode
+        _intensity_fn = create_intensity_fn(
+            intensity_mode,
+            max_value=self.params.intensity_max_value,
+            window_center=self.params.intensity_window_center,
+            window_width=self.params.intensity_window_width,
+            percentile_low=self.params.intensity_percentile_low,
+            percentile_high=self.params.intensity_percentile_high,
+            scale_factor=self.params.intensity_scale_factor,
+            min_value=self.params.intensity_min_value,
+        ) if intensity_mode == "percentile" else None
+
         self.input_transform = InputTransform(
             self.params.reverse_input_channels,
             self.params.mean_values,
             self.params.scale_values,
+            intensity_fn=_intensity_fn,
         )
 
         layout = self.inputs[self.image_blob_name].layout
+        input_dtype = self.params.input_dtype
         if self.params.embedded_processing:
             self.h, self.w = self.params.orig_height, self.params.orig_width
         elif not self._is_dynamic:
@@ -91,6 +107,15 @@ class ImageModel(Model):
                 brg2rgb=self.params.reverse_input_channels,
                 mean=self.params.mean_values,
                 scale=self.params.scale_values,
+                input_dtype=input_dtype,
+                intensity_mode=intensity_mode,
+                intensity_max_value=self.params.intensity_max_value,
+                intensity_window_center=self.params.intensity_window_center,
+                intensity_window_width=self.params.intensity_window_width,
+                intensity_percentile_low=self.params.intensity_percentile_low,
+                intensity_percentile_high=self.params.intensity_percentile_high,
+                intensity_scale_factor=self.params.intensity_scale_factor,
+                intensity_min_value=self.params.intensity_min_value,
             )
             self._embedded_processing = True
             self.orig_height, self.orig_width = self.h, self.w
