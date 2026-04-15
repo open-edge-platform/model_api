@@ -5,7 +5,7 @@ tags:
   - vision
 base_model:
   - <<huggingface_repo>>
-base_model_relation: quantized
+base_model_relation: finetune
 ---
 
 # <<model_name>>-fp16-ov
@@ -15,7 +15,7 @@ base_model_relation: quantized
 
 ## Description
 
-This is [https://huggingface.co/<<huggingface_repo>>](https://huggingface.co/<<huggingface_repo>>) model converted to the [OpenVINO™ IR](https://docs.openvino.ai/2026/documentation/openvino-ir-format.html) (Intermediate Representation) format with weights compressed to FP16.
+This is [<<huggingface_repo>>](https://huggingface.co/<<huggingface_repo>>) model converted to the [OpenVINO™ IR](https://docs.openvino.ai/2026/documentation/openvino-ir-format.html) (Intermediate Representation) format with weights compressed to FP16.
 
 ## Compatibility
 
@@ -28,7 +28,7 @@ The provided OpenVINO™ IR model is compatible with:
 
 1. Install required packages:
 
-```python
+```sh
 pip install openvino-model-api[huggingface]
 ```
 
@@ -63,7 +63,7 @@ Check the original [model card](https://huggingface.co/<<huggingface_repo>>) for
 
 ## Legal information
 
-The original model is distributed under the [<<license>>](<<license_link>>) license. More details can be found in [<<huggingface_repo>>](https://huggingface.co/<huggingface_repo>)
+The original model is distributed under the [<<license>>](<<license_link>>) license. More details can be found in [<<huggingface_repo>>](https://huggingface.co/<<huggingface_repo>>)
 
 ## Disclaimer
 
