@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""Tests for intensity preprocessing (A1–A6 of the preprocessing revamp)."""
+"""Tests for intensity preprocessing."""
 
 from __future__ import annotations
 
@@ -12,9 +12,8 @@ import pytest
 
 from model_api.adapters.utils import InputTransform, create_intensity_fn
 
-
 # ---------------------------------------------------------------------------
-# create_intensity_fn – factory tests
+# create_intensity_fn factory tests
 # ---------------------------------------------------------------------------
 
 
@@ -101,7 +100,7 @@ class TestCreateIntensityFn:
 
 
 # ---------------------------------------------------------------------------
-# InputTransform – integration with intensity_fn
+# InputTransform integration with intensity_fn
 # ---------------------------------------------------------------------------
 
 
@@ -144,7 +143,7 @@ class TestInputTransformIntensity:
 
 
 # ---------------------------------------------------------------------------
-# Parameter types – new intensity parameters validation
+# Parameter types new intensity parameters validation
 # ---------------------------------------------------------------------------
 
 
@@ -273,7 +272,7 @@ class TestGraphPadDtype:
 
 
 # ---------------------------------------------------------------------------
-# Backward compatibility – defaults preserve current behavior
+# Backward compatibility defaults preserve current behavior
 # ---------------------------------------------------------------------------
 
 

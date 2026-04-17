@@ -26,9 +26,7 @@ try:
         get_version,
         layout_helpers,
     )
-    from openvino import opset10 as opset
     from openvino.preprocess import ColorFormat, PrePostProcessor
-    from openvino.utils.decorators import custom_preprocess_function
 
     openvino_absent = False
 except ImportError:
@@ -40,10 +38,12 @@ from .utils import (
     crop_resize,
     get_rt_info_from_dict,
     load_parameters_from_onnx,
+    range_scale_preprocess,
     resize_image,
     resize_image_letterbox,
     resize_image_with_aspect,
     setup_python_preprocessing_pipeline,
+    window_preprocess,
 )
 
 
@@ -506,42 +506,14 @@ class OpenvinoAdapter(InferenceAdapter):
             ppp.input(input_idx).preprocess().convert_element_type(Type.f32)
             ppp.input(input_idx).preprocess().scale([intensity_max_value])
         elif intensity_mode == "window" and intensity_window_center is not None and intensity_window_width is not None:
-            low = intensity_window_center - intensity_window_width / 2.0
-            high = intensity_window_center + intensity_window_width / 2.0
-            span = high - low
-
-            @custom_preprocess_function
-            def _window_preprocess(output: ov.runtime.Output):
-                return opset.clamp(
-                    opset.divide(
-                        opset.subtract(
-                            opset.convert(output, destination_type="f32"),
-                            opset.constant(low, dtype=ov.Type.f32),
-                        ),
-                        opset.constant(span, dtype=ov.Type.f32),
-                    ),
-                    opset.constant(0.0, dtype=ov.Type.f32),
-                    opset.constant(1.0, dtype=ov.Type.f32),
-                )
-
-            ppp.input(input_idx).preprocess().custom(_window_preprocess)
+            ppp.input(input_idx).preprocess().custom(
+                window_preprocess(intensity_window_center, intensity_window_width),
+            )
         elif intensity_mode == "range_scale":
-            sf = float(intensity_scale_factor)
-            mn = float(intensity_min_value)
             mx = float(intensity_max_value) if intensity_max_value is not None else 1e9
-
-            @custom_preprocess_function
-            def _range_scale_preprocess(output: ov.runtime.Output):
-                return opset.clamp(
-                    opset.multiply(
-                        opset.convert(output, destination_type="f32"),
-                        opset.constant(sf, dtype=ov.Type.f32),
-                    ),
-                    opset.constant(mn, dtype=ov.Type.f32),
-                    opset.constant(mx, dtype=ov.Type.f32),
-                )
-
-            ppp.input(input_idx).preprocess().custom(_range_scale_preprocess)
+            ppp.input(input_idx).preprocess().custom(
+                range_scale_preprocess(float(intensity_scale_factor), float(intensity_min_value), mx),
+            )
 
         # Handle layout
         ppp.input(input_idx).model().set_layout(ov.Layout(layout))

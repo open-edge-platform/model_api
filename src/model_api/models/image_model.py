@@ -73,18 +73,28 @@ class ImageModel(Model):
 
         self.resize = RESIZE_TYPES[self.params.resize_type]
 
-        # Build Python-side intensity function for non-embeddable modes or fallback paths
+        # Infer intensity_max_value from input_dtype when not explicitly set
         intensity_mode = self.params.intensity_mode
-        _intensity_fn = create_intensity_fn(
-            intensity_mode,
-            max_value=self.params.intensity_max_value,
-            window_center=self.params.intensity_window_center,
-            window_width=self.params.intensity_window_width,
-            percentile_low=self.params.intensity_percentile_low,
-            percentile_high=self.params.intensity_percentile_high,
-            scale_factor=self.params.intensity_scale_factor,
-            min_value=self.params.intensity_min_value,
-        ) if intensity_mode == "percentile" else None
+        intensity_max_value = self.params.intensity_max_value
+        if intensity_max_value is None and intensity_mode == "scale_to_unit":
+            _DTYPE_MAX_VALUE = {"u8": 255.0, "u16": 65535.0, "f32": 1.0}
+            intensity_max_value = _DTYPE_MAX_VALUE.get(self.params.input_dtype)
+
+        # Build Python-side intensity function for non-embeddable modes or fallback paths
+        _intensity_fn = (
+            create_intensity_fn(
+                intensity_mode,
+                max_value=intensity_max_value,
+                window_center=self.params.intensity_window_center,
+                window_width=self.params.intensity_window_width,
+                percentile_low=self.params.intensity_percentile_low,
+                percentile_high=self.params.intensity_percentile_high,
+                scale_factor=self.params.intensity_scale_factor,
+                min_value=self.params.intensity_min_value,
+            )
+            if intensity_mode == "percentile"
+            else None
+        )
 
         self.input_transform = InputTransform(
             self.params.reverse_input_channels,
@@ -109,7 +119,7 @@ class ImageModel(Model):
                 scale=self.params.scale_values,
                 input_dtype=input_dtype,
                 intensity_mode=intensity_mode,
-                intensity_max_value=self.params.intensity_max_value,
+                intensity_max_value=intensity_max_value,
                 intensity_window_center=self.params.intensity_window_center,
                 intensity_window_width=self.params.intensity_window_width,
                 intensity_percentile_low=self.params.intensity_percentile_low,

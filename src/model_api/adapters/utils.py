@@ -168,7 +168,10 @@ def resize_image_letterbox_graph(
         pads_begin,
         pads_end,
         "constant",
-        opset.constant(pad_value, dtype=np.float32 if input_dtype != "u8" else _NUMPY_DTYPE_MAP.get(input_dtype, np.uint8)),
+        opset.constant(
+            pad_value,
+            dtype=np.float32 if input_dtype != "u8" else _NUMPY_DTYPE_MAP.get(input_dtype, np.uint8),
+        ),
     )
 
 
@@ -379,12 +382,18 @@ def resize_image_graph(
         pads_begin,
         pads_end,
         "constant",
-        opset.constant(pad_value, dtype=np.float32 if input_dtype != "u8" else _NUMPY_DTYPE_MAP.get(input_dtype, np.uint8)),
+        opset.constant(
+            pad_value,
+            dtype=np.float32 if input_dtype != "u8" else _NUMPY_DTYPE_MAP.get(input_dtype, np.uint8),
+        ),
     )
 
 
 def resize_image(
-    size: tuple[int, int], interpolation: str, pad_value: int, input_dtype: str = "u8",
+    size: tuple[int, int],
+    interpolation: str,
+    pad_value: int,
+    input_dtype: str = "u8",
 ) -> Callable:
     return custom_preprocess_function(
         partial(
@@ -399,7 +408,10 @@ def resize_image(
 
 
 def resize_image_with_aspect(
-    size: tuple[int, int], interpolation: str, pad_value: int, input_dtype: str = "u8",
+    size: tuple[int, int],
+    interpolation: str,
+    pad_value: int,
+    input_dtype: str = "u8",
 ) -> Callable:
     return custom_preprocess_function(
         partial(
@@ -414,13 +426,19 @@ def resize_image_with_aspect(
 
 
 def crop_resize(
-    size: tuple[int, int], interpolation: str, pad_value: int, input_dtype: str = "u8",
+    size: tuple[int, int],
+    interpolation: str,
+    pad_value: int,
+    input_dtype: str = "u8",
 ) -> Callable:
     return custom_preprocess_function(partial(crop_resize_graph, size=size, input_dtype=input_dtype))
 
 
 def resize_image_letterbox(
-    size: tuple[int, int], interpolation: str, pad_value: int, input_dtype: str = "u8",
+    size: tuple[int, int],
+    interpolation: str,
+    pad_value: int,
+    input_dtype: str = "u8",
 ) -> Callable:
     return custom_preprocess_function(
         partial(
@@ -429,6 +447,76 @@ def resize_image_letterbox(
             interpolation=interpolation,
             pad_value=pad_value,
             input_dtype=input_dtype,
+        ),
+    )
+
+
+def window_preprocess_graph(
+    output: Output,
+    *,
+    window_center: float,
+    window_width: float,
+) -> Node:
+    """OV graph: window intensity scaling [center-width/2, center+width/2] to [0, 1]."""
+    low = window_center - window_width / 2.0
+    span = window_width
+    return opset.clamp(
+        opset.divide(
+            opset.subtract(
+                opset.convert(output, destination_type="f32"),
+                opset.constant(low, dtype=Type.f32),
+            ),
+            opset.constant(span, dtype=Type.f32),
+        ),
+        opset.constant(0.0, dtype=Type.f32),
+        opset.constant(1.0, dtype=Type.f32),
+    )
+
+
+def window_preprocess(
+    window_center: float,
+    window_width: float,
+) -> Callable:
+    """Return an OV custom preprocess function for window intensity scaling."""
+    return custom_preprocess_function(
+        partial(
+            window_preprocess_graph,
+            window_center=window_center,
+            window_width=window_width,
+        ),
+    )
+
+
+def range_scale_preprocess_graph(
+    output: Output,
+    *,
+    scale_factor: float,
+    min_value: float,
+    max_value: float,
+) -> Node:
+    """OV graph: range_scale intensity scaling: multiplies by scale_factor and clamps."""
+    return opset.clamp(
+        opset.multiply(
+            opset.convert(output, destination_type="f32"),
+            opset.constant(scale_factor, dtype=Type.f32),
+        ),
+        opset.constant(min_value, dtype=Type.f32),
+        opset.constant(max_value, dtype=Type.f32),
+    )
+
+
+def range_scale_preprocess(
+    scale_factor: float,
+    min_value: float,
+    max_value: float,
+) -> Callable:
+    """Return an OV custom preprocess function for range_scale intensity scaling."""
+    return custom_preprocess_function(
+        partial(
+            range_scale_preprocess_graph,
+            scale_factor=scale_factor,
+            min_value=min_value,
+            max_value=max_value,
         ),
     )
 
