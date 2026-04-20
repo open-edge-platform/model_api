@@ -4,7 +4,7 @@ tags:
   - object-detection
   - vision
 base_model:
-  - ultralytics/yolo11
+  - Ultralytics/YOLO11
 base_model_relation: quantized
 ---
 
@@ -15,7 +15,7 @@ base_model_relation: quantized
 
 ## Description
 
-This is [https://huggingface.co/Ultralytics/YOLO11](https://huggingface.co/Ultralytics/YOLO11) model converted to the [OpenVINO™ IR](https://docs.openvino.ai/2026/documentation/openvino-ir-format.html) (Intermediate Representation) format. with weights compressed to INT8 by [NNCF](https://github.com/openvinotoolkit/nncf).
+This is [Ultralytics/YOLO11](https://huggingface.co/Ultralytics/YOLO11) model converted to the [OpenVINO™ IR](https://docs.openvino.ai/2026/documentation/openvino-ir-format.html) (Intermediate Representation) format with weights compressed to INT8 by [NNCF](https://github.com/openvinotoolkit/nncf).
 
 ## Quantization Parameters
 
@@ -39,7 +39,7 @@ The provided OpenVINO™ IR model is compatible with:
 
 1. Install required packages:
 
-```python
+```sh
 pip install openvino-model-api[huggingface]
 ```
 
