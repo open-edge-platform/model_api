@@ -19,6 +19,14 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
 
+# Mapping from input_dtype string to numpy dtype for pad constants in OV graph helpers
+_NUMPY_DTYPE_MAP: dict[str, type] = {
+    "u8": np.uint8,
+    "u16": np.uint16,
+    "f32": np.float32,
+}
+
+
 class Layout:
     def __init__(self, layout: str = "") -> None:
         self.layout = layout
@@ -74,16 +82,24 @@ class Layout:
         return user_layouts
 
 
-def resize_image_letterbox_graph(input: Output, size: tuple[int, int], interpolation: str, pad_value: int) -> Node:
-    if not isinstance(pad_value, int):
-        msg = "pad_value must be int"
-        raise RuntimeError(msg)
-    if not 0 <= pad_value <= 255:
-        msg = "pad_value must be in range [0, 255]"
+def resize_image_letterbox_graph(
+    input: Output,
+    size: tuple[int, int],
+    interpolation: str,
+    pad_value: int,
+    input_dtype: str = "u8",
+) -> Node:
+    if not 0 <= pad_value <= 65535:
+        msg = "pad_value must be in range [0, 65535]"
         raise RuntimeError(msg)
     w, h = size
     h_axis = 1
     w_axis = 2
+
+    # OV Interpolate requires float input for non-u8 types
+    if input_dtype != "u8":
+        input = opset.convert(input, destination_type="f32")
+
     image_shape = opset.shape_of(input, name="shape")
     iw = opset.convert(
         opset.gather(image_shape, opset.constant(w_axis), axis=0),
@@ -152,11 +168,14 @@ def resize_image_letterbox_graph(input: Output, size: tuple[int, int], interpola
         pads_begin,
         pads_end,
         "constant",
-        opset.constant(pad_value, dtype=np.uint8),
+        opset.constant(
+            pad_value,
+            dtype=np.float32 if input_dtype != "u8" else _NUMPY_DTYPE_MAP.get(input_dtype, np.uint8),
+        ),
     )
 
 
-def crop_resize_graph(input: Output, size: tuple[int, int]) -> Node:
+def crop_resize_graph(input: Output, size: tuple[int, int], input_dtype: str = "u8") -> Node:
     h_axis = 1
     w_axis = 2
     desired_aspect_ratio = size[1] / size[0]  # width / height
@@ -173,7 +192,8 @@ def crop_resize_graph(input: Output, size: tuple[int, int]) -> Node:
 
     if desired_aspect_ratio == 1:
         # then_body
-        image_t = opset.parameter([-1, -1, -1, 3], np.uint8, "image")
+        _np_dtype = _NUMPY_DTYPE_MAP.get(input_dtype, np.uint8)
+        image_t = opset.parameter([-1, -1, -1, 3], _np_dtype, "image")
         iw_t = opset.parameter([], np.int32, "iw")
         ih_t = opset.parameter([], np.int32, "ih")
         then_offset = opset.unsqueeze(
@@ -196,7 +216,7 @@ def crop_resize_graph(input: Output, size: tuple[int, int]) -> Node:
         )
 
         # else_body
-        image_e = opset.parameter([-1, -1, -1, 3], np.uint8, "image")
+        image_e = opset.parameter([-1, -1, -1, 3], _np_dtype, "image")
         iw_e = opset.parameter([], np.int32, "iw")
         ih_e = opset.parameter([], np.int32, "ih")
         else_offset = opset.unsqueeze(
@@ -291,16 +311,18 @@ def resize_image_graph(
     keep_aspect_ratio: bool,
     interpolation: str,
     pad_value: int,
+    input_dtype: str = "u8",
 ) -> Node:
-    if not isinstance(pad_value, int):
-        msg = "pad_value must be int"
-        raise RuntimeError(msg)
-    if not 0 <= pad_value <= 255:
-        msg = "pad_value must be in range [0, 255]"
+    if not 0 <= pad_value <= 65535:
+        msg = "pad_value must be in range [0, 65535]"
         raise RuntimeError(msg)
     h_axis = 1
     w_axis = 2
     w, h = size
+
+    # OV Interpolate requires float input for non-u8 types
+    if input_dtype != "u8":
+        input = opset.convert(input, destination_type="f32")
 
     target_size = list(size)
     target_size.reverse()
@@ -360,11 +382,19 @@ def resize_image_graph(
         pads_begin,
         pads_end,
         "constant",
-        opset.constant(pad_value, dtype=np.uint8),
+        opset.constant(
+            pad_value,
+            dtype=np.float32 if input_dtype != "u8" else _NUMPY_DTYPE_MAP.get(input_dtype, np.uint8),
+        ),
     )
 
 
-def resize_image(size: tuple[int, int], interpolation: str, pad_value: int) -> Callable:
+def resize_image(
+    size: tuple[int, int],
+    interpolation: str,
+    pad_value: int,
+    input_dtype: str = "u8",
+) -> Callable:
     return custom_preprocess_function(
         partial(
             resize_image_graph,
@@ -372,11 +402,17 @@ def resize_image(size: tuple[int, int], interpolation: str, pad_value: int) -> C
             keep_aspect_ratio=False,
             interpolation=interpolation,
             pad_value=pad_value,
+            input_dtype=input_dtype,
         ),
     )
 
 
-def resize_image_with_aspect(size: tuple[int, int], interpolation: str, pad_value: int) -> Callable:
+def resize_image_with_aspect(
+    size: tuple[int, int],
+    interpolation: str,
+    pad_value: int,
+    input_dtype: str = "u8",
+) -> Callable:
     return custom_preprocess_function(
         partial(
             resize_image_graph,
@@ -384,21 +420,103 @@ def resize_image_with_aspect(size: tuple[int, int], interpolation: str, pad_valu
             keep_aspect_ratio=True,
             interpolation=interpolation,
             pad_value=pad_value,
+            input_dtype=input_dtype,
         ),
     )
 
 
-def crop_resize(size: tuple[int, int], interpolation: str, pad_value: int) -> Callable:
-    return custom_preprocess_function(partial(crop_resize_graph, size=size))
+def crop_resize(
+    size: tuple[int, int],
+    interpolation: str,
+    pad_value: int,
+    input_dtype: str = "u8",
+) -> Callable:
+    return custom_preprocess_function(partial(crop_resize_graph, size=size, input_dtype=input_dtype))
 
 
-def resize_image_letterbox(size: tuple[int, int], interpolation: str, pad_value: int) -> Callable:
+def resize_image_letterbox(
+    size: tuple[int, int],
+    interpolation: str,
+    pad_value: int,
+    input_dtype: str = "u8",
+) -> Callable:
     return custom_preprocess_function(
         partial(
             resize_image_letterbox_graph,
             size=size,
             interpolation=interpolation,
             pad_value=pad_value,
+            input_dtype=input_dtype,
+        ),
+    )
+
+
+def window_preprocess_graph(
+    output: Output,
+    *,
+    window_center: float,
+    window_width: float,
+) -> Node:
+    """OV graph: window intensity scaling [center-width/2, center+width/2] to [0, 1]."""
+    low = window_center - window_width / 2.0
+    span = window_width
+    return opset.clamp(
+        opset.divide(
+            opset.subtract(
+                opset.convert(output, destination_type="f32"),
+                opset.constant(low, dtype=Type.f32),
+            ),
+            opset.constant(span, dtype=Type.f32),
+        ),
+        opset.constant(0.0, dtype=Type.f32),
+        opset.constant(1.0, dtype=Type.f32),
+    )
+
+
+def window_preprocess(
+    window_center: float,
+    window_width: float,
+) -> Callable:
+    """Return an OV custom preprocess function for window intensity scaling."""
+    return custom_preprocess_function(
+        partial(
+            window_preprocess_graph,
+            window_center=window_center,
+            window_width=window_width,
+        ),
+    )
+
+
+def range_scale_preprocess_graph(
+    output: Output,
+    *,
+    scale_factor: float,
+    min_value: float,
+    max_value: float,
+) -> Node:
+    """OV graph: range_scale intensity scaling: multiplies by scale_factor and clamps."""
+    return opset.clamp(
+        opset.multiply(
+            opset.convert(output, destination_type="f32"),
+            opset.constant(scale_factor, dtype=Type.f32),
+        ),
+        opset.constant(min_value, dtype=Type.f32),
+        opset.constant(max_value, dtype=Type.f32),
+    )
+
+
+def range_scale_preprocess(
+    scale_factor: float,
+    min_value: float,
+    max_value: float,
+) -> Callable:
+    """Return an OV custom preprocess function for range_scale intensity scaling."""
+    return custom_preprocess_function(
+        partial(
+            range_scale_preprocess_graph,
+            scale_factor=scale_factor,
+            min_value=min_value,
+            max_value=max_value,
         ),
     )
 
@@ -528,6 +646,14 @@ def setup_python_preprocessing_pipeline(
     mean: list[Any] | None = None,
     scale: list[Any] | None = None,
     input_idx: int = 0,
+    intensity_mode: str = "none",
+    intensity_max_value: float | None = None,
+    intensity_window_center: float | None = None,
+    intensity_window_width: float | None = None,
+    intensity_percentile_low: float = 1.0,
+    intensity_percentile_high: float = 99.0,
+    intensity_scale_factor: float = 1.0,
+    intensity_min_value: float = 0.0,
 ):
     """
     Sets up a Python preprocessing pipeline for model adapters.
@@ -543,6 +669,14 @@ def setup_python_preprocessing_pipeline(
         mean: Mean values for normalization
         scale: Scale values for normalization
         input_idx: Input index (unused but kept for compatibility)
+        intensity_mode: Intensity scaling mode applied before normalization
+        intensity_max_value: Maximum input value for scale_to_unit or range_scale
+        intensity_window_center: Window center for window intensity mode
+        intensity_window_width: Window width for window intensity mode
+        intensity_percentile_low: Lower percentile for percentile intensity mode
+        intensity_percentile_high: Upper percentile for percentile intensity mode
+        intensity_scale_factor: Scale factor for range_scale intensity mode
+        intensity_min_value: Minimum output value for range_scale intensity mode
 
     Returns:
         Callable: A preprocessing function that can be applied to input data
@@ -567,7 +701,18 @@ def setup_python_preprocessing_pipeline(
     else:
         resize_fn = partial(RESIZE_TYPES[resize_mode], size=target_shape)
     preproc_funcs.append(resize_fn)
-    input_transform = InputTransform(brg2rgb, mean, scale)
+
+    intensity_fn = create_intensity_fn(
+        intensity_mode,
+        max_value=intensity_max_value,
+        window_center=intensity_window_center,
+        window_width=intensity_window_width,
+        percentile_low=intensity_percentile_low,
+        percentile_high=intensity_percentile_high,
+        scale_factor=intensity_scale_factor,
+        min_value=intensity_min_value,
+    )
+    input_transform = InputTransform(brg2rgb, mean, scale, intensity_fn=intensity_fn)
     preproc_funcs.extend((input_transform.__call__, partial(change_layout, layout=layout)))
 
     return reduce(
@@ -614,15 +759,88 @@ class InputTransform:
         reverse_input_channels: bool = False,
         mean_values: list[float] | None = None,
         scale_values: list[float] | None = None,
+        intensity_fn: Callable | None = None,
     ):
         self.reverse_input_channels = reverse_input_channels
-        self.is_trivial = not (reverse_input_channels or mean_values or scale_values)
+        self.intensity_fn = intensity_fn
+        self.is_trivial = not (reverse_input_channels or mean_values or scale_values or intensity_fn)
         self.means = np.array(mean_values, dtype=np.float32) if mean_values else np.array([0.0, 0.0, 0.0])
         self.std_scales = np.array(scale_values, dtype=np.float32) if scale_values else np.array([1.0, 1.0, 1.0])
 
     def __call__(self, inputs):
         if self.is_trivial:
             return inputs
+        if self.intensity_fn:
+            inputs = self.intensity_fn(inputs)
         if self.reverse_input_channels:
             inputs = cv2.cvtColor(inputs, cv2.COLOR_BGR2RGB)
         return (inputs - self.means) / self.std_scales
+
+
+def create_intensity_fn(
+    mode: str,
+    *,
+    max_value: float | None = None,
+    window_center: float | None = None,
+    window_width: float | None = None,
+    percentile_low: float = 1.0,
+    percentile_high: float = 99.0,
+    scale_factor: float = 1.0,
+    min_value: float = 0.0,
+) -> Callable | None:
+    """Create a Python-side intensity transform callable for the given mode.
+
+    Returns None for 'none' mode (no transformation).
+    """
+    if mode == "none":
+        return None
+
+    if mode == "scale_to_unit":
+        if max_value is None:
+            msg = "intensity_max_value is required for scale_to_unit mode"
+            raise ValueError(msg)
+        mv = float(max_value)
+
+        def _scale_to_unit(img: np.ndarray) -> np.ndarray:
+            return img.astype(np.float32) / mv
+
+        return _scale_to_unit
+
+    if mode == "window":
+        if window_center is None or window_width is None:
+            msg = "intensity_window_center and intensity_window_width are required for window mode"
+            raise ValueError(msg)
+        low = float(window_center) - float(window_width) / 2.0
+        high = float(window_center) + float(window_width) / 2.0
+        span = high - low
+
+        def _window(img: np.ndarray) -> np.ndarray:
+            return np.clip((img.astype(np.float32) - low) / span, 0.0, 1.0)
+
+        return _window
+
+    if mode == "percentile":
+
+        def _percentile(img: np.ndarray) -> np.ndarray:
+            img_f = img.astype(np.float32)
+            p_low = np.float32(np.percentile(img, percentile_low))
+            p_high = np.float32(np.percentile(img, percentile_high))
+            span = p_high - p_low
+            if span == 0:
+                return np.zeros_like(img, dtype=np.float32)
+            return np.clip((img_f - p_low) / span, 0.0, 1.0).astype(np.float32)
+
+        return _percentile
+
+    if mode == "range_scale":
+        sf = float(scale_factor)
+        mn = float(min_value)
+        mx = float(max_value) if max_value is not None else np.inf
+
+        def _range_scale(img: np.ndarray) -> np.ndarray:
+            return np.clip(img.astype(np.float32) * sf, mn, mx)
+
+        return _range_scale
+
+    msg = f"Unknown intensity mode: {mode}"
+    raise ValueError(msg)

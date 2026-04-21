@@ -38,10 +38,12 @@ from .utils import (
     crop_resize,
     get_rt_info_from_dict,
     load_parameters_from_onnx,
+    range_scale_preprocess,
     resize_image,
     resize_image_letterbox,
     resize_image_with_aspect,
     setup_python_preprocessing_pipeline,
+    window_preprocess,
 )
 
 
@@ -406,6 +408,15 @@ class OpenvinoAdapter(InferenceAdapter):
         mean: list[Any] | None = None,
         scale: list[Any] | None = None,
         input_idx: int = 0,
+        input_dtype: str = "u8",
+        intensity_mode: str = "none",
+        intensity_max_value: float | None = None,
+        intensity_window_center: float | None = None,
+        intensity_window_width: float | None = None,
+        intensity_percentile_low: float = 1.0,
+        intensity_percentile_high: float = 99.0,
+        intensity_scale_factor: float = 1.0,
+        intensity_min_value: float = 0.0,
     ) -> None:
         """
         Embeds preprocessing into the model, or sets up Python preprocessing for NPU devices.
@@ -424,6 +435,14 @@ class OpenvinoAdapter(InferenceAdapter):
                 mean=mean,
                 scale=scale,
                 input_idx=input_idx,
+                intensity_mode=intensity_mode,
+                intensity_max_value=intensity_max_value,
+                intensity_window_center=intensity_window_center,
+                intensity_window_width=intensity_window_width,
+                intensity_percentile_low=intensity_percentile_low,
+                intensity_percentile_high=intensity_percentile_high,
+                intensity_scale_factor=intensity_scale_factor,
+                intensity_min_value=intensity_min_value,
             )
             self.use_python_preprocessing = True
             input_name = self.model.inputs[input_idx].get_any_name()
@@ -436,8 +455,11 @@ class OpenvinoAdapter(InferenceAdapter):
 
         ppp = PrePostProcessor(self.model)
 
-        # Change the input type to the 8-bit image
-        if dtype is int:
+        # Map input_dtype string to OV element type (also support legacy int/float dtype arg)
+        _DTYPE_TO_OV = {"u8": Type.u8, "f32": Type.f32, "u16": Type.u16}
+        if input_dtype in _DTYPE_TO_OV:
+            ppp.input(input_idx).tensor().set_element_type(_DTYPE_TO_OV[input_dtype])
+        elif dtype is int:
             ppp.input(input_idx).tensor().set_element_type(Type.u8)
         elif dtype is float:
             ppp.input(input_idx).tensor().set_element_type(Type.f32)
@@ -471,12 +493,27 @@ class OpenvinoAdapter(InferenceAdapter):
                         (target_shape[0], target_shape[1]),
                         INTERPOLATION_MODE_MAP[interpolation_mode],
                         pad_value,
+                        input_dtype=input_dtype,
                     ),
                 )
 
             else:
                 msg = f"Upsupported resize type in model preprocessing: {resize_mode}"
                 raise ValueError(msg)
+
+        # Handle intensity scaling (embedded in OV graph for static modes)
+        if intensity_mode == "scale_to_unit" and intensity_max_value is not None:
+            ppp.input(input_idx).preprocess().convert_element_type(Type.f32)
+            ppp.input(input_idx).preprocess().scale([intensity_max_value])
+        elif intensity_mode == "window" and intensity_window_center is not None and intensity_window_width is not None:
+            ppp.input(input_idx).preprocess().custom(
+                window_preprocess(intensity_window_center, intensity_window_width),
+            )
+        elif intensity_mode == "range_scale":
+            mx = float(intensity_max_value) if intensity_max_value is not None else 1e9
+            ppp.input(input_idx).preprocess().custom(
+                range_scale_preprocess(float(intensity_scale_factor), float(intensity_min_value), mx),
+            )
 
         # Handle layout
         ppp.input(input_idx).model().set_layout(ov.Layout(layout))
@@ -485,7 +522,9 @@ class OpenvinoAdapter(InferenceAdapter):
         if brg2rgb:
             ppp.input(input_idx).preprocess().convert_color(ColorFormat.RGB)
 
-        ppp.input(input_idx).preprocess().convert_element_type(Type.f32)
+        # Convert to float before normalization (skip if already done by intensity modes)
+        if intensity_mode not in ("scale_to_unit", "window", "range_scale"):
+            ppp.input(input_idx).preprocess().convert_element_type(Type.f32)
 
         if mean:
             ppp.input(input_idx).preprocess().mean(mean)

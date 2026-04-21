@@ -93,6 +93,56 @@ class ParameterRegistry:
             default_value=False,
             description="Reverse the input channel order (e.g., RGB to BGR)",
         ),
+        "input_dtype": StringValue(
+            default_value="u8",
+            choices=("u8", "f32", "u16"),
+            description="Input tensor element type: u8 (uint8), f32 (float32), or u16 (uint16)",
+        ),
+        "intensity_mode": StringValue(
+            default_value="none",
+            choices=("none", "scale_to_unit", "window", "percentile", "range_scale"),
+            description="Intensity scaling mode applied before normalization",
+        ),
+        "intensity_max_value": NumericalValue(
+            float,
+            default_value=None,
+            min=0.0,
+            description="Maximum input value for scale_to_unit or range_scale intensity mode",
+        ),
+        "intensity_window_center": NumericalValue(
+            float,
+            default_value=None,
+            description="Window center for window intensity mode",
+        ),
+        "intensity_window_width": NumericalValue(
+            float,
+            default_value=None,
+            description="Window width for window intensity mode",
+        ),
+        "intensity_percentile_low": NumericalValue(
+            float,
+            default_value=1.0,
+            min=0.0,
+            max=100.0,
+            description="Lower percentile for percentile intensity mode",
+        ),
+        "intensity_percentile_high": NumericalValue(
+            float,
+            default_value=99.0,
+            min=0.0,
+            max=100.0,
+            description="Upper percentile for percentile intensity mode",
+        ),
+        "intensity_scale_factor": NumericalValue(
+            float,
+            default_value=1.0,
+            description="Scale factor for range_scale intensity mode",
+        ),
+        "intensity_min_value": NumericalValue(
+            float,
+            default_value=0.0,
+            description="Minimum output value for range_scale intensity mode",
+        ),
     }
 
     # Image resizing parameters
@@ -105,7 +155,7 @@ class ParameterRegistry:
         "pad_value": NumericalValue(
             int,
             min=0,
-            max=255,
+            max=65535,
             description="Pad value for resize_image_letterbox embedded into a model",
             default_value=0,
         ),

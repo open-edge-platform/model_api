@@ -148,6 +148,15 @@ class ONNXRuntimeAdapter(InferenceAdapter):
         mean: list[Any] | None = None,
         scale: list[Any] | None = None,
         input_idx: int = 0,
+        input_dtype: str = "u8",
+        intensity_mode: str = "none",
+        intensity_max_value: float | None = None,
+        intensity_window_center: float | None = None,
+        intensity_window_width: float | None = None,
+        intensity_percentile_low: float = 1.0,
+        intensity_percentile_high: float = 99.0,
+        intensity_scale_factor: float = 1.0,
+        intensity_min_value: float = 0.0,
     ):
         """
         Adds external preprocessing steps done before ONNX model execution.
@@ -163,6 +172,14 @@ class ONNXRuntimeAdapter(InferenceAdapter):
             mean=mean,
             scale=scale,
             input_idx=input_idx,
+            intensity_mode=intensity_mode,
+            intensity_max_value=intensity_max_value,
+            intensity_window_center=intensity_window_center,
+            intensity_window_width=intensity_window_width,
+            intensity_percentile_low=intensity_percentile_low,
+            intensity_percentile_high=intensity_percentile_high,
+            intensity_scale_factor=intensity_scale_factor,
+            intensity_min_value=intensity_min_value,
         )
 
     def get_model(self):
