@@ -853,6 +853,7 @@ def create_intensity_fn(
 
             def _range_scale(img: np.ndarray) -> np.ndarray:
                 return (np.clip(img.astype(np.float32) * sf, min, max) - min) / range
+
         else:
 
             def _range_scale(img: np.ndarray) -> np.ndarray:
