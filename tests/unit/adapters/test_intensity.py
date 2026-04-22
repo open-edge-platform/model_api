@@ -81,16 +81,34 @@ class TestCreateIntensityFn:
     # -- range_scale -----------------------------------------------------------
 
     def test_range_scale_basic(self):
+        """range_scale with finite min/max normalises to [0, 1]."""
         fn = create_intensity_fn("range_scale", scale_factor=2.0, min_value=0.0, max_value=500.0)
         img = np.array([0, 100, 300], dtype=np.float32)
         out = fn(img)
-        np.testing.assert_allclose(out, [0.0, 200.0, 500.0])
+        # clamp(x * scale_factor, min, max) - min) / (max - min) → output in [0, 1].
+        # clamp(x*2, 0, 500) → [0, 200, 500], then (v-0)/(500-0) → [0, 0.4, 1.0]
+        np.testing.assert_allclose(out, [0.0, 0.4, 1.0])
 
     def test_range_scale_no_max(self):
         fn = create_intensity_fn("range_scale", scale_factor=0.5)
         img = np.array([100.0], dtype=np.float32)
         out = fn(img)
         np.testing.assert_allclose(out, [50.0])
+
+    def test_range_scale_nonzero_min(self):
+        """range_scale with nonzero min shifts and normalises."""
+        fn = create_intensity_fn("range_scale", scale_factor=1.0, min_value=100.0, max_value=300.0)
+        img = np.array([50, 200, 400], dtype=np.float32)
+        out = fn(img)
+        # clamp(x*1, 100, 300) → [100, 200, 300], then (v-100)/200 → [0.0, 0.5, 1.0]
+        np.testing.assert_allclose(out, [0.0, 0.5, 1.0])
+
+    def test_range_scale_min_equals_max(self):
+        """When min == max, range_scale clamps without division."""
+        fn = create_intensity_fn("range_scale", scale_factor=1.0, min_value=5.0, max_value=5.0)
+        img = np.array([1.0, 5.0, 10.0], dtype=np.float32)
+        out = fn(img)
+        np.testing.assert_allclose(out, [5.0, 5.0, 5.0])
 
     # -- unknown ---------------------------------------------------------------
 
