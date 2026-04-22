@@ -494,14 +494,25 @@ def range_scale_preprocess_graph(
     min_value: float,
     max_value: float,
 ) -> Node:
-    """OV graph: range_scale intensity scaling: multiplies by scale_factor and clamps."""
-    return opset.clamp(
+    """OV graph: range_scale intensity scaling.
+
+    Multiplies by *scale_factor*, clamps to [min_value, max_value], then
+    normalises to [0, 1] via ``(clamped - min) / (max - min)``.
+    """
+    clamped = opset.clamp(
         opset.multiply(
             opset.convert(output, destination_type="f32"),
             opset.constant(scale_factor, dtype=Type.f32),
         ),
         opset.constant(min_value, dtype=Type.f32),
         opset.constant(max_value, dtype=Type.f32),
+    )
+    range = max_value - min_value
+    if range == 0:
+        return clamped
+    return opset.divide(
+        opset.subtract(clamped, opset.constant(min_value, dtype=Type.f32)),
+        opset.constant(range, dtype=Type.f32),
     )
 
 
@@ -834,11 +845,18 @@ def create_intensity_fn(
 
     if mode == "range_scale":
         sf = float(scale_factor)
-        mn = float(min_value)
-        mx = float(max_value) if max_value is not None else np.inf
+        min = float(min_value)
+        max = float(max_value) if max_value is not None else np.inf
 
-        def _range_scale(img: np.ndarray) -> np.ndarray:
-            return np.clip(img.astype(np.float32) * sf, mn, mx)
+        if np.isfinite(max) and max != min:
+            range = max - min
+
+            def _range_scale(img: np.ndarray) -> np.ndarray:
+                return (np.clip(img.astype(np.float32) * sf, min, max) - min) / range
+        else:
+
+            def _range_scale(img: np.ndarray) -> np.ndarray:
+                return np.clip(img.astype(np.float32) * sf, min, max)
 
         return _range_scale
 
