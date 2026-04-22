@@ -143,6 +143,10 @@ class ParameterRegistry:
             default_value=0.0,
             description="Minimum output value for range_scale intensity mode",
         ),
+        "intensity_repeat_channels": BooleanValue(
+            default_value=False,
+            description="Repeat single-channel input to 3 channels for pretrained backbones",
+        ),
     }
 
     # Image resizing parameters

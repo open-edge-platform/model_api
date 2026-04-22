@@ -39,6 +39,7 @@ from .utils import (
     get_rt_info_from_dict,
     load_parameters_from_onnx,
     range_scale_preprocess,
+    repeat_channels_preprocess,
     resize_image,
     resize_image_letterbox,
     resize_image_with_aspect,
@@ -417,6 +418,7 @@ class OpenvinoAdapter(InferenceAdapter):
         intensity_percentile_high: float = 99.0,
         intensity_scale_factor: float = 1.0,
         intensity_min_value: float = 0.0,
+        intensity_repeat_channels: bool = False,
     ) -> None:
         """
         Embeds preprocessing into the model, or sets up Python preprocessing for NPU devices.
@@ -443,6 +445,7 @@ class OpenvinoAdapter(InferenceAdapter):
                 intensity_percentile_high=intensity_percentile_high,
                 intensity_scale_factor=intensity_scale_factor,
                 intensity_min_value=intensity_min_value,
+                intensity_repeat_channels=intensity_repeat_channels,
             )
             self.use_python_preprocessing = True
             input_name = self.model.inputs[input_idx].get_any_name()
@@ -464,9 +467,15 @@ class OpenvinoAdapter(InferenceAdapter):
         elif dtype is float:
             ppp.input(input_idx).tensor().set_element_type(Type.f32)
 
-        ppp.input(input_idx).tensor().set_layout(ov.Layout("NHWC")).set_color_format(
-            ColorFormat.BGR,
-        )
+        ppp.input(input_idx).tensor().set_layout(ov.Layout("NHWC"))
+        if not intensity_repeat_channels:
+            ppp.input(input_idx).tensor().set_color_format(ColorFormat.BGR)
+
+        # Handle repeat single-channel to 3 channels
+        if intensity_repeat_channels:
+            ppp.input(input_idx).preprocess().custom(
+                repeat_channels_preprocess(),
+            )
 
         INTERPOLATION_MODE_MAP = {
             "LINEAR": "linear",
@@ -486,7 +495,8 @@ class OpenvinoAdapter(InferenceAdapter):
         # TODO: check the number of input channels and rank of input shape
         if resize_mode and target_shape:
             if resize_mode in RESIZE_MODE_MAP:
-                input_shape = [1, -1, -1, 3]
+                input_channels = 1 if intensity_repeat_channels else 3
+                input_shape = [1, -1, -1, input_channels]
                 ppp.input(input_idx).tensor().set_shape(input_shape)
                 ppp.input(input_idx).preprocess().custom(
                     RESIZE_MODE_MAP[resize_mode](

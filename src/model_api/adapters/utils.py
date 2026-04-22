@@ -532,6 +532,16 @@ def range_scale_preprocess(
     )
 
 
+def repeat_channels_preprocess_graph(output: Output) -> Node:
+    """OV graph: tile a single-channel tensor to 3 channels along the last axis."""
+    return opset.tile(output, opset.constant([1, 1, 1, 3]))
+
+
+def repeat_channels_preprocess() -> Callable:
+    """Return an OV custom preprocess function that repeats 1 channel to 3."""
+    return custom_preprocess_function(repeat_channels_preprocess_graph)
+
+
 def load_parameters_from_onnx(onnx_model: Any) -> dict[str, Any]:
     parameters: dict[str, Any] = {}
 
@@ -665,6 +675,7 @@ def setup_python_preprocessing_pipeline(
     intensity_percentile_high: float = 99.0,
     intensity_scale_factor: float = 1.0,
     intensity_min_value: float = 0.0,
+    intensity_repeat_channels: bool = False,
 ):
     """
     Sets up a Python preprocessing pipeline for model adapters.
@@ -688,6 +699,7 @@ def setup_python_preprocessing_pipeline(
         intensity_percentile_high: Upper percentile for percentile intensity mode
         intensity_scale_factor: Scale factor for range_scale intensity mode
         intensity_min_value: Minimum output value for range_scale intensity mode
+        intensity_repeat_channels: Whether to repeat single-channel input to 3 channels
 
     Returns:
         Callable: A preprocessing function that can be applied to input data
@@ -695,6 +707,9 @@ def setup_python_preprocessing_pipeline(
     from functools import partial, reduce
 
     preproc_funcs = [np.squeeze]
+
+    if intensity_repeat_channels:
+        preproc_funcs.append(_repeat_single_channel_np)
     if resize_mode != "crop":
         if resize_mode == "fit_to_window_letterbox":
             resize_fn = partial(
@@ -762,6 +777,18 @@ INTERPOLATION_TYPES: dict[str, int] = {
     "NEAREST": cv2.INTER_NEAREST,
     "AREA": cv2.INTER_AREA,
 }
+
+
+def _repeat_single_channel_np(image: np.ndarray) -> np.ndarray:
+    """Expand a single-channel image to 3 channels by repeating.
+
+    Handles HxW and HxWx1.  Already-3-channel images pass through unchanged.
+    """
+    if image.ndim == 2:
+        return np.repeat(image[:, :, np.newaxis], 3, axis=2)
+    if image.ndim == 3 and image.shape[2] == 1:
+        return np.repeat(image, 3, axis=2)
+    return image
 
 
 class InputTransform:
