@@ -157,6 +157,7 @@ class ONNXRuntimeAdapter(InferenceAdapter):
         intensity_percentile_high: float = 99.0,
         intensity_scale_factor: float = 1.0,
         intensity_min_value: float = 0.0,
+        intensity_repeat_channels: bool = False,
         input_frame_shape: tuple[int, int] | None = None,
     ):
         """
@@ -181,6 +182,7 @@ class ONNXRuntimeAdapter(InferenceAdapter):
             intensity_percentile_high=intensity_percentile_high,
             intensity_scale_factor=intensity_scale_factor,
             intensity_min_value=intensity_min_value,
+            intensity_repeat_channels=intensity_repeat_channels,
         )
 
     def get_model(self):

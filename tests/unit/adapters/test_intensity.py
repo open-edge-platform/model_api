@@ -323,3 +323,92 @@ class TestBackwardCompat:
         rng = np.random.default_rng(42)
         img = rng.integers(0, 255, size=(16, 16, 3), dtype=np.uint8)
         np.testing.assert_array_equal(t_old(img), t_new(img))
+
+
+# ---------------------------------------------------------------------------
+# repeat_channels helpers
+# ---------------------------------------------------------------------------
+
+
+class TestRepeatChannels:
+    """Tests for _repeat_single_channel helpers (Python-side and OV graph)."""
+
+    def test_hw_to_hwc3(self):
+        """HxW grayscale image is expanded to HxWx3."""
+        from model_api.models.image_model import _repeat_single_channel
+
+        img = np.arange(12, dtype=np.uint8).reshape(3, 4)
+        out = _repeat_single_channel(img)
+        assert out.shape == (3, 4, 3)
+        np.testing.assert_array_equal(out[:, :, 0], img)
+        np.testing.assert_array_equal(out[:, :, 1], img)
+        np.testing.assert_array_equal(out[:, :, 2], img)
+
+    def test_hwc1_to_hwc3(self):
+        """HxWx1 image is expanded to HxWx3."""
+        from model_api.models.image_model import _repeat_single_channel
+
+        img = np.arange(6, dtype=np.uint16).reshape(2, 3, 1)
+        out = _repeat_single_channel(img)
+        assert out.shape == (2, 3, 3)
+        np.testing.assert_array_equal(out[:, :, 0], img[:, :, 0])
+
+    def test_3ch_noop(self):
+        """Already 3-channel image passes through unchanged."""
+        from model_api.models.image_model import _repeat_single_channel
+
+        img = np.ones((4, 4, 3), dtype=np.float32) * 42.0
+        out = _repeat_single_channel(img)
+        np.testing.assert_array_equal(out, img)
+
+    def test_utils_repeat_hw(self):
+        """utils._repeat_single_channel_np works for HxW input."""
+        from model_api.adapters.utils import _repeat_single_channel_np
+
+        img = np.array([[10, 20], [30, 40]], dtype=np.int16)
+        out = _repeat_single_channel_np(img)
+        assert out.shape == (2, 2, 3)
+        np.testing.assert_array_equal(out[:, :, 0], img)
+
+    def test_utils_repeat_3ch_noop(self):
+        """utils._repeat_single_channel_np is a no-op for 3ch."""
+        from model_api.adapters.utils import _repeat_single_channel_np
+
+        img = np.zeros((2, 2, 3), dtype=np.uint8)
+        out = _repeat_single_channel_np(img)
+        assert out is img
+
+    def test_ov_graph_repeat(self):
+        """OV graph repeat_channels_preprocess tiles 1ch→3ch."""
+        import openvino as ov
+        from openvino.preprocess import PrePostProcessor
+
+        from model_api.adapters.utils import repeat_channels_preprocess
+
+        model_h, model_w = 4, 4
+        param_node = ov.op.Parameter(ov.Type.f32, ov.Shape([1, model_h, model_w, 3]))
+        model = ov.Model(param_node, [param_node])
+        ppp = PrePostProcessor(model)
+        ppp.input().tensor().set_element_type(ov.Type.u8)
+        ppp.input().tensor().set_layout(ov.Layout("NHWC"))
+        ppp.input().tensor().set_shape([1, model_h, model_w, 1])
+        ppp.input().preprocess().custom(repeat_channels_preprocess())
+        ppp.input().preprocess().convert_element_type(ov.Type.f32)
+        built = ppp.build()
+        compiled = ov.Core().compile_model(built, "CPU")
+
+        img = np.arange(16, dtype=np.uint8).reshape(1, 4, 4, 1)
+        result = next(iter(compiled(img).values()))
+        assert result.shape == (1, model_h, model_w, 3)
+        # Each channel should equal the original single channel
+        np.testing.assert_array_equal(result[0, :, :, 0], result[0, :, :, 1])
+        np.testing.assert_array_equal(result[0, :, :, 0], result[0, :, :, 2])
+        np.testing.assert_allclose(result[0, :, :, 0], img[0, :, :, 0].astype(np.float32))
+
+    def test_parameter_default_false(self):
+        """intensity_repeat_channels defaults to False."""
+        from model_api.models.parameters import ParameterRegistry
+
+        pp = ParameterRegistry.IMAGE_PREPROCESSING
+        assert "intensity_repeat_channels" in pp
+        assert pp["intensity_repeat_channels"].default_value is False
