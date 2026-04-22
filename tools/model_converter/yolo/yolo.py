@@ -12,6 +12,7 @@
 # ]
 # ///
 
+import json
 import shutil
 from pathlib import Path
 
@@ -44,6 +45,15 @@ def update_model_type_in_xml(xml_path: Path, model_type: str = "YOLO11") -> None
 
         tree.write(xml_path, encoding="utf-8", xml_declaration=True)
         print(f"Updated model_type to {model_type} in {xml_path}")
+
+        model_info_dict = {}
+        for rt_info in root.findall(".//rt_info"):
+            for model_info in rt_info.findall(".//model_info"):
+                for child in model_info:
+                    model_info_dict[child.tag] = child.attrib["value"]
+        with (xml_path.parent / "config.json").open("w") as f:
+            json.dump(model_info_dict, f, indent=4)
+
     except (OSError, ParseError) as error:
         print(f"Failed to update {xml_path}: {error}")
 

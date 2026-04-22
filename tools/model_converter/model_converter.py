@@ -652,6 +652,10 @@ class ModelConverter:
             ov.save_model(quantized_model, output_path, compress_to_fp16=True)
             self.logger.info(f"✓ Quantized model saved: {output_path}")
 
+            # Save model_info as config.json to track downloads
+            with (output_folder / "config.json").open("w") as f:
+                json.dump(quantized_model.get_rt_info(["model_info"]).value, f, indent=4)
+
             # Validate accuracy if validation data provided
             if validation_data and validation_labels:
                 self.logger.info("Validating FP32 model accuracy...")
@@ -753,6 +757,10 @@ class ModelConverter:
             xml_path = output_folder / f"{model_name}.xml"
             ov.save_model(ov_model, xml_path, compress_to_fp16=True)
             self.logger.info(f"✓ Model saved: {xml_path}")
+
+            # Save model_info as config.json to track downloads
+            with (output_folder / "config.json").open("w") as f:
+                json.dump(ov_model.get_rt_info(["model_info"]).value, f, indent=4)
 
             # Copy .gitattributes file
             gitattributes_template = Path(__file__).parent / "templates" / ".gitattributes"
