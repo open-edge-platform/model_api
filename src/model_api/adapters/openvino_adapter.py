@@ -396,7 +396,7 @@ class OpenvinoAdapter(InferenceAdapter):
             return get_rt_info_from_dict(self.onnx_metadata, path)
         return self.model.get_rt_info(path)
 
-    def embed_preprocessing(
+    def embed_preprocessing(  # noqa: C901
         self,
         layout: str,
         resize_mode: str,
