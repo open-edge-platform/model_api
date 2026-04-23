@@ -417,6 +417,7 @@ class OpenvinoAdapter(InferenceAdapter):
         intensity_percentile_high: float = 99.0,
         intensity_scale_factor: float = 1.0,
         intensity_min_value: float = 0.0,
+        input_frame_shape: tuple[int, int] | None = None,
     ) -> None:
         """
         Embeds preprocessing into the model, or sets up Python preprocessing for NPU devices.
@@ -482,11 +483,15 @@ class OpenvinoAdapter(InferenceAdapter):
         }
 
         # Handle resize
-        # Change to dynamic shape to handle various image size
-        # TODO: check the number of input channels and rank of input shape
+        # Use static input shape when input_frame_shape is provided (avoids GPU
+        # performance penalty from dynamic shapes).  Fall back to dynamic [-1, -1]
+        # when the frame dimensions are unknown.
         if resize_mode and target_shape:
             if resize_mode in RESIZE_MODE_MAP:
-                input_shape = [1, -1, -1, 3]
+                if input_frame_shape is not None:
+                    input_shape = [1, input_frame_shape[0], input_frame_shape[1], 3]
+                else:
+                    input_shape = [1, -1, -1, 3]
                 ppp.input(input_idx).tensor().set_shape(input_shape)
                 ppp.input(input_idx).preprocess().custom(
                     RESIZE_MODE_MAP[resize_mode](

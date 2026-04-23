@@ -108,6 +108,9 @@ class ImageModel(Model):
         if self.params.embedded_processing:
             self.h, self.w = self.params.orig_height, self.params.orig_width
         elif not self._is_dynamic:
+            input_frame_shape = None
+            if self.params.input_frame_height and self.params.input_frame_width:
+                input_frame_shape = (self.params.input_frame_height, self.params.input_frame_width)
             inference_adapter.embed_preprocessing(
                 layout=layout,
                 resize_mode=self.params.resize_type,
@@ -126,6 +129,7 @@ class ImageModel(Model):
                 intensity_percentile_high=self.params.intensity_percentile_high,
                 intensity_scale_factor=self.params.intensity_scale_factor,
                 intensity_min_value=self.params.intensity_min_value,
+                input_frame_shape=input_frame_shape,
             )
             self._embedded_processing = True
             self.orig_height, self.orig_width = self.h, self.w
