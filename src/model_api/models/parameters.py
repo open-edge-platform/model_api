@@ -169,6 +169,16 @@ class ParameterRegistry:
             description="Model input width before embedding processing",
             default_value=None,
         ),
+        "input_frame_height": NumericalValue(
+            int,
+            description="Input frame height for static-shape embedded preprocessing (GPU optimization)",
+            default_value=None,
+        ),
+        "input_frame_width": NumericalValue(
+            int,
+            description="Input frame width for static-shape embedded preprocessing (GPU optimization)",
+            default_value=None,
+        ),
     }
 
     # Top-k classification parameters
