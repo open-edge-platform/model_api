@@ -230,8 +230,8 @@ class OpenvinoAdapter(InferenceAdapter):
     def load_model(self) -> None:
         """Loads the model to the device specified in the constructor"""
         devices = parse_devices(self.device)
-        if any("NPU" in dev.upper() for dev in devices) and self.model.is_dynamic():
-            self.reshape_dynamic_inputs()
+#        if any("GPU" in dev.upper() for dev in devices) and self.model.is_dynamic():
+        self.reshape_dynamic_inputs()
 
         self.compiled_model = self.core.compile_model(
             self.model,
