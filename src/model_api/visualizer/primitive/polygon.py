@@ -87,7 +87,7 @@ class Polygon(Primitive):
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         # incase of multiple contours, use the one with the largest area
         if len(contours) > 1:
-            logger.warning("Multiple contours found in the mask. Using the largest one.")
+            logger.debug("Multiple contours found in the mask. Using the largest one.")
             contours = sorted(contours, key=cv2.contourArea, reverse=True)
         if len(contours) == 0:
             logger.warning("No contours found in the mask. Skipping polygon drawing.")
