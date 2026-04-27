@@ -9,8 +9,14 @@ permissions: {} # No permissions by default on workflow level
 
 jobs:
   build:
-    name: Build
+    name: Build (${{ matrix.project }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project:
+          - model_api
+          - model_converter
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -26,23 +32,23 @@ jobs:
         uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
 
       - name: Install pypa/build
-        run: uv sync --locked
+        run: uv --directory ${{ matrix.project }} sync --locked
 
       - name: Build sdist
-        run: uv build --sdist
+        run: uv --directory ${{ matrix.project }} build --sdist
 
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
-          name: artifact-sdist
-          path: dist/*.tar.gz
+          name: artifact-${{ matrix.project }}-sdist
+          path: ${{ matrix.project }}/dist/*.tar.gz
 
       - name: Build wheel
-        run: uv build --wheel
+        run: uv --directory ${{ matrix.project }} build --wheel
 
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
-          name: artifact-wheel
-          path: dist/*.whl
+          name: artifact-${{ matrix.project }}-wheel
+          path: ${{ matrix.project }}/dist/*.whl
 
   publish_package:
     name: Publish package

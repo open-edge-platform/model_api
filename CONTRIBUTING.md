@@ -35,17 +35,24 @@ Set up your development environment to start contributing. This involves install
 <details>
 <summary>Development Environment Setup Instructions</summary>
 
-1. Create a new python environment and install the development requirements:
+1. Create the subproject environments and install the development requirements:
 
    ```bash
-   uv sync --all-extras
+   uv --directory model_api sync --all-extras --group tests --group docs --group examples
+   uv --directory model_converter sync --group tests
+   ```
+
+   The optional YOLOv8 accuracy tests need the heavier `yolo-tests` group:
+
+   ```bash
+   uv --directory model_api sync --group tests --group yolo-tests --extra-index-url https://download.pytorch.org/whl/cpu
    ```
 
 </details>
 
 ### Making Changes
 
-1. **Write Code:** Follow the project's coding standards and write your code with clear intent. Ensure your code is well-documented and includes examples where appropriate. For code quality we use ruff, whose configuration is in [`pyproject.toml`](pyproject.toml) file.
+1. **Write Code:** Follow the project's coding standards and write your code with clear intent. Ensure your code is well-documented and includes examples where appropriate. For code quality we use ruff, whose configuration is in each subproject's `pyproject.toml` file: [`model_api/pyproject.toml`](model_api/pyproject.toml) and [`model_converter/pyproject.toml`](model_converter/pyproject.toml).
 
 2. **Add Tests:** If your code includes new functionality, add corresponding tests using [pytest](https://docs.pytest.org/en/7.4.x/) to maintain coverage and reliability.
 
@@ -55,11 +62,12 @@ Set up your development environment to start contributing. This involves install
 
    ```bash
    uvx pre-commit run --all-files
-   uv run pytest tests/unit
-   uv run python tests/accuracy/download_models.py -d data -j tests/precommit/public_scope.json -l
-   uv run pytest --data=./data tests/functional
-   uv run python tests/accuracy/download_models.py -d data -j tests/accuracy/public_scope.json -l
-   uv run pytest --data=./data tests/accuracy/test_accuracy.py
+   uv --directory model_api run pytest tests/unit
+   uv --directory model_api run python tests/accuracy/download_models.py -d data -j tests/precommit/public_scope.json -l
+   uv --directory model_api run pytest --data=./data tests/functional
+   uv --directory model_api run python tests/accuracy/download_models.py -d data -j tests/accuracy/public_scope.json -l
+   uv --directory model_api run pytest --data=./data tests/accuracy/test_accuracy.py
+   uv --directory model_converter run model-converter examples/config.json --list
    ```
 
 5. **Update the Changelog:** For significant changes, add a summary to the [CHANGELOG](CHANGELOG.md).
