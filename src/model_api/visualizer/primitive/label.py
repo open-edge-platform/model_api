@@ -67,25 +67,29 @@ class Label(Primitive):
         return image
 
     @classmethod
-    def overlay_labels(cls, image: Image, labels: list["Label"], buffer_x: int = 5) -> Image:
+    def overlay_labels(cls, image: Image, labels: list["Label"], buffer_x: int = 5, buffer_y: int = 5) -> Image:
         """Overlay multiple label images on top of the image.
         Paste the labels in a row but wrap the labels if they exceed the image width.
 
         Args:
             image (PIL.Image): Image to paste the labels on.
             labels (list[Label]): Labels to be pasted on the image.
-            buffer_x (int): Space between the labels.
+            buffer_x (int): Horizontal space between the labels.
+            buffer_y (int): Vertical space between rows of labels.
 
         Returns:
             PIL.Image: Image with the labels pasted on it.
         """
         offset_x = 0
         offset_y = 0
+        row_height = 0
         for label in labels:
             label_image = make_label_image(label.label, label.font, fg_color=label.fg_color, bg_color=label.bg_color)
-            image.paste(label_image, (offset_x, offset_y))
-            offset_x += label_image.width + buffer_x
-            if offset_x + label_image.width > image.width:
+            if offset_x > 0 and offset_x + label_image.width > image.width:
                 offset_x = 0
-                offset_y += label_image.height
+                offset_y += row_height + buffer_y
+                row_height = 0
+            image.paste(label_image, (offset_x, offset_y))
+            row_height = max(row_height, label_image.height)
+            offset_x += label_image.width + buffer_x
         return image
