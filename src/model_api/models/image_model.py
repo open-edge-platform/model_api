@@ -19,6 +19,19 @@ if TYPE_CHECKING:
     from model_api.adapters.inference_adapter import InferenceAdapter
 
 
+def _repeat_single_channel(image: np.ndarray) -> np.ndarray:
+    """Expand a single-channel image to 3 channels by repeating.
+
+    Handles HxW and HxWx1 inputs.  If the image already has 3 channels it is
+    returned unchanged.
+    """
+    if image.ndim == 2:
+        return np.repeat(image[:, :, np.newaxis], 3, axis=2)
+    if image.ndim == 3 and image.shape[2] == 1:
+        return np.repeat(image, 3, axis=2)
+    return image
+
+
 class ImageModel(Model):
     """An abstract wrapper for an image-based model
 
@@ -77,7 +90,7 @@ class ImageModel(Model):
         intensity_mode = self.params.intensity_mode
         intensity_max_value = self.params.intensity_max_value
         if intensity_max_value is None and intensity_mode == "scale_to_unit":
-            _DTYPE_MAX_VALUE = {"u8": 255.0, "u16": 65535.0, "f32": 1.0}
+            _DTYPE_MAX_VALUE = {"u8": 255.0, "u16": 65535.0, "i16": 32767.0, "f32": 1.0}
             intensity_max_value = _DTYPE_MAX_VALUE.get(self.params.input_dtype)
 
         # Build Python-side intensity function for non-embeddable modes or fallback paths
@@ -126,6 +139,7 @@ class ImageModel(Model):
                 intensity_percentile_high=self.params.intensity_percentile_high,
                 intensity_scale_factor=self.params.intensity_scale_factor,
                 intensity_min_value=self.params.intensity_min_value,
+                intensity_repeat_channels=self.params.intensity_repeat_channels,
             )
             self._embedded_processing = True
             self.orig_height, self.orig_width = self.h, self.w
@@ -216,6 +230,10 @@ class ImageModel(Model):
             dict_inputs, meta = self._preprocess_embedded(inputs)
             dict_inputs, meta = self.preprocess(dict_inputs, meta)
             return [dict_inputs, meta]
+
+        # 0. Expand single-channel to 3 channels if requested
+        if self.params.intensity_repeat_channels:
+            inputs = _repeat_single_channel(inputs)
 
         # 1. Resize
         resized_image, meta = self._resize_image(inputs)
