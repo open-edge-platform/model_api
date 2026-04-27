@@ -99,7 +99,9 @@ def make_label_image(
     font_height = ascent + descent
     textbox = draw.textbbox((0, 0), text, font=font)
     label_w = textbox[2] - textbox[0]
+    content_h = textbox[3] - textbox[1]
+    text_y = round((font_height - content_h) / 2 - textbox[1])
     label_image = Image.new("RGB", (label_w, font_height), bg_color)
     draw = ImageDraw.Draw(label_image)
-    draw.text((-textbox[0], 0), text, font=font, fill=fg_color)
+    draw.text((-textbox[0], text_y), text, font=font, fill=fg_color)
     return label_image
