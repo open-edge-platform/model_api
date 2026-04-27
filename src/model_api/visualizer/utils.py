@@ -82,7 +82,8 @@ def make_label_image(
 
     The height is derived from the font's ascent + descent so that all labels
     produced with the same font share the same background height regardless of
-    the specific characters in text.
+    the specific characters in *text*.  Text is drawn at a fixed baseline
+    position so that adjacent labels align consistently.
 
     Args:
         text: The label string to render.
@@ -99,9 +100,7 @@ def make_label_image(
     font_height = ascent + descent
     textbox = draw.textbbox((0, 0), text, font=font)
     label_w = textbox[2] - textbox[0]
-    content_h = textbox[3] - textbox[1]
-    text_y = round((font_height - content_h) / 2 - textbox[1])
     label_image = Image.new("RGB", (label_w, font_height), bg_color)
     draw = ImageDraw.Draw(label_image)
-    draw.text((-textbox[0], text_y), text, font=font, fill=fg_color)
+    draw.text((-textbox[0], 0), text, font=font, fill=fg_color)
     return label_image
