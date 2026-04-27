@@ -56,26 +56,24 @@ class Label(Primitive):
         self.bg_color = bg_color
         self.font = default_font(size=size) if font_path is None else truetype_font(font_path, size)
 
-    def compute(self, image: Image, buffer_y: int = 3) -> Image:
+    def compute(self, image: Image) -> Image:
         """Generate label on top of the image.
 
         Args:
             image (PIL.Image): Image to paste the label on.
-            buffer_y (int): Buffer to add to the y-axis of the label.
         """
-        label_image = make_label_image(self.label, self.font, fg_color=self.fg_color, bg_color=self.bg_color, buffer_y=buffer_y)
+        label_image = make_label_image(self.label, self.font, fg_color=self.fg_color, bg_color=self.bg_color)
         image.paste(label_image, (0, 0))
         return image
 
     @classmethod
-    def overlay_labels(cls, image: Image, labels: list["Label"], buffer_y: int = 3, buffer_x: int = 5) -> Image:
+    def overlay_labels(cls, image: Image, labels: list["Label"], buffer_x: int = 5) -> Image:
         """Overlay multiple label images on top of the image.
         Paste the labels in a row but wrap the labels if they exceed the image width.
 
         Args:
             image (PIL.Image): Image to paste the labels on.
             labels (list[Label]): Labels to be pasted on the image.
-            buffer_y (int): Buffer to add to the y-axis of the labels.
             buffer_x (int): Space between the labels.
 
         Returns:
@@ -84,7 +82,7 @@ class Label(Primitive):
         offset_x = 0
         offset_y = 0
         for label in labels:
-            label_image = make_label_image(label.label, label.font, fg_color=label.fg_color, bg_color=label.bg_color, buffer_y=buffer_y)
+            label_image = make_label_image(label.label, label.font, fg_color=label.fg_color, bg_color=label.bg_color)
             image.paste(label_image, (offset_x, offset_y))
             offset_x += label_image.width + buffer_x
             if offset_x + label_image.width > image.width:

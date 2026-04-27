@@ -11,7 +11,7 @@ import numpy as np
 import PIL
 
 from model_api.visualizer.defaults import DEFAULT_FONT_SIZE, DEFAULT_OPACITY
-from model_api.visualizer.utils import default_font
+from model_api.visualizer.utils import default_font, make_label_image
 
 from .primitive import Primitive
 
@@ -67,12 +67,6 @@ class Overlay(Primitive):
         if labels is not None:
             labels = [labels] if isinstance(labels, str) else labels
             font = default_font(size=font_size)
-            buffer_y = max(3, font_size // 3)
-            dummy_image = PIL.Image.new("RGB", (1, 1))
-            draw = PIL.ImageDraw.Draw(dummy_image)
-            textbox = draw.textbbox((0, 0), ", ".join(labels), font=font)
-            image_ = PIL.Image.new("RGB", (textbox[2] - textbox[0], textbox[3] + buffer_y - textbox[1]), "white")
-            draw = PIL.ImageDraw.Draw(image_)
-            draw.text((0, 0), ", ".join(labels), font=font, fill="black")
-            image.paste(image_, (image.width // 2 - image_.width // 2, image.height - image_.height - buffer_y))
+            image_ = make_label_image(", ".join(labels), font, fg_color="black", bg_color="white")
+            image.paste(image_, (image.width // 2 - image_.width // 2, image.height - image_.height))
         return image

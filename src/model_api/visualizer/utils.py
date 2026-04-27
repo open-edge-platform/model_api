@@ -77,7 +77,6 @@ def make_label_image(
     font: ImageFont.ImageFont,
     fg_color: Union[str, tuple[int, int, int]] = "black",
     bg_color: Union[str, tuple[int, int, int]] = "yellow",
-    buffer_y: int = 3,
 ) -> Image.Image:
     """Create a label image with uniform height based on font metrics.
 
@@ -90,7 +89,6 @@ def make_label_image(
         font: PIL font instance.
         fg_color: Text colour.
         bg_color: Background colour.
-        buffer_y: Extra vertical padding (split evenly top/bottom).
 
     Returns:
         PIL Image containing the rendered label.
@@ -101,9 +99,7 @@ def make_label_image(
     font_height = ascent + descent
     textbox = draw.textbbox((0, 0), text, font=font)
     label_w = textbox[2] - textbox[0]
-    label_h = font_height + buffer_y
-    label_image = Image.new("RGB", (label_w, label_h), bg_color)
+    label_image = Image.new("RGB", (label_w, font_height), bg_color)
     draw = ImageDraw.Draw(label_image)
-    text_y = buffer_y // 2
-    draw.text((-textbox[0], text_y), text, font=font, fill=fg_color)
+    draw.text((-textbox[0], 0), text, font=font, fill=fg_color)
     return label_image

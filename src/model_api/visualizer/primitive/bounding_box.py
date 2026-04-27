@@ -51,7 +51,6 @@ class BoundingBox(Primitive):
         self.outline_width = outline_width
         self.font_size = font_size
         self.font = default_font(size=self.font_size)
-        self.y_buffer = max(3, font_size // 3)  # Text at the bottom of the text box is clipped. This prevents that.
 
     def compute(self, image: Image) -> Image:
         draw = ImageDraw.Draw(image)
@@ -60,7 +59,7 @@ class BoundingBox(Primitive):
         # add label
         if self.label:
             label_image = make_label_image(
-                self.label, self.font, fg_color="white", bg_color=self.color, buffer_y=self.y_buffer,
+                self.label, self.font, fg_color="white", bg_color=self.color,
             )
             image.paste(label_image, (self.x1, self.y1))
         return image
