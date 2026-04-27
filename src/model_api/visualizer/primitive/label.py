@@ -6,7 +6,7 @@
 from io import BytesIO
 from typing import Union
 
-from PIL import Image, ImageDraw
+from PIL import Image
 
 from model_api.visualizer.defaults import DEFAULT_FONT_SIZE
 from model_api.visualizer.utils import default_font, make_label_image, truetype_font

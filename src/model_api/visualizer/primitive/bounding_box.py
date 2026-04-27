@@ -59,7 +59,10 @@ class BoundingBox(Primitive):
         # add label
         if self.label:
             label_image = make_label_image(
-                self.label, self.font, fg_color="white", bg_color=self.color,
+                self.label,
+                self.font,
+                fg_color="white",
+                bg_color=self.color,
             )
             image.paste(label_image, (self.x1, self.y1))
         return image
