@@ -23,6 +23,7 @@ if TYPE_CHECKING:
 _NUMPY_DTYPE_MAP: dict[str, type] = {
     "u8": np.uint8,
     "u16": np.uint16,
+    "i16": np.int16,
     "f32": np.float32,
 }
 

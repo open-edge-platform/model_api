@@ -169,10 +169,11 @@ class TestIntensityParameters:
     def test_input_dtype_string_value(self):
         from model_api.models.types import StringValue
 
-        sv = StringValue(default_value="u8", choices=("u8", "f32", "u16"))
+        sv = StringValue(default_value="u8", choices=("u8", "f32", "u16", "i16"))
         assert sv.validate("u8") == []
         assert sv.validate("f32") == []
         assert sv.validate("u16") == []
+        assert sv.validate("i16") == []
         assert len(sv.validate("i32")) > 0
 
     def test_intensity_mode_string_value(self):
@@ -412,3 +413,50 @@ class TestRepeatChannels:
         pp = ParameterRegistry.IMAGE_PREPROCESSING
         assert "intensity_repeat_channels" in pp
         assert pp["intensity_repeat_channels"].default_value is False
+
+
+# ---------------------------------------------------------------------------
+# i16 (int16) dtype support
+# ---------------------------------------------------------------------------
+
+
+class TestInt16Support:
+    def test_input_dtype_accepts_i16(self):
+        """ParameterRegistry accepts i16 as a valid input_dtype."""
+        from model_api.models.parameters import ParameterRegistry
+
+        pp = ParameterRegistry.IMAGE_PREPROCESSING
+        sv = pp["input_dtype"]
+        assert sv.validate("i16") == []
+
+    def test_numpy_dtype_map_has_i16(self):
+        from model_api.adapters.utils import _NUMPY_DTYPE_MAP
+
+        assert "i16" in _NUMPY_DTYPE_MAP
+        assert _NUMPY_DTYPE_MAP["i16"] is np.int16
+
+    def test_scale_to_unit_i16(self):
+        """scale_to_unit works with int16 input."""
+        fn = create_intensity_fn("scale_to_unit", max_value=32767.0)
+        img = np.array([-1000, 0, 16383, 32767], dtype=np.int16)
+        out = fn(img)
+        np.testing.assert_allclose(out, img.astype(np.float32) / 32767.0, atol=1e-6)
+
+    def test_ov_graph_i16_element_type(self):
+        """OV PrePostProcessor accepts i16 element type."""
+        import openvino as ov
+        from openvino.preprocess import PrePostProcessor
+
+        model_h, model_w = 4, 4
+        param_node = ov.op.Parameter(ov.Type.f32, ov.Shape([1, model_h, model_w, 3]))
+        model = ov.Model(param_node, [param_node])
+        ppp = PrePostProcessor(model)
+        ppp.input().tensor().set_element_type(ov.Type.i16)
+        ppp.input().tensor().set_layout(ov.Layout("NHWC"))
+        ppp.input().preprocess().convert_element_type(ov.Type.f32)
+        built = ppp.build()
+        compiled = ov.Core().compile_model(built, "CPU")
+
+        img = np.arange(-24, 24, dtype=np.int16).reshape(1, model_h, model_w, 3)
+        result = next(iter(compiled(img).values()))
+        np.testing.assert_allclose(result, img.astype(np.float32))
