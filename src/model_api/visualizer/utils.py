@@ -1,8 +1,11 @@
 """Visualizer utilities."""
 
-from functools import lru_cache
+from __future__ import annotations
 
-from PIL import ImageFont
+from functools import lru_cache
+from typing import Union
+
+from PIL import Image, ImageDraw, ImageFont
 
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
@@ -67,3 +70,40 @@ def truetype_font(font_path: str, size: int = 10):
     """
 
     return ImageFont.truetype(font_path, size)
+
+
+def make_label_image(
+    text: str,
+    font: ImageFont.ImageFont,
+    fg_color: Union[str, tuple[int, int, int]] = "black",
+    bg_color: Union[str, tuple[int, int, int]] = "yellow",
+    buffer_y: int = 3,
+) -> Image.Image:
+    """Create a label image with uniform height based on font metrics.
+
+    The height is derived from the font's ascent + descent so that all labels
+    produced with the same font share the same background height regardless of
+    the specific characters in text.
+
+    Args:
+        text: The label string to render.
+        font: PIL font instance.
+        fg_color: Text colour.
+        bg_color: Background colour.
+        buffer_y: Extra vertical padding (split evenly top/bottom).
+
+    Returns:
+        PIL Image containing the rendered label.
+    """
+    dummy = Image.new("RGB", (1, 1))
+    draw = ImageDraw.Draw(dummy)
+    ascent, descent = font.getmetrics()
+    font_height = ascent + descent
+    textbox = draw.textbbox((0, 0), text, font=font)
+    label_w = textbox[2] - textbox[0]
+    label_h = font_height + buffer_y
+    label_image = Image.new("RGB", (label_w, label_h), bg_color)
+    draw = ImageDraw.Draw(label_image)
+    text_y = buffer_y // 2
+    draw.text((-textbox[0], text_y), text, font=font, fill=fg_color)
+    return label_image
