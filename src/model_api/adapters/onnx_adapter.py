@@ -157,6 +157,7 @@ class ONNXRuntimeAdapter(InferenceAdapter):
         intensity_percentile_high: float = 99.0,
         intensity_scale_factor: float = 1.0,
         intensity_min_value: float = 0.0,
+        input_frame_shape: tuple[int, int] | None = None,
     ):
         """
         Adds external preprocessing steps done before ONNX model execution.
