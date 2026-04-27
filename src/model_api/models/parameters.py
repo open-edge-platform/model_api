@@ -95,8 +95,8 @@ class ParameterRegistry:
         ),
         "input_dtype": StringValue(
             default_value="u8",
-            choices=("u8", "f32", "u16"),
-            description="Input tensor element type: u8 (uint8), f32 (float32), or u16 (uint16)",
+            choices=("u8", "f32", "u16", "i16"),
+            description="Input tensor element type: u8 (uint8), f32 (float32), u16 (uint16), or i16 (int16)",
         ),
         "intensity_mode": StringValue(
             default_value="none",

@@ -460,7 +460,7 @@ class OpenvinoAdapter(InferenceAdapter):
         ppp = PrePostProcessor(self.model)
 
         # Map input_dtype string to OV element type (also support legacy int/float dtype arg)
-        _DTYPE_TO_OV = {"u8": Type.u8, "f32": Type.f32, "u16": Type.u16}
+        _DTYPE_TO_OV = {"u8": Type.u8, "f32": Type.f32, "u16": Type.u16, "i16": Type.i16}
         if input_dtype in _DTYPE_TO_OV:
             ppp.input(input_idx).tensor().set_element_type(_DTYPE_TO_OV[input_dtype])
         elif dtype is int:

@@ -90,7 +90,7 @@ class ImageModel(Model):
         intensity_mode = self.params.intensity_mode
         intensity_max_value = self.params.intensity_max_value
         if intensity_max_value is None and intensity_mode == "scale_to_unit":
-            _DTYPE_MAX_VALUE = {"u8": 255.0, "u16": 65535.0, "f32": 1.0}
+            _DTYPE_MAX_VALUE = {"u8": 255.0, "u16": 65535.0, "i16": 32767.0, "f32": 1.0}
             intensity_max_value = _DTYPE_MAX_VALUE.get(self.params.input_dtype)
 
         # Build Python-side intensity function for non-embeddable modes or fallback paths
