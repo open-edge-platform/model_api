@@ -9,14 +9,8 @@ permissions: {} # No permissions by default on workflow level
 
 jobs:
   build:
-    name: Build (${{ matrix.project }})
+    name: Build model_api
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        project:
-          - model_api
-          - model_converter
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -32,23 +26,23 @@ jobs:
         uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
 
       - name: Install pypa/build
-        run: uv --directory ${{ matrix.project }} sync --locked
+        run: uv --directory model_api sync --locked
 
       - name: Build sdist
-        run: uv --directory ${{ matrix.project }} build --sdist
+        run: uv --directory model_api build --sdist
 
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
-          name: artifact-${{ matrix.project }}-sdist
-          path: ${{ matrix.project }}/dist/*.tar.gz
+          name: artifact-model_api-sdist
+          path: model_api/dist/*.tar.gz
 
       - name: Build wheel
-        run: uv --directory ${{ matrix.project }} build --wheel
+        run: uv --directory model_api build --wheel
 
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
-          name: artifact-${{ matrix.project }}-wheel
-          path: ${{ matrix.project }}/dist/*.whl
+          name: artifact-model_api-wheel
+          path: model_api/dist/*.whl
 
   publish_package:
     name: Publish package
