@@ -264,6 +264,9 @@ notice-rgx = """
 # SPDX-License-Identifier: Apache-2\\.0
 """
 
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+
 [tool.bandit]
 skips = ["B101", "B310"]
 
