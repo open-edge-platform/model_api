@@ -38,7 +38,7 @@ Set up your development environment to start contributing. This involves install
 1. Create the subproject environments and install the development requirements:
 
    ```bash
-   uv --directory model_api sync --all-extras --group tests --group docs --group examples
+   uv --directory model_api sync --all-extras --group tests --group docs
    uv --directory model_converter sync --group tests
    ```
 

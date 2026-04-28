@@ -12,7 +12,7 @@ This example demonstrates how to use a Python API of OpenVINO Model API for a re
 - Install Model API from source with `ovms` dependencies by running
 
 - ```bash
-  uv sync --group examples
+  uv sync --extra examples
   ```
 
 - Install Docker. Please refer to the [official documentation](https://docs.docker.com/get-docker/) for details.

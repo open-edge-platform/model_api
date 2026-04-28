@@ -12,7 +12,7 @@ This example demonstrates how to use a Python API implementation of Segment Anyt
 Install Model API dependencies with examples by running the following command in the root directory of the repository:
 
 ```bash
-uv sync --group examples
+uv sync --extra examples
 ```
 
 ## Run example

@@ -36,7 +36,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv --directory model_api sync --locked --all-extras --group docs --group examples
+          uv --directory model_api sync --locked --all-extras --group docs
           uv --directory model_converter sync --locked
 
       - name: Run pre-commit checks

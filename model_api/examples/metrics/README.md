@@ -15,7 +15,7 @@ This example demonstrates how to use the Python API of OpenVINO Model API for pe
 Install Model API dependencies with examples by running the following command in the root directory of the repository:
 
 ```bash
-uv sync --group examples
+uv sync --extra examples
 ```
 
 ## Run example

@@ -44,13 +44,13 @@ ovms = [
 huggingface = [
   "huggingface_hub",
 ]
-
-[dependency-groups]
 examples = [
   "httpx",
   "onnx",
   "onnxruntime",
 ]
+
+[dependency-groups]
 tests = [
     "httpx",
     "pytest",
