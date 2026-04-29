@@ -2057,6 +2057,7 @@ examples = [
     { name = "httpx" },
     { name = "onnx" },
     { name = "onnxruntime" },
+    { name = "sympy" },
 ]
 huggingface = [
     { name = "huggingface-hub" },
@@ -2064,6 +2065,7 @@ huggingface = [
 onnx = [
     { name = "onnx" },
     { name = "onnxruntime" },
+    { name = "sympy" },
 ]
 ovms = [
     { name = "tritonclient", extra = ["http"] },
@@ -2091,6 +2093,7 @@ tests = [
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-mock" },
+    { name = "sympy" },
 ]
 yolo-tests = [
     { name = "torch" },
@@ -2109,6 +2112,8 @@ requires-dist = [
     { name = "opencv-python-headless" },
     { name = "openvino", specifier = ">=2025.3" },
     { name = "pillow" },
+    { name = "sympy", marker = "extra == 'examples'" },
+    { name = "sympy", marker = "extra == 'onnx'" },
     { name = "tritonclient", extras = ["http"], marker = "extra == 'ovms'", specifier = "<2.59" },
 ]
 provides-extras = ["onnx", "ovms", "huggingface", "examples"]
@@ -2133,6 +2138,7 @@ tests = [
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-mock" },
+    { name = "sympy" },
 ]
 yolo-tests = [
     { name = "torch" },

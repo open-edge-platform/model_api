@@ -37,6 +37,7 @@ dependencies = [
 onnx = [
   "onnx",
   "onnxruntime",
+  "sympy",
 ]
 ovms = [
   "tritonclient[http]<2.59",
@@ -48,6 +49,7 @@ examples = [
   "httpx",
   "onnx",
   "onnxruntime",
+  "sympy",
 ]
 
 [dependency-groups]
@@ -59,6 +61,7 @@ tests = [
     "defusedxml",
     "onnx",
     "onnxruntime",
+    "sympy",
 ]
 yolo-tests = [
   "torch",
