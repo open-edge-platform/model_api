@@ -11,25 +11,17 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from model_api.adapters.utils import RESIZE_TYPES, InputTransform, create_intensity_fn
+from model_api.adapters.utils import (
+    RESIZE_TYPES,
+    InputTransform,
+    create_intensity_fn,
+)
+from model_api.adapters.utils import _repeat_single_channel_np as _repeat_single_channel
 from model_api.models.model import Model
 from model_api.models.parameters import ParameterRegistry
 
 if TYPE_CHECKING:
     from model_api.adapters.inference_adapter import InferenceAdapter
-
-
-def _repeat_single_channel(image: np.ndarray) -> np.ndarray:
-    """Expand a single-channel image to 3 channels by repeating.
-
-    Handles HxW and HxWx1 inputs.  If the image already has 3 channels it is
-    returned unchanged.
-    """
-    if image.ndim == 2:
-        return np.repeat(image[:, :, np.newaxis], 3, axis=2)
-    if image.ndim == 3 and image.shape[2] == 1:
-        return np.repeat(image, 3, axis=2)
-    return image
 
 
 class ImageModel(Model):

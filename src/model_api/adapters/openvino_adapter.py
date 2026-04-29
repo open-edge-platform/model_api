@@ -469,14 +469,12 @@ class OpenvinoAdapter(InferenceAdapter):
             ppp.input(input_idx).tensor().set_element_type(Type.f32)
 
         ppp.input(input_idx).tensor().set_layout(ov.Layout("NHWC"))
-        if not intensity_repeat_channels:
-            ppp.input(input_idx).tensor().set_color_format(ColorFormat.BGR)
-
-        # Handle repeat single-channel to 3 channels
         if intensity_repeat_channels:
             ppp.input(input_idx).preprocess().custom(
                 repeat_channels_preprocess(),
             )
+        else:
+            ppp.input(input_idx).tensor().set_color_format(ColorFormat.BGR)
 
         INTERPOLATION_MODE_MAP = {
             "LINEAR": "linear",
