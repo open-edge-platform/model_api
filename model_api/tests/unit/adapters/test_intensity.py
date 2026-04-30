@@ -378,9 +378,8 @@ class TestRepeatChannels:
     def test_ov_graph_repeat(self):
         """OV graph repeat_channels_preprocess tiles 1ch→3ch."""
         import openvino as ov
-        from openvino.preprocess import PrePostProcessor
-
         from model_api.adapters.utils import repeat_channels_preprocess
+        from openvino.preprocess import PrePostProcessor
 
         model_h, model_w = 4, 4
         param_node = ov.op.Parameter(ov.Type.f32, ov.Shape([1, model_h, model_w, 3]))
