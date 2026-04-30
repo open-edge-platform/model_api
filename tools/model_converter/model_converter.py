@@ -459,7 +459,7 @@ class ModelConverter:
             return_labels: Whether to return labels along with images
 
         Returns:
-            List of preprocessed image arrays, or tuple of (images, labels) if return_labels=True
+            List of preprocessed image arrays, or tuple of (images, labels)
         """
         if not self.dataset_path or not self.dataset_path.exists():
             self.logger.warning("Dataset path not provided or doesn't exist. Skipping quantization.")
@@ -476,12 +476,12 @@ class ModelConverter:
         image_dir = self.dataset_path
         if not image_dir.exists():
             self.logger.error(f"Image directory not found: {image_dir}")
-            return ([], []) if return_labels else []
+            return ([], [])
 
         image_entries = self._collect_dataset_entries(image_dir)
         if not image_entries:
             self.logger.error("No images found in dataset")
-            return ([], []) if return_labels else []
+            return ([], [])
 
         self.logger.info(f"Found {len(image_entries)} images in dataset")
         self.logger.info(f"Using {min(subset_size, len(image_entries))} images for calibration")
@@ -537,7 +537,7 @@ class ModelConverter:
                 continue
 
         self.logger.info(f"✓ Created calibration dataset with {len(calibration_data)} images")
-        return calibration_data
+        return calibration_data, []
 
     def validate_model(
         self,
@@ -938,6 +938,7 @@ class ModelConverter:
             # Quantize the model if dataset is available
             if self.dataset_path:
                 self.logger.info("Creating calibration dataset for INT8 quantization")
+                has_labels = bool(config.get("labels"))
 
                 self.logger.info("Creating validation dataset for accuracy measurement")
                 validation_data, validation_labels = self.create_calibration_dataset(
@@ -946,7 +947,7 @@ class ModelConverter:
                     scale_values=scale_values,
                     reverse_input_channels=reverse_input_channels,
                     subset_size=300,
-                    return_labels=True,
+                    return_labels=has_labels,
                 )
 
                 if validation_data:
@@ -957,7 +958,7 @@ class ModelConverter:
                         model_config=config,
                         preset="mixed",
                         validation_data=validation_data if validation_labels else None,
-                        validation_labels=validation_labels,
+                        validation_labels=validation_labels or None,
                     )
 
                 # Clean up temporary FP32 model after quantization
