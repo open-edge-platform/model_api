@@ -23,6 +23,7 @@ if TYPE_CHECKING:
 _NUMPY_DTYPE_MAP: dict[str, type] = {
     "u8": np.uint8,
     "u16": np.uint16,
+    "i16": np.int16,
     "f32": np.float32,
 }
 
@@ -494,14 +495,25 @@ def range_scale_preprocess_graph(
     min_value: float,
     max_value: float,
 ) -> Node:
-    """OV graph: range_scale intensity scaling: multiplies by scale_factor and clamps."""
-    return opset.clamp(
+    """OV graph: range_scale intensity scaling.
+
+    Multiplies by *scale_factor*, clamps to [min_value, max_value], then
+    normalises to [0, 1] via ``(clamped - min) / (max - min)``.
+    """
+    clamped = opset.clamp(
         opset.multiply(
             opset.convert(output, destination_type="f32"),
             opset.constant(scale_factor, dtype=Type.f32),
         ),
         opset.constant(min_value, dtype=Type.f32),
         opset.constant(max_value, dtype=Type.f32),
+    )
+    range = max_value - min_value
+    if range == 0:
+        return clamped
+    return opset.divide(
+        opset.subtract(clamped, opset.constant(min_value, dtype=Type.f32)),
+        opset.constant(range, dtype=Type.f32),
     )
 
 
@@ -519,6 +531,16 @@ def range_scale_preprocess(
             max_value=max_value,
         ),
     )
+
+
+def repeat_channels_preprocess_graph(output: Output) -> Node:
+    """OV graph: tile a single-channel tensor to 3 channels along the last axis."""
+    return opset.tile(output, opset.constant([1, 1, 1, 3]))
+
+
+def repeat_channels_preprocess() -> Callable:
+    """Return an OV custom preprocess function that repeats 1 channel to 3."""
+    return custom_preprocess_function(repeat_channels_preprocess_graph)
 
 
 def load_parameters_from_onnx(onnx_model: Any) -> dict[str, Any]:
@@ -654,6 +676,7 @@ def setup_python_preprocessing_pipeline(
     intensity_percentile_high: float = 99.0,
     intensity_scale_factor: float = 1.0,
     intensity_min_value: float = 0.0,
+    intensity_repeat_channels: bool = False,
 ):
     """
     Sets up a Python preprocessing pipeline for model adapters.
@@ -677,6 +700,7 @@ def setup_python_preprocessing_pipeline(
         intensity_percentile_high: Upper percentile for percentile intensity mode
         intensity_scale_factor: Scale factor for range_scale intensity mode
         intensity_min_value: Minimum output value for range_scale intensity mode
+        intensity_repeat_channels: Whether to repeat single-channel input to 3 channels
 
     Returns:
         Callable: A preprocessing function that can be applied to input data
@@ -684,6 +708,9 @@ def setup_python_preprocessing_pipeline(
     from functools import partial, reduce
 
     preproc_funcs = [np.squeeze]
+
+    if intensity_repeat_channels:
+        preproc_funcs.append(_repeat_single_channel_np)
     if resize_mode != "crop":
         if resize_mode == "fit_to_window_letterbox":
             resize_fn = partial(
@@ -751,6 +778,18 @@ INTERPOLATION_TYPES: dict[str, int] = {
     "NEAREST": cv2.INTER_NEAREST,
     "AREA": cv2.INTER_AREA,
 }
+
+
+def _repeat_single_channel_np(image: np.ndarray) -> np.ndarray:
+    """Expand a single-channel image to 3 channels by repeating.
+
+    Handles HxW and HxWx1.  Already-3-channel images pass through unchanged.
+    """
+    if image.ndim == 2:
+        return np.repeat(image[:, :, np.newaxis], 3, axis=2)
+    if image.ndim == 3 and image.shape[2] == 1:
+        return np.repeat(image, 3, axis=2)
+    return image
 
 
 class InputTransform:
@@ -834,11 +873,19 @@ def create_intensity_fn(
 
     if mode == "range_scale":
         sf = float(scale_factor)
-        mn = float(min_value)
-        mx = float(max_value) if max_value is not None else np.inf
+        min = float(min_value)
+        max = float(max_value) if max_value is not None else np.inf
 
-        def _range_scale(img: np.ndarray) -> np.ndarray:
-            return np.clip(img.astype(np.float32) * sf, mn, mx)
+        if np.isfinite(max) and max != min:
+            range = max - min
+
+            def _range_scale(img: np.ndarray) -> np.ndarray:
+                return (np.clip(img.astype(np.float32) * sf, min, max) - min) / range
+
+        else:
+
+            def _range_scale(img: np.ndarray) -> np.ndarray:
+                return np.clip(img.astype(np.float32) * sf, min, max)
 
         return _range_scale
 

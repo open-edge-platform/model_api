@@ -81,16 +81,34 @@ class TestCreateIntensityFn:
     # -- range_scale -----------------------------------------------------------
 
     def test_range_scale_basic(self):
+        """range_scale with finite min/max normalises to [0, 1]."""
         fn = create_intensity_fn("range_scale", scale_factor=2.0, min_value=0.0, max_value=500.0)
         img = np.array([0, 100, 300], dtype=np.float32)
         out = fn(img)
-        np.testing.assert_allclose(out, [0.0, 200.0, 500.0])
+        # clamp(x * scale_factor, min, max) - min) / (max - min) → output in [0, 1].
+        # clamp(x*2, 0, 500) → [0, 200, 500], then (v-0)/(500-0) → [0, 0.4, 1.0]
+        np.testing.assert_allclose(out, [0.0, 0.4, 1.0])
 
     def test_range_scale_no_max(self):
         fn = create_intensity_fn("range_scale", scale_factor=0.5)
         img = np.array([100.0], dtype=np.float32)
         out = fn(img)
         np.testing.assert_allclose(out, [50.0])
+
+    def test_range_scale_nonzero_min(self):
+        """range_scale with nonzero min shifts and normalises."""
+        fn = create_intensity_fn("range_scale", scale_factor=1.0, min_value=100.0, max_value=300.0)
+        img = np.array([50, 200, 400], dtype=np.float32)
+        out = fn(img)
+        # clamp(x*1, 100, 300) → [100, 200, 300], then (v-100)/200 → [0.0, 0.5, 1.0]
+        np.testing.assert_allclose(out, [0.0, 0.5, 1.0])
+
+    def test_range_scale_min_equals_max(self):
+        """When min == max, range_scale clamps without division."""
+        fn = create_intensity_fn("range_scale", scale_factor=1.0, min_value=5.0, max_value=5.0)
+        img = np.array([1.0, 5.0, 10.0], dtype=np.float32)
+        out = fn(img)
+        np.testing.assert_allclose(out, [5.0, 5.0, 5.0])
 
     # -- unknown ---------------------------------------------------------------
 
@@ -151,10 +169,11 @@ class TestIntensityParameters:
     def test_input_dtype_string_value(self):
         from model_api.models.types import StringValue
 
-        sv = StringValue(default_value="u8", choices=("u8", "f32", "u16"))
+        sv = StringValue(default_value="u8", choices=("u8", "f32", "u16", "i16"))
         assert sv.validate("u8") == []
         assert sv.validate("f32") == []
         assert sv.validate("u16") == []
+        assert sv.validate("i16") == []
         assert len(sv.validate("i32")) > 0
 
     def test_intensity_mode_string_value(self):
@@ -305,3 +324,139 @@ class TestBackwardCompat:
         rng = np.random.default_rng(42)
         img = rng.integers(0, 255, size=(16, 16, 3), dtype=np.uint8)
         np.testing.assert_array_equal(t_old(img), t_new(img))
+
+
+# ---------------------------------------------------------------------------
+# repeat_channels helpers
+# ---------------------------------------------------------------------------
+
+
+class TestRepeatChannels:
+    """Tests for _repeat_single_channel helpers (Python-side and OV graph)."""
+
+    def test_hw_to_hwc3(self):
+        """HxW grayscale image is expanded to HxWx3."""
+        from model_api.models.image_model import _repeat_single_channel
+
+        img = np.arange(12, dtype=np.uint8).reshape(3, 4)
+        out = _repeat_single_channel(img)
+        assert out.shape == (3, 4, 3)
+        np.testing.assert_array_equal(out[:, :, 0], img)
+        np.testing.assert_array_equal(out[:, :, 1], img)
+        np.testing.assert_array_equal(out[:, :, 2], img)
+
+    def test_hwc1_to_hwc3(self):
+        """HxWx1 image is expanded to HxWx3."""
+        from model_api.models.image_model import _repeat_single_channel
+
+        img = np.arange(6, dtype=np.uint16).reshape(2, 3, 1)
+        out = _repeat_single_channel(img)
+        assert out.shape == (2, 3, 3)
+        np.testing.assert_array_equal(out[:, :, 0], img[:, :, 0])
+
+    def test_3ch_noop(self):
+        """Already 3-channel image passes through unchanged."""
+        from model_api.models.image_model import _repeat_single_channel
+
+        img = np.ones((4, 4, 3), dtype=np.float32) * 42.0
+        out = _repeat_single_channel(img)
+        np.testing.assert_array_equal(out, img)
+
+    def test_utils_repeat_hw(self):
+        """utils._repeat_single_channel_np works for HxW input."""
+        from model_api.adapters.utils import _repeat_single_channel_np
+
+        img = np.array([[10, 20], [30, 40]], dtype=np.int16)
+        out = _repeat_single_channel_np(img)
+        assert out.shape == (2, 2, 3)
+        np.testing.assert_array_equal(out[:, :, 0], img)
+
+    def test_utils_repeat_3ch_noop(self):
+        """utils._repeat_single_channel_np is a no-op for 3ch."""
+        from model_api.adapters.utils import _repeat_single_channel_np
+
+        img = np.zeros((2, 2, 3), dtype=np.uint8)
+        out = _repeat_single_channel_np(img)
+        assert out is img
+
+    def test_ov_graph_repeat(self):
+        """OV graph repeat_channels_preprocess tiles 1ch→3ch."""
+        import openvino as ov
+        from openvino.preprocess import PrePostProcessor
+
+        from model_api.adapters.utils import repeat_channels_preprocess
+
+        model_h, model_w = 4, 4
+        param_node = ov.op.Parameter(ov.Type.f32, ov.Shape([1, model_h, model_w, 3]))
+        model = ov.Model(param_node, [param_node])
+        ppp = PrePostProcessor(model)
+        ppp.input().tensor().set_element_type(ov.Type.u8)
+        ppp.input().tensor().set_layout(ov.Layout("NHWC"))
+        ppp.input().tensor().set_shape([1, model_h, model_w, 1])
+        ppp.input().preprocess().custom(repeat_channels_preprocess())
+        ppp.input().preprocess().convert_element_type(ov.Type.f32)
+        built = ppp.build()
+        compiled = ov.Core().compile_model(built, "CPU")
+
+        img = np.arange(16, dtype=np.uint8).reshape(1, 4, 4, 1)
+        result = next(iter(compiled(img).values()))
+        assert result.shape == (1, model_h, model_w, 3)
+        # Each channel should equal the original single channel
+        np.testing.assert_array_equal(result[0, :, :, 0], result[0, :, :, 1])
+        np.testing.assert_array_equal(result[0, :, :, 0], result[0, :, :, 2])
+        np.testing.assert_allclose(result[0, :, :, 0], img[0, :, :, 0].astype(np.float32))
+
+    def test_parameter_default_false(self):
+        """intensity_repeat_channels defaults to False."""
+        from model_api.models.parameters import ParameterRegistry
+
+        pp = ParameterRegistry.IMAGE_PREPROCESSING
+        assert "intensity_repeat_channels" in pp
+        assert pp["intensity_repeat_channels"].default_value is False
+
+
+# ---------------------------------------------------------------------------
+# i16 (int16) dtype support
+# ---------------------------------------------------------------------------
+
+
+class TestInt16Support:
+    def test_input_dtype_accepts_i16(self):
+        """ParameterRegistry accepts i16 as a valid input_dtype."""
+        from model_api.models.parameters import ParameterRegistry
+
+        pp = ParameterRegistry.IMAGE_PREPROCESSING
+        sv = pp["input_dtype"]
+        assert sv.validate("i16") == []
+
+    def test_numpy_dtype_map_has_i16(self):
+        from model_api.adapters.utils import _NUMPY_DTYPE_MAP
+
+        assert "i16" in _NUMPY_DTYPE_MAP
+        assert _NUMPY_DTYPE_MAP["i16"] is np.int16
+
+    def test_scale_to_unit_i16(self):
+        """scale_to_unit works with int16 input."""
+        fn = create_intensity_fn("scale_to_unit", max_value=32767.0)
+        img = np.array([-1000, 0, 16383, 32767], dtype=np.int16)
+        out = fn(img)
+        np.testing.assert_allclose(out, img.astype(np.float32) / 32767.0, atol=1e-6)
+
+    def test_ov_graph_i16_element_type(self):
+        """OV PrePostProcessor accepts i16 element type."""
+        import openvino as ov
+        from openvino.preprocess import PrePostProcessor
+
+        model_h, model_w = 4, 4
+        param_node = ov.op.Parameter(ov.Type.f32, ov.Shape([1, model_h, model_w, 3]))
+        model = ov.Model(param_node, [param_node])
+        ppp = PrePostProcessor(model)
+        ppp.input().tensor().set_element_type(ov.Type.i16)
+        ppp.input().tensor().set_layout(ov.Layout("NHWC"))
+        ppp.input().preprocess().convert_element_type(ov.Type.f32)
+        built = ppp.build()
+        compiled = ov.Core().compile_model(built, "CPU")
+
+        img = np.arange(-24, 24, dtype=np.int16).reshape(1, model_h, model_w, 3)
+        result = next(iter(compiled(img).values()))
+        np.testing.assert_allclose(result, img.astype(np.float32))

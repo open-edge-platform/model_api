@@ -225,6 +225,7 @@ class InferenceAdapter(ABC):
         intensity_percentile_high: float = 99.0,
         intensity_scale_factor: float = 1.0,
         intensity_min_value: float = 0.0,
+        intensity_repeat_channels: bool = False,
         input_frame_shape: tuple[int, int] | None = None,
     ):
         """

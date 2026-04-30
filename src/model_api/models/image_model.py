@@ -11,7 +11,12 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from model_api.adapters.utils import RESIZE_TYPES, InputTransform, create_intensity_fn
+from model_api.adapters.utils import (
+    RESIZE_TYPES,
+    InputTransform,
+    create_intensity_fn,
+)
+from model_api.adapters.utils import _repeat_single_channel_np as _repeat_single_channel
 from model_api.models.model import Model
 from model_api.models.parameters import ParameterRegistry
 
@@ -77,7 +82,7 @@ class ImageModel(Model):
         intensity_mode = self.params.intensity_mode
         intensity_max_value = self.params.intensity_max_value
         if intensity_max_value is None and intensity_mode == "scale_to_unit":
-            _DTYPE_MAX_VALUE = {"u8": 255.0, "u16": 65535.0, "f32": 1.0}
+            _DTYPE_MAX_VALUE = {"u8": 255.0, "u16": 65535.0, "i16": 32767.0, "f32": 1.0}
             intensity_max_value = _DTYPE_MAX_VALUE.get(self.params.input_dtype)
 
         # Build Python-side intensity function for non-embeddable modes or fallback paths
@@ -129,6 +134,7 @@ class ImageModel(Model):
                 intensity_percentile_high=self.params.intensity_percentile_high,
                 intensity_scale_factor=self.params.intensity_scale_factor,
                 intensity_min_value=self.params.intensity_min_value,
+                intensity_repeat_channels=self.params.intensity_repeat_channels,
                 input_frame_shape=input_frame_shape,
             )
             self._embedded_processing = True
@@ -220,6 +226,10 @@ class ImageModel(Model):
             dict_inputs, meta = self._preprocess_embedded(inputs)
             dict_inputs, meta = self.preprocess(dict_inputs, meta)
             return [dict_inputs, meta]
+
+        # 0. Expand single-channel to 3 channels if requested
+        if self.params.intensity_repeat_channels:
+            inputs = _repeat_single_channel(inputs)
 
         # 1. Resize
         resized_image, meta = self._resize_image(inputs)
