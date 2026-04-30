@@ -79,6 +79,14 @@ class ModelConverter:
             categories = [label.replace(" ", "_") for label in categories]
             return " ".join(categories)
 
+        if label_set == "IMAGENET21K":
+            from timm.data import ImageNetInfo
+
+            info = ImageNetInfo("imagenet21k")
+            categories = info.label_descriptions()
+            categories = [desc.split(",")[0].strip().replace(" ", "_") for desc in categories]
+            return " ".join(categories)
+
         return None
 
     def download_from_huggingface(

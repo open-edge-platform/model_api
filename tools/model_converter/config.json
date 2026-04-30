@@ -597,7 +597,8 @@
       "mean_values": "123.675 116.28 103.53",
       "scale_values": "58.395 57.12 57.375",
       "license": "apache-2.0",
-      "license_link": "https://spdx.org/licenses/Apache-2.0.html"
+      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
+      "labels": "IMAGENET21K"
     },
     {
       "model_short_name": "vit_small_patch14_dinov2.lvd142m",
