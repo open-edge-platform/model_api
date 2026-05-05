@@ -18,6 +18,7 @@ import logging
 import shutil
 import sys
 import urllib.request
+from collections import OrderedDict
 from pathlib import Path
 from typing import Any
 
@@ -26,6 +27,42 @@ import numpy as np
 import torch
 import torch.nn as nn
 from huggingface_hub import hf_hub_download, snapshot_download
+
+
+_MODEL_API_METADATA_FIELDS = (
+    "resize_type",
+    "pad_value",
+    "input_dtype",
+    "confidence_threshold",
+    "postprocess_semantic_masks",
+    "nms_execute",
+    "iou_threshold",
+    "agnostic_nms",
+    "nms_max_predictions",
+)
+
+
+class TorchvisionMaskRCNNExportAdapter(nn.Module):
+    """Adapt TorchVision Mask R-CNN to the Model API MaskRCNN output contract."""
+
+    def __init__(self, model: nn.Module):
+        super().__init__()
+        self.model = model
+
+    def forward(self, images: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Return boxes-with-scores, shifted labels, and raw masks for one image."""
+        image_list = [images[0]]
+        transformed_images, _ = self.model.transform(image_list, None)
+        features = self.model.backbone(transformed_images.tensors)
+        if isinstance(features, torch.Tensor):
+            features = OrderedDict([("0", features)])
+        proposals, _ = self.model.rpn(transformed_images, features, None)
+        predictions, _ = self.model.roi_heads(features, proposals, transformed_images.image_sizes, None)
+        prediction = predictions[0]
+        boxes = torch.cat((prediction["boxes"], prediction["scores"].unsqueeze(1)), dim=1)
+        labels = prediction["labels"] - 1
+        masks = prediction["masks"].squeeze(1)
+        return boxes, labels, masks
 
 
 class ModelConverter:
@@ -84,6 +121,13 @@ class ModelConverter:
             info = ImageNetInfo("imagenet21k")
             categories = info.label_descriptions()
             categories = [desc.split(",")[0].strip().replace(" ", "_") for desc in categories]
+            return " ".join(categories)
+
+        if label_set == "COCO_V1":
+            from torchvision.models.detection import MaskRCNN_ResNet50_FPN_Weights
+
+            categories = MaskRCNN_ResNet50_FPN_Weights.COCO_V1.meta["categories"]
+            categories = [label.replace(" ", "_") for label in categories]
             return " ".join(categories)
 
         return None
@@ -729,8 +773,9 @@ class ModelConverter:
         import openvino as ov
 
         try:
+            model = self._prepare_model_for_export(model, model_config)
             model.eval()
-            dummy_input = torch.randn(*input_shape)
+            dummy_input = self._create_example_input(input_shape, model_config)
             self.logger.info("Direct PyTorch to OpenVINO conversion")
             ov_model = ov.convert_model(model, example_input=dummy_input)
             self.logger.info("✓ PyTorch to OpenVINO conversion complete")
@@ -787,6 +832,19 @@ class ModelConverter:
         except Exception as e:
             self.logger.error(f"Failed to export model: {e}")
             raise
+
+    def _prepare_model_for_export(self, model: nn.Module, model_config: dict[str, Any]) -> nn.Module:
+        """Prepare model for OpenVINO conversion."""
+        if str(model_config.get("model_type", "")).lower() == "maskrcnn":
+            self.logger.info("Adapting TorchVision Mask R-CNN outputs for Model API")
+            return TorchvisionMaskRCNNExportAdapter(model)
+        return model
+
+    def _create_example_input(self, input_shape: list[int], model_config: dict[str, Any]) -> torch.Tensor:
+        """Create example input suitable for the configured model type."""
+        if str(model_config.get("model_type", "")).lower() == "maskrcnn":
+            return torch.rand(*input_shape)
+        return torch.randn(*input_shape)
 
     def _postprocess_openvino_model(
         self,
@@ -909,14 +967,19 @@ class ModelConverter:
             reverse_input_channels = config.get("reverse_input_channels", True)
             mean_values = config.get("mean_values", "123.675 116.28 103.53")
             scale_values = config.get("scale_values", "58.395 57.12 57.375")
+            model_type = config.get("model_type", "")
 
             metadata = {
-                ("model_info", "model_type"): config.get("model_type", ""),
+                ("model_info", "model_type"): model_type,
                 ("model_info", "model_short_name"): model_short_name,
-                ("model_info", "reverse_input_channels"): str(reverse_input_channels),
+                ("model_info", "reverse_input_channels"): self._metadata_value(reverse_input_channels),
                 ("model_info", "mean_values"): mean_values,
                 ("model_info", "scale_values"): scale_values,
             }
+
+            for metadata_field in _MODEL_API_METADATA_FIELDS:
+                if metadata_field in config and config[metadata_field] is not None:
+                    metadata["model_info", metadata_field] = self._metadata_value(config[metadata_field])
 
             # Add labels if specified in config
             labels_config = config.get("labels")
@@ -943,18 +1006,19 @@ class ModelConverter:
             )
 
             # Quantize the model if dataset is available
-            if self.dataset_path:
+            if self.dataset_path and self.dataset_path.exists():
                 self.logger.info("Creating calibration dataset for INT8 quantization")
-                has_labels = bool(config.get("labels"))
+                return_validation_labels = model_type == "Classification" and bool(config.get("labels"))
 
-                self.logger.info("Creating validation dataset for accuracy measurement")
+                if return_validation_labels:
+                    self.logger.info("Creating validation dataset for accuracy measurement")
                 validation_data, validation_labels = self.create_calibration_dataset(
                     input_shape=input_shape,
                     mean_values=mean_values,
                     scale_values=scale_values,
                     reverse_input_channels=reverse_input_channels,
                     subset_size=300,
-                    return_labels=has_labels,
+                    return_labels=return_validation_labels,
                 )
 
                 if validation_data:
@@ -990,6 +1054,13 @@ class ModelConverter:
 
             self.logger.debug(traceback.format_exc())
             return False
+
+    @staticmethod
+    def _metadata_value(value: Any) -> str:
+        """Convert config values to Model API rt_info string values."""
+        if isinstance(value, (list, tuple)):
+            return " ".join(str(item) for item in value)
+        return str(value)
 
     def process_config_file(
         self,
