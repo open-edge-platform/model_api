@@ -5,15 +5,22 @@
 
 """Export adapters for different model types."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from model_converter.adapters.base import ExportAdapter
 from model_converter.adapters.maskrcnn import TorchvisionMaskRCNNExportAdapter
+
+if TYPE_CHECKING:
+    import torch
 
 _ADAPTER_REGISTRY: dict[str, type[ExportAdapter]] = {
     "maskrcnn": TorchvisionMaskRCNNExportAdapter,
 }
 
 
-def get_adapter(model_type: str, model: "torch.nn.Module") -> "torch.nn.Module":
+def get_adapter(model_type: str, model: torch.nn.Module) -> torch.nn.Module:
     """
     Get the appropriate export adapter for a model type.
 
@@ -26,8 +33,6 @@ def get_adapter(model_type: str, model: "torch.nn.Module") -> "torch.nn.Module":
     Returns:
         Adapted model (or original model if no adapter needed)
     """
-    import torch.nn as nn
-
     adapter_class = _ADAPTER_REGISTRY.get(model_type.lower())
     if adapter_class is not None:
         return adapter_class(model)

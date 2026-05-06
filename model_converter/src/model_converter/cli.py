@@ -29,7 +29,6 @@ import torch.nn as nn
 from model_converter.adapters import get_adapter
 from model_converter.downloaders import URLDownloader
 
-
 _MODEL_API_METADATA_FIELDS = (
     "resize_type",
     "pad_value",
@@ -789,6 +788,75 @@ class ModelConverter:
 
         return model
 
+    def _load_model_from_config(self, config: dict[str, Any]) -> Any:
+        """Load a PyTorch model based on configuration (HuggingFace or traditional weights)."""
+        huggingface_repo = config.get("huggingface_repo")
+        if huggingface_repo:
+            huggingface_revision = config.get("huggingface_revision")
+            if not huggingface_revision:
+                error_msg = "Hugging Face models must define 'huggingface_revision' with an immutable commit SHA"
+                raise ValueError(error_msg)
+
+            model_library = config.get("model_library", "timm")
+            model_params = config.get("model_params")
+            return self.load_huggingface_model(
+                repo_id=huggingface_repo,
+                revision=huggingface_revision,
+                model_library=model_library,
+                model_params=model_params,
+            )
+
+        # Traditional PyTorch model workflow
+        weights_url = config["weights_url"]
+        weights_path = self._url_downloader.download(url=weights_url)
+
+        model_class_name = config.get("model_class_name", "torch.nn.Module")
+        model_class = self.load_model_class(model_class_name)
+
+        checkpoint = self.load_checkpoint(weights_path)
+
+        model_params = config.get("model_params")
+        return self.create_model(model_class, checkpoint, model_params)
+
+    def _quantize_and_cleanup(self, config: dict[str, Any], fp32_model_path: Path, **kwargs: Any) -> None:
+        """Run INT8 quantization and clean up temporary FP32 model files."""
+        model_type = kwargs["model_type"]
+        self.logger.info("Creating calibration dataset for INT8 quantization")
+        return_validation_labels = model_type == "Classification" and bool(config.get("labels"))
+
+        if return_validation_labels:
+            self.logger.info("Creating validation dataset for accuracy measurement")
+        validation_data, validation_labels = self.create_calibration_dataset(
+            input_shape=kwargs["input_shape"],
+            mean_values=kwargs["mean_values"],
+            scale_values=kwargs["scale_values"],
+            reverse_input_channels=kwargs["reverse_input_channels"],
+            subset_size=300,
+            return_labels=return_validation_labels,
+        )
+
+        if validation_data:
+            self.quantize_model(
+                model_path=fp32_model_path,
+                calibration_data=validation_data,
+                model_config=config,
+                preset="mixed",
+                validation_data=validation_data if validation_labels else None,
+                validation_labels=validation_labels or None,
+            )
+
+        # Clean up temporary FP32 model after quantization
+        try:
+            if fp32_model_path.exists():
+                fp32_model_path.unlink()
+                self.logger.debug(f"Removed temporary FP32 model: {fp32_model_path}")
+            fp32_bin_path = fp32_model_path.with_suffix(".bin")
+            if fp32_bin_path.exists():
+                fp32_bin_path.unlink()
+                self.logger.debug(f"Removed temporary FP32 weights: {fp32_bin_path}")
+        except OSError as e:
+            self.logger.warning(f"Failed to remove temporary FP32 files: {e}")
+
     def process_model_config(self, config: dict[str, Any]) -> bool:
         """
         Process a single model configuration.
@@ -826,39 +894,7 @@ class ModelConverter:
                 self.logger.info(f"Description: {config['description']}")
             self.logger.info("=" * 80)
 
-            # Check if this is a Hugging Face model
-            huggingface_repo = config.get("huggingface_repo")
-            if huggingface_repo:
-                huggingface_revision = config.get("huggingface_revision")
-                if not huggingface_revision:
-                    error_msg = "Hugging Face models must define 'huggingface_revision' with an immutable commit SHA"
-                    raise ValueError(error_msg)
-
-                # Load model from Hugging Face
-                model_library = config.get("model_library", "timm")
-                model_params = config.get("model_params")
-                model = self.load_huggingface_model(
-                    repo_id=huggingface_repo,
-                    revision=huggingface_revision,
-                    model_library=model_library,
-                    model_params=model_params,
-                )
-            else:
-                # Traditional PyTorch model workflow
-                # Download weights
-                weights_url = config["weights_url"]
-                weights_path = self._url_downloader.download(url=weights_url)
-
-                # Load model class
-                model_class_name = config.get("model_class_name", "torch.nn.Module")
-                model_class = self.load_model_class(model_class_name)
-
-                # Load checkpoint
-                checkpoint = self.load_checkpoint(weights_path)
-
-                # Create model
-                model_params = config.get("model_params")
-                model = self.create_model(model_class, checkpoint, model_params)
+            model = self._load_model_from_config(config)
 
             # Prepare export parameters
             input_shape = config.get("input_shape", [1, 3, 224, 224])
@@ -893,9 +929,6 @@ class ModelConverter:
                 else:
                     self.logger.warning(f"Could not load labels for: {labels_config}")
 
-            # Get model library (default to 'timm' for backward compatibility)
-            model_library = config.get("model_library", "timm")
-
             output_path = self.output_dir / model_short_name
             fp16_model_path, fp32_model_path = self.export_to_openvino(
                 model=model,
@@ -909,43 +942,15 @@ class ModelConverter:
 
             # Quantize the model if dataset is available
             if self.dataset_path and self.dataset_path.exists():
-                self.logger.info("Creating calibration dataset for INT8 quantization")
-                return_validation_labels = model_type == "Classification" and bool(config.get("labels"))
-
-                if return_validation_labels:
-                    self.logger.info("Creating validation dataset for accuracy measurement")
-                validation_data, validation_labels = self.create_calibration_dataset(
+                self._quantize_and_cleanup(
+                    config,
+                    fp32_model_path,
+                    model_type=model_type,
                     input_shape=input_shape,
                     mean_values=mean_values,
                     scale_values=scale_values,
                     reverse_input_channels=reverse_input_channels,
-                    subset_size=300,
-                    return_labels=return_validation_labels,
                 )
-
-                if validation_data:
-                    # Use FP32 model for better quantization accuracy
-                    self.quantize_model(
-                        model_path=fp32_model_path,
-                        calibration_data=validation_data,
-                        model_config=config,
-                        preset="mixed",
-                        validation_data=validation_data if validation_labels else None,
-                        validation_labels=validation_labels or None,
-                    )
-
-                # Clean up temporary FP32 model after quantization
-                try:
-                    if fp32_model_path.exists():
-                        fp32_model_path.unlink()
-                        self.logger.debug(f"Removed temporary FP32 model: {fp32_model_path}")
-                    # Also remove the .bin file
-                    fp32_bin_path = fp32_model_path.with_suffix(".bin")
-                    if fp32_bin_path.exists():
-                        fp32_bin_path.unlink()
-                        self.logger.debug(f"Removed temporary FP32 weights: {fp32_bin_path}")
-                except OSError as e:
-                    self.logger.warning(f"Failed to remove temporary FP32 files: {e}")
 
             self.logger.info(f"✓ Successfully converted {model_short_name}")
             return True

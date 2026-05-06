@@ -8,7 +8,6 @@
 from collections import OrderedDict
 
 import torch
-import torch.nn as nn
 
 from model_converter.adapters.base import ExportAdapter
 
