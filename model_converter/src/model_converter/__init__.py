@@ -5,6 +5,6 @@
 
 """Tools for converting models to OpenVINO IR."""
 
-from .model_converter import ModelConverter, list_models, main
+from .cli import ModelConverter, list_models, main
 
 __all__ = ["ModelConverter", "list_models", "main"]
