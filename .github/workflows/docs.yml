@@ -31,11 +31,11 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv sync --locked --extra docs
+          uv --directory model_api sync --locked --group docs
 
       - name: Build Docs
-        working-directory: docs
-        run: uv run make html
+        working-directory: model_api
+        run: uv run make -C docs html
 
       - name: Branch name
         id: branch_name
@@ -82,7 +82,7 @@ jobs:
           git fetch
           git checkout gh-pages
           mkdir -p /tmp/docs_build
-          cp -r docs/build/html/* /tmp/docs_build/
+          cp -r model_api/docs/build/html/* /tmp/docs_build/
           rm -rf "$RELEASE_VERSION"/*
           echo '<html><head><meta http-equiv="refresh" content="0; url=latest/" /></head></html>' > index.html
           mkdir -p "$RELEASE_VERSION"

@@ -36,6 +36,16 @@ Training Extensions embed all the metadata required for inference into model fil
 
 `pip install openvino-model-api`
 
+## Repository layout
+
+This repository contains two independently installable Python subprojects:
+
+- `model_api/` — the inference library published as `openvino-model-api` with a minimal runtime dependency set.
+- `model_converter/` — conversion tooling published as `openvino-model-converter`, with conversion-time dependencies such as PyTorch, TorchVision, OpenVINO, ONNX, and NNCF.
+
+Each subproject owns its own `pyproject.toml` and `uv.lock`.
+Shared repository files, including this `README.md`, `LICENSE`, `CONTRIBUTING.md`, `SECURITY.md`, and CI workflows, remain at the repository root.
+
 ## Usage
 
 ```python
@@ -89,4 +99,4 @@ print(f"Inference result: {result}")
 model.save("serialized_with_metadata.xml")
 ```
 
-For more details please refer to the [examples](https://github.com/openvinotoolkit/model_api/tree/master/examples) of this project.
+For more details please refer to the [examples](https://github.com/openvinotoolkit/model_api/tree/master/model_api/examples) of this project.
