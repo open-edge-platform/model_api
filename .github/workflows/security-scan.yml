@@ -73,8 +73,10 @@ jobs:
     if: always()
     steps:
       - name: Check bandit scan results
+        env:
+          RESULT: ${{ needs.bandit-scan-project.result }}
         run: |
-          if [[ "${{ needs.bandit-scan-project.result }}" == "failure" ]]; then
+          if [[ "$RESULT" == "failure" ]]; then
             exit 1
           fi
 
