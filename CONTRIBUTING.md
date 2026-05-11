@@ -35,17 +35,24 @@ Set up your development environment to start contributing. This involves install
 <details>
 <summary>Development Environment Setup Instructions</summary>
 
-1. Create the subproject environments and install the development requirements:
+Install only the subproject(s) you are working on. Each step is independent.
+
+1. **`model_api`** — Create the environment and install the development requirements:
 
    ```bash
    uv --directory model_api sync --all-extras --group tests --group docs
-   uv --directory model_converter sync --group tests
    ```
 
    The optional YOLOv8 accuracy tests need the heavier `yolo-tests` group:
 
    ```bash
    uv --directory model_api sync --group tests --group yolo-tests --extra-index-url https://download.pytorch.org/whl/cpu
+   ```
+
+2. **`model_converter`** — Create the environment and install the development requirements:
+
+   ```bash
+   uv --directory model_converter sync --group tests
    ```
 
 </details>
