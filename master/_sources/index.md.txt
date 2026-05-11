@@ -40,7 +40,10 @@ Tilers description[todo]
 :caption: Python Reference
 :hidden:
 
-./index
+./adapters/index
+./models/index
+./pipelines/index
+./tilers/index
 ```
 
 ```{toctree}

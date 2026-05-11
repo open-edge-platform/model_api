@@ -51,6 +51,8 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Image Model" href="image_model.html" />
+    <link rel="prev" title="Model" href="model.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -136,6 +138,34 @@
   <ul class="bd-navbar-elements navbar-nav">
     
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="../adapters/index.html">
+    Adapters
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Models
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../pipelines/index.html">
+    Pipelines
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../tilers/index.html">
+    Tilers
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="../guides/index.html">
     Guides
   </a>
@@ -215,6 +245,34 @@
   <ul class="bd-navbar-elements navbar-nav">
     
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="../adapters/index.html">
+    Adapters
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Models
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../pipelines/index.html">
+    Pipelines
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../tilers/index.html">
+    Tilers
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="../guides/index.html">
     Guides
   </a>
@@ -254,7 +312,25 @@
 <nav class="bd-docs-nav bd-links"
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
-  <div class="bd-toc-item navbar-nav"></div>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Models</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="utils.html">Utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="detection_model.html">Detection Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="anomaly.html">Anomaly</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ssd.html">Ssd</a></li>
+<li class="toctree-l1"><a class="reference internal" href="keypoint_detection.html">Keypoint Detection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="visual_prompting.html">Visual Prompting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="classification.html">Classification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="segmentation.html">Segmentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="instance_segmentation.html">Instance Segmentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model.html">Model</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Action Classification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image_model.html">Image Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="types.html">Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sam_models.html">Sam Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="yolo.html">Yolo</a></li>
+</ul>
+</div>
 </nav></div>
     </div>
   
@@ -293,6 +369,9 @@
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Models</a></li>
+    
     <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Action Classification</span></li>
   </ul>
 </nav>
@@ -310,9 +389,79 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="module-model_api.models.action_classification">
-<span id="action-classification"></span><h1>Action Classification<a class="headerlink" href="#module-model_api.models.action_classification" title="Link to this heading">#</a></h1>
-<dl class="py class">
+  <section id="action-classification">
+<h1>Action Classification<a class="headerlink" href="#action-classification" title="Link to this heading">#</a></h1>
+<section id="description">
+<h2>Description<a class="headerlink" href="#description" title="Link to this heading">#</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">ActionClassificationModel</span></code> is a wrapper class designed for action classification models.
+This class encapsulates preprocessing and postprocessing for action classification OpenVINO models satisfying a certain specification.
+Unlike <code class="docutils literal notranslate"><span class="pre">ImageModel</span></code>, it accepts video clips as input, so it performs data preparation outside the OpenVINO graph.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">#</a></h2>
+<p>The following parameters can be provided via Python API or RT Info embedded into an OpenVINO model:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">labels</span></code> (<code class="docutils literal notranslate"><span class="pre">list[str]</span></code>): List of class labels.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">path_to_labels</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Path to file with labels. Labels are overridden if this is set.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mean_values</span></code> (<code class="docutils literal notranslate"><span class="pre">list[int</span> <span class="pre">|</span> <span class="pre">float]</span></code>): Normalization values subtracted from image channels during preprocessing.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pad_value</span></code> (<code class="docutils literal notranslate"><span class="pre">int</span></code>): Pad value used during the <code class="docutils literal notranslate"><span class="pre">resize_image_letterbox</span></code> operation embedded within the model.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">resize_type</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): Resizing method. Valid options include <code class="docutils literal notranslate"><span class="pre">crop</span></code>, <code class="docutils literal notranslate"><span class="pre">standard</span></code>, <code class="docutils literal notranslate"><span class="pre">fit_to_window</span></code>, and <code class="docutils literal notranslate"><span class="pre">fit_to_window_letterbox</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">reverse_input_channels</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): Whether to reverse input channel order.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">scale_values</span></code> (<code class="docutils literal notranslate"><span class="pre">list[int</span> <span class="pre">|</span> <span class="pre">float]</span></code>): Normalization values used to divide image channels during preprocessing.</p></li>
+</ul>
+</section>
+<section id="openvino-model-specifications">
+<h2>OpenVINO Model Specifications<a class="headerlink" href="#openvino-model-specifications" title="Link to this heading">#</a></h2>
+<section id="inputs">
+<h3>Inputs<a class="headerlink" href="#inputs" title="Link to this heading">#</a></h3>
+<p>A single 6D tensor with the following layout:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">N</span></code>: Batch size.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">S</span></code>: Number of clips x number of crops.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">C</span></code>: Number of channels.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">T</span></code>: Time.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">H</span></code>: Height.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">W</span></code>: Width.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">NSTHWC</span></code> layout is also supported.</p>
+</section>
+<section id="outputs">
+<h3>Outputs<a class="headerlink" href="#outputs" title="Link to this heading">#</a></h3>
+<p>A single tensor containing softmax-activated logits.</p>
+</section>
+</section>
+<section id="wrapper-input-output-specifications">
+<h2>Wrapper input-output specifications<a class="headerlink" href="#wrapper-input-output-specifications" title="Link to this heading">#</a></h2>
+<section id="id1">
+<h3>Inputs<a class="headerlink" href="#id1" title="Link to this heading">#</a></h3>
+<p>A single clip in <code class="docutils literal notranslate"><span class="pre">THWC</span></code> format.</p>
+</section>
+<section id="id2">
+<h3>Outputs<a class="headerlink" href="#id2" title="Link to this heading">#</a></h3>
+<p>The output is represented as a <code class="docutils literal notranslate"><span class="pre">ClassificationResult</span></code> object, which includes the indices, labels, and logits of the top predictions.
+At present, saliency maps, feature vectors, and raw scores are not provided.</p>
+</section>
+</section>
+<section id="example">
+<h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">cv2</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">model_api.adapters</span><span class="w"> </span><span class="kn">import</span> <span class="n">OpenvinoAdapter</span><span class="p">,</span> <span class="n">create_core</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">model_api.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ActionClassificationModel</span>
+
+
+<span class="n">model_path</span> <span class="o">=</span> <span class="s2">&quot;action_classification.xml&quot;</span>
+<span class="n">inference_adapter</span> <span class="o">=</span> <span class="n">OpenvinoAdapter</span><span class="p">(</span><span class="n">create_core</span><span class="p">(),</span> <span class="n">model_path</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">&quot;CPU&quot;</span><span class="p">)</span>
+<span class="n">action_cls_model</span> <span class="o">=</span> <span class="n">ActionClassificationModel</span><span class="p">(</span><span class="n">inference_adapter</span><span class="p">,</span> <span class="n">preload</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">cap</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">VideoCapture</span><span class="p">(</span><span class="s2">&quot;sample.mp4&quot;</span><span class="p">)</span>
+<span class="n">input_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">cap</span><span class="o">.</span><span class="n">read</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">action_cls_model</span><span class="o">.</span><span class="n">clip_size</span><span class="p">)])</span>
+
+<span class="n">results</span> <span class="o">=</span> <span class="n">action_cls_model</span><span class="p">(</span><span class="n">input_data</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py class" id="module-model_api.models.action_classification">
 <dt class="sig sig-object py" id="model_api.models.action_classification.ActionClassificationModel">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">model_api.models.action_classification.</span></span><span class="sig-name descname"><span class="pre">ActionClassificationModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inference_adapter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configuration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preload</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.action_classification.ActionClassificationModel" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="model.html#model_api.models.model.Model" title="model_api.models.model.Model"><code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code></a></p>
@@ -484,6 +633,7 @@ additional supported inputs, the <cite>preprocess</cite> should be overloaded in
 </dd></dl>
 
 </section>
+</section>
 
 
                 </article>
@@ -495,6 +645,24 @@ additional supported inputs, the <cite>preprocess</cite> should be overloaded in
                 <footer class="prev-next-footer d-print-none">
                   
 <div class="prev-next-area">
+    <a class="left-prev"
+       href="model.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Model</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="image_model.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Image Model</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
 </div>
                 </footer>
               
@@ -514,16 +682,31 @@ additional supported inputs, the <cite>preprocess</cite> should be overloaded in
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.action_classification.ActionClassificationModel"><code class="docutils literal notranslate"><span class="pre">ActionClassificationModel</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.action_classification.ActionClassificationModel.image_blob_names"><code class="docutils literal notranslate"><span class="pre">ActionClassificationModel.image_blob_names</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.action_classification.ActionClassificationModel.image_blob_name"><code class="docutils literal notranslate"><span class="pre">ActionClassificationModel.image_blob_name</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.action_classification.ActionClassificationModel.resize_type"><code class="docutils literal notranslate"><span class="pre">ActionClassificationModel.resize_type</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.action_classification.ActionClassificationModel.resize"><code class="docutils literal notranslate"><span class="pre">ActionClassificationModel.resize</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.action_classification.ActionClassificationModel.input_transform"><code class="docutils literal notranslate"><span class="pre">ActionClassificationModel.input_transform</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.action_classification.ActionClassificationModel.parameters"><code class="docutils literal notranslate"><span class="pre">ActionClassificationModel.parameters()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.action_classification.ActionClassificationModel.base_preprocess"><code class="docutils literal notranslate"><span class="pre">ActionClassificationModel.base_preprocess()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.action_classification.ActionClassificationModel.postprocess"><code class="docutils literal notranslate"><span class="pre">ActionClassificationModel.postprocess()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.action_classification.ActionClassificationModel.clip_size"><code class="docutils literal notranslate"><span class="pre">ActionClassificationModel.clip_size</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#description">Description</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#parameters">Parameters</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#openvino-model-specifications">OpenVINO Model Specifications</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#inputs">Inputs</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#outputs">Outputs</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#wrapper-input-output-specifications">Wrapper input-output specifications</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Inputs</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Outputs</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.action_classification.ActionClassificationModel"><code class="docutils literal notranslate"><span class="pre">ActionClassificationModel</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.action_classification.ActionClassificationModel.image_blob_names"><code class="docutils literal notranslate"><span class="pre">ActionClassificationModel.image_blob_names</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.action_classification.ActionClassificationModel.image_blob_name"><code class="docutils literal notranslate"><span class="pre">ActionClassificationModel.image_blob_name</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.action_classification.ActionClassificationModel.resize_type"><code class="docutils literal notranslate"><span class="pre">ActionClassificationModel.resize_type</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.action_classification.ActionClassificationModel.resize"><code class="docutils literal notranslate"><span class="pre">ActionClassificationModel.resize</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.action_classification.ActionClassificationModel.input_transform"><code class="docutils literal notranslate"><span class="pre">ActionClassificationModel.input_transform</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.action_classification.ActionClassificationModel.parameters"><code class="docutils literal notranslate"><span class="pre">ActionClassificationModel.parameters()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.action_classification.ActionClassificationModel.base_preprocess"><code class="docutils literal notranslate"><span class="pre">ActionClassificationModel.base_preprocess()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.action_classification.ActionClassificationModel.postprocess"><code class="docutils literal notranslate"><span class="pre">ActionClassificationModel.postprocess()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.action_classification.ActionClassificationModel.clip_size"><code class="docutils literal notranslate"><span class="pre">ActionClassificationModel.clip_size</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
