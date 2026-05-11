@@ -44,8 +44,14 @@ jobs:
           confidence-level: "LOW"
           fail-on-findings: ${{ (github.event_name == 'pull_request' || github.event_name == 'merge_group') && 'true' || 'false' }}
 
-  bandit-scan:
+  bandit-scan-project:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project:
+          - model_api
+          - model_converter
     permissions:
       contents: read
       security-events: write # Needed to upload the results to code-scanning dashboard
@@ -58,8 +64,21 @@ jobs:
           scan-scope: ${{ (github.event_name == 'pull_request' || github.event_name == 'merge_group') && 'changed' || 'all' }}
           severity-level: "LOW"
           confidence-level: "LOW"
-          config_file: "pyproject.toml"
+          config_file: "${{ matrix.project }}/pyproject.toml"
           fail-on-findings: ${{ (github.event_name == 'pull_request' || github.event_name == 'merge_group') && 'true' || 'false' }}
+
+  bandit-scan:
+    runs-on: ubuntu-latest
+    needs: [bandit-scan-project]
+    if: always()
+    steps:
+      - name: Check bandit scan results
+        env:
+          RESULT: ${{ needs.bandit-scan-project.result }}
+        run: |
+          if [[ "$RESULT" == "failure" ]]; then
+            exit 1
+          fi
 
   trivy-scan:
     runs-on: ubuntu-latest

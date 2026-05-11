@@ -19,15 +19,36 @@ repos:
     hooks:
       # Run the linter.
       - id: ruff
-        args: ["--fix"]
+        name: ruff (model_api)
+        args: ["--fix", "--config=model_api/pyproject.toml"]
+        files: ^model_api/
+      - id: ruff
+        name: ruff (model_converter)
+        args: ["--fix", "--config=model_converter/pyproject.toml"]
+        files: ^model_converter/
       # Run the formatter
       - id: ruff-format
+        name: ruff-format (model_api)
+        args: ["--config=model_api/pyproject.toml"]
+        files: ^model_api/
+      - id: ruff-format
+        name: ruff-format (model_converter)
+        args: ["--config=model_converter/pyproject.toml"]
+        files: ^model_converter/
 
   # python static type checking
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: "v1.11.2"
     hooks:
       - id: mypy
+        name: mypy (model_api)
+        args: ["--config-file=model_api/pyproject.toml"]
+        files: ^model_api/(src|tests|examples)/.*\.py$
+        additional_dependencies: [types-PyYAML, types-setuptools]
+      - id: mypy
+        name: mypy (model_converter)
+        args: ["--config-file=model_converter/pyproject.toml"]
+        files: ^model_converter/(src|tests)/.*\.py$
         additional_dependencies: [types-PyYAML, types-setuptools]
 
   - repo: https://github.com/rbubley/mirrors-prettier
@@ -52,13 +73,28 @@ repos:
     rev: 1.8.3
     hooks:
       - id: bandit
+        name: bandit (model_api)
         args:
           [
             "-c",
-            "pyproject.toml",
+            "model_api/pyproject.toml",
             "--severity-level",
             "all",
             "--confidence-level",
             "all",
           ]
+        files: ^model_api/.*\.py$
+        additional_dependencies: ["bandit[toml]"]
+      - id: bandit
+        name: bandit (model_converter)
+        args:
+          [
+            "-c",
+            "model_converter/pyproject.toml",
+            "--severity-level",
+            "all",
+            "--confidence-level",
+            "all",
+          ]
+        files: ^model_converter/.*\.py$
         additional_dependencies: ["bandit[toml]"]

@@ -3,17 +3,20 @@
 python:
   - changed-files:
       - any-glob-to-any-file:
-          - src/**
+          - model_api/src/**
+          - model_converter/src/**
 
 tests:
   - changed-files:
       - any-glob-to-any-file:
-          - tests/**
+          - model_api/tests/**
+          - model_converter/tests/**
 
 docs:
   - changed-files:
       - any-glob-to-any-file:
-          - docs/**
+          - model_api/docs/**
+          - model_converter/docs/**
           - "**/*.md"
           - "LICENSE"
 
@@ -22,10 +25,14 @@ build:
       - any-glob-to-any-file:
           - ".github/**/*"
           - ".pre-commit-config.yaml"
-          - "pyproject.toml"
+          - "model_api/pyproject.toml"
+          - "model_api/uv.lock"
+          - "model_converter/pyproject.toml"
+          - "model_converter/uv.lock"
           - "**/CMakeLists.txt"
 
 samples:
   - changed-files:
       - any-glob-to-any-file:
-          - examples/**
+          - model_api/examples/**
+          - model_converter/examples/**

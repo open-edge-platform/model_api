@@ -1,0 +1,198 @@
+#
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "openvino_model_converter"
+version = "0.4.1"
+requires-python = ">=3.11"
+authors = [
+  {name = "Intel(R) Corporation"},
+]
+maintainers = [
+  {name = "Intel(R) Corporation"},
+]
+description = "Model Converter: tools for converting PyTorch models to OpenVINO IR"
+readme = "README.md"
+classifiers = [
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+    "defusedxml",
+    "huggingface-hub",
+    "nncf",
+    "numpy>=1.16.6",
+    "onnx",
+    "opencv-python-headless<4.13",
+    "openvino>=2025.3",
+    "timm",
+    "torch",
+    "torchvision",
+    "transformers",
+    "ultralytics",
+]
+
+[project.scripts]
+model-converter = "model_converter.model_converter:main"
+model-converter-yolo = "model_converter.yolo.yolo:main"
+
+[project.urls]
+Homepage = "https://github.com/open-edge-platform/model_api"
+Documentation = "https://github.com/open-edge-platform/model_api/blob/master/model_converter/README.md"
+Repository = "https://github.com/open-edge-platform/model_api.git"
+
+[dependency-groups]
+tests = [
+    "openvino-model-api",
+    "pytest",
+    "pytest-cov",
+    "pytest-mock",
+]
+docs = []
+
+[tool.uv.sources]
+openvino-model-api = { path = "../model_api", editable = true }
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/model_converter"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "README.md",
+    "examples",
+    "scripts",
+    "src/model_converter",
+    "tests",
+]
+
+[tool.mypy]
+ignore_missing_imports = true
+show_error_codes = true
+
+[[tool.mypy.overrides]]
+module = "*"
+follow_imports = "skip"
+follow_imports_for_stubs = true
+
+[tool.ruff]
+preview = true
+line-length = 120
+target-version = "py311"
+src = ["src", "tests"]
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+]
+
+[tool.ruff.lint]
+select = [
+    "F",
+    "E",
+    "W",
+    "C90",
+    "I",
+    "YTT",
+    "S",
+    "BLE",
+    "FBT",
+    "COM",
+    "CPY",
+    "C4",
+    "DTZ",
+    "T10",
+    "EM",
+    "ISC",
+    "ICN",
+    "PIE",
+    "PT",
+    "RSE",
+    "RET",
+    "SLF",
+    "SIM",
+    "TID",
+    "TCH",
+    "INT",
+    "PTH",
+    "FIX",
+    "ERA",
+    "PD",
+    "PGH",
+    "FLY",
+    "NPY",
+    "RUF",
+]
+
+ignore = [
+    "ANN002",
+    "ANN003",
+    "ANN101",
+    "D107",
+    "DTZ005",
+    "E226",
+    "E266",
+    "FBT001",
+    "FBT002",
+    "FIX002",
+    "PGH004",
+    "PLR0912",
+    "PLR0913",
+    "PLR0914",
+    "PLR0915",
+    "PLR0917",
+    "PLR2004",
+    "PT001",
+    "RUF021",
+    "RUF022",
+    "S101",
+    "S404",
+]
+
+fixable = ["ALL"]
+unfixable = []
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.lint.mccabe]
+max-complexity = 15
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.flake8-copyright]
+notice-rgx = """
+# Copyright \\(C\\) (\\d{4}(-\\d{4})?) Intel Corporation
+# SPDX-License-Identifier: Apache-2\\.0
+"""
+
+[tool.bandit]
+skips = ["B101", "B310"]
+
+[tool.coverage.report]
+fail_under = 45
+show_missing = true

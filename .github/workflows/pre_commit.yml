@@ -35,7 +35,9 @@ jobs:
           version: "0.11.3"
 
       - name: Install dependencies
-        run: uv sync --locked --all-extras
+        run: |
+          uv --directory model_api sync --locked --all-extras --group docs
+          uv --directory model_converter sync --locked
 
       - name: Run pre-commit checks
         run: uvx pre-commit run --all-files
@@ -69,13 +71,13 @@ jobs:
 
       - &install-dependencies
         name: Install dependencies
-        run: uv sync --locked --extra tests --extra-index-url https://download.pytorch.org/whl/cpu
+        run: uv --directory model_api sync --locked --group tests --extra-index-url https://download.pytorch.org/whl/cpu
 
       - name: Prepare test data
-        run: uv run python tests/accuracy/download_models.py -d data -j tests/accuracy/public_scope.json -l
+        run: uv --directory model_api run python tests/accuracy/download_models.py -d data -j tests/accuracy/public_scope.json -l
 
       - name: Run Python Test
-        run: uv run pytest --data=./data tests/accuracy/test_accuracy.py
+        run: uv --directory model_api run pytest --data=./data tests/accuracy/test_accuracy.py
 
   unit-functional-tests:
     strategy:
@@ -99,16 +101,16 @@ jobs:
       - *install-dependencies
 
       - name: Run python unit tests
-        run: uv run pytest tests/unit --cov
+        run: uv --directory model_api run pytest tests/unit --cov
 
       - &prepare-test-data
         name: Prepare test data
         run: |
-          uv run python tests/accuracy/download_models.py -d data -j tests/precommit/public_scope.json -l
+          uv --directory model_api run python tests/accuracy/download_models.py -d data -j tests/precommit/public_scope.json -l
 
       - name: Run test
         run: |
-          uv run pytest --data=./data tests/functional
+          uv --directory model_api run pytest --data=./data tests/functional
 
   serving_api-tests:
     strategy:
@@ -134,15 +136,15 @@ jobs:
       - *matrix-setup-uv
 
       - name: Install dependencies
-        run: uv sync --locked --extra tests --extra ovms --extra-index-url https://download.pytorch.org/whl/cpu
+        run: uv --directory model_api sync --locked --group tests --extra ovms --extra-index-url https://download.pytorch.org/whl/cpu
 
       - *prepare-test-data
 
       - name: serving_api
         run: |
-          uv run python -c "from model_api.models import Model; Model.create_model('./data/otx_models/ssd-card-detection.xml').save('ovms_models/ssd-card-detection/1/ssd-card-detection.xml')"
-          docker run -d --rm -v $GITHUB_WORKSPACE/ovms_models/:/models -p 8000:8000 openvino/model_server:latest --model_path /models/ssd-card-detection/ --model_name ssd-card-detection --rest_port 8000 --log_level DEBUG --target_device CPU
-          uv run python examples/serving_api/run.py data/coco128/images/train2017/000000000009.jpg  # detects 4 objects
+          uv --directory model_api run python -c "from model_api.models import Model; Model.create_model('./data/otx_models/ssd-card-detection.xml').save('ovms_models/ssd-card-detection/1/ssd-card-detection.xml')"
+          docker run -d --rm -v $GITHUB_WORKSPACE/model_api/ovms_models/:/models -p 8000:8000 openvino/model_server:latest --model_path /models/ssd-card-detection/ --model_name ssd-card-detection --rest_port 8000 --log_level DEBUG --target_device CPU
+          uv --directory model_api run python examples/serving_api/run.py data/coco128/images/train2017/000000000009.jpg  # detects 4 objects
 
   pre-commit-result:
     runs-on: ubuntu-latest
