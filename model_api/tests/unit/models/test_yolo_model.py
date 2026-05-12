@@ -30,6 +30,8 @@ from model_api.models.yolo import (
     xywh2xyxy,
 )
 
+rng = np.random.default_rng(0)
+
 _RT_INFO_ERROR = RuntimeError(
     "Cannot get runtime attribute. Path to runtime attribute is incorrect.",
 )
@@ -172,14 +174,14 @@ class TestYOLOStaticMethods:
             [0, 0, 0, 0, 0.5, 0.2, 0.1],  # obj=0.5, cls=[0.2, 0.1]
         ])
         classes = 2
-        probs = YOLO._get_probabilities(prediction, classes)
-        # probs = class_probs * repeat(obj_probs, classes)
+        probs = YOLO._get_probabilities(prediction, classes)  # noqa: SLF001
+        # expected: class probabilities multiplied by objectness scores
         expected = np.array([0.5 * 0.8, 0.3 * 0.8, 0.2 * 0.5, 0.1 * 0.5])
         np.testing.assert_allclose(probs, expected)
 
     def test_get_location(self):
         # obj_ind=5, cells=3, num=2 => row=0, col=2, n=1
-        row, col, n = YOLO._get_location(5, 3, 2)
+        row, col, n = YOLO._get_location(5, 3, 2)  # noqa: SLF001
         assert row == 0
         assert col == 2
         assert n == 1
@@ -188,7 +190,7 @@ class TestYOLOStaticMethods:
         prediction = np.array([
             [0.1, 0.2, 0.3, 0.4, 0.9, 0.5],
         ])
-        box = YOLO._get_raw_box(prediction, 0)
+        box = YOLO._get_raw_box(prediction, 0)  # noqa: SLF001
         assert isinstance(box, DetectionBox)
         assert box.x == pytest.approx(0.1)
         assert box.y == pytest.approx(0.2)
@@ -201,7 +203,7 @@ class TestYOLOStaticMethods:
         anchors = [10.0, 20.0]
         coord_normalizer = (13, 13)
         size_normalizer = (416, 416)
-        result = YOLO._get_absolute_det_box(
+        result = YOLO._get_absolute_det_box(  # noqa: SLF001
             raw_box,
             row,
             col,
@@ -214,9 +216,7 @@ class TestYOLOStaticMethods:
         assert result.x == pytest.approx(2.5 / 13)
         # y = (row + 0.5) / 13 = 1.5/13
         assert result.y == pytest.approx(1.5 / 13)
-        # w = exp(0) * 10 / 416
         assert result.w == pytest.approx(10.0 / 416)
-        # h = exp(0) * 20 / 416
         assert result.h == pytest.approx(20.0 / 416)
 
 
@@ -235,7 +235,7 @@ class TestYOLOFilter:
         scores = np.array([0.3, 0.9])
         labels = np.array([0, 1], dtype=np.int32)
         det = DetectionResult(bboxes=bboxes, labels=labels, scores=scores)
-        result = YOLO._filter(det, iou_threshold=0.5)
+        result = YOLO._filter(det, iou_threshold=0.5)  # noqa: SLF001
         # After sorting by score descending, highest score first
         assert result.scores[0] == pytest.approx(0.9)
         assert result.scores[1] == pytest.approx(0.3)
@@ -251,7 +251,7 @@ class TestYOLOFilter:
         )
         scores = np.array([0.9, 0.8])
         labels = np.array([0, 0], dtype=np.int32)
-        det = DetectionResult(bboxes=bboxes, labels=labels, scores=scores)
+        det = DetectionResult(bboxes=bboxes, labels=labels, scores=scores)  # noqa: F841
         # _filter accesses bboxes[i].xmin etc. via numpy indexing
         # DetectionResult bboxes are plain ndarrays; _filter's iou() uses
         # attribute access (.xmin, .xmax, .ymin, .ymax) which requires
@@ -269,7 +269,7 @@ class TestYOLOFilter:
         scores = np.array([0.9, 0.8])
         labels = np.array([0, 1], dtype=np.int32)  # different classes
         det = DetectionResult(bboxes=bboxes, labels=labels, scores=scores)
-        result = YOLO._filter(det, iou_threshold=0.5)
+        result = YOLO._filter(det, iou_threshold=0.5)  # noqa: SLF001
         assert len(result) == 2
 
     def test_filter_empty(self):
@@ -277,7 +277,7 @@ class TestYOLOFilter:
         scores = np.empty((0,))
         labels = np.empty((0,), dtype=np.int32)
         det = DetectionResult(bboxes=bboxes, labels=labels, scores=scores)
-        result = YOLO._filter(det, iou_threshold=0.5)
+        result = YOLO._filter(det, iou_threshold=0.5)  # noqa: SLF001
         assert len(result) == 0
 
 
@@ -310,7 +310,7 @@ class TestYOLOModel:
         # All zeros -> all probabilities below threshold
         predictions = np.zeros((1, 3 * 7, 2, 2))
         params = model.yolo_layer_params["output"][1]
-        result = model._parse_yolo_region(predictions, (416, 416), params)
+        result = model._parse_yolo_region(predictions, (416, 416), params)  # noqa: SLF001
         assert isinstance(result, DetectionResult)
         assert len(result) == 0
 
@@ -324,7 +324,7 @@ class TestYOLOModel:
         predictions[0, 4, 0, 0] = 10.0  # objectness (high)
         predictions[0, 5, 0, 0] = 10.0  # class 0 prob (high)
         params = model.yolo_layer_params["output"][1]
-        result = model._parse_yolo_region(predictions, (416, 416), params)
+        result = model._parse_yolo_region(predictions, (416, 416), params)  # noqa: SLF001
         assert len(result) >= 1
         assert result.labels[0] == 0
 
@@ -356,7 +356,7 @@ class TestYoloV4:
             [0, 0, 0, 0, 0.0, 0.0, 0.0],
         ])
         classes = 2
-        probs = YoloV4._get_probabilities(prediction, classes)
+        probs = YoloV4._get_probabilities(prediction, classes)  # noqa: SLF001
         # sigmoid(0) = 0.5 for both objectness and class probs
         expected_obj = 0.5
         expected_cls = 0.5
@@ -366,7 +366,7 @@ class TestYoloV4:
         prediction = np.array([
             [0.0, 0.0, 1.0, 2.0, 0.9, 0.5],
         ])
-        box = YoloV4._get_raw_box(prediction, 0)
+        box = YoloV4._get_raw_box(prediction, 0)  # noqa: SLF001
         assert box.x == pytest.approx(sigmoid(0.0))
         assert box.y == pytest.approx(sigmoid(0.0))
         assert box.w == pytest.approx(1.0)  # w, h not sigmoided
@@ -396,7 +396,7 @@ class TestYOLOF:
             [0, 0, 0, 0, 0.0, 0.0],
         ])
         classes = 2
-        probs = YOLOF._get_probabilities(prediction, classes)
+        probs = YOLOF._get_probabilities(prediction, classes)  # noqa: SLF001
         # sigmoid(0) = 0.5 for each class
         np.testing.assert_allclose(probs, [0.5, 0.5])
 
@@ -405,7 +405,7 @@ class TestYOLOF:
         anchors = [32.0, 32.0]
         coord_normalizer = (16, 16)
         size_normalizer = (512, 512)
-        result = YOLOF._get_absolute_det_box(
+        result = YOLOF._get_absolute_det_box(  # noqa: SLF001
             raw_box,
             row=0,
             col=0,
@@ -415,7 +415,6 @@ class TestYOLOF:
         )
         # x = 0 * (32/512) + 0/16 = 0
         assert result.x == pytest.approx(0.0)
-        # width = exp(0) * 32/512
         assert result.w == pytest.approx(32.0 / 512.0)
 
 
@@ -425,11 +424,10 @@ class TestYOLOF:
 class TestYOLOX:
     def _make_yolox_adapter(self, h=416, w=416, n_predictions=100, n_classes=80):
         output_shape = (1, n_predictions, 5 + n_classes)
-        adapter = _make_yolo_adapter(
+        return _make_yolo_adapter(
             input_shape=(1, 3, h, w),
             output_shapes={"output": output_shape},
         )
-        return adapter
 
     def test_set_strides_grids(self):
         adapter = self._make_yolox_adapter(h=416, w=416)
@@ -469,8 +467,8 @@ class TestYOLOX:
     def test_resize_image(self):
         adapter = self._make_yolox_adapter(h=416, w=416)
         model = YOLOX(adapter, configuration={})
-        image = np.random.randint(0, 255, (300, 200, 3), dtype=np.uint8)
-        padded, meta = model._resize_image(image)
+        image = rng.integers(0, 255, (300, 200, 3), dtype=np.uint8)
+        padded, meta = model._resize_image(image)  # noqa: SLF001
         assert padded.shape == (416, 416, 3)
         assert "scale" in meta
         assert meta["original_shape"] == (300, 200, 3)
@@ -532,7 +530,7 @@ class TestYoloV3ONNX:
     def test_parse_outputs_valid(self):
         adapter = self._make_v3onnx_adapter(n_boxes=100, n_classes=80, n_indices=2)
         model = YoloV3ONNX(adapter, configuration={"confidence_threshold": 0.0})
-        boxes = np.random.rand(1, 100, 4).astype(np.float32) * 100
+        boxes = rng.random((1, 100, 4)).astype(np.float32) * 100
         scores = np.zeros((1, 80, 100), dtype=np.float32)
         scores[0, 1, 0] = 0.9
         scores[0, 2, 1] = 0.8
@@ -542,7 +540,7 @@ class TestYoloV3ONNX:
             "scores": scores,
             "indices": indices,
         }
-        result = model._parse_outputs(outputs)
+        result = model._parse_outputs(outputs)  # noqa: SLF001
         assert isinstance(result, DetectionResult)
         assert len(result) == 2
 
@@ -557,7 +555,7 @@ class TestYoloV3ONNX:
             "scores": scores,
             "indices": indices,
         }
-        result = model._parse_outputs(outputs)
+        result = model._parse_outputs(outputs)  # noqa: SLF001
         assert len(result) == 0
 
 
@@ -634,13 +632,13 @@ class TestYOLOv8YOLO11:
 
 
 class TestYOLOGetOutputInfo2DReshape:
-    """Cover lines 161-167: 2D output reshaped to 4D using 32×32 cells."""
+    """Cover lines 161-167: 2D output reshaped to 4D using 32x32 cells."""
 
     def test_2d_output_success(self):
-        # input 416×416 → cx=416//32=13, cy=416//32=13 → cells=169
+        # input 416x416 → cx=416//32=13, cy=416//32=13 → cells=169
         # shape[1] must be divisible by 169.  3*85=255, 255*169 doesn't work
         # Use simple: 1 anchor, bbox_size=5+classes. Let's pick cells that work.
-        # input 128×128 → cx=4, cy=4 → cells=16.  shape[1]=num*bbox_size*16
+        # input 128x128 → cx=4, cy=4 → cells=16.  shape[1]=num*bbox_size*16
         # num=1, classes=2 → bbox_size=7, shape[1]=7*16=112
         cx, cy = 4, 4
         num = 1
@@ -658,7 +656,7 @@ class TestYOLOGetOutputInfo2DReshape:
         assert params.classes == classes
 
     def test_2d_output_error_not_divisible(self):
-        # input 130×130 → 130%32 != 0 → error
+        # input 130x130 → 130%32 != 0 → error
         adapter = _make_yolo_adapter(
             input_shape=(1, 3, 130, 130),
             output_shapes={"output": (1, 100)},
@@ -782,7 +780,7 @@ class TestYOLOFilterNMS:
             [0.9, 0.8],
             [0, 0],
         )
-        result = YOLO._filter(det, iou_threshold=0.5)
+        result = YOLO._filter(det, iou_threshold=0.5)  # noqa: SLF001
         assert len(result) == 2
 
     def test_zero_area_boxes(self):
@@ -792,7 +790,7 @@ class TestYOLOFilterNMS:
             [0.9, 0.8],
             [0, 0],
         )
-        result = YOLO._filter(det, iou_threshold=0.5)
+        result = YOLO._filter(det, iou_threshold=0.5)  # noqa: SLF001
         assert len(result) == 2
 
     def test_iou_suppression(self):
@@ -802,7 +800,7 @@ class TestYOLOFilterNMS:
             [0.9, 0.8],
             [0, 0],
         )
-        result = YOLO._filter(det, iou_threshold=0.5)
+        result = YOLO._filter(det, iou_threshold=0.5)  # noqa: SLF001
         assert len(result) == 1
         assert result.scores[0] == pytest.approx(0.9)
 
@@ -813,7 +811,7 @@ class TestYOLOFilterNMS:
             [0.0, 0.8, 0.7],
             [0, 0, 0],
         )
-        result = YOLO._filter(det, iou_threshold=0.5)
+        result = YOLO._filter(det, iou_threshold=0.5)  # noqa: SLF001
         # score=0.0 is removed in keep step; the other two are non-overlapping
         assert len(result) == 2
 
@@ -825,7 +823,7 @@ class TestYOLOFilterNMS:
             [0, 0],
         )
         # IOU = 25 / (100 + 100 - 25) = 25/175 ≈ 0.143
-        result = YOLO._filter(det, iou_threshold=0.1)
+        result = YOLO._filter(det, iou_threshold=0.1)  # noqa: SLF001
         assert len(result) == 1  # suppressed because 0.143 > 0.1
 
 
@@ -849,7 +847,7 @@ class TestYOLOParseOutputs:
         meta = {
             "resized_shape": (416, 416),
         }
-        result = model._parse_outputs(outputs, meta)
+        result = model._parse_outputs(outputs, meta)  # noqa: SLF001
         assert isinstance(result, DetectionResult)
         assert len(result) == 0
 
@@ -871,7 +869,7 @@ class TestYOLOParseOutputs:
         blob[0, 5, 0, 0] = 10.0
         outputs = {"output": blob}
         meta = {"resized_shape": (416, 416)}
-        result = model._parse_outputs(outputs, meta)
+        result = model._parse_outputs(outputs, meta)  # noqa: SLF001
         assert len(result) >= 1
 
 
@@ -881,7 +879,7 @@ class TestYoloV4Init:
     @staticmethod
     def _patch_yolov4_get_output_info():
         """Patch _get_output_info to ensure anchors/masks attributes exist for testing."""
-        original = YoloV4._get_output_info
+        original = YoloV4._get_output_info  # noqa: SLF001
 
         def patched(self):
             if not hasattr(self, "anchors"):
@@ -929,9 +927,8 @@ class TestYoloV4Init:
                 "out1": (1, 100, 13, 13),
             },
         )
-        with self._patch_yolov4_get_output_info():
-            with pytest.raises(Exception, match="wrong 2nd dimension"):
-                YoloV4(adapter, configuration={})
+        with self._patch_yolov4_get_output_info(), pytest.raises(Exception, match="wrong 2nd dimension"):
+            YoloV4(adapter, configuration={})
 
     def test_yolov4_tiny(self):
         """Two outputs → is_tiny=True, uses YOLOV4-TINY anchors."""
@@ -1076,23 +1073,23 @@ class TestYoloV3ONNXResizeImage:
 
     def test_resize_image_static(self):
         model = self._make_v3onnx()
-        model._is_dynamic = False
-        image = np.random.randint(0, 255, (300, 200, 3), dtype=np.uint8)
-        resized, meta = model._resize_image(image)
+        model._is_dynamic = False  # noqa: SLF001
+        image = rng.integers(0, 255, (300, 200, 3), dtype=np.uint8)
+        resized, meta = model._resize_image(image)  # noqa: F841, SLF001
         assert meta["original_shape"] == (300, 200, 3)
         assert "resized_shape" in meta
 
     def test_resize_image_dynamic(self):
         model = self._make_v3onnx()
-        model._is_dynamic = True
-        image = np.random.randint(0, 255, (300, 200, 3), dtype=np.uint8)
-        resized, meta = model._resize_image(image)
+        model._is_dynamic = True  # noqa: SLF001
+        image = rng.integers(0, 255, (300, 200, 3), dtype=np.uint8)
+        _, meta = model._resize_image(image)  # noqa: SLF001
         assert meta["original_shape"] == (300, 200, 3)
 
     def test_input_transform_identity(self):
         model = self._make_v3onnx()
-        image = np.random.rand(3, 416, 416).astype(np.float32)
-        result = model._input_transform(image)
+        image = rng.random((3, 416, 416)).astype(np.float32)
+        result = model._input_transform(image)  # noqa: SLF001
         np.testing.assert_array_equal(result, image)
 
 
@@ -1120,24 +1117,24 @@ class TestYoloV3ONNXParseOutputs2D:
         """indices shape is 2D → used directly."""
         model = self._make_v3onnx()
         model.params.confidence_threshold = 0.0
-        boxes = np.random.rand(1, 100, 4).astype(np.float32) * 100
+        boxes = rng.random((1, 100, 4)).astype(np.float32) * 100
         scores = np.zeros((1, 80, 100), dtype=np.float32)
         scores[0, 1, 0] = 0.9
         indices = np.array([[0, 1, 0]], dtype=np.int64)  # 2D
         outputs = {"bboxes": boxes, "scores": scores, "indices": indices}
-        result = model._parse_outputs(outputs)
+        result = model._parse_outputs(outputs)  # noqa: SLF001
         assert len(result) >= 1
 
     def test_3d_indices(self):
         """indices shape is 3D → [0] used."""
         model = self._make_v3onnx()
         model.params.confidence_threshold = 0.0
-        boxes = np.random.rand(1, 100, 4).astype(np.float32) * 100
+        boxes = rng.random((1, 100, 4)).astype(np.float32) * 100
         scores = np.zeros((1, 80, 100), dtype=np.float32)
         scores[0, 2, 0] = 0.8
         indices = np.array([[[0, 2, 0]]], dtype=np.int64)  # 3D
         outputs = {"bboxes": boxes, "scores": scores, "indices": indices}
-        result = model._parse_outputs(outputs)
+        result = model._parse_outputs(outputs)  # noqa: SLF001
         assert len(result) >= 1
 
 
@@ -1256,7 +1253,7 @@ class TestYoloV3ONNXPostprocess:
 
     def test_postprocess(self):
         model = self._make_v3onnx()
-        boxes = np.random.rand(1, 100, 4).astype(np.float32) * 100
+        boxes = rng.random((1, 100, 4)).astype(np.float32) * 100
         scores = np.zeros((1, 80, 100), dtype=np.float32)
         scores[0, 1, 0] = 0.9
         indices = np.array([[0, 1, 0]], dtype=np.int64)

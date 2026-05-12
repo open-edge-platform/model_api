@@ -22,6 +22,8 @@ import pytest
 from model_api.adapters.inference_adapter import InferenceAdapter
 from model_api.models.model import Model, WrapperError
 
+rng = np.random.default_rng(0)
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -104,7 +106,7 @@ class TestModelConstructor:
         adapter.load_model.assert_called_once()
 
     def test_onnx_adapter_unsupported_wrapper(self):
-        """Line 91 – ONNXRuntimeAdapter with unsupported wrapper raises error."""
+        """Line 91 - ONNXRuntimeAdapter with unsupported wrapper raises error."""
         from model_api.adapters.onnx_adapter import ONNXRuntimeAdapter
 
         adapter = MagicMock(spec=ONNXRuntimeAdapter)
@@ -120,7 +122,7 @@ class TestModelLoadConfig:
     """Tests for Model._load_config (lines 398-445)."""
 
     def test_config_sets_attribute(self):
-        """Line 424 – rt_info value sets attribute via __setattr__."""
+        """Line 424 - rt_info value sets attribute via __setattr__."""
         rt_values = {"model_type": MagicMock(astype=MagicMock(return_value="Model"))}
 
         def rt_side_effect(path):
@@ -133,7 +135,7 @@ class TestModelLoadConfig:
         Model(adapter, configuration={}, preload=False)
 
     def test_config_overrides_param(self):
-        """Lines 430-441 – user config overrides parameter defaults."""
+        """Lines 430-441 - user config overrides parameter defaults."""
         from model_api.models.image_model import ImageModel
 
         adapter = _make_adapter()
@@ -141,7 +143,7 @@ class TestModelLoadConfig:
         assert model.params.resize_type == "fit_to_window"
 
     def test_config_invalid_value_raises(self):
-        """Lines 434-439 – validation error in config raises WrapperError."""
+        """Lines 434-439 - validation error in config raises WrapperError."""
         from model_api.models.image_model import ImageModel
 
         adapter = _make_adapter()
@@ -149,23 +151,24 @@ class TestModelLoadConfig:
             ImageModel(adapter, configuration={"resize_type": "INVALID_TYPE"}, preload=False)
 
     def test_config_unknown_param_warns(self, caplog):
-        """Lines 442-443 – unknown param logs warning."""
+        """Lines 442-443 - unknown param logs warning."""
         adapter = _make_adapter()
         with caplog.at_level(logging.WARNING):
             Model(adapter, configuration={"unknown_param_xyz": 42}, preload=False)
         assert any("unknown_param_xyz" in r.message for r in caplog.records)
 
     def test_config_none_value_skipped(self):
-        """Lines 431-432 – None values are skipped."""
+        """Lines 431-432 - None values are skipped."""
         adapter = _make_adapter()
         Model(adapter, configuration={"resize_type": None}, preload=False)
 
     def test_rt_info_non_missing_error_propagates(self):
-        """Line 428 – RuntimeError that is NOT missing-rt-info is re-raised."""
+        """Line 428 - RuntimeError that is NOT missing-rt-info is re-raised."""
         from model_api.models.image_model import ImageModel
 
         def rt_side_effect(path):
-            raise RuntimeError("Some other error")
+            msg = "Some other error"
+            raise RuntimeError(msg)
 
         adapter = _make_adapter(rt_info=rt_side_effect)
         with pytest.raises(RuntimeError, match="Some other error"):
@@ -176,14 +179,14 @@ class TestModelGetParam:
     """Tests for get_param (lines 105-122)."""
 
     def test_get_param_returns_attribute(self):
-        """Line 120 – returns instance attribute (not prefixed)."""
+        """Line 120 - returns instance attribute (not prefixed)."""
         adapter = _make_adapter()
         model = Model(adapter, configuration={}, preload=False)
         # Access via params descriptor which calls get_param
-        assert model._parameters_cache is None or isinstance(model._parameters_cache, dict)
+        assert model._parameters_cache is None or isinstance(model._parameters_cache, dict)  # noqa: SLF001
 
     def test_get_param_unknown_raises(self):
-        """Line 122 – unknown parameter raises."""
+        """Line 122 - unknown parameter raises."""
         adapter = _make_adapter()
         model = Model(adapter, configuration={}, preload=False)
         with pytest.raises(WrapperError, match="not found"):
@@ -194,13 +197,13 @@ class TestModelGetCachedParameters:
     """Tests for get_cached_parameters (lines 124-132)."""
 
     def test_cache_initialized_on_first_access(self):
-        """Line 130-132 – cache is lazily initialized."""
+        """Line 130-132 - cache is lazily initialized."""
         adapter = _make_adapter()
         model = Model(adapter, configuration={}, preload=False)
-        model._parameters_cache = None
+        model._parameters_cache = None  # noqa: SLF001
         result = model.get_cached_parameters()
         assert isinstance(result, dict)
-        assert model._parameters_cache is result
+        assert model._parameters_cache is result  # noqa: SLF001
 
 
 class TestModelGetModel:
@@ -227,19 +230,20 @@ class TestModelBasePreprocess:
     """Tests for Model.base_preprocess (line 473) and preprocess (line 486)."""
 
     def test_base_preprocess_raises_not_implemented(self):
-        """Line 473 – abstract base_preprocess raises NotImplementedError."""
+        """Line 473 - abstract base_preprocess raises NotImplementedError."""
         adapter = _make_adapter()
         model = Model(adapter, configuration={}, preload=False)
         with pytest.raises(NotImplementedError):
             model.base_preprocess(np.zeros((224, 224, 3)))
 
     def test_preprocess_passthrough(self):
-        """Line 486 – default preprocess returns inputs unchanged."""
+        """Line 486 - default preprocess returns inputs unchanged."""
         adapter = _make_adapter()
         model = Model(adapter, configuration={}, preload=False)
         d, m = {"x": 1}, {"y": 2}
         rd, rm = model.preprocess(d, m)
-        assert rd is d and rm is m
+        assert rd is d
+        assert rm is m
 
 
 class TestModelPostprocess:
@@ -258,53 +262,53 @@ class TestModelCheckIONumber:
     def test_int_inputs_ok(self):
         adapter = _make_adapter()
         model = Model(adapter, configuration={}, preload=False)
-        model._check_io_number(1, 1)
+        model._check_io_number(1, 1)  # noqa: SLF001
 
     def test_int_inputs_mismatch(self):
-        """Line 522-526 – wrong int input count."""
+        """Line 522-526 - wrong int input count."""
         adapter = _make_adapter()
         model = Model(adapter, configuration={}, preload=False)
         with pytest.raises(WrapperError, match="Expected 2 input blob"):
-            model._check_io_number(2, 1)
+            model._check_io_number(2, 1)  # noqa: SLF001
 
     def test_int_inputs_skip_minus_one(self):
-        """Line 522 – -1 skips check."""
+        """Line 522 - -1 skips check."""
         adapter = _make_adapter()
         model = Model(adapter, configuration={}, preload=False)
-        model._check_io_number(-1, -1)
+        model._check_io_number(-1, -1)  # noqa: SLF001
 
     def test_tuple_inputs_ok(self):
         adapter = _make_adapter()
         model = Model(adapter, configuration={}, preload=False)
-        model._check_io_number((1, 2), (1, 2))
+        model._check_io_number((1, 2), (1, 2))  # noqa: SLF001
 
     def test_tuple_inputs_mismatch(self):
-        """Lines 527-531 – wrong tuple input count."""
+        """Lines 527-531 - wrong tuple input count."""
         adapter = _make_adapter()
         model = Model(adapter, configuration={}, preload=False)
         with pytest.raises(WrapperError, match="Expected 2 or 3 input blobs"):
-            model._check_io_number((2, 3), 1)
+            model._check_io_number((2, 3), 1)  # noqa: SLF001
 
     def test_int_outputs_mismatch(self):
-        """Lines 533-538 – wrong int output count."""
+        """Lines 533-538 - wrong int output count."""
         adapter = _make_adapter()
         model = Model(adapter, configuration={}, preload=False)
         with pytest.raises(WrapperError, match="Expected 5 output blob"):
-            model._check_io_number(1, 5)
+            model._check_io_number(1, 5)  # noqa: SLF001
 
     def test_tuple_outputs_mismatch(self):
-        """Lines 539-544 – wrong tuple output count."""
+        """Lines 539-544 - wrong tuple output count."""
         adapter = _make_adapter()
         model = Model(adapter, configuration={}, preload=False)
         with pytest.raises(WrapperError, match="Expected 5 or 6 output blobs"):
-            model._check_io_number(1, (5, 6))
+            model._check_io_number(1, (5, 6))  # noqa: SLF001
 
 
 class TestModelCall:
     """Tests for __call__ (lines 555-566)."""
 
     def test_call_runs_full_pipeline(self):
-        """Lines 555-566 – preprocess→infer→postprocess."""
+        """Lines 555-566 - preprocess→infer→postprocess."""
         adapter = _make_adapter()
         model = Model(adapter, configuration={}, preload=True)
         model.base_preprocess = MagicMock(return_value=({"image": np.zeros((1, 3, 224, 224))}, {"meta": 1}))
@@ -320,7 +324,7 @@ class TestModelInferBatch:
     """Tests for infer_batch (lines 577-599)."""
 
     def test_infer_batch(self):
-        """Lines 577-599 – batch inference with callback."""
+        """Lines 577-599 - batch inference with callback."""
         adapter = _make_adapter()
         model = Model(adapter, configuration={}, preload=True)
         model.base_preprocess = MagicMock(return_value=({"image": np.zeros((1, 3, 224, 224))}, {"m": 1}))
@@ -328,7 +332,7 @@ class TestModelInferBatch:
 
         # Simulate infer_async triggering callback
         def fake_infer_async(data, cb_data):
-            Model._process_callback(MagicMock(), cb_data)
+            Model._process_callback(MagicMock(), cb_data)  # noqa: SLF001
 
         adapter.infer_async.side_effect = fake_infer_async
 
@@ -348,14 +352,14 @@ class TestModelLoad:
         adapter.load_model.assert_called_once()
 
     def test_load_skip_if_loaded(self):
-        """Line 608 – skip if already loaded."""
+        """Line 608 - skip if already loaded."""
         adapter = _make_adapter()
         model = Model(adapter, configuration={}, preload=True)
         model.load()
         assert adapter.load_model.call_count == 1
 
     def test_load_force(self):
-        """Line 608 – force reload."""
+        """Line 608 - force reload."""
         adapter = _make_adapter()
         model = Model(adapter, configuration={}, preload=True)
         model.load(force=True)
@@ -366,7 +370,7 @@ class TestModelReshape:
     """Tests for reshape (lines 622-630)."""
 
     def test_reshape_unloaded(self):
-        """Lines 628-630 – reshape when not loaded."""
+        """Lines 628-630 - reshape when not loaded."""
         adapter = _make_adapter()
         model = Model(adapter, configuration={}, preload=False)
         model.reshape({"image": [1, 3, 300, 300]})
@@ -375,7 +379,7 @@ class TestModelReshape:
         adapter.get_output_layers.assert_called()
 
     def test_reshape_when_loaded_warns(self):
-        """Lines 622-627 – reshape when loaded resets flag."""
+        """Lines 622-627 - reshape when loaded resets flag."""
         adapter = _make_adapter()
         model = Model(adapter, configuration={}, preload=True)
         assert model.model_loaded is True
@@ -398,7 +402,7 @@ class TestModelInferSync:
         assert "output" in result
 
     def test_infer_sync_not_loaded_raises(self):
-        """Lines 637-641 – error if not loaded."""
+        """Lines 637-641 - error if not loaded."""
         adapter = _make_adapter()
         model = Model(adapter, configuration={}, preload=False)
         with pytest.raises(WrapperError, match="not loaded"):
@@ -415,7 +419,7 @@ class TestModelInferAsyncRaw:
         adapter.infer_async.assert_called_once()
 
     def test_infer_async_raw_not_loaded_raises(self):
-        """Lines 652-656 – error if not loaded."""
+        """Lines 652-656 - error if not loaded."""
         adapter = _make_adapter()
         model = Model(adapter, configuration={}, preload=False)
         with pytest.raises(WrapperError, match="not loaded"):
@@ -426,7 +430,7 @@ class TestModelInferAsync:
     """Tests for infer_async (lines 668-692)."""
 
     def test_infer_async_success(self):
-        """Lines 668-692 – full async path."""
+        """Lines 668-692 - full async path."""
         adapter = _make_adapter()
         model = Model(adapter, configuration={}, preload=True)
         model.base_preprocess = MagicMock(return_value=({"image": np.zeros((1, 3, 224, 224))}, {"m": 1}))
@@ -434,7 +438,7 @@ class TestModelInferAsync:
         adapter.infer_async.assert_called_once()
 
     def test_infer_async_not_loaded_raises(self):
-        """Lines 668-672 – error if not loaded."""
+        """Lines 668-672 - error if not loaded."""
         adapter = _make_adapter()
         model = Model(adapter, configuration={}, preload=False)
         with pytest.raises(WrapperError, match="not loaded"):
@@ -445,7 +449,7 @@ class TestModelProcessCallback:
     """Tests for _process_callback (lines 699-726)."""
 
     def test_process_callback_with_tokens(self):
-        """Lines 699-726 – 8-element callback_data path."""
+        """Lines 699-726 - 8-element callback_data path."""
         adapter = _make_adapter()
         model = Model(adapter, configuration={}, preload=False)
         postprocess_fn = MagicMock(return_value="result")
@@ -455,12 +459,12 @@ class TestModelProcessCallback:
         inference_token = object()
 
         cb_data = (model, {"m": 1}, get_result_fn, postprocess_fn, callback_fn, "user", total_token, inference_token)
-        Model._process_callback(MagicMock(), cb_data)
+        Model._process_callback(MagicMock(), cb_data)  # noqa: SLF001
         postprocess_fn.assert_called_once()
         callback_fn.assert_called_once_with("result", "user")
 
     def test_process_callback_without_tokens(self):
-        """Lines 712-713 – 6-element callback_data (legacy) path."""
+        """Lines 712-713 - 6-element callback_data (legacy) path."""
         adapter = _make_adapter()
         model = Model(adapter, configuration={}, preload=False)
         postprocess_fn = MagicMock(return_value="result")
@@ -468,7 +472,7 @@ class TestModelProcessCallback:
         get_result_fn = MagicMock(return_value={"output": np.zeros(5)})
 
         cb_data = (model, {"m": 1}, get_result_fn, postprocess_fn, callback_fn, "user")
-        Model._process_callback(MagicMock(), cb_data)
+        Model._process_callback(MagicMock(), cb_data)  # noqa: SLF001
         callback_fn.assert_called_once_with("result", "user")
 
 
@@ -478,10 +482,13 @@ class TestModelSetCallback:
     def test_set_callback(self):
         adapter = _make_adapter()
         model = Model(adapter, configuration={}, preload=False)
-        fn = lambda result, data: None
+
+        def fn(result, data):
+            return None
+
         model.set_callback(fn)
         assert model.callback_fn is fn
-        adapter.set_callback.assert_called_once_with(Model._process_callback)
+        adapter.set_callback.assert_called_once_with(Model._process_callback)  # noqa: SLF001
 
 
 class TestModelIsReady:
@@ -536,14 +543,14 @@ class TestModelCreateModel:
     """Tests for create_model (lines 216-244)."""
 
     def test_create_model_with_adapter_instance(self):
-        """Line 216-217 – passing an adapter directly."""
+        """Line 216-217 - passing an adapter directly."""
         adapter = _make_adapter()
         model = Model.create_model(adapter, model_type="Model", preload=False)
         assert isinstance(model, Model)
 
     @patch("model_api.models.model.OVMSAdapter")
     def test_create_model_ovms_url(self, mock_ovms_cls):
-        """Lines 218-219 – OVMS URL creates OVMSAdapter."""
+        """Lines 218-219 - OVMS URL creates OVMSAdapter."""
         mock_ovms_cls.is_ovms_model.return_value = True
         mock_adapter = _make_adapter()
         mock_ovms_cls.return_value = mock_adapter
@@ -555,7 +562,7 @@ class TestModelCreateModel:
     @patch("model_api.models.model.create_core")
     @patch("model_api.models.model.OVMSAdapter")
     def test_create_model_from_path(self, mock_ovms, mock_core, mock_config, mock_ov_cls):
-        """Lines 220-235 – path creates OpenvinoAdapter."""
+        """Lines 220-235 - path creates OpenvinoAdapter."""
         mock_ovms.is_ovms_model.return_value = False
         mock_core.return_value = MagicMock()
         mock_config.return_value = {}
@@ -565,7 +572,7 @@ class TestModelCreateModel:
         assert isinstance(model, Model)
 
     def test_create_model_detects_type_from_rt_info(self):
-        """Lines 236-243 – model_type auto-detected from rt_info."""
+        """Lines 236-243 - model_type auto-detected from rt_info."""
         rt_mock = MagicMock()
         rt_mock.astype.return_value = "Model"
 
@@ -579,13 +586,13 @@ class TestModelCreateModel:
         assert isinstance(model, Model)
 
     def test_create_model_detects_type_from_config_fallback(self):
-        """Line 242 – model_type from configuration if rt_info fails."""
+        """Line 242 - model_type from configuration if rt_info fails."""
         adapter = _make_adapter()
         model = Model.create_model(adapter, model_type=None, configuration={"model_type": "Model"}, preload=False)
         assert isinstance(model, Model)
 
     def test_create_model_detect_anomaly(self):
-        """Lines 347-358 – detect_model_type finds AnomalyDetection."""
+        """Lines 347-358 - detect_model_type finds AnomalyDetection."""
         adapter = _make_adapter()
         adapter.get_input_layers.return_value = {"input": FakeMetadata(shape=[1, 3, 224, 224])}
         adapter.get_output_layers.return_value = {
@@ -598,7 +605,7 @@ class TestModelCreateModel:
         assert result == "AnomalyDetection"
 
     def test_detect_model_type_unknown(self):
-        """Line 358 – returns 'uknown' for unrecognized models."""
+        """Line 358 - returns 'uknown' for unrecognized models."""
         adapter = _make_adapter()
         result = Model.detect_model_type(adapter)
         assert result == "uknown"
@@ -610,7 +617,7 @@ class TestModelFromPretrained:
     @patch("model_api.models.model.Model.create_model")
     @patch("model_api.utils.hf_hub_helper.download_from_hf")
     def test_from_pretrained(self, mock_download, mock_create):
-        """Lines 315-343 – delegates to download_from_hf then create_model."""
+        """Lines 315-343 - delegates to download_from_hf then create_model."""
         mock_download.return_value = "/downloaded/model.xml"
         mock_create.return_value = MagicMock()
         result = Model.from_pretrained("user/model-name", model_type="Model")
@@ -637,7 +644,7 @@ class TestImageModelConstructor:
         assert model.w == 224
 
     def test_nhwc_layout(self):
-        """Line 73 – NHWC unpacking."""
+        """Line 73 - NHWC unpacking."""
         from model_api.models.image_model import ImageModel
 
         adapter = _make_adapter(input_shape=(1, 224, 224, 3), layout="NHWC")
@@ -647,15 +654,15 @@ class TestImageModelConstructor:
         assert model.w == 224
 
     def test_dynamic_shape(self):
-        """Lines 76-77 – dynamic input shapes (h=-1 or w=-1)."""
+        """Lines 76-77 - dynamic input shapes (h=-1 or w=-1)."""
         from model_api.models.image_model import ImageModel
 
         adapter = _make_adapter(input_shape=(1, 3, -1, -1), layout="NCHW")
         model = ImageModel(adapter, configuration={}, preload=False)
-        assert model._is_dynamic is True
+        assert model._is_dynamic is True  # noqa: SLF001
 
     def test_embedded_processing(self):
-        """Lines 113-114 – embedded_processing overrides h, w."""
+        """Lines 113-114 - embedded_processing overrides h, w."""
         from model_api.models.image_model import ImageModel
 
         adapter = _make_adapter(input_shape=(1, 3, 224, 224), layout="NCHW")
@@ -668,16 +675,16 @@ class TestImageModelConstructor:
         assert model.w == 640
 
     def test_non_dynamic_embeds_preprocessing(self):
-        """Lines 115-141 – embed_preprocessing is called for non-dynamic models."""
+        """Lines 115-141 - embed_preprocessing is called for non-dynamic models."""
         from model_api.models.image_model import ImageModel
 
         adapter = _make_adapter(input_shape=(1, 3, 300, 300), layout="NCHW")
         model = ImageModel(adapter, configuration={}, preload=False)
         adapter.embed_preprocessing.assert_called_once()
-        assert model._embedded_processing is True
+        assert model._embedded_processing is True  # noqa: SLF001
 
     def test_intensity_auto_for_scale_to_unit(self):
-        """Lines 84-86 – intensity_max_value auto-inferred."""
+        """Lines 84-86 - intensity_max_value auto-inferred."""
         from model_api.models.image_model import ImageModel
 
         adapter = _make_adapter()
@@ -690,11 +697,11 @@ class TestImageModelConstructor:
         assert model is not None
 
     def test_input_frame_shape_passed_to_embed(self):
-        """Lines 117-118 – input_frame_height/width passed to embed_preprocessing."""
+        """Lines 117-118 - input_frame_height/width passed to embed_preprocessing."""
         from model_api.models.image_model import ImageModel
 
         adapter = _make_adapter(input_shape=(1, 3, 300, 300), layout="NCHW")
-        model = ImageModel(
+        ImageModel(
             adapter,
             configuration={"input_frame_height": 480, "input_frame_width": 640},
             preload=False,
@@ -714,7 +721,7 @@ class TestImageModelGetInputs:
         assert "image" in model.image_blob_names
 
     def test_2d_extra_input(self):
-        """Lines 188-189 – 2D tensor info blobs."""
+        """Lines 188-189 - 2D tensor info blobs."""
         from model_api.models.image_model import ImageModel
 
         adapter = _make_adapter(
@@ -724,7 +731,7 @@ class TestImageModelGetInputs:
         assert "info" in model.image_info_blob_names
 
     def test_unsupported_shape_raises(self):
-        """Lines 190-193 – 3D tensor raises WrapperError."""
+        """Lines 190-193 - 3D tensor raises WrapperError."""
         from model_api.models.image_model import ImageModel
 
         adapter = _make_adapter(
@@ -734,7 +741,7 @@ class TestImageModelGetInputs:
             ImageModel(adapter, configuration={}, preload=False)
 
     def test_no_image_input_raises(self):
-        """Lines 194-197 – no 4D input raises WrapperError."""
+        """Lines 194-197 - no 4D input raises WrapperError."""
         from model_api.models.image_model import ImageModel
 
         adapter = MagicMock(spec=InferenceAdapter)
@@ -758,7 +765,7 @@ class TestImageModelGetLabelName:
         assert model.get_label_name(1) == "dog"
 
     def test_label_out_of_range(self):
-        """Lines 170-171 – out-of-range returns auto-generated name."""
+        """Lines 170-171 - out-of-range returns auto-generated name."""
         from model_api.models.detection_model import DetectionModel
 
         adapter = _make_adapter(input_shape=(1, 3, 300, 300), output_shape=(1, 1, 200, 7))
@@ -766,7 +773,7 @@ class TestImageModelGetLabelName:
         assert model.get_label_name(999) == "#999"
 
     def test_label_none(self):
-        """Lines 167-169 – no labels set returns auto-generated name (empty list)."""
+        """Lines 167-169 - no labels set returns auto-generated name (empty list)."""
         from model_api.models.detection_model import DetectionModel
 
         adapter = _make_adapter(input_shape=(1, 3, 300, 300), output_shape=(1, 1, 200, 7))
@@ -774,13 +781,13 @@ class TestImageModelGetLabelName:
         assert model.get_label_name(0) == "#0"
 
     def test_label_explicitly_none(self):
-        """Lines 168-169 – labels is literally None returns auto-generated name."""
+        """Lines 168-169 - labels is literally None returns auto-generated name."""
         from model_api.models.detection_model import DetectionModel
 
         adapter = _make_adapter(input_shape=(1, 3, 300, 300), output_shape=(1, 1, 200, 7))
         model = DetectionModel(adapter, configuration={}, preload=False)
         # Force labels to None (simulating rt_info returning "None")
-        model._labels = None
+        model._labels = None  # noqa: SLF001
         assert model.get_label_name(0) == "#0"
 
 
@@ -788,14 +795,14 @@ class TestImageModelBasePreprocess:
     """Tests for base_preprocess (lines 200-249)."""
 
     def test_base_preprocess_standard(self):
-        """Lines 231-249 – standard preprocessing flow (non-embedded)."""
+        """Lines 231-249 - standard preprocessing flow (non-embedded)."""
         from model_api.models.image_model import ImageModel
 
         adapter = _make_adapter(input_shape=(1, 3, 300, 300), layout="NCHW")
         model = ImageModel(adapter, configuration={}, preload=False)
         # Force non-embedded path
-        model._embedded_processing = False
-        image = np.random.randint(0, 255, (480, 640, 3), dtype=np.uint8)
+        model._embedded_processing = False  # noqa: SLF001
+        image = rng.integers(0, 255, (480, 640, 3), dtype=np.uint8)
         result = model.base_preprocess(image)
         assert isinstance(result, list)
         assert len(result) == 2
@@ -805,19 +812,19 @@ class TestImageModelBasePreprocess:
         assert "resized_shape" in meta
 
     def test_base_preprocess_standard_with_repeat_channels(self):
-        """Line 231-232 – intensity_repeat_channels triggers _repeat_single_channel."""
+        """Line 231-232 - intensity_repeat_channels triggers _repeat_single_channel."""
         from model_api.models.image_model import ImageModel
 
         adapter = _make_adapter(input_shape=(1, 3, 300, 300), layout="NCHW")
         model = ImageModel(adapter, configuration={"intensity_repeat_channels": True}, preload=False)
-        model._embedded_processing = False
+        model._embedded_processing = False  # noqa: SLF001
         # Provide single-channel image (H, W, 1)
-        image = np.random.randint(0, 255, (480, 640, 1), dtype=np.uint8)
+        image = rng.integers(0, 255, (480, 640, 1), dtype=np.uint8)
         result = model.base_preprocess(image)
         assert isinstance(result, list)
 
     def test_base_preprocess_embedded(self):
-        """Lines 225-228 – embedded preprocessing path."""
+        """Lines 225-228 - embedded preprocessing path."""
         from model_api.models.image_model import ImageModel
 
         adapter = _make_adapter(input_shape=(1, 3, 224, 224), layout="NCHW")
@@ -826,10 +833,10 @@ class TestImageModelBasePreprocess:
             configuration={"embedded_processing": True, "orig_height": 480, "orig_width": 640},
             preload=False,
         )
-        image = np.random.randint(0, 255, (480, 640, 3), dtype=np.uint8)
+        image = rng.integers(0, 255, (480, 640, 3), dtype=np.uint8)
         result = model.base_preprocess(image)
         assert isinstance(result, list)
-        dict_inputs, meta = result
+        dict_inputs, _ = result
         assert "image" in dict_inputs
 
 
@@ -837,7 +844,7 @@ class TestImageModelPreprocessEmbedded:
     """Tests for _preprocess_embedded (lines 251-266)."""
 
     def test_preprocess_embedded_fixed(self):
-        """Lines 257-258 – fixed shape uses model dims."""
+        """Lines 257-258 - fixed shape uses model dims."""
         from model_api.models.image_model import ImageModel
 
         adapter = _make_adapter(input_shape=(1, 3, 224, 224), layout="NCHW")
@@ -846,14 +853,14 @@ class TestImageModelPreprocessEmbedded:
             configuration={"embedded_processing": True, "orig_height": 480, "orig_width": 640},
             preload=False,
         )
-        model._is_dynamic = False
-        image = np.random.randint(0, 255, (480, 640, 3), dtype=np.uint8)
-        dict_inputs, meta = model._preprocess_embedded(image)
+        model._is_dynamic = False  # noqa: SLF001
+        image = rng.integers(0, 255, (480, 640, 3), dtype=np.uint8)
+        dict_inputs, meta = model._preprocess_embedded(image)  # noqa: SLF001
         assert dict_inputs["image"].shape[0] == 1
         assert "original_shape" in meta
 
     def test_preprocess_embedded_dynamic(self):
-        """Lines 254-256 – dynamic shape uses image dims."""
+        """Lines 254-256 - dynamic shape uses image dims."""
         from model_api.models.image_model import ImageModel
 
         adapter = _make_adapter(input_shape=(1, 3, -1, -1), layout="NCHW")
@@ -862,8 +869,8 @@ class TestImageModelPreprocessEmbedded:
             configuration={"embedded_processing": True, "orig_height": 480, "orig_width": 640},
             preload=False,
         )
-        image = np.random.randint(0, 255, (100, 200, 3), dtype=np.uint8)
-        dict_inputs, meta = model._preprocess_embedded(image)
+        image = rng.integers(0, 255, (100, 200, 3), dtype=np.uint8)
+        _, meta = model._preprocess_embedded(image)  # noqa: SLF001
         assert meta["resized_shape"] == (200, 100, 3)
 
 
@@ -871,24 +878,24 @@ class TestImageModelResizeImage:
     """Tests for _resize_image (lines 268-277)."""
 
     def test_resize_image_fixed(self):
-        """Lines 275-277 – fixed shape triggers actual resize."""
+        """Lines 275-277 - fixed shape triggers actual resize."""
         from model_api.models.image_model import ImageModel
 
         adapter = _make_adapter(input_shape=(1, 3, 300, 300), layout="NCHW")
         model = ImageModel(adapter, configuration={}, preload=False)
-        image = np.random.randint(0, 255, (480, 640, 3), dtype=np.uint8)
-        resized, meta = model._resize_image(image)
+        image = rng.integers(0, 255, (480, 640, 3), dtype=np.uint8)
+        _, meta = model._resize_image(image)  # noqa: SLF001
         assert "original_shape" in meta
         assert "resized_shape" in meta
 
     def test_resize_image_dynamic(self):
-        """Lines 270-273 – dynamic shape returns image unchanged."""
+        """Lines 270-273 - dynamic shape returns image unchanged."""
         from model_api.models.image_model import ImageModel
 
         adapter = _make_adapter(input_shape=(1, 3, -1, -1), layout="NCHW")
         model = ImageModel(adapter, configuration={}, preload=False)
-        image = np.random.randint(0, 255, (100, 200, 3), dtype=np.uint8)
-        resized, meta = model._resize_image(image)
+        image = rng.integers(0, 255, (100, 200, 3), dtype=np.uint8)
+        resized, _ = model._resize_image(image)  # noqa: SLF001
         assert resized is image
 
 
@@ -900,8 +907,8 @@ class TestImageModelInputTransform:
 
         adapter = _make_adapter(input_shape=(1, 3, 300, 300), layout="NCHW")
         model = ImageModel(adapter, configuration={}, preload=False)
-        image = np.random.rand(300, 300, 3).astype(np.float32)
-        result = model._input_transform(image)
+        image = rng.random((300, 300, 3)).astype(np.float32)
+        result = model._input_transform(image)  # noqa: SLF001
         assert result.shape == (300, 300, 3)
 
 
@@ -909,33 +916,33 @@ class TestImageModelChangeLayout:
     """Tests for _change_layout (lines 305-323)."""
 
     def test_change_layout_nchw(self):
-        """Lines 317-319 – NCHW layout conversion."""
+        """Lines 317-319 - NCHW layout conversion."""
         from model_api.models.image_model import ImageModel
 
         adapter = _make_adapter(input_shape=(1, 3, 300, 300), layout="NCHW")
         model = ImageModel(adapter, configuration={}, preload=False)
-        image = np.random.rand(300, 300, 3).astype(np.float32)
-        result = model._change_layout(image)
+        image = rng.random((300, 300, 3)).astype(np.float32)
+        result = model._change_layout(image)  # noqa: SLF001
         assert result.shape == (1, 3, 300, 300)
 
     def test_change_layout_nhwc(self):
-        """Lines 320-321 – NHWC layout conversion."""
+        """Lines 320-321 - NHWC layout conversion."""
         from model_api.models.image_model import ImageModel
 
         adapter = _make_adapter(input_shape=(1, 300, 300, 3), layout="NHWC")
         model = ImageModel(adapter, configuration={}, preload=False)
-        image = np.random.rand(300, 300, 3).astype(np.float32)
-        result = model._change_layout(image)
+        image = rng.random((300, 300, 3)).astype(np.float32)
+        result = model._change_layout(image)  # noqa: SLF001
         assert result.shape == (1, 300, 300, 3)
 
     def test_change_layout_dynamic_nchw(self):
-        """Line 314 – dynamic shape with NCHW."""
+        """Line 314 - dynamic shape with NCHW."""
         from model_api.models.image_model import ImageModel
 
         adapter = _make_adapter(input_shape=(1, 3, -1, -1), layout="NCHW")
         model = ImageModel(adapter, configuration={}, preload=False)
-        image = np.random.rand(100, 200, 3).astype(np.float32)
-        result = model._change_layout(image)
+        image = rng.random((100, 200, 3)).astype(np.float32)
+        result = model._change_layout(image)  # noqa: SLF001
         assert result.shape == (1, 3, 100, 200)
 
 
@@ -951,7 +958,7 @@ class TestImageModelWrapPreprocessCompat:
         assert callable(model.preprocess)
 
     def test_compat_new_style_no_warning(self):
-        """Line 298 – two-arg call goes through original."""
+        """Line 298 - two-arg call goes through original."""
         import warnings
 
         from model_api.models.image_model import ImageModel
@@ -962,16 +969,16 @@ class TestImageModelWrapPreprocessCompat:
         m = {"original_shape": (480, 640, 3)}
         with warnings.catch_warnings():
             warnings.simplefilter("error", DeprecationWarning)
-            rd, rm = model.preprocess(d, m)
+            rd, _ = model.preprocess(d, m)
         assert rd is d
 
     def test_compat_old_style_warns(self):
-        """Lines 288-297 – single ndarray arg triggers deprecation."""
+        """Lines 288-297 - single ndarray arg triggers deprecation."""
         from model_api.models.image_model import ImageModel
 
         adapter = _make_adapter()
         model = ImageModel(adapter, configuration={}, preload=False)
-        image = np.random.randint(0, 255, (480, 640, 3), dtype=np.uint8)
+        image = rng.integers(0, 255, (480, 640, 3), dtype=np.uint8)
         with pytest.warns(DeprecationWarning, match="deprecated since model_api v0.4.0"):
             result = model.preprocess(image)
         assert isinstance(result, list)
@@ -984,7 +991,7 @@ class TestDetectionModelConstructor:
     """Tests for DetectionModel.__init__ (lines 26-48)."""
 
     def test_basic_construction(self):
-        """Line 41 – basic construction."""
+        """Line 41 - basic construction."""
         from model_api.models.detection_model import DetectionModel
 
         adapter = _make_adapter(input_shape=(1, 3, 300, 300), output_shape=(1, 1, 200, 7))
@@ -992,17 +999,17 @@ class TestDetectionModelConstructor:
         assert model.image_blob_name == "image"
 
     def test_with_path_to_labels(self):
-        """Lines 47-48 – loads labels from file."""
+        """Lines 47-48 - loads labels from file."""
         from model_api.models.detection_model import DetectionModel
 
         adapter = _make_adapter(input_shape=(1, 3, 300, 300), output_shape=(1, 1, 200, 7))
         with patch("model_api.models.detection_model.load_labels", return_value=["a", "b"]) as mock_ll:
             model = DetectionModel(adapter, configuration={"path_to_labels": "/some/labels.txt"}, preload=False)
             mock_ll.assert_called_once_with("/some/labels.txt")
-            assert model._labels == ["a", "b"]
+            assert model._labels == ["a", "b"]  # noqa: SLF001
 
     def test_no_image_blob_raises(self):
-        """Lines 42-45 – raises if image_blob_name is empty (no 4D inputs)."""
+        """Lines 42-45 - raises if image_blob_name is empty (no 4D inputs)."""
         from model_api.models.detection_model import DetectionModel
 
         # Create adapter with only 2D inputs (no 4D image blob)
@@ -1015,7 +1022,7 @@ class TestDetectionModelPreprocess:
     """Tests for DetectionModel.preprocess (lines 62-72)."""
 
     def test_preprocess_adds_resize_info(self):
-        """Lines 62-72 – compute resize metadata."""
+        """Lines 62-72 - compute resize metadata."""
         from model_api.models.detection_model import DetectionModel
 
         adapter = _make_adapter(input_shape=(1, 3, 300, 300), output_shape=(1, 1, 200, 7))
@@ -1024,7 +1031,7 @@ class TestDetectionModelPreprocess:
         meta = {"original_shape": (480, 640, 3), "resized_shape": (300, 300, 3)}
         # Call the original (unwrapped) preprocess logic
         # The wrapped version will call through to the original
-        result_inputs, result_meta = model.preprocess(dict_inputs, meta)
+        _, result_meta = model.preprocess(dict_inputs, meta)
         assert "resize_info" in result_meta
 
 
@@ -1038,7 +1045,7 @@ class TestDetectionModelResizeDetections:
         return DetectionModel(adapter, configuration={}, preload=False)
 
     def test_resize_detections_with_resize_info(self):
-        """Lines 86-87 – uses pre-computed resize_info."""
+        """Lines 86-87 - uses pre-computed resize_info."""
         from model_api.models.result import DetectionResult
 
         model = self._make_detection_model()
@@ -1056,11 +1063,11 @@ class TestDetectionModelResizeDetections:
                 "pad_top": 0,
             },
         }
-        model._resize_detections(det, meta)
+        model._resize_detections(det, meta)  # noqa: SLF001
         assert det.bboxes.dtype == np.int32
 
     def test_resize_detections_without_resize_info(self):
-        """Lines 88-95 – computes resize_info on the fly."""
+        """Lines 88-95 - computes resize_info on the fly."""
         from model_api.models.result import DetectionResult
 
         model = self._make_detection_model()
@@ -1070,7 +1077,7 @@ class TestDetectionModelResizeDetections:
         det = DetectionResult(bboxes, labels, scores)
 
         meta = {"original_shape": (480, 640, 3)}
-        model._resize_detections(det, meta)
+        model._resize_detections(det, meta)  # noqa: SLF001
         assert det.bboxes.dtype == np.int32
 
 
@@ -1078,7 +1085,7 @@ class TestDetectionModelFilterDetections:
     """Tests for _filter_detections (lines 115-120)."""
 
     def test_filter_by_confidence(self):
-        """Lines 115-120 – filters by confidence and area."""
+        """Lines 115-120 - filters by confidence and area."""
         from model_api.models.detection_model import DetectionModel
         from model_api.models.result import DetectionResult
 
@@ -1090,12 +1097,12 @@ class TestDetectionModelFilterDetections:
         scores = np.array([0.9, 0.3])
         det = DetectionResult(bboxes, labels, scores)
 
-        model._filter_detections(det)
+        model._filter_detections(det)  # noqa: SLF001
         assert len(det.bboxes) == 1
         assert det.scores[0] == 0.9
 
     def test_filter_by_area(self):
-        """Lines 115-120 – filter by box area threshold."""
+        """Lines 115-120 - filter by box area threshold."""
         from model_api.models.detection_model import DetectionModel
         from model_api.models.result import DetectionResult
 
@@ -1107,7 +1114,7 @@ class TestDetectionModelFilterDetections:
         scores = np.array([0.9, 0.8])
         det = DetectionResult(bboxes, labels, scores)
 
-        model._filter_detections(det, box_area_threshold=100)
+        model._filter_detections(det, box_area_threshold=100)  # noqa: SLF001
         assert len(det.bboxes) == 1
 
 
@@ -1125,7 +1132,7 @@ class TestDetectionModelAddLabelNames:
         labels = np.array([0, 1])
         det = DetectionResult(bboxes, labels)
 
-        model._add_label_names(det)
+        model._add_label_names(det)  # noqa: SLF001
         assert det.label_names == ["cat", "dog"]
 
 
@@ -1142,7 +1149,7 @@ class TestDetectionModelCalculateNms:
         scores = np.array([0.9, 0.8], dtype=np.float32)
         labels = np.array([0, 0])
 
-        keep = model._calculate_nms(boxes, scores, labels)
+        keep = model._calculate_nms(boxes, scores, labels)  # noqa: SLF001
         assert isinstance(keep, list)
         assert len(keep) >= 1
 
@@ -1151,10 +1158,10 @@ class TestDetectionModelCalculateNms:
 
 
 class TestModelGetParamUnprefixed:
-    """Test for get_param line 120 – return attr without _ prefix."""
+    """Test for get_param line 120 - return attr without _ prefix."""
 
     def test_get_param_via_unprefixed_attr(self):
-        """Line 119-120 – get_param returns attribute set directly (no _ prefix)."""
+        """Line 119-120 - get_param returns attribute set directly (no _ prefix)."""
         from model_api.models.image_model import ImageModel
 
         adapter = _make_adapter()
@@ -1165,16 +1172,16 @@ class TestModelGetParamUnprefixed:
         # Remove the prefixed version if it exists
         if hasattr(model, "_resize_type"):
             delattr(model, "_resize_type")
-        model._parameters_cache = None  # reset cache
+        model._parameters_cache = None  # reset cache  # noqa: SLF001
         val = model.get_param("resize_type")
         assert val == "fit_to_window"
 
 
 class TestModelRtInfoSetsValue:
-    """Test for _load_config line 424 – rt_info value successfully sets attribute."""
+    """Test for _load_config line 424 - rt_info value successfully sets attribute."""
 
     def test_rt_info_value_sets_attribute(self):
-        """Line 424 – rt_info returns a value that is set as attribute."""
+        """Line 424 - rt_info returns a value that is set as attribute."""
         from model_api.models.image_model import ImageModel
 
         rt_mock = MagicMock()
@@ -1192,10 +1199,10 @@ class TestModelRtInfoSetsValue:
 
 
 class TestModelSaveWithParams:
-    """Test for save lines 775-778 – iteration over parameters."""
+    """Test for save lines 775-778 - iteration over parameters."""
 
     def test_save_iterates_params(self):
-        """Lines 775-778 – save collects all non-None parameter values."""
+        """Lines 775-778 - save collects all non-None parameter values."""
         from model_api.models.image_model import ImageModel
 
         adapter = _make_adapter()
@@ -1220,7 +1227,7 @@ class TestModelAvailableWrappers:
 
 
 class TestModelGetModelClassNotFound:
-    """Test for get_model_class line 169 – not found path."""
+    """Test for get_model_class line 169 - not found path."""
 
     def test_get_model_class_not_found(self):
         with pytest.raises(WrapperError, match="There is no model"):
@@ -1231,7 +1238,7 @@ class TestImageModelGetLabelNameFromImageModel:
     """Test get_label_name from ImageModel directly (line 169 image_model.py)."""
 
     def test_label_none_on_detection_model(self):
-        """Line 167-169 image_model.py – no labels returns auto name."""
+        """Line 167-169 image_model.py - no labels returns auto name."""
         from model_api.models.detection_model import DetectionModel
 
         adapter = _make_adapter(input_shape=(1, 3, 300, 300), output_shape=(1, 1, 200, 7))

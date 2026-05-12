@@ -56,7 +56,7 @@ def test_layout_abstract_compute_on_primitive():
     class TestLayout(Layout):
         def _compute_on_primitive(self, primitive, image, scene):
             # Call super to cover the abstract pass body
-            return Layout._compute_on_primitive(self, primitive, image, scene)
+            return Layout._compute_on_primitive(self, primitive, image, scene)  # noqa: SLF001
 
         def __call__(self, scene):
             return scene.base
@@ -66,4 +66,4 @@ def test_layout_abstract_compute_on_primitive():
     scene = Scene(base=img, layout=layout)
     assert scene.render() == img
     # Explicitly call _compute_on_primitive to cover the abstract body
-    assert layout._compute_on_primitive(Overlay, img, scene) is None
+    assert layout._compute_on_primitive(Overlay, img, scene) is None  # noqa: SLF001

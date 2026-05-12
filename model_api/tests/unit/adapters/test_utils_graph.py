@@ -22,6 +22,8 @@ from model_api.adapters.utils import (
 )
 from openvino.preprocess import PrePostProcessor
 
+rng = np.random.default_rng(0)
+
 
 class TestLayoutFromOpenvino:
     def test_from_openvino(self):
@@ -57,12 +59,24 @@ class TestResizeImageGraphValidation:
     def test_pad_value_too_low(self):
         param = ov.op.Parameter(ov.Type.u8, ov.PartialShape([-1, -1, -1, 3]))
         with pytest.raises(RuntimeError, match="pad_value must be in range"):
-            resize_image_graph(param.output(0), (224, 224), True, "linear", -1)
+            resize_image_graph(
+                param.output(0),
+                (224, 224),
+                keep_aspect_ratio=True,
+                interpolation="linear",
+                pad_value=-1,
+            )
 
     def test_pad_value_too_high(self):
         param = ov.op.Parameter(ov.Type.u8, ov.PartialShape([-1, -1, -1, 3]))
         with pytest.raises(RuntimeError, match="pad_value must be in range"):
-            resize_image_graph(param.output(0), (224, 224), True, "linear", 70000)
+            resize_image_graph(
+                param.output(0),
+                (224, 224),
+                keep_aspect_ratio=True,
+                interpolation="linear",
+                pad_value=70000,
+            )
 
     def test_non_aspect_ratio(self):
         """Test resize_image_graph with keep_aspect_ratio=False."""
@@ -80,7 +94,7 @@ class TestResizeImageGraphValidation:
         built = ppp.build()
         compiled = ov.Core().compile_model(built, "CPU")
 
-        img = np.random.randint(0, 255, (100, 200, 3), dtype=np.uint8)
+        img = rng.integers(0, 255, (100, 200, 3), dtype=np.uint8)
         result = next(iter(compiled(img[None]).values()))
         assert result.shape == (1, model_h, model_w, 3)
 
@@ -105,7 +119,7 @@ class TestCropResizeGraph:
         built = ppp.build()
         compiled = ov.Core().compile_model(built, "CPU")
 
-        img = np.random.randint(0, 255, img_shape, dtype=np_dtype)
+        img = rng.integers(0, 255, img_shape, dtype=np_dtype)
         return next(iter(compiled(img[None]).values()))
 
     def test_crop_square_tall(self):

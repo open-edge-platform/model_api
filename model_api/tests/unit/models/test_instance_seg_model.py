@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import pathlib
 from dataclasses import dataclass, field
 from unittest.mock import MagicMock
 
@@ -22,6 +23,8 @@ from model_api.models.instance_segmentation import (
 )
 from model_api.models.model import WrapperError
 from model_api.models.result import InstanceSegmentationResult
+
+rng = np.random.default_rng(0)
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -313,7 +316,7 @@ class TestMaskRCNNModelPreprocess:
         model = MaskRCNNModel(adapter, configuration={})
         dict_inputs = {"image": np.zeros((1, 3, 800, 800))}
         meta = {"resized_shape": (800, 800, 3)}
-        result_inputs, result_meta = model.preprocess(dict_inputs, meta)
+        result_inputs, _ = model.preprocess(dict_inputs, meta)
         # Non-segmentoly: no image_info added
         assert "image_info" not in result_inputs or len(model.image_info_blob_names) == 0
 
@@ -354,8 +357,7 @@ class TestMaskRCNNModelPostprocess:
         if labels is not None:
             config["labels"] = labels
         adapter = _make_adapter()
-        model = MaskRCNNModel(adapter, configuration=config)
-        return model
+        return MaskRCNNModel(adapter, configuration=config)
 
     def _make_meta(self, orig_h=480, orig_w=640):
         return {"original_shape": (orig_h, orig_w, 3)}
@@ -517,7 +519,7 @@ class TestMaskRCNNModelPostprocess:
         labels = np.array([0], dtype=np.int32)
         boxes = np.array([[10, 10, 100, 100, 0.9]], dtype=np.float32)
         masks = np.ones((1, 28, 28), dtype=np.float32)
-        fv = np.random.rand(1, 128).astype(np.float32)
+        fv = rng.random((1, 128)).astype(np.float32)
 
         outputs = {
             "labels_out": labels,
@@ -553,7 +555,6 @@ class TestMaskRCNNModelPostprocess:
 class TestMaskRCNNPathToLabels:
     def test_path_to_labels_loads_labels(self):
         """Line 25: labels loaded from path_to_labels file."""
-        import os
         import tempfile
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
@@ -562,9 +563,9 @@ class TestMaskRCNNPathToLabels:
         try:
             adapter = _make_adapter()
             model = MaskRCNNModel(adapter, configuration={"path_to_labels": label_path}, preload=False)
-            assert model._labels == ["cat", "dog"]
+            assert model._labels == ["cat", "dog"]  # noqa: SLF001
         finally:
-            os.unlink(label_path)
+            pathlib.Path(label_path).unlink()
 
 
 class TestMaskRCNNTopKSkip:
@@ -631,7 +632,7 @@ class TestMaskRCNNFeatureVectorWithoutLabels:
         labels = np.array([0], dtype=np.int32)
         boxes = np.array([[10, 10, 100, 100, 0.9]], dtype=np.float32)
         masks = np.ones((1, 28, 28), dtype=np.float32)
-        fv = np.random.rand(1, 128).astype(np.float32)
+        fv = rng.random((1, 128)).astype(np.float32)
 
         outputs = {
             "labels_out": labels,

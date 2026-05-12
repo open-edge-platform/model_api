@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import pathlib
 from dataclasses import dataclass, field
 from unittest.mock import MagicMock
 
@@ -20,6 +21,8 @@ from model_api.models.segmentation import (
     _get_activation_map,
     create_hard_prediction_from_soft_prediction,
 )
+
+rng = np.random.default_rng(0)
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -75,13 +78,13 @@ def _make_adapter(
 
 class TestCreateHardPrediction:
     def test_blur_strength_neg1_uses_argmax(self):
-        soft = np.random.rand(10, 10, 3).astype(np.float32)
+        soft = rng.random((10, 10, 3)).astype(np.float32)
         result = create_hard_prediction_from_soft_prediction(soft, 0.5, -1)
         expected = np.argmax(soft, axis=2)
         np.testing.assert_array_equal(result, expected)
 
     def test_soft_threshold_inf_uses_argmax(self):
-        soft = np.random.rand(10, 10, 3).astype(np.float32)
+        soft = rng.random((10, 10, 3)).astype(np.float32)
         result = create_hard_prediction_from_soft_prediction(soft, float("inf"), 3)
         expected = np.argmax(soft, axis=2)
         np.testing.assert_array_equal(result, expected)
@@ -167,10 +170,7 @@ class TestSegmentationModelInit:
 
 class TestSegmentationPostprocess:
     def _build_model(self, out_channels, h=32, w=32):
-        if out_channels < 2:
-            output_shape = (1, h, w)
-        else:
-            output_shape = (1, out_channels, h, w)
+        output_shape = (1, h, w) if out_channels < 2 else (1, out_channels, h, w)
         adapter = _make_adapter(
             input_shape=(1, 3, h, w),
             output_shape=output_shape,
@@ -179,10 +179,7 @@ class TestSegmentationPostprocess:
         return model, output_shape
 
     def _build_model_with_config(self, out_channels, h=32, w=32, **config):
-        if out_channels < 2:
-            output_shape = (1, h, w)
-        else:
-            output_shape = (1, out_channels, h, w)
+        output_shape = (1, h, w) if out_channels < 2 else (1, out_channels, h, w)
         adapter = _make_adapter(
             input_shape=(1, 3, h, w),
             output_shape=output_shape,
@@ -198,7 +195,7 @@ class TestSegmentationPostprocess:
             w=16,
             return_soft_prediction=False,
         )
-        outputs = {"output": np.random.rand(1, 2, 16, 16).astype(np.float32)}
+        outputs = {"output": rng.random((1, 2, 16, 16)).astype(np.float32)}
         meta = {"original_shape": (32, 32, 3)}
         result = model.postprocess(outputs, meta)
         assert isinstance(result, np.ndarray)
@@ -207,7 +204,7 @@ class TestSegmentationPostprocess:
     def test_multichannel_return_soft(self):
         """out_channels >= 2 with return_soft_prediction=True (default)."""
         model, _ = self._build_model(out_channels=3, h=16, w=16)
-        outputs = {"output": np.random.rand(1, 3, 16, 16).astype(np.float32)}
+        outputs = {"output": rng.random((1, 3, 16, 16)).astype(np.float32)}
         meta = {"original_shape": (32, 32, 3)}
         result = model.postprocess(outputs, meta)
         from model_api.models.result import ImageResultWithSoftPrediction
@@ -224,7 +221,7 @@ class TestSegmentationPostprocess:
             w=16,
             return_soft_prediction=False,
         )
-        outputs = {"output": np.random.rand(1, 3, 16, 16).astype(np.float32)}
+        outputs = {"output": rng.random((1, 3, 16, 16)).astype(np.float32)}
         meta = {"original_shape": (32, 32, 3)}
         result = model.postprocess(outputs, meta)
         assert isinstance(result, np.ndarray)
@@ -240,8 +237,8 @@ class TestSegmentationPostprocess:
         )
         model = SegmentationModel(adapter, configuration={})
         outputs = {
-            "output": np.random.rand(1, 3, 16, 16).astype(np.float32),
-            "feature_vector": np.random.rand(1, 64).astype(np.float32),
+            "output": rng.random((1, 3, 16, 16)).astype(np.float32),
+            "feature_vector": rng.random((1, 64)).astype(np.float32),
         }
         meta = {"original_shape": (16, 16, 3)}
         result = model.postprocess(outputs, meta)
@@ -322,7 +319,7 @@ class TestGetActivationMap:
         np.testing.assert_array_equal(result, np.zeros(5, dtype=np.uint8))
 
     def test_2d_input(self):
-        features = np.random.rand(10, 10).astype(np.float32)
+        features = rng.random((10, 10)).astype(np.float32)
         result = _get_activation_map(features)
         assert result.dtype == np.uint8
         assert result.shape == (10, 10)
@@ -338,7 +335,6 @@ class TestGetActivationMap:
 class TestSegmentationModelPathToLabels:
     def test_path_to_labels_loads_labels(self):
         """Line 81: labels loaded from path_to_labels file."""
-        import os
         import tempfile
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
@@ -347,9 +343,9 @@ class TestSegmentationModelPathToLabels:
         try:
             adapter = _make_adapter(output_shape=(1, 2, 64, 64))
             model = SegmentationModel(adapter, configuration={"path_to_labels": label_path}, preload=False)
-            assert model._labels == ["label1", "label2"]
+            assert model._labels == ["label1", "label2"]  # noqa: SLF001
         finally:
-            os.unlink(label_path)
+            pathlib.Path(label_path).unlink()
 
 
 class TestSegmentationPostprocessArgmaxed:
@@ -364,7 +360,7 @@ class TestSegmentationPostprocessArgmaxed:
         model = SegmentationModel(adapter, configuration={"return_soft_prediction": True})
         assert model.out_channels == 0
 
-        predictions = np.random.rand(1, 16, 16).astype(np.float32)
+        predictions = rng.random((1, 16, 16)).astype(np.float32)
         meta = {"original_shape": (16, 16, 3)}
         # The 2D soft_prediction triggers AxisError in argmax(axis=2)
         with pytest.raises(np.exceptions.AxisError):

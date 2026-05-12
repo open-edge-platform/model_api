@@ -52,7 +52,7 @@ class TestDetectionTilerPostprocessTile:
         tiler = DetectionTiler(model, execution_mode="async")
         pred = _make_detection_result(n=1)
         coord = [10, 20, 110, 120]
-        result = tiler._postprocess_tile(pred, coord)
+        result = tiler._postprocess_tile(pred, coord)  # noqa: SLF001
         assert "bboxes" in result
         assert "saliency_map" in result
         assert "features" in result
@@ -66,7 +66,7 @@ class TestDetectionTilerPostprocessTile:
         tiler = DetectionTiler(model, execution_mode="sync")
         pred = _make_detection_result(n=1)
         coord = [0, 0, 100, 100]
-        result = tiler._postprocess_tile(pred, coord)
+        result = tiler._postprocess_tile(pred, coord)  # noqa: SLF001
         assert "saliency_map" in result
 
 
@@ -85,7 +85,7 @@ class TestDetectionTilerMergeResults:
                 "coords": [0, 0, 100, 100],
             },
         ]
-        merged = tiler._merge_results(results, (100, 100, 3))
+        merged = tiler._merge_results(results, (100, 100, 3))  # noqa: SLF001
         assert isinstance(merged, DetectionResult)
         mock_nms.assert_called_once()
 
@@ -100,7 +100,7 @@ class TestDetectionTilerMergeResults:
                 "coords": [0, 0, 100, 100],
             },
         ]
-        merged = tiler._merge_results(results, (100, 100, 3))
+        merged = tiler._merge_results(results, (100, 100, 3))  # noqa: SLF001
         assert isinstance(merged, DetectionResult)
         assert len(merged.bboxes) == 0
 
@@ -124,7 +124,7 @@ class TestDetectionTilerMergeResults:
                 "coords": [100, 100, 200, 200],
             },
         ]
-        merged = tiler._merge_results(results, (200, 200, 3))
+        merged = tiler._merge_results(results, (200, 200, 3))  # noqa: SLF001
         assert isinstance(merged, DetectionResult)
 
 
@@ -132,20 +132,20 @@ class TestDetectionTilerMergeSaliencyMaps:
     def test_merge_saliency_maps_empty(self):
         model = _make_model()
         tiler = DetectionTiler(model, execution_mode="sync")
-        assert tiler._merge_saliency_maps([], (100, 100, 3), []) is None
+        assert tiler._merge_saliency_maps([], (100, 100, 3), []) is None  # noqa: SLF001
 
     def test_merge_saliency_maps_1d(self):
         model = _make_model()
         tiler = DetectionTiler(model, execution_mode="sync")
         smap = np.array([1.0])
-        result = tiler._merge_saliency_maps([smap], (100, 100, 3), [[0, 0, 100, 100]])
+        result = tiler._merge_saliency_maps([smap], (100, 100, 3), [[0, 0, 100, 100]])  # noqa: SLF001
         np.testing.assert_array_equal(result, smap)
 
     def test_merge_saliency_maps_single_map(self):
         model = _make_model()
         tiler = DetectionTiler(model, execution_mode="sync")
         smap = np.ones((2, 10, 10), dtype=np.float32)
-        result = tiler._merge_saliency_maps([smap], (100, 100, 3), [[0, 0, 100, 100]])
+        result = tiler._merge_saliency_maps([smap], (100, 100, 3), [[0, 0, 100, 100]])  # noqa: SLF001
         np.testing.assert_array_equal(result, smap)
 
     def test_merge_saliency_maps_4d(self):
@@ -158,7 +158,7 @@ class TestDetectionTilerMergeSaliencyMaps:
         smap_full = np.ones((1, 2, 5, 5), dtype=np.float32) * 100
         smap_tile = np.ones((1, 2, 5, 5), dtype=np.float32) * 50
         coords = [[0, 0, 100, 100], [0, 0, 50, 50]]
-        result = tiler._merge_saliency_maps([smap_full, smap_tile], (100, 100, 3), coords)
+        result = tiler._merge_saliency_maps([smap_full, smap_tile], (100, 100, 3), coords)  # noqa: SLF001
         assert result.shape[0] == 1  # recovered 4d
 
     def test_merge_saliency_maps_multiple_tiles(self):
@@ -171,7 +171,7 @@ class TestDetectionTilerMergeSaliencyMaps:
         smap1 = np.ones((2, 5, 5), dtype=np.float32) * 100
         smap2 = np.ones((2, 5, 5), dtype=np.float32) * 50
         coords = [[0, 0, 50, 50], [50, 0, 100, 50]]
-        result = tiler._merge_saliency_maps([smap1, smap2], (50, 100, 3), coords)
+        result = tiler._merge_saliency_maps([smap1, smap2], (50, 100, 3), coords)  # noqa: SLF001
         assert result.dtype == np.uint8
 
     def test_merge_saliency_maps_with_full_img(self):
@@ -184,7 +184,7 @@ class TestDetectionTilerMergeSaliencyMaps:
         smap_full = np.ones((2, 5, 5), dtype=np.float32) * 100
         smap_tile = np.ones((2, 5, 5), dtype=np.float32) * 50
         coords = [[0, 0, 50, 50], [0, 0, 50, 50]]
-        result = tiler._merge_saliency_maps([smap_full, smap_tile], (50, 50, 3), coords)
+        result = tiler._merge_saliency_maps([smap_full, smap_tile], (50, 50, 3), coords)  # noqa: SLF001
         assert result is not None
 
     def test_merge_saliency_maps_resize_and_overlap(self):
@@ -202,7 +202,7 @@ class TestDetectionTilerMergeSaliencyMaps:
         smap1 = np.ones((1, 20, 20), dtype=np.float32) * 100
         smap2 = np.ones((1, 20, 20), dtype=np.float32) * 80
         coords = [[0, 0, 15, 15], [0, 0, 15, 15]]
-        result = tiler._merge_saliency_maps([smap1, smap2], (40, 40, 3), coords)
+        result = tiler._merge_saliency_maps([smap1, smap2], (40, 40, 3), coords)  # noqa: SLF001
         assert result is not None
         assert result.dtype == np.uint8
 

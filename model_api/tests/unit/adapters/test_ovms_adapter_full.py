@@ -53,8 +53,8 @@ def ovms_adapter():
     from model_api.adapters.ovms_adapter import OVMSAdapter
 
     adapter = OVMSAdapter("localhost:9000/v2/models/test_model/versions/1")
-    adapter._mock_client = mock_client
-    adapter._mock_httpclient = mock_httpclient
+    adapter._mock_client = mock_client  # noqa: SLF001
+    adapter._mock_httpclient = mock_httpclient  # noqa: SLF001
     yield adapter
     patcher.stop()
 
@@ -96,7 +96,7 @@ class TestOVMSAdapterInference:
     def test_infer_sync(self, ovms_adapter):
         mock_result = MagicMock()
         mock_result.as_numpy.return_value = np.zeros((1, 1000), dtype=np.float32)
-        ovms_adapter._mock_client.infer.return_value = mock_result
+        ovms_adapter._mock_client.infer.return_value = mock_result  # noqa: SLF001
 
         result = ovms_adapter.infer_sync(
             {"input": np.zeros((1, 3, 224, 224), dtype=np.float32)},
@@ -107,7 +107,7 @@ class TestOVMSAdapterInference:
         """Test input data type casting."""
         mock_result = MagicMock()
         mock_result.as_numpy.return_value = np.zeros((1, 1000), dtype=np.float32)
-        ovms_adapter._mock_client.infer.return_value = mock_result
+        ovms_adapter._mock_client.infer.return_value = mock_result  # noqa: SLF001
 
         result = ovms_adapter.infer_sync(
             {"input": np.zeros((1, 3, 224, 224), dtype=np.float64)},
@@ -118,7 +118,7 @@ class TestOVMSAdapterInference:
         """Test list input conversion to numpy array."""
         mock_result = MagicMock()
         mock_result.as_numpy.return_value = np.zeros((1, 1000), dtype=np.float32)
-        ovms_adapter._mock_client.infer.return_value = mock_result
+        ovms_adapter._mock_client.infer.return_value = mock_result  # noqa: SLF001
 
         result = ovms_adapter.infer_sync(
             {"input": [[[[0.0] * 224] * 224] * 3]},
@@ -139,7 +139,7 @@ class TestOVMSAdapterInference:
     def test_infer_async(self, ovms_adapter):
         mock_result = MagicMock()
         mock_result.as_numpy.return_value = np.zeros((1, 1000), dtype=np.float32)
-        ovms_adapter._mock_client.infer.return_value = mock_result
+        ovms_adapter._mock_client.infer.return_value = mock_result  # noqa: SLF001
 
         cb = MagicMock()
         ovms_adapter.set_callback(cb)

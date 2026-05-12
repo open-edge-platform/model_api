@@ -16,6 +16,8 @@ from model_api.adapters.inference_adapter import InferenceAdapter
 from model_api.models.anomaly import AnomalyDetection
 from model_api.models.model import WrapperError
 
+rng = np.random.default_rng(0)
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -106,7 +108,7 @@ class TestAnomalyDetectionInit:
 class TestResizeImage:
     def test_npu_dynamic_shape(self):
         model = _make_anomaly_model()
-        model._is_dynamic = True
+        model._is_dynamic = True  # noqa: SLF001
         model.inference_adapter.device = "NPU"
 
         compiled_model = MagicMock()
@@ -116,16 +118,16 @@ class TestResizeImage:
         model.inference_adapter.compiled_model = compiled_model
 
         image = np.zeros((100, 100, 3), dtype=np.uint8)
-        resized, meta = model._resize_image(image)
-        assert not model._is_dynamic
+        model._resize_image(image)  # noqa: SLF001
+        assert not model._is_dynamic  # noqa: SLF001
         assert model.h == 256
         assert model.w == 256
 
     def test_default_resize(self):
         model = _make_anomaly_model()
-        model._is_dynamic = False
+        model._is_dynamic = False  # noqa: SLF001
         image = np.zeros((100, 100, 3), dtype=np.uint8)
-        resized, meta = model._resize_image(image)
+        resized, _ = model._resize_image(image)  # noqa: SLF001
         assert resized is not None
 
 
@@ -138,7 +140,7 @@ class TestInputTransform:
     def test_uint8_to_float32(self):
         model = _make_anomaly_model()
         image = np.array([0, 128, 255], dtype=np.uint8)
-        result = model._input_transform(image)
+        result = model._input_transform(image)  # noqa: SLF001
         assert result.dtype == np.float32
         np.testing.assert_allclose(result[0], 0.0, atol=1e-6)
         np.testing.assert_allclose(result[2], 1.0, atol=1e-6)
@@ -146,13 +148,13 @@ class TestInputTransform:
     def test_float32_passthrough(self):
         model = _make_anomaly_model()
         image = np.array([0.0, 0.5, 1.0], dtype=np.float32)
-        result = model._input_transform(image)
+        result = model._input_transform(image)  # noqa: SLF001
         assert result.dtype == np.float32
         np.testing.assert_array_equal(result, image)
 
 
 # ---------------------------------------------------------------------------
-# postprocess – without anomalib keys
+# postprocess - without anomalib keys
 # ---------------------------------------------------------------------------
 
 
@@ -165,7 +167,7 @@ class TestPostprocessWithoutAnomalibKeys:
         # shape=1 triggers scalar path; but code does `assert anomaly_map is not None` after,
         # so scalar-only path actually fails at that assert if no spatial map.
         # The model expects spatial output for mask generation. Test the spatial path.
-        spatial = np.random.rand(1, 1, 32, 32).astype(np.float32)
+        spatial = rng.random((1, 1, 32, 32)).astype(np.float32)
         outputs = {"output": spatial}
         result = model.postprocess(outputs, self._meta())
         assert result.pred_label in ["Normal", "Anomaly"]
@@ -190,7 +192,7 @@ class TestPostprocessWithoutAnomalibKeys:
 
 
 # ---------------------------------------------------------------------------
-# postprocess – with anomalib keys
+# postprocess - with anomalib keys
 # ---------------------------------------------------------------------------
 
 
@@ -215,7 +217,7 @@ class TestPostprocessWithAnomalibKeys:
 
 
 # ---------------------------------------------------------------------------
-# postprocess – detection task
+# postprocess - detection task
 # ---------------------------------------------------------------------------
 
 
@@ -257,7 +259,7 @@ class TestNormalize:
     def test_min_max_normalization(self):
         model = _make_anomaly_model()
         tensor = np.array([0.0, 0.5, 1.0])
-        result = model._normalize(tensor, threshold=0.5)
+        result = model._normalize(tensor, threshold=0.5)  # noqa: SLF001
         assert result[1] == 0.5
         assert np.all(result >= 0)
         assert np.all(result <= 1)
@@ -265,7 +267,7 @@ class TestNormalize:
     def test_clipping(self):
         model = _make_anomaly_model()
         tensor = np.array([-10.0, 10.0])
-        result = model._normalize(tensor, threshold=0.5)
+        result = model._normalize(tensor, threshold=0.5)  # noqa: SLF001
         assert np.all(result >= 0)
         assert np.all(result <= 1)
 
@@ -279,21 +281,23 @@ class TestGetBoxes:
     def test_contour_detection(self):
         mask = np.zeros((100, 100), dtype=np.uint8)
         mask[20:40, 30:60] = 1
-        boxes = AnomalyDetection._get_boxes(mask)
+        boxes = AnomalyDetection._get_boxes(mask)  # noqa: SLF001
         assert boxes.shape[0] >= 1
         assert boxes.shape[1] == 4
-        x1, y1, x2, y2 = boxes[0]
-        assert x1 >= 29 and x1 <= 31
-        assert y1 >= 19 and y1 <= 21
+        x1, y1, _, _ = boxes[0]
+        assert x1 >= 29
+        assert x1 <= 31
+        assert y1 >= 19
+        assert y1 <= 21
 
     def test_empty_mask(self):
         mask = np.zeros((100, 100), dtype=np.uint8)
-        boxes = AnomalyDetection._get_boxes(mask)
+        boxes = AnomalyDetection._get_boxes(mask)  # noqa: SLF001
         assert boxes.shape == (0,)
 
     def test_multiple_contours(self):
         mask = np.zeros((100, 100), dtype=np.uint8)
         mask[10:20, 10:20] = 1
         mask[60:80, 60:80] = 1
-        boxes = AnomalyDetection._get_boxes(mask)
+        boxes = AnomalyDetection._get_boxes(mask)  # noqa: SLF001
         assert boxes.shape[0] == 2

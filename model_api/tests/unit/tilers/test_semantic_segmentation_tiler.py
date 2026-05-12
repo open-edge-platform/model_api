@@ -7,6 +7,8 @@ import numpy as np
 from model_api.models import ImageResultWithSoftPrediction
 from model_api.tilers.semantic_segmentation import SemanticSegmentationTiler
 
+rng = np.random.default_rng(0)
+
 
 def _make_model(num_labels=3):
     model = MagicMock()
@@ -21,7 +23,7 @@ def _make_model(num_labels=3):
 
 
 def _make_seg_result(h, w, num_classes=3):
-    soft = np.random.rand(h, w, num_classes).astype(np.float32)
+    soft = rng.random((h, w, num_classes)).astype(np.float32)
     return ImageResultWithSoftPrediction(
         resultImage=soft.argmax(2),
         soft_prediction=soft,
@@ -36,7 +38,7 @@ class TestSemanticSegmentationTilerPostprocessTile:
         tiler = SemanticSegmentationTiler(model, execution_mode="sync")
         pred = _make_seg_result(50, 50)
         coord = [0, 0, 50, 50]
-        result = tiler._postprocess_tile(pred, coord)
+        result = tiler._postprocess_tile(pred, coord)  # noqa: SLF001
         assert "coord" in result
         assert "masks" in result
         assert result["coord"] == coord
@@ -58,7 +60,7 @@ class TestSemanticSegmentationTilerMergeResults:
                 "masks": np.ones((50, 50, 2), dtype=np.float32) * 0.3,
             },
         ]
-        merged = tiler._merge_results(results, (50, 75, 3))
+        merged = tiler._merge_results(results, (50, 75, 3))  # noqa: SLF001
         assert isinstance(merged, ImageResultWithSoftPrediction)
         assert merged.resultImage.shape == (50, 75)
         assert merged.soft_prediction.shape == (50, 75, 2)
@@ -66,9 +68,9 @@ class TestSemanticSegmentationTilerMergeResults:
     def test_merge_results_single_tile(self):
         model = _make_model(num_labels=3)
         tiler = SemanticSegmentationTiler(model, execution_mode="sync")
-        soft = np.random.rand(100, 100, 3).astype(np.float32)
+        soft = rng.random((100, 100, 3)).astype(np.float32)
         results = [{"coord": [0, 0, 100, 100], "masks": soft}]
-        merged = tiler._merge_results(results, (100, 100, 3))
+        merged = tiler._merge_results(results, (100, 100, 3))  # noqa: SLF001
         assert isinstance(merged, ImageResultWithSoftPrediction)
         np.testing.assert_array_almost_equal(merged.soft_prediction, soft)
 

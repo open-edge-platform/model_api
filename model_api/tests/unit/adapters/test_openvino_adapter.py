@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import pathlib
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -72,7 +73,7 @@ def mock_core(mock_ov_model):
 @pytest.fixture
 def ov_adapter(mock_core, mock_ov_model):
     """Create OpenvinoAdapter with mocked Core and model."""
-    with patch("model_api.adapters.openvino_adapter.openvino_absent", False):
+    with patch("model_api.adapters.openvino_adapter.openvino_absent", new=False):
         import openvino as ov
 
         mock_layout = MagicMock()
@@ -96,11 +97,11 @@ def ov_adapter(mock_core, mock_ov_model):
                     device="CPU",
                 )
             finally:
-                os.unlink(path)
+                pathlib.Path(path).unlink()
 
             # Patch async queue for load_model
-            adapter._mock_core = mock_core
-            adapter._mock_model = mock_ov_model
+            adapter._mock_core = mock_core  # noqa: SLF001
+            adapter._mock_model = mock_ov_model  # noqa: SLF001
             yield adapter
 
 
@@ -110,7 +111,7 @@ class TestOpenvinoAdapterInit:
         assert ov_adapter.model is not None
 
     def test_init_from_buffer(self, mock_core):
-        with patch("model_api.adapters.openvino_adapter.openvino_absent", False):
+        with patch("model_api.adapters.openvino_adapter.openvino_absent", new=False):
             from model_api.adapters.openvino_adapter import OpenvinoAdapter
 
             adapter = OpenvinoAdapter(
@@ -122,7 +123,7 @@ class TestOpenvinoAdapterInit:
             assert adapter.model_from_buffer is True
 
     def test_init_invalid_model_raises(self, mock_core):
-        with patch("model_api.adapters.openvino_adapter.openvino_absent", False):
+        with patch("model_api.adapters.openvino_adapter.openvino_absent", new=False):
             from model_api.adapters.openvino_adapter import OpenvinoAdapter
 
             with pytest.raises(RuntimeError, match="Model must be bytes or a file"):
@@ -133,7 +134,7 @@ class TestOpenvinoAdapterInit:
                 )
 
     def test_init_onnx_model(self, mock_core):
-        with patch("model_api.adapters.openvino_adapter.openvino_absent", False):
+        with patch("model_api.adapters.openvino_adapter.openvino_absent", new=False):
             import os
             import tempfile
 
@@ -157,10 +158,10 @@ class TestOpenvinoAdapterInit:
                     )
                     assert adapter.is_onnx_file is True
             finally:
-                os.unlink(path)
+                pathlib.Path(path).unlink()
 
     def test_init_onnx_with_weights_warning(self, mock_core, caplog):
-        with patch("model_api.adapters.openvino_adapter.openvino_absent", False):
+        with patch("model_api.adapters.openvino_adapter.openvino_absent", new=False):
             import logging
             import os
             import sys
@@ -186,7 +187,7 @@ class TestOpenvinoAdapterInit:
                         )
                     assert "omitted" in caplog.text.lower() or adapter is not None
             finally:
-                os.unlink(path)
+                pathlib.Path(path).unlink()
 
 
 class TestOpenvinoAdapterLoadModel:
@@ -199,7 +200,7 @@ class TestOpenvinoAdapterLoadModel:
             assert ov_adapter.compiled_model is not None
 
     def test_load_model_with_max_requests(self, mock_core, mock_ov_model):
-        with patch("model_api.adapters.openvino_adapter.openvino_absent", False):
+        with patch("model_api.adapters.openvino_adapter.openvino_absent", new=False):
             import os
             import tempfile
 
@@ -215,7 +216,7 @@ class TestOpenvinoAdapterLoadModel:
                     max_num_requests=4,
                 )
             finally:
-                os.unlink(path)
+                pathlib.Path(path).unlink()
             with patch("model_api.adapters.openvino_adapter.AsyncInferQueue") as mock_aiq:
                 mock_queue = MagicMock()
                 mock_queue.__len__ = MagicMock(return_value=4)
@@ -238,7 +239,7 @@ class TestOpenvinoAdapterLayers:
             assert meta.precision == "f32"
 
     def test_get_input_layers_with_user_layout(self, mock_core, mock_ov_model):
-        with patch("model_api.adapters.openvino_adapter.openvino_absent", False):
+        with patch("model_api.adapters.openvino_adapter.openvino_absent", new=False):
             import os
             import tempfile
 
@@ -256,7 +257,7 @@ class TestOpenvinoAdapterLayers:
                     model_parameters={"input_layouts": "input:NCHW"},
                 )
             finally:
-                os.unlink(path)
+                pathlib.Path(path).unlink()
 
             # Use real model to avoid layout_helpers issues
             param = ov.op.Parameter(ov.Type.f32, ov.Shape([1, 3, 224, 224]))
@@ -435,7 +436,7 @@ class TestOpenvinoAdapterInference:
 class TestOpenvinoAdapterMethods:
     def test_reshape_model(self, ov_adapter):
         with (
-            patch("model_api.adapters.openvino_adapter.PartialShape") as mock_ps,
+            patch("model_api.adapters.openvino_adapter.PartialShape"),
             patch("model_api.adapters.openvino_adapter.Dimension"),
         ):
             ov_adapter.reshape_model({"input": [1, 3, 128, 128]})
@@ -443,7 +444,7 @@ class TestOpenvinoAdapterMethods:
 
     def test_reshape_model_with_tuple_dim(self, ov_adapter):
         with (
-            patch("model_api.adapters.openvino_adapter.PartialShape") as mock_ps,
+            patch("model_api.adapters.openvino_adapter.PartialShape"),
             patch("model_api.adapters.openvino_adapter.Dimension"),
         ):
             ov_adapter.reshape_model({"input": [(1, 4), 3, 128, 128]})
@@ -454,7 +455,7 @@ class TestOpenvinoAdapterMethods:
 
     def test_get_rt_info(self, ov_adapter):
         ov_adapter.model.get_rt_info.return_value = "test_value"
-        result = ov_adapter.get_rt_info(["model_info", "task"])
+        ov_adapter.get_rt_info(["model_info", "task"])
         ov_adapter.model.get_rt_info.assert_called_with(["model_info", "task"])
 
     def test_get_rt_info_onnx_file(self, ov_adapter):
@@ -929,14 +930,14 @@ class TestGetInputShape:
 
 class TestCreateCore:
     def test_create_core_when_absent(self):
-        with patch("model_api.adapters.openvino_adapter.openvino_absent", True):
+        with patch("model_api.adapters.openvino_adapter.openvino_absent", new=True):
             from model_api.adapters.openvino_adapter import create_core
 
             with pytest.raises(ImportError, match="OpenVINO package is not installed"):
                 create_core()
 
     def test_create_core_success(self):
-        with patch("model_api.adapters.openvino_adapter.openvino_absent", False):
+        with patch("model_api.adapters.openvino_adapter.openvino_absent", new=False):
             from model_api.adapters.openvino_adapter import create_core
 
             core = create_core()
@@ -980,7 +981,8 @@ class TestOpenvinoAdapterOnnxImportError:
 
             def mock_import(name, *args, **kwargs):
                 if name == "onnx":
-                    raise ImportError("No module named 'onnx'")
+                    msg = "No module named 'onnx'"
+                    raise ImportError(msg)
                 return original_import(name, *args, **kwargs)
 
             with patch("builtins.__import__", side_effect=mock_import):
@@ -989,7 +991,7 @@ class TestOpenvinoAdapterOnnxImportError:
                 with pytest.raises(ImportError, match="Loading ONNX models requires"):
                     OpenvinoAdapter(core=mock_core, model=path, device="CPU")
         finally:
-            os.unlink(path)
+            pathlib.Path(path).unlink()
 
 
 class TestLogRuntimeSettingsSuccess:

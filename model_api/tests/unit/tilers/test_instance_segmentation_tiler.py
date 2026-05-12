@@ -53,7 +53,7 @@ class TestInstanceSegmentationTilerFilterTiles:
         tiler = InstanceSegmentationTiler(model, execution_mode="sync")
         coords = [[0, 0, 100, 100], [100, 0, 200, 100]]
         image = np.zeros((100, 200, 3), dtype=np.uint8)
-        assert tiler._filter_tiles(image, coords) == coords
+        assert tiler._filter_tiles(image, coords) == coords  # noqa: SLF001
 
     def test_filter_tiles_with_classifier(self):
         model = _make_model()
@@ -68,7 +68,7 @@ class TestInstanceSegmentationTilerFilterTiles:
         tiler = InstanceSegmentationTiler(model, execution_mode="sync", tile_classifier_model=classifier)
         image = np.zeros((100, 300, 3), dtype=np.uint8)
         coords = [[0, 0, 100, 100], [100, 0, 200, 100], [200, 0, 300, 100]]
-        result = tiler._filter_tiles(image, coords)
+        result = tiler._filter_tiles(image, coords)  # noqa: SLF001
         assert len(result) == 2
         assert coords[0] in result
         assert coords[1] in result
@@ -80,7 +80,7 @@ class TestInstanceSegmentationTilerPostprocessTile:
         tiler = InstanceSegmentationTiler(model, execution_mode="async")
         pred = _make_instance_seg_result(n=1)
         coord = [10, 20, 110, 120]
-        result = tiler._postprocess_tile(pred, coord)
+        result = tiler._postprocess_tile(pred, coord)  # noqa: SLF001
         assert "masks" in result
         assert "bboxes" in result
         assert len(result["masks"]) == 1
@@ -104,7 +104,7 @@ class TestInstanceSegmentationTilerMergeResults:
                 "masks": [np.ones((40, 40), dtype=np.uint8)],
             },
         ]
-        merged = tiler._merge_results(results, (100, 100, 3))
+        merged = tiler._merge_results(results, (100, 100, 3))  # noqa: SLF001
         assert isinstance(merged, InstanceSegmentationResult)
 
     def test_merge_results_empty(self):
@@ -119,7 +119,7 @@ class TestInstanceSegmentationTilerMergeResults:
                 "masks": [],
             },
         ]
-        merged = tiler._merge_results(results, (100, 100, 3))
+        merged = tiler._merge_results(results, (100, 100, 3))  # noqa: SLF001
         assert isinstance(merged, InstanceSegmentationResult)
 
 
@@ -127,12 +127,12 @@ class TestInstanceSegmentationTilerMergeSaliencyMaps:
     def test_merge_saliency_maps_empty(self):
         model = _make_model()
         tiler = InstanceSegmentationTiler(model, execution_mode="sync")
-        assert tiler._merge_saliency_maps([], (100, 100, 3), []) is None
+        assert tiler._merge_saliency_maps([], (100, 100, 3), []) is None  # noqa: SLF001
 
     def test_merge_saliency_maps_falsy_first(self):
         model = _make_model()
         tiler = InstanceSegmentationTiler(model, execution_mode="sync")
-        result = tiler._merge_saliency_maps([[]], (100, 100, 3), [[0, 0, 100, 100]])
+        result = tiler._merge_saliency_maps([[]], (100, 100, 3), [[0, 0, 100, 100]])  # noqa: SLF001
         assert result == []
 
     def test_merge_saliency_maps_with_tiles(self):
@@ -145,7 +145,7 @@ class TestInstanceSegmentationTilerMergeSaliencyMaps:
         smap_full = [np.ones((10, 20), dtype=np.float32) * 100, np.ones((10, 20), dtype=np.float32) * 50]
         smap_tile = [np.ones((10, 10), dtype=np.float32) * 80, np.ones((10, 10), dtype=np.float32) * 40]
         coords = [[0, 0, 100, 50], [0, 0, 50, 50]]
-        result = tiler._merge_saliency_maps([smap_full, smap_tile], (50, 100, 3), coords)
+        result = tiler._merge_saliency_maps([smap_full, smap_tile], (50, 100, 3), coords)  # noqa: SLF001
         assert len(result) == 2
 
     def test_merge_saliency_maps_1d_class_map_skipped(self):
@@ -157,7 +157,7 @@ class TestInstanceSegmentationTilerMergeSaliencyMaps:
         )
         smap = [np.array([1.0]), np.array([2.0])]
         coords = [[0, 0, 50, 50]]
-        result = tiler._merge_saliency_maps([smap], (50, 50, 3), coords)
+        result = tiler._merge_saliency_maps([smap], (50, 50, 3), coords)  # noqa: SLF001
         # 1d maps - rounded and checked for sum==0
         assert len(result) == 2
 
@@ -171,7 +171,7 @@ class TestInstanceSegmentationTilerMergeSaliencyMaps:
         smap1 = [np.ones((10, 10), dtype=np.float32) * 100]
         smap2 = [np.ones((10, 10), dtype=np.float32) * 50]
         coords = [[0, 0, 50, 50], [50, 0, 100, 50]]
-        result = tiler._merge_saliency_maps([smap1, smap2], (50, 100, 3), coords)
+        result = tiler._merge_saliency_maps([smap1, smap2], (50, 100, 3), coords)  # noqa: SLF001
         assert len(result) == 1
 
     def test_merge_saliency_maps_zero_sum(self):
@@ -184,7 +184,7 @@ class TestInstanceSegmentationTilerMergeSaliencyMaps:
         # All zeros - should result in ndarray(0) for 1d case
         smap = [np.array([0.0])]
         coords = [[0, 0, 50, 50]]
-        result = tiler._merge_saliency_maps([smap], (50, 50, 3), coords)
+        result = tiler._merge_saliency_maps([smap], (50, 50, 3), coords)  # noqa: SLF001
         # 1d map with sum 0 gets replaced with ndarray(0)
         assert result[0].shape == (0,)
 
@@ -203,7 +203,7 @@ class TestInstanceSegmentationTilerCall:
             with patch.object(InstanceSegmentationTiler.__bases__[0], "__call__", return_value="result"):
                 # Can't easily mock isinstance for MaskRCNNModel, test non-MaskRCNN path
                 image = np.zeros((100, 100, 3), dtype=np.uint8)
-                result = tiler(image)
+                tiler(image)
 
     def test_call_with_actual_maskrcnn_mock(self):
         from model_api.models.instance_segmentation import MaskRCNNModel

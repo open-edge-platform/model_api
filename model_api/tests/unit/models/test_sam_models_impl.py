@@ -13,6 +13,8 @@ from unittest.mock import MagicMock
 import numpy as np
 from model_api.adapters.inference_adapter import InferenceAdapter
 
+rng = np.random.default_rng(0)
+
 _RT_INFO_ERROR = RuntimeError(
     "Cannot get runtime attribute. Path to runtime attribute is incorrect.",
 )
@@ -79,8 +81,7 @@ class TestSAMImageEncoder:
         from model_api.models.sam_models import SAMImageEncoder
 
         adapter = _make_encoder_adapter()
-        model = SAMImageEncoder(adapter, configuration={}, preload=False)
-        return model
+        return SAMImageEncoder(adapter, configuration={}, preload=False)
 
     def test_init_output_name(self):
         model = self._build()
@@ -94,7 +95,7 @@ class TestSAMImageEncoder:
 
     def test_postprocess_returns_output(self):
         model = self._build()
-        data = np.random.rand(1, 256, 64, 64).astype(np.float32)
+        data = rng.random((1, 256, 64, 64)).astype(np.float32)
         result = model.postprocess({"image_embeddings": data}, {})
         np.testing.assert_array_equal(result, data)
 
@@ -115,8 +116,7 @@ class TestSAMDecoder:
         from model_api.models.sam_models import SAMDecoder
 
         adapter = _make_decoder_adapter()
-        model = SAMDecoder(adapter, configuration={}, preload=False)
-        return model
+        return SAMDecoder(adapter, configuration={}, preload=False)
 
     def test_init_mask_input_shape(self):
         model = self._build()
@@ -135,7 +135,7 @@ class TestSAMDecoder:
 
     def test_get_outputs(self):
         model = self._build()
-        assert model._get_outputs() == "upscaled_masks"
+        assert model._get_outputs() == "upscaled_masks"  # noqa: SLF001
 
     def test_base_preprocess_bboxes(self):
         model = self._build()
@@ -188,50 +188,49 @@ class TestSAMDecoder:
 
     def test_get_preprocess_shape_landscape(self):
         model = self._build()
-        h, w = model._get_preprocess_shape(500, 1000, 1024)
+        h, w = model._get_preprocess_shape(500, 1000, 1024)  # noqa: SLF001
         assert w == 1024
         assert h < w
 
     def test_get_preprocess_shape_portrait(self):
         model = self._build()
-        h, w = model._get_preprocess_shape(1000, 500, 1024)
+        h, w = model._get_preprocess_shape(1000, 500, 1024)  # noqa: SLF001
         assert h == 1024
         assert w < h
 
     def test_get_preprocess_shape_square(self):
         model = self._build()
-        h, w = model._get_preprocess_shape(800, 800, 1024)
+        h, w = model._get_preprocess_shape(800, 800, 1024)  # noqa: SLF001
         assert h == 1024
         assert w == 1024
 
     def test_check_io_number_noop(self):
         model = self._build()
         # Should not raise
-        model._check_io_number(6, 4)
-        model._check_io_number((1, 2, 3), (1, 2))
+        model._check_io_number(6, 4)  # noqa: SLF001
+        model._check_io_number((1, 2, 3), (1, 2))  # noqa: SLF001
 
     def test_get_inputs(self):
         model = self._build()
-        image_blob_names, image_info_blob_names = model._get_inputs()
+        image_blob_names, image_info_blob_names = model._get_inputs()  # noqa: SLF001
         assert len(image_blob_names) == 6
         assert image_info_blob_names == []
 
     def test_postprocess(self):
         model = self._build()
         scores = np.array([[0.3, 0.8, -0.1, 1.5]])
-        upscaled = np.random.rand(1, 4, 64, 64).astype(np.float32)
+        upscaled = rng.random((1, 4, 64, 64)).astype(np.float32)
         outputs = {
             "scores": scores,
             "upscaled_masks": upscaled.copy(),
             "iou_predictions": np.array([[0.9, 0.8, 0.7, 0.6]]),
-            "low_res_masks": np.random.rand(1, 4, 16, 16).astype(np.float32),
+            "low_res_masks": rng.random((1, 4, 16, 16)).astype(np.float32),
         }
         result = model.postprocess(outputs, {})
         # scores clipped to [0,1]
-        clipped = np.clip(scores, 0, 1)
         assert "hard_prediction" in result
         assert "soft_prediction" in result
         # hard_prediction is boolean-like: threshold is 0.0 by default
         assert result["hard_prediction"].dtype == bool
-        # soft_prediction = hard * clipped_scores
+        # soft_prediction spatial dims match hard_prediction
         assert result["soft_prediction"].shape[-2:] == result["hard_prediction"].shape[-2:]

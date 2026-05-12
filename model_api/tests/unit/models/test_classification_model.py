@@ -167,14 +167,16 @@ class TestLoadLabels:
         lines = "0 cat,\n1 dog,\n2 bird,\n"
         with patch("model_api.models.classification.Path.open", mock_open(read_data=lines)):
             model = ClassificationModel(adapter, configuration={"path_to_labels": "labels.txt"})
-        assert model._labels == ["cat", "dog", "bird"]
+        assert model._labels == ["cat", "dog", "bird"]  # noqa: SLF001
 
     def test_bad_format_raises(self):
         adapter = _make_adapter(output_shape=(1, 3))
         lines = "cat\ndog\nbird\n"
-        with patch("model_api.models.classification.Path.open", mock_open(read_data=lines)):
-            with pytest.raises(WrapperError):
-                ClassificationModel(adapter, configuration={"path_to_labels": "labels.txt"})
+        with (
+            patch("model_api.models.classification.Path.open", mock_open(read_data=lines)),
+            pytest.raises(WrapperError),
+        ):
+            ClassificationModel(adapter, configuration={"path_to_labels": "labels.txt"})
 
 
 # ---------------------------------------------------------------------------
@@ -207,8 +209,8 @@ class TestVerifySingleOutput:
             adapter,
             configuration={"labels": ["a", "b", "c"]},
         )
-        assert model._labels[0] == "other"
-        assert len(model._labels) == 4
+        assert model._labels[0] == "other"  # noqa: SLF001
+        assert len(model._labels) == 4  # noqa: SLF001
 
     def test_model_classes_gt_labels_raises(self):
         adapter = _make_adapter(output_shape=(1, 10))
@@ -530,7 +532,7 @@ class TestProbabilisticLabelsResolver:
         config = self._make_config()
         resolver = ProbabilisticLabelsResolver(config)
         hard = {"animal": 0.0, "cat": 1.0, "dog": 1.0}
-        result = resolver._suppress_descendant_output(hard)
+        result = resolver._suppress_descendant_output(hard)  # noqa: SLF001
         assert result["cat"] == 0.0
         assert result["dog"] == 0.0
 
@@ -538,7 +540,7 @@ class TestProbabilisticLabelsResolver:
         config = self._make_config()
         resolver = ProbabilisticLabelsResolver(config)
         label_to_prob = {"animal": 0.9, "cat": 0.8, "dog": 0.0}
-        result = resolver._resolve_exclusive_labels(label_to_prob)
+        result = resolver._resolve_exclusive_labels(label_to_prob)  # noqa: SLF001
         assert result["animal"] == 1.0
         assert result["cat"] == 1.0
         assert result["dog"] == 0.0
@@ -547,7 +549,7 @@ class TestProbabilisticLabelsResolver:
         config = self._make_config()
         resolver = ProbabilisticLabelsResolver(config)
         label_to_prob = {"cat": 0.8}
-        result = resolver._add_missing_ancestors(label_to_prob)
+        result = resolver._add_missing_ancestors(label_to_prob)  # noqa: SLF001
         assert "animal" in result
         assert result["animal"] == 0.0
 
@@ -588,17 +590,17 @@ class TestSimpleLabelsGraph:
 
     def test_topological_sort_cycle_detection(self):
         g = SimpleLabelsGraph(["a", "b"])
-        g._adj["a"].append("b")
-        g._adj["b"].append("a")
+        g._adj["a"].append("b")  # noqa: SLF001
+        g._adj["b"].append("a")  # noqa: SLF001
         with pytest.raises(RuntimeError):
             g.topological_sort()
 
     def test_cache_invalidation(self):
         g = SimpleLabelsGraph(["a", "b"])
         _ = g.get_labels_in_topological_order()
-        assert g._topological_order_cache is not None
+        assert g._topological_order_cache is not None  # noqa: SLF001
         g.add_edge("a", "b")
-        assert g._topological_order_cache is None
+        assert g._topological_order_cache is None  # noqa: SLF001
 
     def test_get_labels_uses_cache(self):
         g = SimpleLabelsGraph(["a", "b"])
@@ -645,7 +647,7 @@ class TestClassificationModelPreload:
     def test_preload_true_calls_load(self):
         """Line 69: preload=True triggers self.load()."""
         adapter = _make_adapter(output_shape=(1, 10))
-        model = ClassificationModel(adapter, configuration={}, preload=True)
+        ClassificationModel(adapter, configuration={}, preload=True)
         adapter.load_model.assert_called()
 
 

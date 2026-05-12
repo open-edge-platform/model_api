@@ -86,8 +86,8 @@ def test_softmax():
 def test_top_k():
     arr = np.array([[1, 5, 3, 2, 4]])
     result = top_k(arr, k=3, axis=1)
-    assert result.values.shape == (1, 3)
-    assert result.values[0, 0] == 5
+    assert result.values.shape == (1, 3)  # noqa: PD011
+    assert result.values[0, 0] == 5  # noqa: PD011
     assert result.indices[0, 0] == 1
 
 

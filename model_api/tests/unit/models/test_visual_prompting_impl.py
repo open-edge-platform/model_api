@@ -29,6 +29,8 @@ from model_api.models.visual_prompting import (
     _topk_numpy,
 )
 
+rng = np.random.default_rng(0)
+
 # ---------------------------------------------------------------------------
 # _polygon_to_mask
 # ---------------------------------------------------------------------------
@@ -56,7 +58,7 @@ class TestPolygonToMask:
 
 class TestGenerateMaskedFeatures:
     def test_valid_mask_returns_features(self):
-        feats = np.random.rand(64, 64, 256).astype(np.float32)
+        feats = rng.random((64, 64, 256)).astype(np.float32)
         mask = np.zeros((100, 100), dtype=np.uint8)
         mask[20:80, 20:80] = 1
         result = _generate_masked_features(feats, mask, threshold_mask=0.3, image_size=1024)
@@ -67,7 +69,7 @@ class TestGenerateMaskedFeatures:
         np.testing.assert_allclose(norm, 1.0, atol=1e-5)
 
     def test_empty_mask_returns_none(self):
-        feats = np.random.rand(64, 64, 256).astype(np.float32)
+        feats = rng.random((64, 64, 256)).astype(np.float32)
         mask = np.zeros((100, 100), dtype=np.uint8)
         result = _generate_masked_features(feats, mask, threshold_mask=0.5, image_size=1024)
         assert result is None
@@ -98,9 +100,9 @@ class TestPadToSquare:
 class TestDecideMasks:
     def test_is_single_uses_idx_0(self):
         masks = np.ones((1, 4, 32, 32), dtype=np.float32)
-        logits = np.random.rand(1, 4, 16, 16).astype(np.float32)
+        logits = rng.random((1, 4, 16, 16)).astype(np.float32)
         scores = np.array([[0.2, 0.9, 0.5, 0.3]])
-        log_out, mask_out, score = _decide_masks(masks, logits, scores, is_single=True)
+        log_out, _, _ = _decide_masks(masks, logits, scores, is_single=True)
         assert log_out is not None
         assert log_out.shape[1] == 1
         # is_single always uses best_idx=0
@@ -108,15 +110,15 @@ class TestDecideMasks:
 
     def test_not_single_skips_first(self):
         masks = np.ones((1, 4, 32, 32), dtype=np.float32)
-        logits = np.random.rand(1, 4, 16, 16).astype(np.float32)
+        logits = rng.random((1, 4, 16, 16)).astype(np.float32)
         scores = np.array([[0.1, 0.9, 0.8, 0.5]])
         # After skipping index 0, remaining scores are [0.9, 0.8, 0.5], best is index 0 of remaining
-        log_out, mask_out, score = _decide_masks(masks, logits, scores, is_single=False)
+        _, _, score = _decide_masks(masks, logits, scores, is_single=False)
         assert score == pytest.approx(0.9, abs=1e-5)
 
     def test_all_zero_masks(self):
         masks = np.zeros((1, 4, 32, 32), dtype=np.float32)
-        logits = np.random.rand(1, 4, 16, 16).astype(np.float32)
+        logits = rng.random((1, 4, 16, 16)).astype(np.float32)
         scores = np.array([[0.1, 0.9, 0.8, 0.5]])
         log_out, mask_out, score = _decide_masks(masks, logits, scores, is_single=False)
         assert log_out is None
@@ -132,12 +134,12 @@ class TestDecideMasks:
 class TestTopkNumpy:
     def test_largest_true(self):
         x = np.array([1, 5, 3, 4, 2])
-        vals, inds = _topk_numpy(x, k=3, largest=True)
+        vals, _ = _topk_numpy(x, k=3, largest=True)
         assert list(vals) == [5, 4, 3]
 
     def test_largest_false(self):
         x = np.array([1, 5, 3, 4, 2])
-        vals, inds = _topk_numpy(x, k=2, largest=False)
+        vals, _ = _topk_numpy(x, k=2, largest=False)
         assert list(vals) == [1, 2]
 
 
@@ -167,7 +169,7 @@ class TestGetPrepaddedSize:
 
 class TestResizeToOriginalShape:
     def test_output_shape(self):
-        masks = np.random.rand(64, 64).astype(np.float32)
+        masks = rng.random((64, 64)).astype(np.float32)
         original_shape = np.array([480, 640])
         result = _resize_to_original_shape(masks, 1024, original_shape)
         assert result.shape == (480, 640)
@@ -241,9 +243,9 @@ class TestInspectOverlappingAreas:
 
 class TestGetPromptCandidates:
     def test_basic_flow(self):
-        ref_feats = np.random.rand(2, 1, 256).astype(np.float32)
+        ref_feats = rng.random((2, 1, 256)).astype(np.float32)
         ref_feats = ref_feats / np.linalg.norm(ref_feats, axis=-1, keepdims=True)
-        image_emb = np.random.rand(1, 256, 64, 64).astype(np.float32)
+        image_emb = rng.random((1, 256, 64, 64)).astype(np.float32)
         used_indices = np.array([0, 1])
         original_shape = np.array([480, 640])
         pts_scores, bg_coords = _get_prompt_candidates(
@@ -308,13 +310,13 @@ class TestSAMLearnableVisualPrompter:
     def test_init_default(self):
         enc, dec = _make_mock_encoder_decoder()
         prompter = SAMLearnableVisualPrompter(enc, dec)
-        assert prompter._threshold == 0.65
+        assert prompter._threshold == 0.65  # noqa: SLF001
         assert not prompter.has_reference_features()
 
     def test_init_with_reference_features(self):
         enc, dec = _make_mock_encoder_decoder()
         feats = VisualPromptingFeatures(
-            feature_vectors=np.random.rand(3, 1, 256).astype(np.float32),
+            feature_vectors=rng.random((3, 1, 256)).astype(np.float32),
             used_indices=np.array([0, 1, 2]),
         )
         prompter = SAMLearnableVisualPrompter(enc, dec, reference_features=feats)
@@ -328,7 +330,7 @@ class TestSAMLearnableVisualPrompter:
     def test_reference_features_property_success(self):
         enc, dec = _make_mock_encoder_decoder()
         feats = VisualPromptingFeatures(
-            feature_vectors=np.random.rand(2, 1, 256).astype(np.float32),
+            feature_vectors=rng.random((2, 1, 256)).astype(np.float32),
             used_indices=np.array([0, 1]),
         )
         prompter = SAMLearnableVisualPrompter(enc, dec, reference_features=feats)
@@ -345,9 +347,9 @@ class TestSAMLearnableVisualPrompter:
         enc, dec = _make_mock_encoder_decoder()
         prompter = SAMLearnableVisualPrompter(enc, dec)
         prompter.reset_reference_info()
-        assert prompter._reference_features is not None
-        assert prompter._reference_features.shape == (0, 1, 256)
-        assert len(prompter._used_indices) == 0
+        assert prompter._reference_features is not None  # noqa: SLF001
+        assert prompter._reference_features.shape == (0, 1, 256)  # noqa: SLF001
+        assert len(prompter._used_indices) == 0  # noqa: SLF001
 
     def test_gather_prompts_with_labels(self):
         enc, dec = _make_mock_encoder_decoder()
@@ -357,7 +359,7 @@ class TestSAMLearnableVisualPrompter:
             {"label": np.int64(1), "data": np.array([3, 4])},
             {"label": np.int64(0), "data": np.array([5, 6])},
         ]
-        result = prompter._gather_prompts_with_labels(prompts)
+        result = prompter._gather_prompts_with_labels(prompts)  # noqa: SLF001
         assert 0 in result
         assert 1 in result
         assert len(result[0]) == 2
@@ -367,8 +369,8 @@ class TestSAMLearnableVisualPrompter:
         enc, dec = _make_mock_encoder_decoder()
         prompter = SAMLearnableVisualPrompter(enc, dec)
         prompter.reset_reference_info()
-        prompter._expand_reference_info(5)
-        assert prompter._reference_features.shape[0] == 6  # 0..5
+        prompter._expand_reference_info(5)  # noqa: SLF001
+        assert prompter._reference_features.shape[0] == 6  # noqa: SLF001  # 0..5
 
     def test_learn_no_prompts_raises(self):
         enc, dec = _make_mock_encoder_decoder()
@@ -384,7 +386,7 @@ class TestSAMLearnableVisualPrompter:
 
 
 # ---------------------------------------------------------------------------
-# SAMVisualPrompter.infer() – full path
+# SAMVisualPrompter.infer() - full path
 # ---------------------------------------------------------------------------
 
 
@@ -484,7 +486,7 @@ class TestSAMVisualPrompterInfer:
 
 
 # ---------------------------------------------------------------------------
-# SAMLearnableVisualPrompter.learn() – lines 229-302
+# SAMLearnableVisualPrompter.learn() - lines 229-302
 # ---------------------------------------------------------------------------
 
 
@@ -531,7 +533,7 @@ class TestSAMLearnableVisualPrompterLearn:
         prompter = SAMLearnableVisualPrompter(enc, dec)
         image = np.zeros((100, 100, 3), dtype=np.uint8)
         points = [Prompt(data=np.array([25, 25]), label=0)]
-        feats, ref_masks = prompter.learn(image, points=points)
+        feats, _ = prompter.learn(image, points=points)
         assert isinstance(feats, VisualPromptingFeatures)
 
     def test_learn_with_polygons_only(self):
@@ -553,7 +555,7 @@ class TestSAMLearnableVisualPrompterLearn:
         # First learn
         prompter.learn(image, boxes=boxes)
         # Second learn with reset
-        feats, ref_masks = prompter.learn(image, boxes=boxes, reset_features=True)
+        feats, _ = prompter.learn(image, boxes=boxes, reset_features=True)
         assert isinstance(feats, VisualPromptingFeatures)
 
     def test_learn_multiple_labels(self):
@@ -575,7 +577,7 @@ class TestSAMLearnableVisualPrompterLearn:
 
 
 # ---------------------------------------------------------------------------
-# SAMLearnableVisualPrompter.__call__ – line 311
+# SAMLearnableVisualPrompter.__call__ - line 311
 # ---------------------------------------------------------------------------
 
 
@@ -592,7 +594,7 @@ class TestSAMLearnableVisualPrompterCall:
         dec.output_blob_name = "upscaled_masks"
 
         feats = VisualPromptingFeatures(
-            feature_vectors=np.random.rand(2, 1, 256).astype(np.float32),
+            feature_vectors=rng.random((2, 1, 256)).astype(np.float32),
             used_indices=np.array([0, 1]),
         )
         prompter = SAMLearnableVisualPrompter(enc, dec, reference_features=feats)
@@ -602,7 +604,7 @@ class TestSAMLearnableVisualPrompterCall:
 
 
 # ---------------------------------------------------------------------------
-# SAMLearnableVisualPrompter.infer() – lines 345-427
+# SAMLearnableVisualPrompter.infer() - lines 345-427
 # ---------------------------------------------------------------------------
 
 
@@ -623,7 +625,7 @@ class TestSAMLearnableVisualPrompterInfer:
     def test_infer_with_internal_features(self):
         enc, dec = self._setup_for_infer()
         feats = VisualPromptingFeatures(
-            feature_vectors=np.random.rand(2, 1, 256).astype(np.float32),
+            feature_vectors=rng.random((2, 1, 256)).astype(np.float32),
             used_indices=np.array([0, 1]),
         )
         prompter = SAMLearnableVisualPrompter(enc, dec, reference_features=feats)
@@ -635,7 +637,7 @@ class TestSAMLearnableVisualPrompterInfer:
         enc, dec = self._setup_for_infer()
         prompter = SAMLearnableVisualPrompter(enc, dec)
         feats = VisualPromptingFeatures(
-            feature_vectors=np.random.rand(2, 1, 256).astype(np.float32),
+            feature_vectors=rng.random((2, 1, 256)).astype(np.float32),
             used_indices=np.array([0, 1]),
         )
         image = np.zeros((100, 100, 3), dtype=np.uint8)
@@ -646,7 +648,7 @@ class TestSAMLearnableVisualPrompterInfer:
         """Line 379: points with score 0 or -1 are skipped."""
         enc, dec = self._setup_for_infer()
         feats = VisualPromptingFeatures(
-            feature_vectors=np.random.rand(2, 1, 256).astype(np.float32),
+            feature_vectors=rng.random((2, 1, 256)).astype(np.float32),
             used_indices=np.array([0, 1]),
         )
         prompter = SAMLearnableVisualPrompter(enc, dec, reference_features=feats)
@@ -671,7 +673,7 @@ class TestSAMLearnableVisualPrompterInfer:
             "low_res_masks": np.ones((1, 4, 64, 64), dtype=np.float32),
         }
         feats = VisualPromptingFeatures(
-            feature_vectors=np.random.rand(2, 1, 256).astype(np.float32),
+            feature_vectors=rng.random((2, 1, 256)).astype(np.float32),
             used_indices=np.array([0, 1]),
         )
         prompter = SAMLearnableVisualPrompter(enc, dec, reference_features=feats)
@@ -689,14 +691,14 @@ class TestSAMLearnableVisualPrompterInfer:
     def test_infer_used_indices_none_raises(self):
         enc, dec = self._setup_for_infer()
         prompter = SAMLearnableVisualPrompter(enc, dec)
-        prompter._reference_features = np.zeros((2, 1, 256), dtype=np.float32)
-        prompter._used_indices = None
+        prompter._reference_features = np.zeros((2, 1, 256), dtype=np.float32)  # noqa: SLF001
+        prompter._used_indices = None  # noqa: SLF001
         with pytest.raises(RuntimeError, match="Used indices are not defined"):
             prompter.infer(np.zeros((100, 100, 3), dtype=np.uint8))
 
 
 # ---------------------------------------------------------------------------
-# _expand_reference_info – lines 453-454
+# _expand_reference_info - lines 453-454
 # ---------------------------------------------------------------------------
 
 
@@ -706,11 +708,11 @@ class TestExpandReferenceInfoError:
         prompter = SAMLearnableVisualPrompter(enc, dec)
         # _reference_features is None by default
         with pytest.raises(RuntimeError, match="Can not expand non existing reference info"):
-            prompter._expand_reference_info(5)
+            prompter._expand_reference_info(5)  # noqa: SLF001
 
 
 # ---------------------------------------------------------------------------
-# _predict_masks – lines 474-540
+# _predict_masks - lines 474-540
 # ---------------------------------------------------------------------------
 
 
@@ -737,7 +739,7 @@ class TestPredictMasks:
             "orig_size": np.array([[100, 100]]),
             "image_embeddings": np.ones((1, 256, 64, 64), dtype=np.float32),
         }
-        result = prompter._predict_masks(inputs, np.array([100, 100]), is_cascade=False)
+        result = prompter._predict_masks(inputs, np.array([100, 100]), is_cascade=False)  # noqa: SLF001
         assert "upscaled_masks" in result
         dec.infer_sync.assert_called_once()
 
@@ -751,7 +753,7 @@ class TestPredictMasks:
             "orig_size": np.array([[100, 100]]),
             "image_embeddings": np.ones((1, 256, 64, 64), dtype=np.float32),
         }
-        result = prompter._predict_masks(inputs, np.array([100, 100]), is_cascade=True)
+        result = prompter._predict_masks(inputs, np.array([100, 100]), is_cascade=True)  # noqa: SLF001
         assert "upscaled_masks" in result
         assert dec.infer_sync.call_count == 3
 
@@ -772,7 +774,7 @@ class TestPredictMasks:
             "orig_size": np.array([[100, 100]]),
             "image_embeddings": np.ones((1, 256, 64, 64), dtype=np.float32),
         }
-        result = prompter._predict_masks(inputs, np.array([100, 100]), is_cascade=True)
+        result = prompter._predict_masks(inputs, np.array([100, 100]), is_cascade=True)  # noqa: SLF001
         assert result["upscaled_masks"].sum() == 0
         assert dec.infer_sync.call_count == 1  # stopped at iter 1
 
@@ -806,13 +808,13 @@ class TestPredictMasks:
             "orig_size": np.array([[100, 100]]),
             "image_embeddings": np.ones((1, 256, 64, 64), dtype=np.float32),
         }
-        result = prompter._predict_masks(inputs, np.array([100, 100]), is_cascade=True)
+        result = prompter._predict_masks(inputs, np.array([100, 100]), is_cascade=True)  # noqa: SLF001
         assert result["upscaled_masks"].sum() == 0
         assert dec.infer_sync.call_count == 2
 
 
 # ---------------------------------------------------------------------------
-# _inspect_overlapping_areas – missing branches
+# _inspect_overlapping_areas - missing branches
 # ---------------------------------------------------------------------------
 
 

@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import pathlib
 from dataclasses import dataclass, field
 from unittest.mock import MagicMock
 
@@ -15,6 +16,8 @@ import pytest
 from model_api.adapters.inference_adapter import InferenceAdapter
 from model_api.models.action_classification import ActionClassificationModel
 from model_api.models.model import WrapperError
+
+rng = np.random.default_rng(0)
 
 _RT_INFO_ERROR = RuntimeError(
     "Cannot get runtime attribute. Path to runtime attribute is incorrect.",
@@ -118,7 +121,7 @@ class TestGetInputs:
 
     def test_error_on_non_6d_input(self):
         adapter = _make_adapter()
-        extra = {"extra_input": FakeMetadata(shape=[1, 3, 224, 224], layout="NCHW")}
+
         adapter.get_input_layers.return_value = {
             "video": FakeMetadata(shape=[1, 1, 3, 8, 224, 224], layout="NSCTHW"),
             "extra_input": FakeMetadata(shape=[1, 3, 224, 224], layout="NCHW"),
@@ -146,7 +149,7 @@ class TestBasePreprocess:
         )
         model = ActionClassificationModel(adapter, configuration={})
         # 4 frames of 64x64x3
-        frames = np.random.randint(0, 255, (4, 64, 64, 3), dtype=np.uint8)
+        frames = rng.integers(0, 255, (4, 64, 64, 3), dtype=np.uint8)
         dict_inputs, meta = model.base_preprocess(frames)
         assert "video" in dict_inputs
         assert "original_shape" in meta
@@ -158,10 +161,10 @@ class TestBasePreprocess:
             layout="NSCTHW",
         )
         model = ActionClassificationModel(adapter, configuration={})
-        frames = np.random.randint(0, 255, (4, 64, 64, 3), dtype=np.uint8)
+        frames = rng.integers(0, 255, (4, 64, 64, 3), dtype=np.uint8)
         dict_inputs, _ = model.base_preprocess(frames)
         out = dict_inputs["video"]
-        # NSCTHW: (1, 1, C, T, H, W)
+        # shape order: batch, segments, channels, time, height, width
         assert out.shape[0] == 1  # N
         assert out.shape[1] == 1  # S
         assert out.shape[2] == 3  # C
@@ -173,10 +176,10 @@ class TestBasePreprocess:
             layout="NSTHWC",
         )
         model = ActionClassificationModel(adapter, configuration={})
-        frames = np.random.randint(0, 255, (4, 64, 64, 3), dtype=np.uint8)
+        frames = rng.integers(0, 255, (4, 64, 64, 3), dtype=np.uint8)
         dict_inputs, _ = model.base_preprocess(frames)
         out = dict_inputs["video"]
-        # NSTHWC: (1, 1, T, H, W, C)
+        # shape order: batch, segments, time, height, width, channels
         assert out.shape[0] == 1  # N
         assert out.shape[1] == 1  # S
         assert out.ndim == 6
@@ -188,7 +191,7 @@ class TestBasePreprocess:
         )
         model = ActionClassificationModel(adapter, configuration={})
         # 4 frames but model expects 8
-        frames = np.random.randint(0, 255, (4, 64, 64, 3), dtype=np.uint8)
+        frames = rng.integers(0, 255, (4, 64, 64, 3), dtype=np.uint8)
         with pytest.raises(RuntimeError, match="input shape"):
             model.base_preprocess(frames)
 
@@ -205,7 +208,7 @@ class TestChangeLayout:
         model = ActionClassificationModel(adapter, configuration={})
         # list of T frames, each (H, W, C)
         frames = [np.zeros((4, 4, 3)) for _ in range(2)]
-        result = model._change_layout(frames)
+        result = model._change_layout(frames)  # noqa: SLF001
         # Should be (1, 1, C, T, H, W)
         assert result.shape == (1, 1, 3, 2, 4, 4)
 
@@ -216,7 +219,7 @@ class TestChangeLayout:
         )
         model = ActionClassificationModel(adapter, configuration={})
         frames = [np.zeros((4, 4, 3)) for _ in range(2)]
-        result = model._change_layout(frames)
+        result = model._change_layout(frames)  # noqa: SLF001
         # Should be (1, 1, T, H, W, C)
         assert result.shape == (1, 1, 2, 4, 4, 3)
 
@@ -283,7 +286,6 @@ class TestParameters:
 class TestActionClassificationPathToLabels:
     def test_path_to_labels_loads_labels(self):
         """Line 80: labels loaded from path_to_labels file."""
-        import os
         import tempfile
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
@@ -296,9 +298,9 @@ class TestActionClassificationPathToLabels:
                 configuration={"path_to_labels": label_path},
                 preload=False,
             )
-            assert model._labels == ["action1", "action2"]
+            assert model._labels == ["action1", "action2"]  # noqa: SLF001
         finally:
-            os.unlink(label_path)
+            pathlib.Path(label_path).unlink()
 
 
 class TestActionClassificationNo6DInput:

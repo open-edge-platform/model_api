@@ -183,7 +183,7 @@ def test_instance_segmentation_bounding_boxes(mock_image: Image):
     )
 
     scene = InstanceSegmentationScene(mock_image, result)
-    bboxes = scene._get_bounding_boxes(result)
+    bboxes = scene._get_bounding_boxes(result)  # noqa: SLF001
     assert len(bboxes) == 2
     assert bboxes[0].label == "person (0.85)"
     assert bboxes[1].label == "car (0.75)"

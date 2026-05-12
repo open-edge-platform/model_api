@@ -75,7 +75,7 @@ class TestTilerLoadConfig:
         rt_mock.astype.return_value = "300"
         model.inference_adapter.get_rt_info.side_effect = None
         model.inference_adapter.get_rt_info.return_value = rt_mock
-        tiler = ConcreteTiler(model)
+        ConcreteTiler(model)
         # rt_info values should have been loaded
 
     def test_load_config_rt_info_missing(self):
@@ -119,7 +119,7 @@ class TestTilerTile:
         model = _make_model()
         tiler = ConcreteTiler(model, configuration={"tile_size": 100, "tiles_overlap": 0.0, "tile_with_full_img": True})
         image = np.zeros((200, 300, 3), dtype=np.uint8)
-        coords = tiler._tile(image)
+        coords = tiler._tile(image)  # noqa: SLF001
         assert coords[0] == [0, 0, 300, 200]
         assert len(coords) > 1
 
@@ -130,7 +130,7 @@ class TestTilerTile:
             configuration={"tile_size": 100, "tiles_overlap": 0.0, "tile_with_full_img": False},
         )
         image = np.zeros((200, 300, 3), dtype=np.uint8)
-        coords = tiler._tile(image)
+        coords = tiler._tile(image)  # noqa: SLF001
         assert coords[0] != [0, 0, 300, 200]
 
     def test_tile_overlap(self):
@@ -140,7 +140,7 @@ class TestTilerTile:
             configuration={"tile_size": 100, "tiles_overlap": 0.5, "tile_with_full_img": False},
         )
         image = np.zeros((100, 200, 3), dtype=np.uint8)
-        coords = tiler._tile(image)
+        coords = tiler._tile(image)  # noqa: SLF001
         # With 50% overlap and tile_size=100, step=50
         assert len(coords) > 2
 
@@ -151,7 +151,7 @@ class TestTilerTile:
             configuration={"tile_size": 150, "tiles_overlap": 0.0, "tile_with_full_img": False},
         )
         image = np.zeros((100, 200, 3), dtype=np.uint8)
-        coords = tiler._tile(image)
+        coords = tiler._tile(image)  # noqa: SLF001
         for c in coords:
             assert c[2] <= 200
             assert c[3] <= 100
@@ -163,7 +163,7 @@ class TestTilerFilterTiles:
         tiler = ConcreteTiler(model)
         coords = [[0, 0, 100, 100], [100, 0, 200, 100]]
         image = np.zeros((100, 200, 3))
-        assert tiler._filter_tiles(image, coords) == coords
+        assert tiler._filter_tiles(image, coords) == coords  # noqa: SLF001
 
 
 class TestTilerCropTile:
@@ -171,7 +171,7 @@ class TestTilerCropTile:
         model = _make_model()
         tiler = ConcreteTiler(model)
         image = np.arange(60).reshape(6, 10, 1)
-        crop = tiler._crop_tile(image, [2, 1, 5, 4])
+        crop = tiler._crop_tile(image, [2, 1, 5, 4])  # noqa: SLF001
         assert crop.shape == (3, 3, 1)
         np.testing.assert_array_equal(crop, image[1:4, 2:5])
 
@@ -214,7 +214,7 @@ class TestTilerPredictSync:
         tiler = ConcreteTiler(model, execution_mode="sync")
         image = np.zeros((200, 200, 3), dtype=np.uint8)
         coords = [[0, 0, 100, 100], [100, 0, 200, 100]]
-        results = tiler._predict_sync(image, coords)
+        results = tiler._predict_sync(image, coords)  # noqa: SLF001
         assert len(results) == 2
         assert model.call_count == 2
 
@@ -229,7 +229,7 @@ class TestTilerPredictAsync:
         tiler = ConcreteTiler(model)
         image = np.zeros((200, 200, 3), dtype=np.uint8)
         coords = [[0, 0, 100, 100], [100, 0, 200, 100]]
-        results = tiler._predict_async(image, coords)
+        results = tiler._predict_async(image, coords)  # noqa: SLF001
         assert mock_pipeline.submit_data.call_count == 2
         mock_pipeline.await_all.assert_called_once()
         assert len(results) == 2

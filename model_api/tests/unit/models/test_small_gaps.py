@@ -19,6 +19,8 @@ import pytest
 from model_api.models.result import InstanceSegmentationResult
 from model_api.models.utils import OutputTransform, add_rotated_rects
 
+rng = np.random.default_rng(0)
+
 
 class TestAddRotatedRects:
     def _make_inst_seg_result(self, masks):
@@ -40,7 +42,7 @@ class TestAddRotatedRects:
 
         result = add_rotated_rects(self._make_inst_seg_result([mask]))
         assert len(result.rotated_rects) == 1
-        (cx, cy), (w, h), angle = result.rotated_rects[0]
+        _, _, angle = result.rotated_rects[0]
         # After adjustment, angle must be in (0, 90]
         assert 0 < angle <= 90
 
@@ -58,14 +60,14 @@ class TestAddRotatedRects:
 class TestOutputTransformResize:
     def test_scale_factor_one_returns_image(self):
         # When output_resolution matches input_size, scale_factor == 1
-        img = np.random.randint(0, 255, (100, 200, 3), dtype=np.uint8)
+        img = rng.integers(0, 255, (100, 200, 3), dtype=np.uint8)
         transform = OutputTransform(input_size=(100, 200), output_resolution=(200, 100))
         # scale_factor = min(200/200, 100/100) = 1.0
         result = transform.resize(img)
         np.testing.assert_array_equal(result, img)
 
     def test_no_output_resolution_returns_image(self):
-        img = np.random.randint(0, 255, (100, 200, 3), dtype=np.uint8)
+        img = rng.integers(0, 255, (100, 200, 3), dtype=np.uint8)
         transform = OutputTransform(input_size=(100, 200), output_resolution=None)
         result = transform.resize(img)
         np.testing.assert_array_equal(result, img)
@@ -133,9 +135,8 @@ class TestONNXAdapterImportError:
     def test_raises_import_error_when_onnx_absent(self):
         import model_api.adapters.onnx_adapter as onnx_mod
 
-        with patch.object(onnx_mod, "onnxrt_absent", True):
-            with pytest.raises(ImportError, match="onnx"):
-                onnx_mod.ONNXRuntimeAdapter("dummy.onnx")
+        with patch.object(onnx_mod, "onnxrt_absent", new=True), pytest.raises(ImportError, match="onnx"):
+            onnx_mod.ONNXRuntimeAdapter("dummy.onnx")
 
 
 # ---------------------------------------------------------------------------
@@ -170,7 +171,7 @@ class TestAddRotatedRectsAngleAbove90:
             mock_cv2.minAreaRect.return_value = ((50.0, 50.0), (20.0, 40.0), 135.0)
 
             result = add_rotated_rects(self._make_inst_seg_result([mask]))
-            (cx, cy), (w, h), angle = result.rotated_rects[0]
+            (_, _), (w, h), angle = result.rotated_rects[0]
             assert 0 < angle <= 90
             assert angle == 45.0  # 135 - 90 = 45
             # w, h should be swapped once

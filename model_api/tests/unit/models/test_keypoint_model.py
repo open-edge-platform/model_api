@@ -19,7 +19,10 @@ from model_api.models.keypoint_detection import (
     _decode_simcc,
     _get_simcc_maximum,
 )
+from model_api.models.model import WrapperError
 from model_api.models.result import DetectedKeypoints, DetectionResult
+
+rng = np.random.default_rng(0)
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -77,8 +80,8 @@ class TestGetSimccMaximum:
     def test_2d_input(self):
         """K x W input produces K x 2 locs and K vals."""
         K, Wx, Wy = 5, 10, 12
-        simcc_x = np.random.rand(K, Wx).astype(np.float32)
-        simcc_y = np.random.rand(K, Wy).astype(np.float32)
+        simcc_x = rng.random((K, Wx)).astype(np.float32)
+        simcc_y = rng.random((K, Wy)).astype(np.float32)
         locs, vals = _get_simcc_maximum(simcc_x, simcc_y)
         assert locs.shape == (K, 2)
         assert vals.shape == (K,)
@@ -86,8 +89,8 @@ class TestGetSimccMaximum:
     def test_3d_input_batch(self):
         """N x K x W input produces N x K x 2 locs and N x K vals."""
         N, K, Wx, Wy = 2, 5, 10, 12
-        simcc_x = np.random.rand(N, K, Wx).astype(np.float32)
-        simcc_y = np.random.rand(N, K, Wy).astype(np.float32)
+        simcc_x = rng.random((N, K, Wx)).astype(np.float32)
+        simcc_y = rng.random((N, K, Wy)).astype(np.float32)
         locs, vals = _get_simcc_maximum(simcc_x, simcc_y)
         assert locs.shape == (N, K, 2)
         assert vals.shape == (N, K)
@@ -95,11 +98,12 @@ class TestGetSimccMaximum:
     def test_apply_softmax(self):
         """With apply_softmax=True, values should be in (0, 1)."""
         K, Wx, Wy = 3, 8, 8
-        simcc_x = np.random.rand(K, Wx).astype(np.float32) * 10
-        simcc_y = np.random.rand(K, Wy).astype(np.float32) * 10
+        simcc_x = rng.random((K, Wx)).astype(np.float32) * 10
+        simcc_y = rng.random((K, Wy)).astype(np.float32) * 10
         locs, vals = _get_simcc_maximum(simcc_x, simcc_y, apply_softmax=True)
         assert locs.shape == (K, 2)
-        assert np.all(vals >= 0) and np.all(vals <= 1)
+        assert np.all(vals >= 0)
+        assert np.all(vals <= 1)
 
     def test_1d_input_raises(self):
         simcc_x = np.array([1.0, 2.0, 3.0])
@@ -108,9 +112,9 @@ class TestGetSimccMaximum:
             _get_simcc_maximum(simcc_x, simcc_y)
 
     def test_mismatched_ndim_raises(self):
-        simcc_x = np.random.rand(3, 10).astype(np.float32)
-        simcc_y = np.random.rand(1, 3, 10).astype(np.float32)
-        with pytest.raises(ValueError):
+        simcc_x = rng.random((3, 10)).astype(np.float32)
+        simcc_y = rng.random((1, 3, 10)).astype(np.float32)
+        with pytest.raises(ValueError, match="Invalid shape"):
             _get_simcc_maximum(simcc_x, simcc_y)
 
     def test_negative_values_set_to_minus_one(self):
@@ -118,14 +122,14 @@ class TestGetSimccMaximum:
         K, W = 2, 5
         simcc_x = np.full((K, W), -1.0, dtype=np.float32)
         simcc_y = np.full((K, W), -1.0, dtype=np.float32)
-        locs, vals = _get_simcc_maximum(simcc_x, simcc_y)
+        locs, _ = _get_simcc_maximum(simcc_x, simcc_y)
         assert np.all(locs == -1)
 
     def test_argmax_correctness(self):
         """Location should correspond to argmax of the input."""
         simcc_x = np.array([[0.0, 0.0, 5.0, 0.0]], dtype=np.float32)  # argmax=2
         simcc_y = np.array([[0.0, 3.0, 0.0, 0.0]], dtype=np.float32)  # argmax=1
-        locs, vals = _get_simcc_maximum(simcc_x, simcc_y)
+        locs, _ = _get_simcc_maximum(simcc_x, simcc_y)
         assert locs[0, 0] == 2.0
         assert locs[0, 1] == 1.0
 
@@ -138,8 +142,8 @@ class TestGetSimccMaximum:
 class TestDecodeSimcc:
     def test_without_softmax(self):
         K, Wx, Wy = 5, 20, 20
-        simcc_x = np.random.rand(K, Wx).astype(np.float32)
-        simcc_y = np.random.rand(K, Wy).astype(np.float32)
+        simcc_x = rng.random((K, Wx)).astype(np.float32)
+        simcc_y = rng.random((K, Wy)).astype(np.float32)
         kps, scores = _decode_simcc(simcc_x, simcc_y, apply_softmax=False)
         # 2D input → unsqueezed to 3D
         assert kps.ndim == 3
@@ -149,17 +153,18 @@ class TestDecodeSimcc:
 
     def test_with_softmax(self):
         K, Wx, Wy = 5, 20, 20
-        simcc_x = np.random.rand(K, Wx).astype(np.float32) * 5
-        simcc_y = np.random.rand(K, Wy).astype(np.float32) * 5
+        simcc_x = rng.random((K, Wx)).astype(np.float32) * 5
+        simcc_y = rng.random((K, Wy)).astype(np.float32) * 5
         kps, scores = _decode_simcc(simcc_x, simcc_y, apply_softmax=True)
         assert kps.ndim == 3
         # With softmax, scores should be in [0, 1]
-        assert np.all(scores >= 0) and np.all(scores <= 1)
+        assert np.all(scores >= 0)
+        assert np.all(scores <= 1)
 
     def test_3d_input_no_unsqueeze(self):
         N, K, Wx, Wy = 2, 5, 20, 20
-        simcc_x = np.random.rand(N, K, Wx).astype(np.float32)
-        simcc_y = np.random.rand(N, K, Wy).astype(np.float32)
+        simcc_x = rng.random((N, K, Wx)).astype(np.float32)
+        simcc_y = rng.random((N, K, Wy)).astype(np.float32)
         kps, scores = _decode_simcc(simcc_x, simcc_y)
         assert kps.shape == (N, K, 2)
         assert scores.shape == (N, K)
@@ -193,7 +198,7 @@ class TestKeypointDetectionModelInit:
         # Add extra input
         inputs = adapter.get_input_layers.return_value
         inputs["extra"] = FakeMetadata(shape=[1, 3, 256, 192], layout="NCHW")
-        with pytest.raises(Exception):
+        with pytest.raises(WrapperError):
             KeypointDetectionModel(adapter, configuration={})
 
     def test_wrong_output_count_raises(self):
@@ -202,7 +207,7 @@ class TestKeypointDetectionModelInit:
                 "out1": (1, 17, 384),
             },
         )
-        with pytest.raises(Exception):
+        with pytest.raises(WrapperError):
             KeypointDetectionModel(adapter, configuration={})
 
 
@@ -300,8 +305,8 @@ class TestKeypointDetectionModelPostprocess:
     def test_apply_softmax_param(self):
         model = self._build_model(apply_softmax=True)
         K = 17
-        simcc_x = np.random.rand(1, K, 384).astype(np.float32) * 5
-        simcc_y = np.random.rand(1, K, 512).astype(np.float32) * 5
+        simcc_x = rng.random((1, K, 384)).astype(np.float32) * 5
+        simcc_y = rng.random((1, K, 512)).astype(np.float32) * 5
         outputs = {"simcc_x": simcc_x, "simcc_y": simcc_y}
         meta = {
             "original_shape": (480, 640, 3),
@@ -364,14 +369,14 @@ class TestTopDownKeypointDetectionPipeline:
 class TestGetSimccMaximumInvalidShape:
     def test_simcc_y_invalid_ndim_raises(self):
         """Lines 235-236: simcc_y with invalid ndim (1D) raises ValueError."""
-        simcc_x = np.random.rand(5, 10).astype(np.float32)
-        simcc_y = np.random.rand(50).astype(np.float32)  # 1D - invalid
+        simcc_x = rng.random((5, 10)).astype(np.float32)
+        simcc_y = rng.random((50)).astype(np.float32)  # 1D - invalid
         with pytest.raises(ValueError, match="Invalid shape"):
             _get_simcc_maximum(simcc_x, simcc_y)
 
     def test_simcc_y_4d_raises(self):
         """Lines 235-236: simcc_y with invalid ndim (4D) raises ValueError."""
-        simcc_x = np.random.rand(5, 10).astype(np.float32)
-        simcc_y = np.random.rand(1, 2, 5, 10).astype(np.float32)  # 4D - invalid
+        simcc_x = rng.random((5, 10)).astype(np.float32)
+        simcc_y = rng.random((1, 2, 5, 10)).astype(np.float32)  # 4D - invalid
         with pytest.raises(ValueError, match="Invalid shape"):
             _get_simcc_maximum(simcc_x, simcc_y)

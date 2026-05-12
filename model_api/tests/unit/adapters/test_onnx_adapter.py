@@ -9,6 +9,8 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 
+rng = np.random.default_rng(0)
+
 
 def _make_onnx_input(name="input", shape=(1, 3, 224, 224), type_str="tensor(float)"):
     inp = MagicMock()
@@ -44,7 +46,7 @@ def onnx_adapter():
     mock_inferred_model.SerializeToString.return_value = b"fake_model_bytes"
 
     with (
-        patch("model_api.adapters.onnx_adapter.onnxrt_absent", False),
+        patch("model_api.adapters.onnx_adapter.onnxrt_absent", new=False),
         patch("model_api.adapters.onnx_adapter.onnx") as mock_onnx,
         patch("model_api.adapters.onnx_adapter.ort") as mock_ort,
         patch("model_api.adapters.onnx_adapter.SymbolicShapeInference") as mock_ssi,
@@ -58,16 +60,16 @@ def onnx_adapter():
         adapter = ONNXRuntimeAdapter("fake_model.onnx")
 
         # Store mocks for later use
-        adapter._mock_session = mock_session
-        adapter._mock_onnx = mock_onnx
-        adapter._mock_ort = mock_ort
+        adapter._mock_session = mock_session  # noqa: SLF001
+        adapter._mock_onnx = mock_onnx  # noqa: SLF001
+        adapter._mock_ort = mock_ort  # noqa: SLF001
 
         yield adapter
 
 
 class TestONNXRuntimeAdapterInit:
     def test_import_error_when_onnxrt_absent(self):
-        with patch("model_api.adapters.onnx_adapter.onnxrt_absent", True):
+        with patch("model_api.adapters.onnx_adapter.onnxrt_absent", new=True):
             from model_api.adapters.onnx_adapter import ONNXRuntimeAdapter
 
             with pytest.raises(ImportError, match="ONNXRuntimeAdapter requires"):
@@ -80,7 +82,7 @@ class TestONNXRuntimeAdapterInit:
 
 
 class TestInferenceAdapterAbstract:
-    def test_model_annotation_coverage(self):
+    def test_model_annotation_coverage(self):  # noqa: C901
         """Exercise InferenceAdapter.__init__ to cover self.model type annotation."""
         from model_api.adapters.inference_adapter import InferenceAdapter
 
@@ -128,7 +130,7 @@ class TestONNXRuntimeAdapterLayers:
         assert "input" in meta.names
 
     def test_get_input_layers_unknown_precision(self, onnx_adapter):
-        onnx_adapter._mock_session.get_inputs.return_value = [
+        onnx_adapter._mock_session.get_inputs.return_value = [  # noqa: SLF001
             _make_onnx_input(type_str="tensor(double)"),
         ]
         inputs = onnx_adapter.get_input_layers()
@@ -142,7 +144,7 @@ class TestONNXRuntimeAdapterLayers:
         assert meta.precision == "f32"
 
     def test_get_output_layers_unknown_precision(self, onnx_adapter):
-        onnx_adapter._mock_session.get_outputs.return_value = [
+        onnx_adapter._mock_session.get_outputs.return_value = [  # noqa: SLF001
             _make_onnx_output(type_str="tensor(int64)"),
         ]
         outputs = onnx_adapter.get_output_layers()
@@ -151,9 +153,9 @@ class TestONNXRuntimeAdapterLayers:
 
 class TestONNXRuntimeAdapterInference:
     def test_infer_sync(self, onnx_adapter):
-        input_data = np.random.rand(1, 3, 224, 224).astype(np.float32)
-        mock_result = [np.random.rand(1, 1000).astype(np.float32)]
-        onnx_adapter._mock_session.run.return_value = mock_result
+        input_data = rng.random((1, 3, 224, 224)).astype(np.float32)
+        mock_result = [rng.random((1, 1000)).astype(np.float32)]
+        onnx_adapter._mock_session.run.return_value = mock_result  # noqa: SLF001
 
         result = onnx_adapter.infer_sync({"input": input_data})
         assert "output" in result
@@ -161,9 +163,9 @@ class TestONNXRuntimeAdapterInference:
 
     def test_infer_sync_dtype_mismatch(self, onnx_adapter):
         """When input dtype doesn't match, adapter should cast."""
-        input_data = np.random.rand(1, 3, 224, 224).astype(np.float64)
-        mock_result = [np.random.rand(1, 1000).astype(np.float32)]
-        onnx_adapter._mock_session.run.return_value = mock_result
+        input_data = rng.random((1, 3, 224, 224)).astype(np.float64)
+        mock_result = [rng.random((1, 1000)).astype(np.float32)]
+        onnx_adapter._mock_session.run.return_value = mock_result  # noqa: SLF001
 
         result = onnx_adapter.infer_sync({"input": input_data})
         assert "output" in result
