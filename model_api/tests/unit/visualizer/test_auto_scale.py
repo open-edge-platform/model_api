@@ -5,6 +5,8 @@
 
 import numpy as np
 import pytest
+from PIL import Image
+
 from model_api.models.result import (
     ClassificationResult,
     DetectionResult,
@@ -13,7 +15,6 @@ from model_api.models.result import (
 from model_api.models.result.classification import Label as ResultLabel
 from model_api.visualizer import Visualizer
 from model_api.visualizer.defaults import SCALE_BASELINE
-from PIL import Image
 
 
 class TestComputeScaleFactor:

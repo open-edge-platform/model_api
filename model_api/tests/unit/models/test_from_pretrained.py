@@ -9,6 +9,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 from model_api.utils.hf_hub_helper import (
     _HF_IMPORT_ERROR_MSG,
     download_from_hf,

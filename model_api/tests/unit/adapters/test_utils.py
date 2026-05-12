@@ -6,11 +6,12 @@ import cv2 as cv
 import numpy as np
 import openvino as ov
 import pytest
+from openvino.preprocess import PrePostProcessor
+
 from model_api.adapters.utils import (
     resize_image_with_aspect,
     resize_image_with_aspect_ocv,
 )
-from openvino.preprocess import PrePostProcessor
 
 
 @pytest.mark.parametrize(
