@@ -749,10 +749,19 @@ class TestImageModelGetLabelName:
         assert model.get_label_name(999) == "#999"
 
     def test_label_none(self):
-        """Lines 167-169 – no labels set returns auto-generated name."""
+        """Lines 167-169 – no labels set returns auto-generated name (empty list)."""
         from model_api.models.detection_model import DetectionModel
         adapter = _make_adapter(input_shape=(1, 3, 300, 300), output_shape=(1, 1, 200, 7))
         model = DetectionModel(adapter, configuration={}, preload=False)
+        assert model.get_label_name(0) == "#0"
+
+    def test_label_explicitly_none(self):
+        """Lines 168-169 – labels is literally None returns auto-generated name."""
+        from model_api.models.detection_model import DetectionModel
+        adapter = _make_adapter(input_shape=(1, 3, 300, 300), output_shape=(1, 1, 200, 7))
+        model = DetectionModel(adapter, configuration={}, preload=False)
+        # Force labels to None (simulating rt_info returning "None")
+        model._labels = None
         assert model.get_label_name(0) == "#0"
 
 
@@ -957,14 +966,12 @@ class TestDetectionModelConstructor:
             assert model._labels == ["a", "b"]
 
     def test_no_image_blob_raises(self):
-        """Lines 42-45 – raises if image_blob_name is empty."""
+        """Lines 42-45 – raises if image_blob_name is empty (no 4D inputs)."""
         from model_api.models.detection_model import DetectionModel
-        adapter = _make_adapter(input_shape=(1, 3, 300, 300), output_shape=(1, 1, 200, 7))
-        # Patch image_blob_name to be empty after super().__init__
-        with patch.object(DetectionModel, '__init__', wraps=DetectionModel.__init__) as _:
-            # Actually, the check is `if not self.image_blob_name` which would be False if it's a non-empty string.
-            # This is hard to trigger naturally. Let's skip and test via mock.
-            pass
+        # Create adapter with only 2D inputs (no 4D image blob)
+        adapter = _make_adapter(input_shape=(1, 3), output_shape=(1, 1, 200, 7))
+        with pytest.raises(WrapperError, match="Failed to identify the input for the image"):
+            DetectionModel(adapter, configuration={}, preload=False)
 
 
 class TestDetectionModelPreprocess:
