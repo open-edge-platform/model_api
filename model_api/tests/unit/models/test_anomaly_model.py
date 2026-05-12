@@ -8,23 +8,20 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from unittest.mock import MagicMock, PropertyMock
+from unittest.mock import MagicMock
 
-import cv2
 import numpy as np
 import pytest
-
 from model_api.adapters.inference_adapter import InferenceAdapter
 from model_api.models.anomaly import AnomalyDetection
 from model_api.models.model import WrapperError
-
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
 _RT_INFO_ERROR = RuntimeError(
-    "Cannot get runtime attribute. Path to runtime attribute is incorrect."
+    "Cannot get runtime attribute. Path to runtime attribute is incorrect.",
 )
 
 

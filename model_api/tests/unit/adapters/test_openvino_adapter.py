@@ -3,15 +3,20 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, PropertyMock, patch
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
 
 
-def _make_mock_ov_output(name="input", names=None, shape=(1, 3, 224, 224),
-                          element_type_name="f32", is_dynamic=False,
-                          partial_shape_str="[1,3,224,224]"):
+def _make_mock_ov_output(
+    name="input",
+    names=None,
+    shape=(1, 3, 224, 224),
+    element_type_name="f32",
+    is_dynamic=False,
+    partial_shape_str="[1,3,224,224]",
+):
     """Create a mock OV output (input/output tensor)."""
     output = MagicMock()
     output.get_any_name.return_value = name
@@ -74,11 +79,13 @@ def ov_adapter(mock_core, mock_ov_model):
         mock_layout.empty = True
         with patch.object(ov, "layout_helpers", create=True) as mock_lh:
             mock_lh.get_layout.return_value = mock_layout
-            from model_api.adapters.openvino_adapter import OpenvinoAdapter
+            import os
 
             # Create a temp file to make Path.is_file() happy
             import tempfile
-            import os
+
+            from model_api.adapters.openvino_adapter import OpenvinoAdapter
+
             fd, path = tempfile.mkstemp(suffix=".xml")
             os.close(fd)
             try:
@@ -127,13 +134,14 @@ class TestOpenvinoAdapterInit:
 
     def test_init_onnx_model(self, mock_core):
         with patch("model_api.adapters.openvino_adapter.openvino_absent", False):
-            import tempfile
             import os
+            import tempfile
 
             fd, path = tempfile.mkstemp(suffix=".onnx")
             os.close(fd)
             try:
                 import sys
+
                 mock_onnx = MagicMock()
                 mock_onnx_model = MagicMock()
                 mock_onnx_model.metadata_props = []
@@ -153,10 +161,10 @@ class TestOpenvinoAdapterInit:
 
     def test_init_onnx_with_weights_warning(self, mock_core, caplog):
         with patch("model_api.adapters.openvino_adapter.openvino_absent", False):
-            import tempfile
+            import logging
             import os
             import sys
-            import logging
+            import tempfile
 
             fd, path = tempfile.mkstemp(suffix=".onnx")
             os.close(fd)
@@ -192,7 +200,8 @@ class TestOpenvinoAdapterLoadModel:
 
     def test_load_model_with_max_requests(self, mock_core, mock_ov_model):
         with patch("model_api.adapters.openvino_adapter.openvino_absent", False):
-            import tempfile, os
+            import os
+            import tempfile
 
             fd, path = tempfile.mkstemp(suffix=".xml")
             os.close(fd)
@@ -200,7 +209,10 @@ class TestOpenvinoAdapterLoadModel:
                 from model_api.adapters.openvino_adapter import OpenvinoAdapter
 
                 adapter = OpenvinoAdapter(
-                    core=mock_core, model=path, device="CPU", max_num_requests=4
+                    core=mock_core,
+                    model=path,
+                    device="CPU",
+                    max_num_requests=4,
                 )
             finally:
                 os.unlink(path)
@@ -227,7 +239,9 @@ class TestOpenvinoAdapterLayers:
 
     def test_get_input_layers_with_user_layout(self, mock_core, mock_ov_model):
         with patch("model_api.adapters.openvino_adapter.openvino_absent", False):
-            import tempfile, os
+            import os
+            import tempfile
+
             import openvino as ov
 
             fd, path = tempfile.mkstemp(suffix=".xml")
@@ -321,9 +335,11 @@ class TestOpenvinoAdapterInference:
 
             ov_adapter.use_python_preprocessing = True
             call_count = [0]
+
             def mock_preprocessor(x):
                 call_count[0] += 1
                 return x
+
             ov_adapter.preprocessor = mock_preprocessor
 
             ov_adapter.infer_sync({"input": np.zeros((1, 3, 224, 224))})
@@ -348,9 +364,11 @@ class TestOpenvinoAdapterInference:
 
             ov_adapter.use_python_preprocessing = True
             called = [False]
+
             def mock_pp(x):
                 called[0] = True
                 return x
+
             ov_adapter.preprocessor = mock_pp
 
             ov_adapter.infer_async({"input": np.zeros((1, 3, 224, 224))}, "cb")
@@ -416,14 +434,18 @@ class TestOpenvinoAdapterInference:
 
 class TestOpenvinoAdapterMethods:
     def test_reshape_model(self, ov_adapter):
-        with patch("model_api.adapters.openvino_adapter.PartialShape") as mock_ps, \
-             patch("model_api.adapters.openvino_adapter.Dimension"):
+        with (
+            patch("model_api.adapters.openvino_adapter.PartialShape") as mock_ps,
+            patch("model_api.adapters.openvino_adapter.Dimension"),
+        ):
             ov_adapter.reshape_model({"input": [1, 3, 128, 128]})
             ov_adapter.model.reshape.assert_called_once()
 
     def test_reshape_model_with_tuple_dim(self, ov_adapter):
-        with patch("model_api.adapters.openvino_adapter.PartialShape") as mock_ps, \
-             patch("model_api.adapters.openvino_adapter.Dimension"):
+        with (
+            patch("model_api.adapters.openvino_adapter.PartialShape") as mock_ps,
+            patch("model_api.adapters.openvino_adapter.Dimension"),
+        ):
             ov_adapter.reshape_model({"input": [(1, 4), 3, 128, 128]})
             ov_adapter.model.reshape.assert_called_once()
 
@@ -449,14 +471,20 @@ class TestOpenvinoAdapterMethods:
         with patch("model_api.adapters.openvino_adapter.ov") as mock_ov:
             ov_adapter.save_model("model.xml")
             mock_ov.serialize.assert_called_once_with(
-                ov_adapter.get_model(), "model.xml", "", "UNSPECIFIED"
+                ov_adapter.get_model(),
+                "model.xml",
+                "",
+                "UNSPECIFIED",
             )
 
     def test_save_model_with_paths(self, ov_adapter):
         with patch("model_api.adapters.openvino_adapter.ov") as mock_ov:
             ov_adapter.save_model("model.xml", weights_path="model.bin", version="IR_V10")
             mock_ov.serialize.assert_called_once_with(
-                ov_adapter.get_model(), "model.xml", "model.bin", "IR_V10"
+                ov_adapter.get_model(),
+                "model.xml",
+                "model.bin",
+                "IR_V10",
             )
 
     def test_operations_by_type(self, ov_adapter):
@@ -856,8 +884,10 @@ class TestOpenvinoAdapterNPU:
         mock_input.get_any_name.return_value = "input"
         ov_adapter.model.inputs = [mock_input]
 
-        with patch("model_api.adapters.openvino_adapter.get_input_shape") as mock_gis, \
-             patch("model_api.adapters.openvino_adapter.AsyncInferQueue") as mock_aiq:
+        with (
+            patch("model_api.adapters.openvino_adapter.get_input_shape") as mock_gis,
+            patch("model_api.adapters.openvino_adapter.AsyncInferQueue") as mock_aiq,
+        ):
             mock_gis.return_value = [-1, 3, -1, -1]
             mock_queue = MagicMock()
             mock_queue.__len__ = MagicMock(return_value=2)
@@ -939,7 +969,9 @@ class TestParseDevicesEdgeCases:
 class TestOpenvinoAdapterOnnxImportError:
     def test_onnx_import_error(self, mock_core):
         """Test the ImportError path when onnx is not installed."""
-        import tempfile, os, sys, builtins
+        import builtins
+        import os
+        import tempfile
 
         fd, path = tempfile.mkstemp(suffix=".onnx")
         os.close(fd)

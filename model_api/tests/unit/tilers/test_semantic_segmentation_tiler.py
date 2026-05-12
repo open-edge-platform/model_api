@@ -4,8 +4,6 @@
 from unittest.mock import MagicMock, patch
 
 import numpy as np
-import pytest
-
 from model_api.models import ImageResultWithSoftPrediction
 from model_api.tilers.semantic_segmentation import SemanticSegmentationTiler
 
@@ -15,7 +13,7 @@ def _make_model(num_labels=3):
     model.load = MagicMock()
     model.inference_adapter = MagicMock()
     model.inference_adapter.get_rt_info.side_effect = RuntimeError(
-        "Cannot get runtime attribute. Path to runtime attribute is incorrect."
+        "Cannot get runtime attribute. Path to runtime attribute is incorrect.",
     )
     model.params = MagicMock()
     model.params.labels = [f"label_{i}" for i in range(num_labels)]
@@ -83,7 +81,7 @@ class TestSemanticSegmentationTilerCall:
         model.load = MagicMock()
         model.inference_adapter = MagicMock()
         model.inference_adapter.get_rt_info.side_effect = RuntimeError(
-            "Cannot get runtime attribute. Path to runtime attribute is incorrect."
+            "Cannot get runtime attribute. Path to runtime attribute is incorrect.",
         )
         model.params = MagicMock()
         model.params.labels = ["a", "b"]

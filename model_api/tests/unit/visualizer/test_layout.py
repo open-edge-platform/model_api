@@ -4,11 +4,10 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import numpy as np
-from PIL import Image
-
 from model_api.visualizer import Flatten, HStack, Scene
 from model_api.visualizer.layout.layout import Layout
 from model_api.visualizer.primitive import Overlay
+from PIL import Image
 
 
 def test_flatten_layout(mock_image: Image, mock_scene: Scene):

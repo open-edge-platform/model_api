@@ -5,7 +5,6 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
-
 from model_api.tilers.tiler import Tiler
 
 
@@ -24,7 +23,7 @@ def _make_model():
     model.load = MagicMock()
     model.inference_adapter = MagicMock()
     model.inference_adapter.get_rt_info.side_effect = RuntimeError(
-        "Cannot get runtime attribute. Path to runtime attribute is incorrect."
+        "Cannot get runtime attribute. Path to runtime attribute is incorrect.",
     )
     return model
 
@@ -88,7 +87,7 @@ class TestTilerLoadConfig:
     def test_load_config_rt_info_ovms_error(self):
         model = _make_model()
         model.inference_adapter.get_rt_info.side_effect = RuntimeError(
-            "OVMSAdapter does not support RT info getting"
+            "OVMSAdapter does not support RT info getting",
         )
         tiler = ConcreteTiler(model)
         assert tiler.tile_size == 400
@@ -126,14 +125,20 @@ class TestTilerTile:
 
     def test_tile_without_full_img(self):
         model = _make_model()
-        tiler = ConcreteTiler(model, configuration={"tile_size": 100, "tiles_overlap": 0.0, "tile_with_full_img": False})
+        tiler = ConcreteTiler(
+            model,
+            configuration={"tile_size": 100, "tiles_overlap": 0.0, "tile_with_full_img": False},
+        )
         image = np.zeros((200, 300, 3), dtype=np.uint8)
         coords = tiler._tile(image)
         assert coords[0] != [0, 0, 300, 200]
 
     def test_tile_overlap(self):
         model = _make_model()
-        tiler = ConcreteTiler(model, configuration={"tile_size": 100, "tiles_overlap": 0.5, "tile_with_full_img": False})
+        tiler = ConcreteTiler(
+            model,
+            configuration={"tile_size": 100, "tiles_overlap": 0.5, "tile_with_full_img": False},
+        )
         image = np.zeros((100, 200, 3), dtype=np.uint8)
         coords = tiler._tile(image)
         # With 50% overlap and tile_size=100, step=50
@@ -141,7 +146,10 @@ class TestTilerTile:
 
     def test_tile_clamps_to_image_boundary(self):
         model = _make_model()
-        tiler = ConcreteTiler(model, configuration={"tile_size": 150, "tiles_overlap": 0.0, "tile_with_full_img": False})
+        tiler = ConcreteTiler(
+            model,
+            configuration={"tile_size": 150, "tiles_overlap": 0.0, "tile_with_full_img": False},
+        )
         image = np.zeros((100, 200, 3), dtype=np.uint8)
         coords = tiler._tile(image)
         for c in coords:
@@ -172,7 +180,11 @@ class TestTilerCall:
     def test_call_sync(self):
         model = _make_model()
         model.return_value = "prediction"
-        tiler = ConcreteTiler(model, configuration={"tile_size": 100, "tiles_overlap": 0.0, "tile_with_full_img": False}, execution_mode="sync")
+        tiler = ConcreteTiler(
+            model,
+            configuration={"tile_size": 100, "tiles_overlap": 0.0, "tile_with_full_img": False},
+            execution_mode="sync",
+        )
         image = np.zeros((100, 100, 3), dtype=np.uint8)
         results = tiler(image)
         assert isinstance(results, list)
@@ -184,7 +196,11 @@ class TestTilerCall:
         mock_pipeline = MagicMock()
         mock_pipeline_cls.return_value = mock_pipeline
         mock_pipeline.get_result.return_value = ("pred", {})
-        tiler = ConcreteTiler(model, configuration={"tile_size": 100, "tiles_overlap": 0.0, "tile_with_full_img": False}, execution_mode="async")
+        tiler = ConcreteTiler(
+            model,
+            configuration={"tile_size": 100, "tiles_overlap": 0.0, "tile_with_full_img": False},
+            execution_mode="async",
+        )
         image = np.zeros((100, 100, 3), dtype=np.uint8)
         results = tiler(image)
         mock_pipeline.await_all.assert_called_once()

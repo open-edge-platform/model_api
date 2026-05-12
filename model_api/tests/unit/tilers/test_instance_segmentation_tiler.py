@@ -4,9 +4,7 @@
 from unittest.mock import MagicMock, patch
 
 import numpy as np
-import pytest
-
-from model_api.models import DetectionResult, InstanceSegmentationResult
+from model_api.models import InstanceSegmentationResult
 from model_api.tilers.instance_segmentation import InstanceSegmentationTiler
 
 
@@ -15,7 +13,7 @@ def _make_model():
     model.load = MagicMock()
     model.inference_adapter = MagicMock()
     model.inference_adapter.get_rt_info.side_effect = RuntimeError(
-        "Cannot get runtime attribute. Path to runtime attribute is incorrect."
+        "Cannot get runtime attribute. Path to runtime attribute is incorrect.",
     )
     model.get_label_name = MagicMock(side_effect=lambda x: f"label_{x}")
     return model
@@ -104,7 +102,7 @@ class TestInstanceSegmentationTilerMergeResults:
                 "saliency_map": [],
                 "coords": [0, 0, 100, 100],
                 "masks": [np.ones((40, 40), dtype=np.uint8)],
-            }
+            },
         ]
         merged = tiler._merge_results(results, (100, 100, 3))
         assert isinstance(merged, InstanceSegmentationResult)
@@ -119,7 +117,7 @@ class TestInstanceSegmentationTilerMergeResults:
                 "saliency_map": [],
                 "coords": [0, 0, 100, 100],
                 "masks": [],
-            }
+            },
         ]
         merged = tiler._merge_results(results, (100, 100, 3))
         assert isinstance(merged, InstanceSegmentationResult)
@@ -193,13 +191,13 @@ class TestInstanceSegmentationTilerMergeSaliencyMaps:
 
 class TestInstanceSegmentationTilerCall:
     def test_call_with_maskrcnn(self):
-        from model_api.models.instance_segmentation import MaskRCNNModel
-
         model = _make_model()
         model.__class__ = MagicMock
         # Mock isinstance check
         with patch("model_api.tilers.instance_segmentation.isinstance") as mock_isinstance:
-            mock_isinstance.side_effect = lambda obj, cls: cls == MagicMock if cls != InstanceSegmentationTiler else False
+            mock_isinstance.side_effect = (
+                lambda obj, cls: cls == MagicMock if cls != InstanceSegmentationTiler else False
+            )
             # Just test that __call__ delegates to super().__call__
             tiler = InstanceSegmentationTiler(model, execution_mode="sync")
             with patch.object(InstanceSegmentationTiler.__bases__[0], "__call__", return_value="result"):
@@ -214,14 +212,17 @@ class TestInstanceSegmentationTilerCall:
         model.load = MagicMock()
         model.inference_adapter = MagicMock()
         model.inference_adapter.get_rt_info.side_effect = RuntimeError(
-            "Cannot get runtime attribute. Path to runtime attribute is incorrect."
+            "Cannot get runtime attribute. Path to runtime attribute is incorrect.",
         )
         model.params = MagicMock()
         model.params.postprocess_semantic_masks = True
         model.return_value = _make_instance_seg_result(n=1)
 
-        tiler = InstanceSegmentationTiler(model, execution_mode="sync",
-                                          configuration={"tile_size": 100, "tiles_overlap": 0.0, "tile_with_full_img": False})
+        tiler = InstanceSegmentationTiler(
+            model,
+            execution_mode="sync",
+            configuration={"tile_size": 100, "tiles_overlap": 0.0, "tile_with_full_img": False},
+        )
         image = np.zeros((100, 100, 3), dtype=np.uint8)
         with patch.object(tiler, "_merge_results", return_value="merged"):
             result = tiler(image)
@@ -230,8 +231,11 @@ class TestInstanceSegmentationTilerCall:
     def test_call_non_maskrcnn(self):
         model = _make_model()
         model.return_value = _make_instance_seg_result(n=1)
-        tiler = InstanceSegmentationTiler(model, execution_mode="sync",
-                                          configuration={"tile_size": 100, "tiles_overlap": 0.0, "tile_with_full_img": False})
+        tiler = InstanceSegmentationTiler(
+            model,
+            execution_mode="sync",
+            configuration={"tile_size": 100, "tiles_overlap": 0.0, "tile_with_full_img": False},
+        )
         image = np.zeros((100, 100, 3), dtype=np.uint8)
         with patch.object(tiler, "_merge_results", return_value="merged"):
             result = tiler(image)

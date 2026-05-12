@@ -13,9 +13,7 @@ from unittest.mock import MagicMock, mock_open, patch
 
 import numpy as np
 import pytest
-
 from model_api.adapters.inference_adapter import InferenceAdapter
-from model_api.models.model import WrapperError
 from model_api.models.classification import (
     ClassificationModel,
     GreedyLabelsResolver,
@@ -25,14 +23,14 @@ from model_api.models.classification import (
     _get_non_xai_names,
     sigmoid_numpy,
 )
-
+from model_api.models.model import WrapperError
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
 _RT_INFO_ERROR = RuntimeError(
-    "Cannot get runtime attribute. Path to runtime attribute is incorrect."
+    "Cannot get runtime attribute. Path to runtime attribute is incorrect.",
 )
 
 
@@ -101,7 +99,7 @@ def _hierarchical_config(
                 "class_to_group_idx": class_to_group_idx,
             },
             "label_tree_edges": edges,
-        }
+        },
     )
 
 
@@ -206,7 +204,8 @@ class TestVerifySingleOutput:
     def test_label_insertion_other(self):
         adapter = _make_adapter(output_shape=(1, 4))
         model = ClassificationModel(
-            adapter, configuration={"labels": ["a", "b", "c"]}
+            adapter,
+            configuration={"labels": ["a", "b", "c"]},
         )
         assert model._labels[0] == "other"
         assert len(model._labels) == 4
@@ -215,7 +214,8 @@ class TestVerifySingleOutput:
         adapter = _make_adapter(output_shape=(1, 10))
         with pytest.raises(WrapperError):
             ClassificationModel(
-                adapter, configuration={"labels": ["a", "b"]}
+                adapter,
+                configuration={"labels": ["a", "b"]},
             )
 
 
@@ -262,7 +262,8 @@ class TestPostprocess:
     def test_with_raw_scores(self):
         adapter = _make_adapter(output_shape=(1, 5))
         model = ClassificationModel(
-            adapter, configuration={"output_raw_scores": True}
+            adapter,
+            configuration={"output_raw_scores": True},
         )
         logits = np.array([[0.1, 0.5, 0.2, 0.05, 0.15]])
         outputs = {"output": logits}
@@ -437,7 +438,8 @@ class TestGetMulticlassPredictions:
     def test_softmax_topk(self):
         adapter = _make_adapter(output_shape=(1, 5))
         model = ClassificationModel(
-            adapter, configuration={"topk": 3, "labels": ["a", "b", "c", "d", "e"]}
+            adapter,
+            configuration={"topk": 3, "labels": ["a", "b", "c", "d", "e"]},
         )
         outputs = {"output": np.array([[0.1, 5.0, 0.2, 0.05, 0.15]])}
         labels = model.get_multiclass_predictions(outputs)

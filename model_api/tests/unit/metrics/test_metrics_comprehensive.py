@@ -98,6 +98,7 @@ def test_timestat_add_not_implemented():
 
 # --- PerformanceMetrics ---
 
+
 def test_perf_metrics_init():
     pm = PerformanceMetrics()
     assert isinstance(pm.load_time, TimeStat)
@@ -178,6 +179,7 @@ def test_perf_metrics_add_not_implemented():
 
 def test_perf_metrics_log(caplog):
     import logging
+
     pm = PerformanceMetrics()
     pm.total_time.durations = [10.0]
     pm.total_time.time = 10.0

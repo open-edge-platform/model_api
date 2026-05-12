@@ -12,7 +12,6 @@ from unittest.mock import MagicMock
 
 import numpy as np
 import pytest
-
 from model_api.adapters.inference_adapter import InferenceAdapter
 from model_api.models.instance_segmentation import (
     MaskRCNNModel,
@@ -29,7 +28,7 @@ from model_api.models.result import InstanceSegmentationResult
 # ---------------------------------------------------------------------------
 
 _RT_INFO_ERROR = RuntimeError(
-    "Cannot get runtime attribute. Path to runtime attribute is incorrect."
+    "Cannot get runtime attribute. Path to runtime attribute is incorrect.",
 )
 
 
@@ -369,9 +368,7 @@ class TestMaskRCNNModelPostprocess:
         n = 3
         labels = np.array([0, 1, 0], dtype=np.int32)
         boxes = np.array(
-            [[10, 10, 100, 100, 0.9],
-             [20, 20, 80, 80, 0.8],
-             [30, 30, 60, 60, 0.1]],
+            [[10, 10, 100, 100, 0.9], [20, 20, 80, 80, 0.8], [30, 30, 60, 60, 0.1]],
             dtype=np.float32,
         )
         masks = np.ones((n, 28, 28), dtype=np.float32)
@@ -422,8 +419,7 @@ class TestMaskRCNNModelPostprocess:
         # label 0 + 1 offset = 1 (valid), label 5 + 1 offset = 6 (invalid)
         labels = np.array([0, 5], dtype=np.int32)
         boxes = np.array(
-            [[10, 10, 100, 100, 0.9],
-             [10, 10, 100, 100, 0.9]],
+            [[10, 10, 100, 100, 0.9], [10, 10, 100, 100, 0.9]],
             dtype=np.float32,
         )
         masks = np.ones((2, 28, 28), dtype=np.float32)
@@ -438,7 +434,7 @@ class TestMaskRCNNModelPostprocess:
     def test_batched_squeeze(self):
         """When outputs have extra batch dim (ndim==2/3/4), they should be squeezed."""
         model = self._build_standard_model(confidence=0.0)
-        labels = np.array([[0]], dtype=np.int32)   # 2D
+        labels = np.array([[0]], dtype=np.int32)  # 2D
         boxes = np.array([[[10, 10, 100, 100, 0.9]]], dtype=np.float32)  # 3D
         masks = np.ones((1, 1, 28, 28), dtype=np.float32)  # 4D
         outputs = {
@@ -463,16 +459,18 @@ class TestMaskRCNNModelPostprocess:
                 "raw_masks": ((100, 2, 28, 28), set()),
             },
         )
-        model = MaskRCNNModel(adapter, configuration={
-            "confidence_threshold": 0.3,
-            "labels": ["cat", "dog"],
-        })
+        model = MaskRCNNModel(
+            adapter,
+            configuration={
+                "confidence_threshold": 0.3,
+                "labels": ["cat", "dog"],
+            },
+        )
 
         n = 2
         labels = np.array([0, 1], dtype=np.int32)
         boxes = np.array(
-            [[10, 10, 100, 100],
-             [20, 20, 80, 80]],
+            [[10, 10, 100, 100], [20, 20, 80, 80]],
             dtype=np.float32,
         )
         scores_arr = np.array([0.9, 0.8], dtype=np.float32)
@@ -507,11 +505,14 @@ class TestMaskRCNNModelPostprocess:
                 "feature_vector": ((1, 128), {"feature_vector"}),
             },
         )
-        model = MaskRCNNModel(adapter, configuration={
-            "confidence_threshold": 0.3,
-            "labels": ["bg", "cat", "dog"],
-            "postprocess_semantic_masks": True,
-        })
+        model = MaskRCNNModel(
+            adapter,
+            configuration={
+                "confidence_threshold": 0.3,
+                "labels": ["bg", "cat", "dog"],
+                "postprocess_semantic_masks": True,
+            },
+        )
 
         labels = np.array([0], dtype=np.int32)
         boxes = np.array([[10, 10, 100, 100, 0.9]], dtype=np.float32)
@@ -652,11 +653,14 @@ class TestMaskRCNNNoPostprocessSemanticMasks:
                 "masks_out": ((100, 28, 28), set()),
             },
         )
-        model = MaskRCNNModel(adapter, configuration={
-            "confidence_threshold": 0.0,
-            "labels": ["cat", "dog"],
-            "postprocess_semantic_masks": False,
-        })
+        model = MaskRCNNModel(
+            adapter,
+            configuration={
+                "confidence_threshold": 0.0,
+                "labels": ["cat", "dog"],
+                "postprocess_semantic_masks": False,
+            },
+        )
 
         labels = np.array([0], dtype=np.int32)
         boxes = np.array([[10, 10, 100, 100, 0.9]], dtype=np.float32)

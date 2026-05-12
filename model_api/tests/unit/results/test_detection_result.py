@@ -3,7 +3,6 @@
 
 import numpy as np
 import pytest
-
 from model_api.models.result import DetectionResult
 
 
@@ -115,6 +114,7 @@ def test_scores_setter_valid():
 
 
 # --- DetectionResult setter success paths (lines 110, 126, 137) ---
+
 
 def test_label_names_setter_valid():
     result = _make_det()

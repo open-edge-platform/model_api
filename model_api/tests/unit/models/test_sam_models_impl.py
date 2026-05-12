@@ -11,12 +11,10 @@ from dataclasses import dataclass, field
 from unittest.mock import MagicMock
 
 import numpy as np
-import pytest
-
 from model_api.adapters.inference_adapter import InferenceAdapter
 
 _RT_INFO_ERROR = RuntimeError(
-    "Cannot get runtime attribute. Path to runtime attribute is incorrect."
+    "Cannot get runtime attribute. Path to runtime attribute is incorrect.",
 )
 
 

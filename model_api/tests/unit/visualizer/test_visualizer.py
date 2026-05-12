@@ -6,12 +6,11 @@
 from pathlib import Path
 
 import numpy as np
-from PIL import Image
-
 from model_api.models.result import (
     AnomalyResult,
 )
 from model_api.visualizer import Visualizer
+from PIL import Image
 
 
 def test_render(mock_image: Image, tmpdir: Path):

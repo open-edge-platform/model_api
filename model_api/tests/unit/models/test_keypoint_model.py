@@ -12,7 +12,6 @@ from unittest.mock import MagicMock
 
 import numpy as np
 import pytest
-
 from model_api.adapters.inference_adapter import InferenceAdapter
 from model_api.models.keypoint_detection import (
     KeypointDetectionModel,
@@ -27,7 +26,7 @@ from model_api.models.result import DetectedKeypoints, DetectionResult
 # ---------------------------------------------------------------------------
 
 _RT_INFO_ERROR = RuntimeError(
-    "Cannot get runtime attribute. Path to runtime attribute is incorrect."
+    "Cannot get runtime attribute. Path to runtime attribute is incorrect.",
 )
 
 

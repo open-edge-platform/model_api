@@ -4,8 +4,6 @@
 from unittest.mock import MagicMock, patch
 
 import numpy as np
-import pytest
-
 from model_api.models import DetectionResult
 from model_api.tilers.detection import DetectionTiler, _non_linear_normalization
 
@@ -15,7 +13,7 @@ def _make_model():
     model.load = MagicMock()
     model.inference_adapter = MagicMock()
     model.inference_adapter.get_rt_info.side_effect = RuntimeError(
-        "Cannot get runtime attribute. Path to runtime attribute is incorrect."
+        "Cannot get runtime attribute. Path to runtime attribute is incorrect.",
     )
     model.get_label_name = MagicMock(side_effect=lambda x: f"label_{x}")
     return model
@@ -85,7 +83,7 @@ class TestDetectionTilerMergeResults:
                 "features": np.array([1.0]),
                 "saliency_map": np.zeros((1,)),
                 "coords": [0, 0, 100, 100],
-            }
+            },
         ]
         merged = tiler._merge_results(results, (100, 100, 3))
         assert isinstance(merged, DetectionResult)
@@ -100,7 +98,7 @@ class TestDetectionTilerMergeResults:
                 "features": np.array([1.0]),
                 "saliency_map": np.zeros((1,)),
                 "coords": [0, 0, 100, 100],
-            }
+            },
         ]
         merged = tiler._merge_results(results, (100, 100, 3))
         assert isinstance(merged, DetectionResult)
@@ -152,7 +150,11 @@ class TestDetectionTilerMergeSaliencyMaps:
 
     def test_merge_saliency_maps_4d(self):
         model = _make_model()
-        tiler = DetectionTiler(model, configuration={"tile_size": 50, "tile_with_full_img": True}, execution_mode="sync")
+        tiler = DetectionTiler(
+            model,
+            configuration={"tile_size": 50, "tile_with_full_img": True},
+            execution_mode="sync",
+        )
         smap_full = np.ones((1, 2, 5, 5), dtype=np.float32) * 100
         smap_tile = np.ones((1, 2, 5, 5), dtype=np.float32) * 50
         coords = [[0, 0, 100, 100], [0, 0, 50, 50]]
@@ -161,7 +163,11 @@ class TestDetectionTilerMergeSaliencyMaps:
 
     def test_merge_saliency_maps_multiple_tiles(self):
         model = _make_model()
-        tiler = DetectionTiler(model, configuration={"tile_size": 50, "tile_with_full_img": False}, execution_mode="sync")
+        tiler = DetectionTiler(
+            model,
+            configuration={"tile_size": 50, "tile_with_full_img": False},
+            execution_mode="sync",
+        )
         smap1 = np.ones((2, 5, 5), dtype=np.float32) * 100
         smap2 = np.ones((2, 5, 5), dtype=np.float32) * 50
         coords = [[0, 0, 50, 50], [50, 0, 100, 50]]
@@ -170,7 +176,11 @@ class TestDetectionTilerMergeSaliencyMaps:
 
     def test_merge_saliency_maps_with_full_img(self):
         model = _make_model()
-        tiler = DetectionTiler(model, configuration={"tile_size": 50, "tile_with_full_img": True}, execution_mode="sync")
+        tiler = DetectionTiler(
+            model,
+            configuration={"tile_size": 50, "tile_with_full_img": True},
+            execution_mode="sync",
+        )
         smap_full = np.ones((2, 5, 5), dtype=np.float32) * 100
         smap_tile = np.ones((2, 5, 5), dtype=np.float32) * 50
         coords = [[0, 0, 50, 50], [0, 0, 50, 50]]
@@ -184,7 +194,11 @@ class TestDetectionTilerMergeSaliencyMaps:
         # ratio = map_h/min(img_h, tile_size) = 20/30 = 0.667
         # coord [0,0,15,15] -> mapped y2-y1 = int(15*0.667)=10, cls_map 20x20 > 10 -> resize
         # Two overlapping tiles trigger line 182 (overlap averaging)
-        tiler = DetectionTiler(model, configuration={"tile_size": 30, "tile_with_full_img": False}, execution_mode="sync")
+        tiler = DetectionTiler(
+            model,
+            configuration={"tile_size": 30, "tile_with_full_img": False},
+            execution_mode="sync",
+        )
         smap1 = np.ones((1, 20, 20), dtype=np.float32) * 100
         smap2 = np.ones((1, 20, 20), dtype=np.float32) * 80
         coords = [[0, 0, 15, 15], [0, 0, 15, 15]]

@@ -3,11 +3,10 @@
 
 import numpy as np
 import pytest
-from PIL import Image
-
 from model_api.visualizer.primitive import BoundingBox, Label, Overlay, Polygon
 from model_api.visualizer.primitive.keypoints import Keypoint
 from model_api.visualizer.scene.scene import Scene
+from PIL import Image
 
 
 class ConcreteScene(Scene):
@@ -16,6 +15,7 @@ class ConcreteScene(Scene):
     @property
     def default_layout(self):
         from model_api.visualizer.layout import Flatten
+
         return Flatten()
 
 
@@ -24,6 +24,7 @@ def _make_image():
 
 
 # --- Scene._to_overlay ---
+
 
 def test_to_overlay_ndarray():
     img = _make_image()
@@ -41,6 +42,7 @@ def test_to_overlay_single():
 
 # --- Scene._to_bounding_box ---
 
+
 def test_to_bounding_box_single():
     img = _make_image()
     bb = BoundingBox(10, 20, 30, 40)
@@ -49,6 +51,7 @@ def test_to_bounding_box_single():
 
 
 # --- Scene._to_label ---
+
 
 def test_to_label_single():
     img = _make_image()
@@ -59,6 +62,7 @@ def test_to_label_single():
 
 # --- Scene._to_polygon ---
 
+
 def test_to_polygon_single():
     img = _make_image()
     polygon = Polygon(np.array([[0, 0], [10, 0], [10, 10]]))
@@ -67,6 +71,7 @@ def test_to_polygon_single():
 
 
 # --- Scene._to_keypoints ---
+
 
 def test_to_keypoints_single():
     img = _make_image()
@@ -83,6 +88,7 @@ def test_to_keypoints_ndarray():
 
 # --- Scene.has_primitives ---
 
+
 def test_has_primitives_keypoint():
     img = _make_image()
     kp = Keypoint(np.array([[10, 20]]))
@@ -92,6 +98,7 @@ def test_has_primitives_keypoint():
 
 
 # --- Scene.get_primitives ---
+
 
 def test_get_primitives_polygon():
     img = _make_image()
@@ -118,6 +125,7 @@ def test_get_primitives_unknown_raises():
 
 # --- Scene.has_primitives with unknown type ---
 
+
 def test_has_primitives_unknown_type():
     """has_primitives returns False for unknown primitive types."""
     img = _make_image()
@@ -126,6 +134,7 @@ def test_has_primitives_unknown_type():
 
 
 # --- Scene.show ---
+
 
 def test_scene_show(monkeypatch):
     """Scene.show() calls render().show()."""
@@ -138,6 +147,7 @@ def test_scene_show(monkeypatch):
 
 
 # --- Scene.default_layout ---
+
 
 def test_scene_default_layout_not_implemented():
     """Scene base class raises NotImplementedError for default_layout."""
@@ -157,9 +167,11 @@ def test_scene_base_default_layout_raises():
 
 # --- Scene.render ---
 
+
 def test_scene_render_with_layout():
     img = _make_image()
     from model_api.visualizer.layout import Flatten
+
     layout = Flatten()
     scene = ConcreteScene(img, layout=layout)
     rendered = scene.render()
@@ -175,8 +187,10 @@ def test_scene_render_default_layout():
 
 # --- Visualizer unsupported result type ---
 
+
 def test_visualizer_unsupported_result_raises():
     from model_api.visualizer import Visualizer
+
     vis = Visualizer()
     img = _make_image()
     with pytest.raises(ValueError, match="Unsupported result type"):

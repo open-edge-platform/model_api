@@ -5,9 +5,8 @@
 
 import numpy as np
 import pytest
-from PIL import Image
-
 from model_api.visualizer import Overlay, Scene
+from PIL import Image
 
 
 @pytest.fixture(scope="session")

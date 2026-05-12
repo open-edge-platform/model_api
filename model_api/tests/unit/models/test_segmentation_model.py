@@ -13,7 +13,6 @@ from unittest.mock import MagicMock
 import cv2
 import numpy as np
 import pytest
-
 from model_api.adapters.inference_adapter import InferenceAdapter
 from model_api.models.model import WrapperError
 from model_api.models.segmentation import (
@@ -27,7 +26,7 @@ from model_api.models.segmentation import (
 # ---------------------------------------------------------------------------
 
 _RT_INFO_ERROR = RuntimeError(
-    "Cannot get runtime attribute. Path to runtime attribute is incorrect."
+    "Cannot get runtime attribute. Path to runtime attribute is incorrect.",
 )
 
 
@@ -194,7 +193,10 @@ class TestSegmentationPostprocess:
     def test_two_channel_return_no_soft(self):
         """out_channels == 2 with return_soft_prediction=False."""
         model, _ = self._build_model_with_config(
-            out_channels=2, h=16, w=16, return_soft_prediction=False
+            out_channels=2,
+            h=16,
+            w=16,
+            return_soft_prediction=False,
         )
         outputs = {"output": np.random.rand(1, 2, 16, 16).astype(np.float32)}
         meta = {"original_shape": (32, 32, 3)}
@@ -217,7 +219,10 @@ class TestSegmentationPostprocess:
     def test_multichannel_no_soft(self):
         """out_channels >= 2 with return_soft_prediction=False returns np array."""
         model, _ = self._build_model_with_config(
-            out_channels=3, h=16, w=16, return_soft_prediction=False
+            out_channels=3,
+            h=16,
+            w=16,
+            return_soft_prediction=False,
         )
         outputs = {"output": np.random.rand(1, 3, 16, 16).astype(np.float32)}
         meta = {"original_shape": (32, 32, 3)}

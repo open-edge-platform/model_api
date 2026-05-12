@@ -12,9 +12,7 @@ from unittest.mock import MagicMock
 
 import numpy as np
 import pytest
-
 from model_api.adapters.inference_adapter import InferenceAdapter
-from model_api.models.model import WrapperError
 from model_api.models.result import DetectionResult
 from model_api.models.ssd import (
     SSD,
@@ -29,7 +27,7 @@ from model_api.models.ssd import (
 # ---------------------------------------------------------------------------
 
 _RT_INFO_ERROR = RuntimeError(
-    "Cannot get runtime attribute. Path to runtime attribute is incorrect."
+    "Cannot get runtime attribute. Path to runtime attribute is incorrect.",
 )
 
 
@@ -121,8 +119,8 @@ class TestSingleOutputParser:
                         [0, 1, 0.9, 0.1, 0.2, 0.3, 0.4],
                         [0, 2, 0.8, 0.5, 0.6, 0.7, 0.8],
                         [0, 0, 0.1, 0.0, 0.0, 0.1, 0.1],
-                    ]
-                ]
+                    ],
+                ],
             ],
             dtype=np.float32,
         )
@@ -275,7 +273,8 @@ class TestSSDPreprocess:
         result_inputs, _ = model.preprocess(dict_inputs, meta)
         assert "im_info" in result_inputs
         np.testing.assert_array_equal(
-            result_inputs["im_info"], [[model.h, model.w, 1]]
+            result_inputs["im_info"],
+            [[model.h, model.w, 1]],
         )
 
     def test_no_image_info_blob(self):

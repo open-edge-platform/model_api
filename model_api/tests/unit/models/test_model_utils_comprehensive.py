@@ -5,7 +5,6 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-
 from model_api.models.result import DetectionResult, InstanceSegmentationResult
 from model_api.models.result.segmentation import Contour
 from model_api.models.utils import (
@@ -72,6 +71,7 @@ def test_resize_metadata_from_dict_defaults():
 
 # --- softmax ---
 
+
 def test_softmax():
     logits = np.array([1.0, 2.0, 3.0])
     result = softmax(logits)
@@ -82,6 +82,7 @@ def test_softmax():
 
 # --- top_k ---
 
+
 def test_top_k():
     arr = np.array([[1, 5, 3, 2, 4]])
     result = top_k(arr, k=3, axis=1)
@@ -91,6 +92,7 @@ def test_top_k():
 
 
 # --- is_softmaxed ---
+
 
 def test_is_softmaxed_true():
     arr = np.array([[0.2, 0.3, 0.5], [0.1, 0.6, 0.3]])
@@ -109,6 +111,7 @@ def test_is_softmaxed_negative():
 
 # --- clip_detections ---
 
+
 def test_clip_detections():
     bboxes = np.array([[-5, -10, 150, 200]], dtype=np.float32)
     labels = np.array([0])
@@ -121,6 +124,7 @@ def test_clip_detections():
 
 
 # --- OutputTransform ---
+
 
 def test_output_transform_no_resolution():
     ot = OutputTransform(input_size=(100, 200), output_resolution=None)
@@ -158,6 +162,7 @@ def test_output_transform_resize_different_size():
 
 # --- load_labels ---
 
+
 def test_load_labels(request):
     label_file = Path(request.fspath).parent / "test_labels_file.txt"
     label_file.write_text("cat\ndog\nbird\n")
@@ -169,6 +174,7 @@ def test_load_labels(request):
 
 
 # --- add_rotated_rects ---
+
 
 def test_add_rotated_rects():
     bboxes = np.array([[0, 0, 20, 20]], dtype=np.float32)
@@ -205,6 +211,7 @@ def test_add_rotated_rects_empty_mask():
 
 # --- Contour ---
 
+
 def test_contour_str():
     c = Contour(label="tree", probability=0.75, shape=[(0, 0), (1, 0), (1, 1), (0, 1)])
     assert "tree" in str(c)
@@ -238,6 +245,7 @@ def test_get_contours():
 
 # --- add_rotated_rects angle adjustment (lines 134-135) ---
 
+
 def test_add_rotated_rects_angle_above_90():
     """Test angle normalization when angle > 90."""
     bboxes = np.array([[10, 20, 30, 40]], dtype=np.float32)
@@ -257,6 +265,7 @@ def test_add_rotated_rects_angle_above_90():
 
 
 # --- get_contours error case (lines 166-167) ---
+
 
 def test_get_contours_multiple_contours_raises():
     """Test that multiple contours from a single mask raises RuntimeError."""
@@ -281,6 +290,7 @@ def test_get_contours_multiple_contours_raises():
 
 
 # --- OutputTransform.resize with different sizes (line 205) ---
+
 
 def test_output_transform_resize_changed_size():
     """Test resize when current size differs from input size."""

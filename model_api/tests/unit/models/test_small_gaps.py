@@ -16,7 +16,6 @@ import pytest
 # ---------------------------------------------------------------------------
 # add_rotated_rects: angle > 90 and angle <= 0 branches
 # ---------------------------------------------------------------------------
-
 from model_api.models.result import InstanceSegmentationResult
 from model_api.models.utils import OutputTransform, add_rotated_rects
 
@@ -81,7 +80,6 @@ class TestDownloadFromHf:
     def test_bin_download_failure_logs_debug(self):
         """When .xml download succeeds but .bin fails with OSError, it should log debug and not raise."""
         from pathlib import Path
-        from unittest.mock import call
 
         mock_hf_hub_download = MagicMock()
         mock_snapshot_download = MagicMock()
@@ -193,7 +191,7 @@ class TestDetectionModelNoImageInput:
         from model_api.models.ssd import SSD
 
         _RT_ERR = RuntimeError(
-            "Cannot get runtime attribute. Path to runtime attribute is incorrect."
+            "Cannot get runtime attribute. Path to runtime attribute is incorrect.",
         )
 
         adapter = MagicMock(spec=InferenceAdapter)

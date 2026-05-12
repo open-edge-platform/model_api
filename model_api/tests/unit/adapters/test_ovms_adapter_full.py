@@ -99,7 +99,7 @@ class TestOVMSAdapterInference:
         ovms_adapter._mock_client.infer.return_value = mock_result
 
         result = ovms_adapter.infer_sync(
-            {"input": np.zeros((1, 3, 224, 224), dtype=np.float32)}
+            {"input": np.zeros((1, 3, 224, 224), dtype=np.float32)},
         )
         assert "output" in result
 
@@ -110,7 +110,7 @@ class TestOVMSAdapterInference:
         ovms_adapter._mock_client.infer.return_value = mock_result
 
         result = ovms_adapter.infer_sync(
-            {"input": np.zeros((1, 3, 224, 224), dtype=np.float64)}
+            {"input": np.zeros((1, 3, 224, 224), dtype=np.float64)},
         )
         assert "output" in result
 
@@ -121,7 +121,7 @@ class TestOVMSAdapterInference:
         ovms_adapter._mock_client.infer.return_value = mock_result
 
         result = ovms_adapter.infer_sync(
-            {"input": [[[[0.0] * 224] * 224] * 3]}
+            {"input": [[[[0.0] * 224] * 224] * 3]},
         )
         assert "output" in result
 
@@ -133,7 +133,7 @@ class TestOVMSAdapterInference:
         ovms_adapter.inputs["input"].precision = "UNSUPPORTED_TYPE"
         with pytest.raises(ValueError, match="Unsupported input precision"):
             ovms_adapter.infer_sync(
-                {"input": np.zeros((1, 3, 224, 224), dtype=np.float32)}
+                {"input": np.zeros((1, 3, 224, 224), dtype=np.float32)},
             )
 
     def test_infer_async(self, ovms_adapter):

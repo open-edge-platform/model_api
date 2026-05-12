@@ -19,18 +19,18 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
-
-from model_api.adapters.inference_adapter import InferenceAdapter, Metadata
+from model_api.adapters.inference_adapter import InferenceAdapter
 from model_api.models.model import Model, WrapperError
-
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class FakeMetadata:
     """Lightweight metadata matching the Metadata interface."""
+
     names: set = field(default_factory=set)
     shape: list = field(default_factory=list)
     layout: str = ""
@@ -40,7 +40,7 @@ class FakeMetadata:
 
 
 _RT_INFO_ERROR = RuntimeError(
-    "Cannot get runtime attribute. Path to runtime attribute is incorrect."
+    "Cannot get runtime attribute. Path to runtime attribute is incorrect.",
 )
 
 
@@ -627,6 +627,7 @@ class TestImageModelConstructor:
 
     def test_nchw_layout(self):
         from model_api.models.image_model import ImageModel
+
         adapter = _make_adapter(input_shape=(1, 3, 224, 224), layout="NCHW")
         model = ImageModel(adapter, configuration={}, preload=False)
         assert model.nchw_layout is True
@@ -638,6 +639,7 @@ class TestImageModelConstructor:
     def test_nhwc_layout(self):
         """Line 73 – NHWC unpacking."""
         from model_api.models.image_model import ImageModel
+
         adapter = _make_adapter(input_shape=(1, 224, 224, 3), layout="NHWC")
         model = ImageModel(adapter, configuration={}, preload=False)
         assert model.nchw_layout is False
@@ -647,6 +649,7 @@ class TestImageModelConstructor:
     def test_dynamic_shape(self):
         """Lines 76-77 – dynamic input shapes (h=-1 or w=-1)."""
         from model_api.models.image_model import ImageModel
+
         adapter = _make_adapter(input_shape=(1, 3, -1, -1), layout="NCHW")
         model = ImageModel(adapter, configuration={}, preload=False)
         assert model._is_dynamic is True
@@ -654,6 +657,7 @@ class TestImageModelConstructor:
     def test_embedded_processing(self):
         """Lines 113-114 – embedded_processing overrides h, w."""
         from model_api.models.image_model import ImageModel
+
         adapter = _make_adapter(input_shape=(1, 3, 224, 224), layout="NCHW")
         model = ImageModel(
             adapter,
@@ -666,6 +670,7 @@ class TestImageModelConstructor:
     def test_non_dynamic_embeds_preprocessing(self):
         """Lines 115-141 – embed_preprocessing is called for non-dynamic models."""
         from model_api.models.image_model import ImageModel
+
         adapter = _make_adapter(input_shape=(1, 3, 300, 300), layout="NCHW")
         model = ImageModel(adapter, configuration={}, preload=False)
         adapter.embed_preprocessing.assert_called_once()
@@ -674,14 +679,20 @@ class TestImageModelConstructor:
     def test_intensity_auto_for_scale_to_unit(self):
         """Lines 84-86 – intensity_max_value auto-inferred."""
         from model_api.models.image_model import ImageModel
+
         adapter = _make_adapter()
-        model = ImageModel(adapter, configuration={"intensity_mode": "scale_to_unit", "input_dtype": "u8"}, preload=False)
+        model = ImageModel(
+            adapter,
+            configuration={"intensity_mode": "scale_to_unit", "input_dtype": "u8"},
+            preload=False,
+        )
         # Should not raise, and model should be created
         assert model is not None
 
     def test_input_frame_shape_passed_to_embed(self):
         """Lines 117-118 – input_frame_height/width passed to embed_preprocessing."""
         from model_api.models.image_model import ImageModel
+
         adapter = _make_adapter(input_shape=(1, 3, 300, 300), layout="NCHW")
         model = ImageModel(
             adapter,
@@ -697,6 +708,7 @@ class TestImageModelGetInputs:
 
     def test_4d_image_input(self):
         from model_api.models.image_model import ImageModel
+
         adapter = _make_adapter()
         model = ImageModel(adapter, configuration={}, preload=False)
         assert "image" in model.image_blob_names
@@ -704,6 +716,7 @@ class TestImageModelGetInputs:
     def test_2d_extra_input(self):
         """Lines 188-189 – 2D tensor info blobs."""
         from model_api.models.image_model import ImageModel
+
         adapter = _make_adapter(
             extra_inputs={"info": FakeMetadata(shape=[1, 3], layout="NC")},
         )
@@ -713,6 +726,7 @@ class TestImageModelGetInputs:
     def test_unsupported_shape_raises(self):
         """Lines 190-193 – 3D tensor raises WrapperError."""
         from model_api.models.image_model import ImageModel
+
         adapter = _make_adapter(
             extra_inputs={"bad": FakeMetadata(shape=[1, 3, 5], layout="")},
         )
@@ -722,6 +736,7 @@ class TestImageModelGetInputs:
     def test_no_image_input_raises(self):
         """Lines 194-197 – no 4D input raises WrapperError."""
         from model_api.models.image_model import ImageModel
+
         adapter = MagicMock(spec=InferenceAdapter)
         adapter.get_input_layers.return_value = {"scalar": FakeMetadata(shape=[1, 3], layout="NC")}
         adapter.get_output_layers.return_value = {"output": FakeMetadata(shape=[1, 10])}
@@ -736,6 +751,7 @@ class TestImageModelGetLabelName:
 
     def test_label_found(self):
         from model_api.models.detection_model import DetectionModel
+
         adapter = _make_adapter(input_shape=(1, 3, 300, 300), output_shape=(1, 1, 200, 7))
         model = DetectionModel(adapter, configuration={"labels": ["cat", "dog"]}, preload=False)
         assert model.get_label_name(0) == "cat"
@@ -744,6 +760,7 @@ class TestImageModelGetLabelName:
     def test_label_out_of_range(self):
         """Lines 170-171 – out-of-range returns auto-generated name."""
         from model_api.models.detection_model import DetectionModel
+
         adapter = _make_adapter(input_shape=(1, 3, 300, 300), output_shape=(1, 1, 200, 7))
         model = DetectionModel(adapter, configuration={"labels": ["cat"]}, preload=False)
         assert model.get_label_name(999) == "#999"
@@ -751,6 +768,7 @@ class TestImageModelGetLabelName:
     def test_label_none(self):
         """Lines 167-169 – no labels set returns auto-generated name (empty list)."""
         from model_api.models.detection_model import DetectionModel
+
         adapter = _make_adapter(input_shape=(1, 3, 300, 300), output_shape=(1, 1, 200, 7))
         model = DetectionModel(adapter, configuration={}, preload=False)
         assert model.get_label_name(0) == "#0"
@@ -758,6 +776,7 @@ class TestImageModelGetLabelName:
     def test_label_explicitly_none(self):
         """Lines 168-169 – labels is literally None returns auto-generated name."""
         from model_api.models.detection_model import DetectionModel
+
         adapter = _make_adapter(input_shape=(1, 3, 300, 300), output_shape=(1, 1, 200, 7))
         model = DetectionModel(adapter, configuration={}, preload=False)
         # Force labels to None (simulating rt_info returning "None")
@@ -771,6 +790,7 @@ class TestImageModelBasePreprocess:
     def test_base_preprocess_standard(self):
         """Lines 231-249 – standard preprocessing flow (non-embedded)."""
         from model_api.models.image_model import ImageModel
+
         adapter = _make_adapter(input_shape=(1, 3, 300, 300), layout="NCHW")
         model = ImageModel(adapter, configuration={}, preload=False)
         # Force non-embedded path
@@ -787,6 +807,7 @@ class TestImageModelBasePreprocess:
     def test_base_preprocess_standard_with_repeat_channels(self):
         """Line 231-232 – intensity_repeat_channels triggers _repeat_single_channel."""
         from model_api.models.image_model import ImageModel
+
         adapter = _make_adapter(input_shape=(1, 3, 300, 300), layout="NCHW")
         model = ImageModel(adapter, configuration={"intensity_repeat_channels": True}, preload=False)
         model._embedded_processing = False
@@ -798,6 +819,7 @@ class TestImageModelBasePreprocess:
     def test_base_preprocess_embedded(self):
         """Lines 225-228 – embedded preprocessing path."""
         from model_api.models.image_model import ImageModel
+
         adapter = _make_adapter(input_shape=(1, 3, 224, 224), layout="NCHW")
         model = ImageModel(
             adapter,
@@ -817,6 +839,7 @@ class TestImageModelPreprocessEmbedded:
     def test_preprocess_embedded_fixed(self):
         """Lines 257-258 – fixed shape uses model dims."""
         from model_api.models.image_model import ImageModel
+
         adapter = _make_adapter(input_shape=(1, 3, 224, 224), layout="NCHW")
         model = ImageModel(
             adapter,
@@ -832,6 +855,7 @@ class TestImageModelPreprocessEmbedded:
     def test_preprocess_embedded_dynamic(self):
         """Lines 254-256 – dynamic shape uses image dims."""
         from model_api.models.image_model import ImageModel
+
         adapter = _make_adapter(input_shape=(1, 3, -1, -1), layout="NCHW")
         model = ImageModel(
             adapter,
@@ -849,6 +873,7 @@ class TestImageModelResizeImage:
     def test_resize_image_fixed(self):
         """Lines 275-277 – fixed shape triggers actual resize."""
         from model_api.models.image_model import ImageModel
+
         adapter = _make_adapter(input_shape=(1, 3, 300, 300), layout="NCHW")
         model = ImageModel(adapter, configuration={}, preload=False)
         image = np.random.randint(0, 255, (480, 640, 3), dtype=np.uint8)
@@ -859,6 +884,7 @@ class TestImageModelResizeImage:
     def test_resize_image_dynamic(self):
         """Lines 270-273 – dynamic shape returns image unchanged."""
         from model_api.models.image_model import ImageModel
+
         adapter = _make_adapter(input_shape=(1, 3, -1, -1), layout="NCHW")
         model = ImageModel(adapter, configuration={}, preload=False)
         image = np.random.randint(0, 255, (100, 200, 3), dtype=np.uint8)
@@ -871,6 +897,7 @@ class TestImageModelInputTransform:
 
     def test_input_transform(self):
         from model_api.models.image_model import ImageModel
+
         adapter = _make_adapter(input_shape=(1, 3, 300, 300), layout="NCHW")
         model = ImageModel(adapter, configuration={}, preload=False)
         image = np.random.rand(300, 300, 3).astype(np.float32)
@@ -884,6 +911,7 @@ class TestImageModelChangeLayout:
     def test_change_layout_nchw(self):
         """Lines 317-319 – NCHW layout conversion."""
         from model_api.models.image_model import ImageModel
+
         adapter = _make_adapter(input_shape=(1, 3, 300, 300), layout="NCHW")
         model = ImageModel(adapter, configuration={}, preload=False)
         image = np.random.rand(300, 300, 3).astype(np.float32)
@@ -893,6 +921,7 @@ class TestImageModelChangeLayout:
     def test_change_layout_nhwc(self):
         """Lines 320-321 – NHWC layout conversion."""
         from model_api.models.image_model import ImageModel
+
         adapter = _make_adapter(input_shape=(1, 300, 300, 3), layout="NHWC")
         model = ImageModel(adapter, configuration={}, preload=False)
         image = np.random.rand(300, 300, 3).astype(np.float32)
@@ -902,6 +931,7 @@ class TestImageModelChangeLayout:
     def test_change_layout_dynamic_nchw(self):
         """Line 314 – dynamic shape with NCHW."""
         from model_api.models.image_model import ImageModel
+
         adapter = _make_adapter(input_shape=(1, 3, -1, -1), layout="NCHW")
         model = ImageModel(adapter, configuration={}, preload=False)
         image = np.random.rand(100, 200, 3).astype(np.float32)
@@ -914,6 +944,7 @@ class TestImageModelWrapPreprocessCompat:
 
     def test_compat_wrapper_exists(self):
         from model_api.models.image_model import ImageModel
+
         adapter = _make_adapter()
         model = ImageModel(adapter, configuration={}, preload=False)
         # preprocess should be wrapped
@@ -922,7 +953,9 @@ class TestImageModelWrapPreprocessCompat:
     def test_compat_new_style_no_warning(self):
         """Line 298 – two-arg call goes through original."""
         import warnings
+
         from model_api.models.image_model import ImageModel
+
         adapter = _make_adapter()
         model = ImageModel(adapter, configuration={}, preload=False)
         d = {"image": np.zeros((1, 3, 224, 224))}
@@ -935,6 +968,7 @@ class TestImageModelWrapPreprocessCompat:
     def test_compat_old_style_warns(self):
         """Lines 288-297 – single ndarray arg triggers deprecation."""
         from model_api.models.image_model import ImageModel
+
         adapter = _make_adapter()
         model = ImageModel(adapter, configuration={}, preload=False)
         image = np.random.randint(0, 255, (480, 640, 3), dtype=np.uint8)
@@ -952,6 +986,7 @@ class TestDetectionModelConstructor:
     def test_basic_construction(self):
         """Line 41 – basic construction."""
         from model_api.models.detection_model import DetectionModel
+
         adapter = _make_adapter(input_shape=(1, 3, 300, 300), output_shape=(1, 1, 200, 7))
         model = DetectionModel(adapter, configuration={}, preload=False)
         assert model.image_blob_name == "image"
@@ -959,6 +994,7 @@ class TestDetectionModelConstructor:
     def test_with_path_to_labels(self):
         """Lines 47-48 – loads labels from file."""
         from model_api.models.detection_model import DetectionModel
+
         adapter = _make_adapter(input_shape=(1, 3, 300, 300), output_shape=(1, 1, 200, 7))
         with patch("model_api.models.detection_model.load_labels", return_value=["a", "b"]) as mock_ll:
             model = DetectionModel(adapter, configuration={"path_to_labels": "/some/labels.txt"}, preload=False)
@@ -968,6 +1004,7 @@ class TestDetectionModelConstructor:
     def test_no_image_blob_raises(self):
         """Lines 42-45 – raises if image_blob_name is empty (no 4D inputs)."""
         from model_api.models.detection_model import DetectionModel
+
         # Create adapter with only 2D inputs (no 4D image blob)
         adapter = _make_adapter(input_shape=(1, 3), output_shape=(1, 1, 200, 7))
         with pytest.raises(WrapperError, match="Failed to identify the input for the image"):
@@ -980,6 +1017,7 @@ class TestDetectionModelPreprocess:
     def test_preprocess_adds_resize_info(self):
         """Lines 62-72 – compute resize metadata."""
         from model_api.models.detection_model import DetectionModel
+
         adapter = _make_adapter(input_shape=(1, 3, 300, 300), output_shape=(1, 1, 200, 7))
         model = DetectionModel(adapter, configuration={}, preload=False)
         dict_inputs = {"image": np.zeros((1, 3, 300, 300))}
@@ -995,12 +1033,14 @@ class TestDetectionModelResizeDetections:
 
     def _make_detection_model(self):
         from model_api.models.detection_model import DetectionModel
+
         adapter = _make_adapter(input_shape=(1, 3, 300, 300), output_shape=(1, 1, 200, 7))
         return DetectionModel(adapter, configuration={}, preload=False)
 
     def test_resize_detections_with_resize_info(self):
         """Lines 86-87 – uses pre-computed resize_info."""
         from model_api.models.result import DetectionResult
+
         model = self._make_detection_model()
         bboxes = np.array([[0.1, 0.1, 0.5, 0.5]], dtype=np.float64)
         labels = np.array([0])
@@ -1022,6 +1062,7 @@ class TestDetectionModelResizeDetections:
     def test_resize_detections_without_resize_info(self):
         """Lines 88-95 – computes resize_info on the fly."""
         from model_api.models.result import DetectionResult
+
         model = self._make_detection_model()
         bboxes = np.array([[0.1, 0.1, 0.5, 0.5]], dtype=np.float64)
         labels = np.array([0])
@@ -1040,6 +1081,7 @@ class TestDetectionModelFilterDetections:
         """Lines 115-120 – filters by confidence and area."""
         from model_api.models.detection_model import DetectionModel
         from model_api.models.result import DetectionResult
+
         adapter = _make_adapter(input_shape=(1, 3, 300, 300), output_shape=(1, 1, 200, 7))
         model = DetectionModel(adapter, configuration={"confidence_threshold": 0.5}, preload=False)
 
@@ -1056,6 +1098,7 @@ class TestDetectionModelFilterDetections:
         """Lines 115-120 – filter by box area threshold."""
         from model_api.models.detection_model import DetectionModel
         from model_api.models.result import DetectionResult
+
         adapter = _make_adapter(input_shape=(1, 3, 300, 300), output_shape=(1, 1, 200, 7))
         model = DetectionModel(adapter, configuration={"confidence_threshold": 0.0}, preload=False)
 
@@ -1074,6 +1117,7 @@ class TestDetectionModelAddLabelNames:
     def test_add_label_names(self):
         from model_api.models.detection_model import DetectionModel
         from model_api.models.result import DetectionResult
+
         adapter = _make_adapter(input_shape=(1, 3, 300, 300), output_shape=(1, 1, 200, 7))
         model = DetectionModel(adapter, configuration={"labels": ["cat", "dog"]}, preload=False)
 
@@ -1090,6 +1134,7 @@ class TestDetectionModelCalculateNms:
 
     def test_calculate_nms(self):
         from model_api.models.detection_model import DetectionModel
+
         adapter = _make_adapter(input_shape=(1, 3, 300, 300), output_shape=(1, 1, 200, 7))
         model = DetectionModel(adapter, configuration={}, preload=False)
 
@@ -1111,6 +1156,7 @@ class TestModelGetParamUnprefixed:
     def test_get_param_via_unprefixed_attr(self):
         """Line 119-120 – get_param returns attribute set directly (no _ prefix)."""
         from model_api.models.image_model import ImageModel
+
         adapter = _make_adapter()
         model = ImageModel(adapter, configuration={}, preload=False)
         # Set an attribute matching a parameter name without _ prefix
@@ -1151,6 +1197,7 @@ class TestModelSaveWithParams:
     def test_save_iterates_params(self):
         """Lines 775-778 – save collects all non-None parameter values."""
         from model_api.models.image_model import ImageModel
+
         adapter = _make_adapter()
         model = ImageModel(adapter, configuration={}, preload=False)
         model.save("/some/path")
@@ -1186,6 +1233,7 @@ class TestImageModelGetLabelNameFromImageModel:
     def test_label_none_on_detection_model(self):
         """Line 167-169 image_model.py – no labels returns auto name."""
         from model_api.models.detection_model import DetectionModel
+
         adapter = _make_adapter(input_shape=(1, 3, 300, 300), output_shape=(1, 1, 200, 7))
         model = DetectionModel(adapter, configuration={}, preload=False)
         result = model.get_label_name(5)

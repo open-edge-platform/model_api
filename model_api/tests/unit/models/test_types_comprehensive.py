@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import pytest
-
 from model_api.models.types import (
     BaseValue,
     BooleanValue,
@@ -28,6 +27,7 @@ def test_configurable_value_error_without_prefix():
 
 
 # --- BaseValue ---
+
 
 def test_base_value_init():
     bv = BaseValue(description="test desc", default_value=42)
@@ -71,6 +71,7 @@ def test_base_value_str_without_default():
 
 
 # --- NumericalValue ---
+
 
 def test_numerical_value_init():
     nv = NumericalValue(value_type=int, min=0, max=100, description="count")
@@ -138,6 +139,7 @@ def test_numerical_str():
 
 # --- StringValue ---
 
+
 def test_string_value_init():
     sv = StringValue(choices=("a", "b"), default_value="a")
     assert sv.choices == ("a", "b")
@@ -181,6 +183,7 @@ def test_string_value_bad_choice():
 
 # --- BooleanValue ---
 
+
 def test_boolean_from_str_yes():
     bv = BooleanValue()
     assert bv.from_str("YES") is True
@@ -214,6 +217,7 @@ def test_boolean_validate_ok():
 
 
 # --- ListValue ---
+
 
 def test_list_from_str_none():
     lv = ListValue()
@@ -270,6 +274,7 @@ def test_list_validate_ok():
 
 # --- DictValue ---
 
+
 def test_dict_from_str_raises():
     dv = DictValue()
     with pytest.raises(NotImplementedError):
@@ -288,6 +293,7 @@ def test_dict_validate_ok():
 
 
 # --- get_python_type ---
+
 
 def test_get_python_type_numerical():
     assert get_python_type(NumericalValue(value_type=int)) is int
@@ -315,6 +321,7 @@ def test_get_python_type_base():
 
 
 # --- Validation error raising via get_value (types.py lines 36-37) ---
+
 
 def test_numerical_value_get_value_raises_on_invalid_type():
     nv = NumericalValue()
@@ -347,6 +354,7 @@ def test_dict_value_get_value_raises_on_invalid_type():
 
 
 # --- Validate returns early for falsy values (lines 76, 134, 170, 210, 251) ---
+
 
 def test_numerical_value_validate_empty():
     nv = NumericalValue()

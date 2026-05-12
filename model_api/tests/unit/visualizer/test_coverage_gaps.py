@@ -6,16 +6,13 @@
 from unittest.mock import patch
 
 import numpy as np
-import pytest
-from PIL import Image
-
 from model_api.models.result import DetectedKeypoints
 from model_api.models.result.visual_prompting import VisualPromptingResult
 from model_api.visualizer.primitive.keypoints import Keypoint
 from model_api.visualizer.scene.keypoint import KeypointScene
 from model_api.visualizer.scene.visual_prompting import VisualPromptingScene
 from model_api.visualizer.utils import truetype_font
-
+from PIL import Image
 
 # --- VisualPromptingScene ---
 

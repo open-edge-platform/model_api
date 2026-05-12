@@ -11,7 +11,7 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
-
+from model_api.models import ZSLVisualPromptingResult
 from model_api.models.visual_prompting import (
     Prompt,
     SAMLearnableVisualPrompter,
@@ -28,8 +28,6 @@ from model_api.models.visual_prompting import (
     _resize_to_original_shape,
     _topk_numpy,
 )
-from model_api.models import ZSLVisualPromptingResult
-
 
 # ---------------------------------------------------------------------------
 # _polygon_to_mask
@@ -425,7 +423,7 @@ class TestSAMVisualPrompterInfer:
         enc.infer_sync.return_value = {"image_embeddings": np.ones((1, 256, 64, 64))}
 
         dec.base_preprocess.side_effect = lambda _: [
-            TestSAMVisualPrompterInfer._make_prompt()
+            TestSAMVisualPrompterInfer._make_prompt(),
         ]
         dec.infer_sync.return_value = {
             "upscaled_masks": np.ones((1, 4, 100, 100)),
@@ -456,13 +454,16 @@ class TestSAMVisualPrompterInfer:
 
     def test_infer_with_boxes_and_points(self):
         enc, dec = self._setup_encoder_decoder()
+
         # Two prompts returned by decoder
+
         def _two_prompts(_):
             p1 = self._make_prompt()
             p1["label"] = 1
             p2 = self._make_prompt()
             p2["label"] = 2
             return [p1, p2]
+
         dec.base_preprocess.side_effect = _two_prompts
         prompter = SAMVisualPrompter(enc, dec)
         image = np.zeros((100, 100, 3), dtype=np.uint8)
@@ -504,7 +505,7 @@ class TestSAMLearnableVisualPrompterLearn:
         enc, dec = _make_mock_encoder_decoder()
         enc.return_value = np.ones((1, 256, 64, 64), dtype=np.float32)
         dec.base_preprocess.side_effect = lambda _: [
-            TestSAMLearnableVisualPrompterLearn._make_prompt_dict(0)
+            TestSAMLearnableVisualPrompterLearn._make_prompt_dict(0),
         ]
         dec.infer_sync.return_value = {
             "upscaled_masks": np.ones((1, 4, 100, 100), dtype=np.float32),

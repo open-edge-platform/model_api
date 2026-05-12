@@ -3,7 +3,6 @@
 
 import numpy as np
 import pytest
-
 from model_api.models.result import InstanceSegmentationResult, RotatedSegmentationResult
 from model_api.models.result.segmentation import Contour, ImageResultWithSoftPrediction
 

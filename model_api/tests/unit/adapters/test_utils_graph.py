@@ -8,12 +8,9 @@ from __future__ import annotations
 import numpy as np
 import openvino as ov
 import pytest
-from openvino.preprocess import PrePostProcessor
-
 from model_api.adapters.utils import (
     Layout,
     crop_resize,
-    crop_resize_graph,
     range_scale_preprocess,
     range_scale_preprocess_graph,
     resize_image,
@@ -22,8 +19,8 @@ from model_api.adapters.utils import (
     resize_image_letterbox_graph,
     resize_image_with_aspect,
     window_preprocess,
-    window_preprocess_graph,
 )
+from openvino.preprocess import PrePostProcessor
 
 
 class TestLayoutFromOpenvino:
@@ -77,7 +74,7 @@ class TestResizeImageGraphValidation:
         ppp.input().tensor().set_layout(ov.Layout("NHWC"))
         ppp.input().tensor().set_shape([1, -1, -1, 3])
         ppp.input().preprocess().custom(
-            resize_image((model_h, model_w), "linear", 0)
+            resize_image((model_h, model_w), "linear", 0),
         )
         ppp.input().preprocess().convert_element_type(ov.Type.f32)
         built = ppp.build()
@@ -102,7 +99,7 @@ class TestCropResizeGraph:
         ppp.input().tensor().set_layout(ov.Layout("NHWC"))
         ppp.input().tensor().set_shape([1, -1, -1, 3])
         ppp.input().preprocess().custom(
-            crop_resize(size, "linear", 0, input_dtype=input_dtype)
+            crop_resize(size, "linear", 0, input_dtype=input_dtype),
         )
         ppp.input().preprocess().convert_element_type(ov.Type.f32)
         built = ppp.build()
@@ -170,7 +167,7 @@ class TestWindowPreprocessGraph:
         ppp.input().tensor().set_element_type(ov.Type.u16)
         ppp.input().tensor().set_layout(ov.Layout("NHWC"))
         ppp.input().preprocess().custom(
-            window_preprocess(500.0, 1000.0)
+            window_preprocess(500.0, 1000.0),
         )
         built = ppp.build()
         compiled = ov.Core().compile_model(built, "CPU")
@@ -192,7 +189,7 @@ class TestRangeScalePreprocessGraph:
         ppp.input().tensor().set_element_type(ov.Type.u8)
         ppp.input().tensor().set_layout(ov.Layout("NHWC"))
         ppp.input().preprocess().custom(
-            range_scale_preprocess(2.0, 0.0, 500.0)
+            range_scale_preprocess(2.0, 0.0, 500.0),
         )
         built = ppp.build()
         compiled = ov.Core().compile_model(built, "CPU")

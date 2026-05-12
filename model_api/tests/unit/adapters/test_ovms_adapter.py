@@ -4,7 +4,6 @@
 #
 
 import pytest
-
 from model_api.adapters.ovms_adapter import OVMSAdapter
 
 

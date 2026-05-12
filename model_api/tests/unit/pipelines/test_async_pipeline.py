@@ -1,10 +1,9 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from unittest.mock import MagicMock, PropertyMock
+from unittest.mock import MagicMock
 
 import pytest
-
 from model_api.pipelines import AsyncPipeline
 from model_api.pipelines.async_pipeline import AsyncPipeline as DirectImport
 
@@ -67,7 +66,8 @@ class TestAsyncPipelineSubmitData:
         self.pipeline.submit_data("input", 1, {"m": 2})
         self.model.base_preprocess.assert_called_once_with("input")
         self.model.infer_async_raw.assert_called_once_with(
-            "processed", (1, {"m": 2}, {"pmeta": 1})
+            "processed",
+            (1, {"m": 2}, {"pmeta": 1}),
         )
         assert self.model.perf.preprocess_time.update.call_count == 2
         self.model.perf.inference_time.update.assert_called_once()

@@ -87,6 +87,7 @@ class TestInferenceAdapterAbstract:
         class _Dummy(InferenceAdapter):
             def __init__(self):
                 super().__init__()
+
             def load_model(self): ...
             def get_model(self): ...
             def get_input_layers(self): ...
@@ -102,8 +103,15 @@ class TestInferenceAdapterAbstract:
             def get_rt_info(self, path): ...
             def update_model_info(self, model_info): ...
             def save_model(self, path, weights_path=None, version=None): ...
-            def embed_preprocessing(self, layout, resize_mode, interpolation_mode,
-                                     target_shape, pad_value, **kwargs): ...
+            def embed_preprocessing(
+                self,
+                layout,
+                resize_mode,
+                interpolation_mode,
+                target_shape,
+                pad_value,
+                **kwargs,
+            ): ...
 
         d = _Dummy()
         # Type annotation doesn't create attribute, but __init__ was executed
@@ -121,7 +129,7 @@ class TestONNXRuntimeAdapterLayers:
 
     def test_get_input_layers_unknown_precision(self, onnx_adapter):
         onnx_adapter._mock_session.get_inputs.return_value = [
-            _make_onnx_input(type_str="tensor(double)")
+            _make_onnx_input(type_str="tensor(double)"),
         ]
         inputs = onnx_adapter.get_input_layers()
         assert inputs["input"].precision == "tensor(double)"
@@ -135,7 +143,7 @@ class TestONNXRuntimeAdapterLayers:
 
     def test_get_output_layers_unknown_precision(self, onnx_adapter):
         onnx_adapter._mock_session.get_outputs.return_value = [
-            _make_onnx_output(type_str="tensor(int64)")
+            _make_onnx_output(type_str="tensor(int64)"),
         ]
         outputs = onnx_adapter.get_output_layers()
         assert outputs["output"].precision == "tensor(int64)"

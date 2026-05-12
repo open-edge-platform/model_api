@@ -5,7 +5,6 @@ from types import SimpleNamespace
 
 import numpy as np
 import pytest
-
 from model_api.adapters.utils import (
     InputTransform,
     Layout,
@@ -91,6 +90,7 @@ def test_layout_from_user_layouts_default():
 
 # --- resize functions ---
 
+
 def test_resize_image_ocv_standard():
     img = np.zeros((100, 200, 3), dtype=np.uint8)
     result = resize_image_ocv(img, (50, 50))
@@ -149,6 +149,7 @@ def test_crop_resize_ocv_wide_aspect():
 
 # --- change_layout ---
 
+
 def test_change_layout_chw():
     img = np.zeros((224, 224, 3), dtype=np.uint8)
     result = change_layout(img, "NCHW")
@@ -162,6 +163,7 @@ def test_change_layout_hwc():
 
 
 # --- _repeat_single_channel_np ---
+
 
 def test_repeat_single_channel_2d():
     img = np.zeros((10, 10), dtype=np.uint8)
@@ -183,6 +185,7 @@ def test_repeat_single_channel_3d_three():
 
 
 # --- InputTransform ---
+
 
 def test_input_transform_trivial():
     t = InputTransform()
@@ -218,6 +221,7 @@ def test_input_transform_with_intensity_fn():
 
 
 # --- create_intensity_fn ---
+
 
 def test_create_intensity_fn_none():
     result = create_intensity_fn("none")

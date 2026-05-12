@@ -12,13 +12,12 @@ from unittest.mock import MagicMock
 
 import numpy as np
 import pytest
-
 from model_api.adapters.inference_adapter import InferenceAdapter
 from model_api.models.action_classification import ActionClassificationModel
 from model_api.models.model import WrapperError
 
 _RT_INFO_ERROR = RuntimeError(
-    "Cannot get runtime attribute. Path to runtime attribute is incorrect."
+    "Cannot get runtime attribute. Path to runtime attribute is incorrect.",
 )
 
 
@@ -65,7 +64,8 @@ def _make_adapter(
 class TestActionClassificationModelInit:
     def test_nscthw_layout(self):
         adapter = _make_adapter(
-            input_shape=(1, 1, 3, 8, 224, 224), layout="NSCTHW"
+            input_shape=(1, 1, 3, 8, 224, 224),
+            layout="NSCTHW",
         )
         model = ActionClassificationModel(adapter, configuration={})
         assert model.nscthw_layout is True
@@ -78,7 +78,8 @@ class TestActionClassificationModelInit:
 
     def test_nsthwc_layout(self):
         adapter = _make_adapter(
-            input_shape=(1, 1, 8, 224, 224, 3), layout="NSTHWC"
+            input_shape=(1, 1, 8, 224, 224, 3),
+            layout="NSTHWC",
         )
         model = ActionClassificationModel(adapter, configuration={})
         assert model.nscthw_layout is False
@@ -140,7 +141,8 @@ class TestGetInputs:
 class TestBasePreprocess:
     def test_preprocess_produces_dict(self):
         adapter = _make_adapter(
-            input_shape=(1, 1, 3, 4, 64, 64), layout="NSCTHW"
+            input_shape=(1, 1, 3, 4, 64, 64),
+            layout="NSCTHW",
         )
         model = ActionClassificationModel(adapter, configuration={})
         # 4 frames of 64x64x3
@@ -152,7 +154,8 @@ class TestBasePreprocess:
 
     def test_preprocess_nscthw_output_shape(self):
         adapter = _make_adapter(
-            input_shape=(1, 1, 3, 4, 64, 64), layout="NSCTHW"
+            input_shape=(1, 1, 3, 4, 64, 64),
+            layout="NSCTHW",
         )
         model = ActionClassificationModel(adapter, configuration={})
         frames = np.random.randint(0, 255, (4, 64, 64, 3), dtype=np.uint8)
@@ -166,7 +169,8 @@ class TestBasePreprocess:
 
     def test_preprocess_nsthwc_output_shape(self):
         adapter = _make_adapter(
-            input_shape=(1, 1, 4, 64, 64, 3), layout="NSTHWC"
+            input_shape=(1, 1, 4, 64, 64, 3),
+            layout="NSTHWC",
         )
         model = ActionClassificationModel(adapter, configuration={})
         frames = np.random.randint(0, 255, (4, 64, 64, 3), dtype=np.uint8)
@@ -179,7 +183,8 @@ class TestBasePreprocess:
 
     def test_preprocess_t_mismatch_raises(self):
         adapter = _make_adapter(
-            input_shape=(1, 1, 3, 8, 64, 64), layout="NSCTHW"
+            input_shape=(1, 1, 3, 8, 64, 64),
+            layout="NSCTHW",
         )
         model = ActionClassificationModel(adapter, configuration={})
         # 4 frames but model expects 8
@@ -194,7 +199,8 @@ class TestBasePreprocess:
 class TestChangeLayout:
     def test_nscthw_transpose(self):
         adapter = _make_adapter(
-            input_shape=(1, 1, 3, 2, 4, 4), layout="NSCTHW"
+            input_shape=(1, 1, 3, 2, 4, 4),
+            layout="NSCTHW",
         )
         model = ActionClassificationModel(adapter, configuration={})
         # list of T frames, each (H, W, C)
@@ -205,7 +211,8 @@ class TestChangeLayout:
 
     def test_nsthwc_passthrough(self):
         adapter = _make_adapter(
-            input_shape=(1, 1, 2, 4, 4, 3), layout="NSTHWC"
+            input_shape=(1, 1, 2, 4, 4, 3),
+            layout="NSTHWC",
         )
         model = ActionClassificationModel(adapter, configuration={})
         frames = [np.zeros((4, 4, 3)) for _ in range(2)]
@@ -285,7 +292,9 @@ class TestActionClassificationPathToLabels:
         try:
             adapter = _make_adapter()
             model = ActionClassificationModel(
-                adapter, configuration={"path_to_labels": label_path}, preload=False
+                adapter,
+                configuration={"path_to_labels": label_path},
+                preload=False,
             )
             assert model._labels == ["action1", "action2"]
         finally:

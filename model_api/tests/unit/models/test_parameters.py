@@ -4,7 +4,6 @@
 from unittest.mock import MagicMock
 
 import pytest
-
 from model_api.models.parameters import ParameterDescriptor, ParameterRegistry, ParameterView
 
 

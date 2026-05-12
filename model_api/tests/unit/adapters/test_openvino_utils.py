@@ -35,6 +35,7 @@ def test_metadata_with_values():
 
 # --- parse_devices ---
 
+
 def test_parse_devices_single():
     assert parse_devices("CPU") == ["CPU"]
     assert parse_devices("GPU") == ["GPU"]
@@ -54,6 +55,7 @@ def test_parse_devices_multi():
 
 # --- parse_value_per_device ---
 
+
 def test_parse_value_per_device_single():
     result = parse_value_per_device({"CPU", "GPU"}, "4")
     assert result["CPU"] == 4
@@ -72,6 +74,7 @@ def test_parse_value_per_device_empty():
 
 
 # --- get_user_config ---
+
 
 def test_get_user_config_cpu():
     config = get_user_config("CPU", "1")
