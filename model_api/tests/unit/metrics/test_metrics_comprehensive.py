@@ -5,8 +5,8 @@ import time
 
 from model_api.metrics import PerformanceMetrics, TimeStat
 
-
 # --- TimeStat ---
+
 
 def test_timestat_init():
     ts = TimeStat()

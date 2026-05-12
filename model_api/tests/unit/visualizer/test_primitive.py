@@ -5,8 +5,9 @@
 
 import numpy as np
 import PIL
-from model_api.visualizer import BoundingBox, Keypoint, Label, Overlay, Polygon
 from PIL import ImageDraw
+
+from model_api.visualizer import BoundingBox, Keypoint, Label, Overlay, Polygon
 
 
 def test_overlay(mock_image: PIL.Image):

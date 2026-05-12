@@ -1,7 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import pytest
 
 from model_api.adapters.inference_adapter import Metadata
 from model_api.adapters.openvino_adapter import (
@@ -10,8 +9,8 @@ from model_api.adapters.openvino_adapter import (
     parse_value_per_device,
 )
 
-
 # --- Metadata ---
+
 
 def test_metadata_defaults():
     m = Metadata()

@@ -14,8 +14,8 @@ from model_api.models.types import (
     get_python_type,
 )
 
-
 # --- ConfigurableValueError ---
+
 
 def test_configurable_value_error_with_prefix():
     err = ConfigurableValueError("bad value", prefix="param_x")
@@ -209,7 +209,8 @@ def test_boolean_validate_type_error():
 
 def test_boolean_validate_ok():
     bv = BooleanValue()
-    assert len(bv.validate(True)) == 0
+    val = True
+    assert len(bv.validate(val)) == 0
 
 
 # --- ListValue ---

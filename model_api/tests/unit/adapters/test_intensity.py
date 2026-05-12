@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
+
 from model_api.adapters.utils import InputTransform, create_intensity_fn
 
 # ---------------------------------------------------------------------------
@@ -210,8 +211,9 @@ class TestGraphPadDtype:
     def test_letterbox_graph_u8(self):
         """Default u8 pad constant works as before."""
         import openvino as ov
-        from model_api.adapters.utils import resize_image_letterbox
         from openvino.preprocess import PrePostProcessor
+
+        from model_api.adapters.utils import resize_image_letterbox
 
         model_h, model_w = 224, 224
         param_node = ov.op.Parameter(ov.Type.f32, ov.Shape([1, model_h, model_w, 3]))
@@ -235,8 +237,9 @@ class TestGraphPadDtype:
     def test_letterbox_graph_u16(self):
         """u16 pad constant works for uint16 input."""
         import openvino as ov
-        from model_api.adapters.utils import resize_image_letterbox
         from openvino.preprocess import PrePostProcessor
+
+        from model_api.adapters.utils import resize_image_letterbox
 
         model_h, model_w = 224, 224
         param_node = ov.op.Parameter(ov.Type.f32, ov.Shape([1, model_h, model_w, 3]))
@@ -260,8 +263,9 @@ class TestGraphPadDtype:
     def test_pad_value_over_255_u16(self):
         """pad_value > 255 is valid for u16 input."""
         import openvino as ov
-        from model_api.adapters.utils import resize_image_with_aspect
         from openvino.preprocess import PrePostProcessor
+
+        from model_api.adapters.utils import resize_image_with_aspect
 
         model_h, model_w = 64, 64
         param_node = ov.op.Parameter(ov.Type.f32, ov.Shape([1, model_h, model_w, 3]))
@@ -378,8 +382,9 @@ class TestRepeatChannels:
     def test_ov_graph_repeat(self):
         """OV graph repeat_channels_preprocess tiles 1ch→3ch."""
         import openvino as ov
-        from model_api.adapters.utils import repeat_channels_preprocess
         from openvino.preprocess import PrePostProcessor
+
+        from model_api.adapters.utils import repeat_channels_preprocess
 
         model_h, model_w = 4, 4
         param_node = ov.op.Parameter(ov.Type.f32, ov.Shape([1, model_h, model_w, 3]))

@@ -145,9 +145,10 @@ def test_contour_with_excluded_shapes():
 
 
 def test_image_result_with_soft_prediction():
+    rng = np.random.default_rng(42)
     result_img = np.zeros((10, 10), dtype=np.uint8)
-    soft = np.random.rand(10, 10).astype(np.float32)
-    sal = np.random.rand(3, 10, 10).astype(np.float32)
+    soft = rng.random((10, 10)).astype(np.float32)
+    sal = rng.random((3, 10, 10)).astype(np.float32)
     fv = np.array([1.0, 2.0])
     result = ImageResultWithSoftPrediction(
         resultImage=result_img,

@@ -26,7 +26,7 @@ def test_parse_model_arg_valid():
 
 
 def test_parse_model_arg_with_version():
-    url, name, version = OVMSAdapter.parse_model_arg("localhost:9000/v2/models/my_model/versions/2")
+    _url, name, version = OVMSAdapter.parse_model_arg("localhost:9000/v2/models/my_model/versions/2")
     assert name == "my_model"
     assert version == "2"
 

@@ -136,19 +136,19 @@ def test_feature_vector_setter_valid():
     np.testing.assert_array_equal(result.feature_vector, new_vec)
 
 
-def test_label_names_setter_invalid():
+def test_label_names_setter_invalid_str():
     result = _make_det()
     with pytest.raises(ValueError, match="Label names must be list"):
         result.label_names = "not_a_list"
 
 
-def test_saliency_map_setter_invalid():
+def test_saliency_map_setter_invalid_str():
     result = _make_det()
     with pytest.raises(ValueError, match="Saliency map must be numpy"):
         result.saliency_map = "not_array"
 
 
-def test_feature_vector_setter_invalid():
+def test_feature_vector_setter_invalid_str():
     result = _make_det()
     with pytest.raises(ValueError, match="Feature vector must be numpy"):
         result.feature_vector = "not_array"

@@ -1,6 +1,8 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+from types import SimpleNamespace
+
 import numpy as np
 import pytest
 
@@ -11,13 +13,16 @@ from model_api.adapters.utils import (
     change_layout,
     create_intensity_fn,
     crop_resize_ocv,
+    get_rt_info_from_dict,
+    load_parameters_from_onnx,
     resize_image_letterbox_ocv,
     resize_image_ocv,
     resize_image_with_aspect_ocv,
+    setup_python_preprocessing_pipeline,
 )
 
-
 # --- Layout ---
+
 
 def test_layout_init():
     layout = Layout("NCHW")
@@ -202,8 +207,10 @@ def test_input_transform_reverse_channels():
 
 
 def test_input_transform_with_intensity_fn():
-    fn = lambda img: img / 255.0
-    t = InputTransform(intensity_fn=fn)
+    def scale_fn(img):
+        return img / 255.0
+
+    t = InputTransform(intensity_fn=scale_fn)
     assert t.is_trivial is False
     img = np.full((10, 10, 3), 255.0, dtype=np.float32)
     result = t(img)
@@ -270,8 +277,6 @@ def test_create_intensity_fn_unknown():
 
 
 # --- setup_python_preprocessing_pipeline ---
-
-from model_api.adapters.utils import setup_python_preprocessing_pipeline
 
 
 def test_setup_python_preprocessing_standard():
@@ -342,9 +347,6 @@ def test_setup_python_preprocessing_with_repeat_channels():
 
 # --- load_parameters_from_onnx ---
 
-from model_api.adapters.utils import load_parameters_from_onnx
-from types import SimpleNamespace
-
 
 def test_load_parameters_from_onnx_basic():
     prop1 = SimpleNamespace(key="model_info labels", value="cat dog")
@@ -364,8 +366,6 @@ def test_load_parameters_from_onnx_empty():
 
 
 # --- get_rt_info_from_dict ---
-
-from model_api.adapters.utils import get_rt_info_from_dict
 
 
 def test_get_rt_info_from_dict_success():

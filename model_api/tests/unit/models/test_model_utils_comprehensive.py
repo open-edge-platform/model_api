@@ -20,8 +20,8 @@ from model_api.models.utils import (
     top_k,
 )
 
-
 # --- ResizeMetadata ---
+
 
 def test_resize_metadata_standard():
     meta = ResizeMetadata.compute(640, 480, 320, 240, "standard")
@@ -185,7 +185,7 @@ def test_add_rotated_rects():
     )
     rotated = add_rotated_rects(inst)
     assert len(rotated.rotated_rects) == 1
-    (cx, cy), (w, h), angle = rotated.rotated_rects[0]
+    _center, _size, angle = rotated.rotated_rects[0]
     assert 0 < angle <= 90
 
 
@@ -282,7 +282,7 @@ def test_get_contours_multiple_contours_raises():
 
 # --- OutputTransform.resize with different sizes (line 205) ---
 
-def test_output_transform_resize_different_size():
+def test_output_transform_resize_changed_size():
     """Test resize when current size differs from input size."""
     ot = OutputTransform((100, 100), (200, 200))
     img = np.zeros((50, 50, 3), dtype=np.uint8)

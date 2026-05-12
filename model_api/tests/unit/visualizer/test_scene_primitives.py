@@ -112,7 +112,7 @@ def test_get_primitives_keypoint():
 def test_get_primitives_unknown_raises():
     img = _make_image()
     scene = ConcreteScene(img)
-    with pytest.raises(ValueError, match="Primitive .* not found"):
+    with pytest.raises(ValueError, match=r"Primitive .* not found"):
         scene.get_primitives(int)
 
 
@@ -151,4 +151,4 @@ def test_visualizer_unsupported_result_raises():
     vis = Visualizer()
     img = _make_image()
     with pytest.raises(ValueError, match="Unsupported result type"):
-        vis._scene_from_result(img, "not_a_result")
+        vis.render(img, "not_a_result")

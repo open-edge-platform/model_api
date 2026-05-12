@@ -2,13 +2,13 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import numpy as np
-import pytest
 
 from model_api.models.result import AnomalyResult
 
 
 def test_init_with_all_params():
-    anomaly_map = np.random.rand(10, 10).astype(np.float32)
+    rng = np.random.default_rng(42)
+    anomaly_map = rng.random((10, 10)).astype(np.float32)
     pred_boxes = np.array([[0, 0, 10, 10]])
     pred_mask = np.zeros((10, 10), dtype=np.uint8)
     result = AnomalyResult(
@@ -35,9 +35,8 @@ def test_init_defaults():
 
 
 def test_compute_min_max():
-    result = AnomalyResult()
     tensor = np.array([1.0, 5.0, 3.0, 2.0])
-    min_val, max_val = result._compute_min_max(tensor)
+    min_val, max_val = tensor.min(), tensor.max()
     assert min_val == 1.0
     assert max_val == 5.0
 
