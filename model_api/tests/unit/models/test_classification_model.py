@@ -632,3 +632,37 @@ class TestXaiHelpers:
         output_names = ["output"]
         _append_xai_names({"output": 1}, output_names)
         assert len(output_names) == 1
+
+
+# ---------------------------------------------------------------------------
+# Additional coverage tests
+# ---------------------------------------------------------------------------
+
+
+class TestClassificationModelPreload:
+    def test_preload_true_calls_load(self):
+        """Line 69: preload=True triggers self.load()."""
+        adapter = _make_adapter(output_shape=(1, 10))
+        model = ClassificationModel(adapter, configuration={}, preload=True)
+        adapter.load_model.assert_called()
+
+
+class TestGreedyLabelsResolverDuplicateSkip:
+    def test_duplicate_candidate_skipped(self):
+        """Line 332: duplicate label in candidates is skipped."""
+        config = {
+            "cls_heads_info": {
+                "label_to_idx": {"animal": 0, "cat": 1, "dog": 2},
+                "all_groups": [["cat", "dog"], ["animal"]],
+            },
+            "label_tree_edges": [["cat", "animal"], ["dog", "animal"]],
+        }
+        resolver = GreedyLabelsResolver(config)
+        # "cat" is max in group 0, "animal" is the single element in group 1
+        # Processing "cat" adds predecessors ["animal", "cat"]
+        # Processing "animal" finds it already in output_labels → continue (line 332)
+        predictions = [("animal", 0.9), ("cat", 0.8), ("dog", 0.3)]
+        labels = resolver.resolve_labels(predictions)
+        names = [lbl.name for lbl in labels]
+        assert "animal" in names
+        assert "cat" in names

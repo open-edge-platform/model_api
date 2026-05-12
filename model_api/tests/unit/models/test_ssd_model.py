@@ -355,3 +355,21 @@ class TestSSDGetOutputParser:
         adapter.get_output_layers.return_value = outputs
         with pytest.raises(ValueError, match="Unsupported"):
             SSD(adapter, configuration={})
+
+
+# ---------------------------------------------------------------------------
+# Additional coverage tests
+# ---------------------------------------------------------------------------
+
+
+class TestBoxesLabelsParserNoLabelsLayer:
+    def test_default_labels_when_no_labels_layer(self):
+        """Line 144: default labels used when labels_layer not found."""
+        outputs_meta = {"boxes": FakeMetadata(shape=[100, 5])}
+        parser = BoxesLabelsParser(outputs_meta, (300, 300))
+
+        bboxes = np.array([[[10, 20, 50, 60, 0.9]]], dtype=np.float32)  # (1, 1, 5)
+        result = parser({"boxes": bboxes})
+        assert isinstance(result, DetectionResult)
+        # Labels should be filled with default_label (0)
+        assert result.labels == 0

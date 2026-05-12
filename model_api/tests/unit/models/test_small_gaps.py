@@ -138,3 +138,82 @@ class TestONNXAdapterImportError:
         with patch.object(onnx_mod, "onnxrt_absent", True):
             with pytest.raises(ImportError, match="onnx"):
                 onnx_mod.ONNXRuntimeAdapter("dummy.onnx")
+
+
+# ---------------------------------------------------------------------------
+# add_rotated_rects: angle > 90 branch
+# ---------------------------------------------------------------------------
+
+
+class TestAddRotatedRectsAngleAbove90:
+    def _make_inst_seg_result(self, masks):
+        n = len(masks)
+        return InstanceSegmentationResult(
+            bboxes=np.zeros((n, 4), dtype=np.float32),
+            labels=np.zeros(n, dtype=np.int32),
+            masks=masks,
+            scores=np.ones(n, dtype=np.float32),
+            label_names=["obj"] * n,
+        )
+
+    def test_angle_above_90_adjustment(self):
+        """Lines 133-135: when cv2.minAreaRect returns angle > 90, it's adjusted."""
+        mask = np.zeros((100, 100), dtype=np.uint8)
+        # Create a simple rectangle that will have a contour
+        mask[30:70, 40:60] = 1
+
+        with patch("model_api.models.utils.cv2") as mock_cv2:
+            # Mock findContours to return a contour
+            contour = np.array([[[40, 30]], [[60, 30]], [[60, 70]], [[40, 70]]])
+            mock_cv2.findContours.return_value = ([contour], None)
+            mock_cv2.RETR_EXTERNAL = cv2.RETR_EXTERNAL
+            mock_cv2.CHAIN_APPROX_SIMPLE = cv2.CHAIN_APPROX_SIMPLE
+            # Return angle > 90 to trigger the while loop
+            mock_cv2.minAreaRect.return_value = ((50.0, 50.0), (20.0, 40.0), 135.0)
+
+            result = add_rotated_rects(self._make_inst_seg_result([mask]))
+            (cx, cy), (w, h), angle = result.rotated_rects[0]
+            assert 0 < angle <= 90
+            assert angle == 45.0  # 135 - 90 = 45
+            # w, h should be swapped once
+            assert w == 40.0
+            assert h == 20.0
+
+
+# ---------------------------------------------------------------------------
+# DetectionModel: no image input
+# ---------------------------------------------------------------------------
+
+
+class TestDetectionModelNoImageInput:
+    def test_no_image_blob_raises(self):
+        """detection_model.py line 43 / image_model.py: error when no valid image input."""
+        from model_api.adapters.inference_adapter import InferenceAdapter
+        from model_api.models.model import WrapperError
+        from model_api.models.ssd import SSD
+
+        _RT_ERR = RuntimeError(
+            "Cannot get runtime attribute. Path to runtime attribute is incorrect."
+        )
+
+        adapter = MagicMock(spec=InferenceAdapter)
+        # 3D input - not recognized as image (4D required)
+        from dataclasses import dataclass, field
+
+        @dataclass
+        class _FM:
+            names: set = field(default_factory=set)
+            shape: list = field(default_factory=list)
+            layout: str = ""
+            precision: str = ""
+            type: str = ""
+            meta: dict = field(default_factory=dict)
+
+        adapter.get_input_layers.return_value = {"data": _FM(shape=[1, 3, 224], layout="NCH")}
+        adapter.get_output_layers.return_value = {"output": _FM(shape=[1, 1, 100, 7])}
+        adapter.get_rt_info.side_effect = _RT_ERR
+        adapter.embed_preprocessing = MagicMock()
+        adapter.load_model.return_value = None
+
+        with pytest.raises(WrapperError, match="Failed to identify the input"):
+            SSD(adapter, configuration={})

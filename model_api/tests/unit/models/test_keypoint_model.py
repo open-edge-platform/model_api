@@ -355,3 +355,24 @@ class TestTopDownKeypointDetectionPipeline:
         crops = [np.zeros((50, 50, 3))]
         pipeline.predict_crops(crops)
         base_model.infer_batch.assert_called_once_with(crops)
+
+
+# ---------------------------------------------------------------------------
+# Additional coverage tests
+# ---------------------------------------------------------------------------
+
+
+class TestGetSimccMaximumInvalidShape:
+    def test_simcc_y_invalid_ndim_raises(self):
+        """Lines 235-236: simcc_y with invalid ndim (1D) raises ValueError."""
+        simcc_x = np.random.rand(5, 10).astype(np.float32)
+        simcc_y = np.random.rand(50).astype(np.float32)  # 1D - invalid
+        with pytest.raises(ValueError, match="Invalid shape"):
+            _get_simcc_maximum(simcc_x, simcc_y)
+
+    def test_simcc_y_4d_raises(self):
+        """Lines 235-236: simcc_y with invalid ndim (4D) raises ValueError."""
+        simcc_x = np.random.rand(5, 10).astype(np.float32)
+        simcc_y = np.random.rand(1, 2, 5, 10).astype(np.float32)  # 4D - invalid
+        with pytest.raises(ValueError, match="Invalid shape"):
+            _get_simcc_maximum(simcc_x, simcc_y)

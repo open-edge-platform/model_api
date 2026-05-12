@@ -266,3 +266,35 @@ class TestParameters:
         assert "reverse_input_channels" in params
         assert "mean_values" in params
         assert "scale_values" in params
+
+
+# ---------------------------------------------------------------------------
+# Additional coverage tests
+# ---------------------------------------------------------------------------
+
+
+class TestActionClassificationPathToLabels:
+    def test_path_to_labels_loads_labels(self):
+        """Line 80: labels loaded from path_to_labels file."""
+        import os
+        import tempfile
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
+            f.write("action1\naction2\n")
+            label_path = f.name
+        try:
+            adapter = _make_adapter()
+            model = ActionClassificationModel(
+                adapter, configuration={"path_to_labels": label_path}, preload=False
+            )
+            assert model._labels == ["action1", "action2"]
+        finally:
+            os.unlink(label_path)
+
+
+class TestActionClassificationNo6DInput:
+    def test_no_6d_input_raises(self):
+        """Line 117: error when no 6D input found."""
+        adapter = _make_adapter(input_shape=(1, 3, 224, 224), layout="NCHW")
+        with pytest.raises(WrapperError, match="Failed to identify the input"):
+            ActionClassificationModel(adapter, configuration={})

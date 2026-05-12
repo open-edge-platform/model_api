@@ -542,3 +542,132 @@ class TestMaskRCNNModelPostprocess:
         result = model.postprocess(outputs, self._make_meta())
         assert len(result.scores) == 0
         assert result.masks.shape[0] == 0
+
+
+# ---------------------------------------------------------------------------
+# Additional coverage tests
+# ---------------------------------------------------------------------------
+
+
+class TestMaskRCNNPathToLabels:
+    def test_path_to_labels_loads_labels(self):
+        """Line 25: labels loaded from path_to_labels file."""
+        import os
+        import tempfile
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
+            f.write("cat\ndog\n")
+            label_path = f.name
+        try:
+            adapter = _make_adapter()
+            model = MaskRCNNModel(adapter, configuration={"path_to_labels": label_path}, preload=False)
+            assert model._labels == ["cat", "dog"]
+        finally:
+            os.unlink(label_path)
+
+
+class TestMaskRCNNTopKSkip:
+    def test_topk_output_is_skipped_first_loop(self):
+        """Line 51: outputs starting with 'TopK' skipped in first loop."""
+        adapter = _make_adapter(
+            output_configs={
+                "labels_out": ((100,), set()),
+                "boxes_out": ((100, 5), set()),
+                "masks_out": ((100, 28, 28), set()),
+                "TopK_scores": ((100,), set()),
+            },
+        )
+        model = MaskRCNNModel(adapter, configuration={})
+        assert "TopK_scores" not in model.output_blob_name.values()
+
+    def test_topk_output_is_skipped_second_loop(self):
+        """Line 67: outputs starting with 'TopK' skipped in second loop (2D/3D/4D pattern)."""
+        adapter = _make_adapter(
+            output_configs={
+                "labels_out": ((1, 100), set()),
+                "boxes_out": ((1, 100, 5), set()),
+                "masks_out": ((1, 100, 28, 28), set()),
+                "TopK_scores": ((1, 100), set()),
+            },
+        )
+        model = MaskRCNNModel(adapter, configuration={})
+        assert "TopK_scores" not in model.output_blob_name.values()
+
+
+class TestMaskRCNNSegmentolyUnexpectedOutput:
+    def test_segmentoly_unexpected_shape_raises(self):
+        """Line 94: unexpected output in segmentoly mode raises error."""
+        adapter = _make_adapter(
+            input_shapes={
+                "image": ((1, 3, 800, 800), "NCHW", set()),
+                "image_info": ((1, 3), "", {"image_info"}),
+            },
+            output_configs={
+                "boxes": ((100, 4), set()),
+                "classes": ((100,), set()),
+                "scores": ((100,), set()),
+                "raw_masks": ((100, 2, 28, 28), set()),
+                "unexpected_out": ((5, 5, 5), set()),
+            },
+        )
+        with pytest.raises(WrapperError):
+            MaskRCNNModel(adapter, configuration={})
+
+
+class TestMaskRCNNFeatureVectorWithoutLabels:
+    def test_feature_vector_without_labels_raises(self):
+        """Line 171: feature_vector output without labels raises error."""
+        adapter = _make_adapter(
+            output_configs={
+                "labels_out": ((100,), set()),
+                "boxes_out": ((100, 5), set()),
+                "masks_out": ((100, 28, 28), set()),
+                "feature_vector": ((1, 128), {"feature_vector"}),
+            },
+        )
+        model = MaskRCNNModel(adapter, configuration={"confidence_threshold": 0.0})
+
+        labels = np.array([0], dtype=np.int32)
+        boxes = np.array([[10, 10, 100, 100, 0.9]], dtype=np.float32)
+        masks = np.ones((1, 28, 28), dtype=np.float32)
+        fv = np.random.rand(1, 128).astype(np.float32)
+
+        outputs = {
+            "labels_out": labels,
+            "boxes_out": boxes,
+            "masks_out": masks,
+            "feature_vector": fv,
+        }
+        with pytest.raises(WrapperError, match="labels are empty"):
+            model.postprocess(outputs, {"original_shape": (480, 640, 3)})
+
+
+class TestMaskRCNNNoPostprocessSemanticMasks:
+    def test_raw_mask_returned_without_postprocess(self):
+        """Line 222: resized_mask = raw_cls_mask when postprocess_semantic_masks=False."""
+        adapter = _make_adapter(
+            output_configs={
+                "labels_out": ((100,), set()),
+                "boxes_out": ((100, 5), set()),
+                "masks_out": ((100, 28, 28), set()),
+            },
+        )
+        model = MaskRCNNModel(adapter, configuration={
+            "confidence_threshold": 0.0,
+            "labels": ["cat", "dog"],
+            "postprocess_semantic_masks": False,
+        })
+
+        labels = np.array([0], dtype=np.int32)
+        boxes = np.array([[10, 10, 100, 100, 0.9]], dtype=np.float32)
+        masks = np.ones((1, 28, 28), dtype=np.float32)
+
+        outputs = {
+            "labels_out": labels,
+            "boxes_out": boxes,
+            "masks_out": masks,
+        }
+        result = model.postprocess(outputs, {"original_shape": (480, 640, 3)})
+        assert isinstance(result, InstanceSegmentationResult)
+        # Raw mask should be returned without resizing
+        assert result.masks[0].shape == (28, 28)
