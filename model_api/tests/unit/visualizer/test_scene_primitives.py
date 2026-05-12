@@ -116,6 +116,27 @@ def test_get_primitives_unknown_raises():
         scene.get_primitives(int)
 
 
+# --- Scene.has_primitives with unknown type ---
+
+def test_has_primitives_unknown_type():
+    """has_primitives returns False for unknown primitive types."""
+    img = _make_image()
+    scene = ConcreteScene(img)
+    assert scene.has_primitives(int) is False
+
+
+# --- Scene.show ---
+
+def test_scene_show(monkeypatch):
+    """Scene.show() calls render().show()."""
+    img = _make_image()
+    scene = ConcreteScene(img)
+    shown = []
+    monkeypatch.setattr(Image.Image, "show", lambda self: shown.append(True))
+    scene.show()
+    assert shown == [True]
+
+
 # --- Scene.default_layout ---
 
 def test_scene_default_layout_not_implemented():
@@ -124,6 +145,14 @@ def test_scene_default_layout_not_implemented():
     scene = ConcreteScene(img)
     # Access default_layout from concrete - it works
     assert scene.default_layout is not None
+
+
+def test_scene_base_default_layout_raises():
+    """Scene base class raises NotImplementedError for default_layout."""
+    img = _make_image()
+    scene = Scene(img)
+    with pytest.raises(NotImplementedError, match="Default layout not implemented"):
+        _ = scene.default_layout
 
 
 # --- Scene.render ---
