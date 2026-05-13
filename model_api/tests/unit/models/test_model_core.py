@@ -1243,5 +1243,8 @@ class TestDetectionModelEmptyImageBlobName:
             original_init(self_model, *args, **kwargs)
             self_model.image_blob_name = ""
 
-        with patch.object(ImageModel, "__init__", patched_init), pytest.raises(WrapperError, match="only one image input"):
+        with (
+            patch.object(ImageModel, "__init__", patched_init),
+            pytest.raises(WrapperError, match="only one image input"),
+        ):
             DetectionModel(adapter, configuration={}, preload=False)
