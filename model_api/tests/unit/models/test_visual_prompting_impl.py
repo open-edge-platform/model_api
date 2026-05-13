@@ -558,6 +558,18 @@ class TestSAMLearnableVisualPrompterLearn:
         feats, _ = prompter.learn(image, boxes=boxes, reset_features=True)
         assert isinstance(feats, VisualPromptingFeatures)
 
+    def test_learn_unsupported_prompt_type_raises(self):
+        """Lines 280-281: unsupported prompt type raises RuntimeError."""
+        enc, dec = self._setup()
+        # Clear side_effect so return_value takes effect
+        dec.base_preprocess.side_effect = None
+        # Return a prompt that has neither point_coords nor polygon
+        dec.base_preprocess.return_value = [{"label": np.int64(0), "unsupported_key": np.array([1, 2])}]
+        prompter = SAMLearnableVisualPrompter(enc, dec)
+        image = np.zeros((100, 100, 3), dtype=np.uint8)
+        with pytest.raises(RuntimeError, match="Unsupported type of prompt"):
+            prompter.learn(image, boxes=[Prompt(data=np.array([10, 10, 50, 50]), label=0)])
+
     def test_learn_multiple_labels(self):
         enc, dec = self._setup()
         dec.base_preprocess.side_effect = lambda _: [

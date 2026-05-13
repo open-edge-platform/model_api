@@ -47,15 +47,12 @@ def _make_adapter(
     input_shape=(1, 3, 224, 224),
     output_shape=(1, 1, 224, 224),
     layout="NCHW",
-    extra_inputs=None,
     extra_outputs=None,
     rt_info=None,
 ):
     adapter = MagicMock(spec=InferenceAdapter)
     image_meta = FakeMetadata(shape=list(input_shape), layout=layout)
     inputs = {"image": image_meta}
-    if extra_inputs:
-        inputs.update(extra_inputs)
 
     out_meta = FakeMetadata(shape=list(output_shape))
     outputs = {"output": out_meta}
@@ -296,6 +293,28 @@ class TestGetContours:
         contours = model.get_contours(pred)
         assert len(contours) > 0
         assert contours[0].probability > 0
+
+    def test_non_3d_soft_prediction(self):
+        """Line 193: soft_prediction with non-3D shape uses full array."""
+        adapter = _make_adapter(
+            input_shape=(1, 3, 32, 32),
+            output_shape=(1, 3, 32, 32),
+        )
+        model = SegmentationModel(adapter, configuration={})
+        hard = np.zeros((32, 32), dtype=np.uint8)
+        # 4D soft_prediction: shape[2] = 3 so n_layers = 3
+        soft = np.zeros((32, 32, 3, 1), dtype=np.float32)
+
+        from model_api.models.result import ImageResultWithSoftPrediction
+
+        pred = ImageResultWithSoftPrediction(
+            resultImage=hard,
+            soft_prediction=soft,
+            saliency_map=np.ndarray(0),
+            feature_vector=np.ndarray(0),
+        )
+        contours = model.get_contours(pred)
+        assert isinstance(contours, list)
 
 
 # ---------------------------------------------------------------------------

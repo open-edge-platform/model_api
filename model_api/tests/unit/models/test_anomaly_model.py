@@ -301,3 +301,12 @@ class TestGetBoxes:
         mask[60:80, 60:80] = 1
         boxes = AnomalyDetection._get_boxes(mask)  # noqa: SLF001
         assert boxes.shape[0] == 2
+
+
+class TestPostprocess1DPredictions:
+    def test_1d_predictions_hits_assertion(self):
+        """Line 107: npred_score = predictions for 1D output (no anomaly_map)."""
+        model = _make_anomaly_model()
+        outputs = {"output": np.array([0.6], dtype=np.float32)}
+        with pytest.raises(AssertionError):
+            model.postprocess(outputs, {"original_shape": (100, 100, 3)})

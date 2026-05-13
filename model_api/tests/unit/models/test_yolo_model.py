@@ -66,8 +66,6 @@ def _make_yolo_adapter(
     image_meta = FakeMetadata(shape=list(input_shape), layout=layout)
     adapter.get_input_layers.return_value = {"image": image_meta}
 
-    if output_shapes is None:
-        output_shapes = {"output": (1, 255, 13, 13)}
     outputs = {}
     for name, shape in output_shapes.items():
         meta = {}

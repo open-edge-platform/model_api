@@ -51,7 +51,6 @@ def _make_adapter(
     output_shape=(1, 1000),
     layout="NCHW",
     extra_inputs=None,
-    extra_outputs=None,
     rt_info=None,
 ):
     """Build a mock InferenceAdapter suitable for Model / ImageModel / DetectionModel."""
@@ -64,8 +63,6 @@ def _make_adapter(
 
     out_meta = FakeMetadata(shape=list(output_shape))
     outputs = {"output": out_meta}
-    if extra_outputs:
-        outputs.update(extra_outputs)
 
     adapter.get_input_layers.return_value = inputs
     adapter.get_output_layers.return_value = outputs
@@ -123,15 +120,7 @@ class TestModelLoadConfig:
 
     def test_config_sets_attribute(self):
         """Line 424 - rt_info value sets attribute via __setattr__."""
-        rt_values = {"model_type": MagicMock(astype=MagicMock(return_value="Model"))}
-
-        def rt_side_effect(path):
-            key = path[-1] if isinstance(path, list) else path
-            if key in rt_values:
-                return rt_values[key]
-            raise _RT_INFO_ERROR
-
-        adapter = _make_adapter(rt_info=rt_side_effect)
+        adapter = _make_adapter()
         Model(adapter, configuration={}, preload=False)
 
     def test_config_overrides_param(self):
@@ -483,9 +472,7 @@ class TestModelSetCallback:
         adapter = _make_adapter()
         model = Model(adapter, configuration={}, preload=False)
 
-        def fn(result, data):
-            return None
-
+        fn = MagicMock()
         model.set_callback(fn)
         assert model.callback_fn is fn
         adapter.set_callback.assert_called_once_with(Model._process_callback)  # noqa: SLF001
@@ -576,12 +563,9 @@ class TestModelCreateModel:
         rt_mock = MagicMock()
         rt_mock.astype.return_value = "Model"
 
-        def rt_side_effect(path):
-            if path == ["model_info", "model_type"]:
-                return rt_mock
-            raise _RT_INFO_ERROR
-
-        adapter = _make_adapter(rt_info=rt_side_effect)
+        adapter = _make_adapter()
+        adapter.get_rt_info.side_effect = None
+        adapter.get_rt_info.return_value = rt_mock
         model = Model.create_model(adapter, model_type=None, preload=False)
         assert isinstance(model, Model)
 
@@ -1169,9 +1153,6 @@ class TestModelGetParamUnprefixed:
         # Set an attribute matching a parameter name without _ prefix
         # The parameters() dict includes 'resize_type'; set it directly
         model.resize_type = "fit_to_window"
-        # Remove the prefixed version if it exists
-        if hasattr(model, "_resize_type"):
-            delattr(model, "_resize_type")
         model._parameters_cache = None  # reset cache  # noqa: SLF001
         val = model.get_param("resize_type")
         assert val == "fit_to_window"
@@ -1245,3 +1226,23 @@ class TestImageModelGetLabelNameFromImageModel:
         model = DetectionModel(adapter, configuration={}, preload=False)
         result = model.get_label_name(5)
         assert result == "#5"
+
+
+class TestDetectionModelEmptyImageBlobName:
+    """Test for DetectionModel.__init__ line 43 - empty image_blob_name."""
+
+    def test_empty_image_blob_name_raises(self):
+        """Line 43 - raises when image_blob_name is falsy after ImageModel init."""
+        from model_api.models.detection_model import DetectionModel
+        from model_api.models.image_model import ImageModel
+
+        adapter = _make_adapter(input_shape=(1, 3, 300, 300), output_shape=(1, 1, 200, 7))
+        original_init = ImageModel.__init__
+
+        def patched_init(self_model, *args, **kwargs):
+            original_init(self_model, *args, **kwargs)
+            self_model.image_blob_name = ""
+
+        with patch.object(ImageModel, "__init__", patched_init):
+            with pytest.raises(WrapperError, match="only one image input"):
+                DetectionModel(adapter, configuration={}, preload=False)

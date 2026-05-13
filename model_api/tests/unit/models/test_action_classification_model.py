@@ -38,19 +38,13 @@ def _make_adapter(
     input_shape=(1, 1, 3, 8, 224, 224),
     output_shape=(1, 10),
     layout="NSCTHW",
-    extra_inputs=None,
-    extra_outputs=None,
 ):
     adapter = MagicMock(spec=InferenceAdapter)
     video_meta = FakeMetadata(shape=list(input_shape), layout=layout)
     inputs = {"video": video_meta}
-    if extra_inputs:
-        inputs.update(extra_inputs)
 
     out_meta = FakeMetadata(shape=list(output_shape))
     outputs = {"output": out_meta}
-    if extra_outputs:
-        outputs.update(extra_outputs)
 
     adapter.get_input_layers.return_value = inputs
     adapter.get_output_layers.return_value = outputs
@@ -308,4 +302,14 @@ class TestActionClassificationNo6DInput:
         """Line 117: error when no 6D input found."""
         adapter = _make_adapter(input_shape=(1, 3, 224, 224), layout="NCHW")
         with pytest.raises(WrapperError, match="Failed to identify the input"):
+            ActionClassificationModel(adapter, configuration={})
+
+    def test_empty_inputs_raises_no_6d(self):
+        """Line 117: error when inputs dict is empty (no 6D layer found)."""
+        adapter = MagicMock(spec=InferenceAdapter)
+        adapter.get_input_layers.return_value = {}
+        adapter.get_output_layers.return_value = {"output": FakeMetadata(shape=[1, 10])}
+        adapter.get_rt_info.side_effect = _RT_INFO_ERROR
+        adapter.embed_preprocessing = MagicMock()
+        with pytest.raises(WrapperError, match="no 6D input layer found"):
             ActionClassificationModel(adapter, configuration={})

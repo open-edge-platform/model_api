@@ -48,20 +48,14 @@ def _make_adapter(
     input_shape=(1, 3, 224, 224),
     output_shape=(1, 10),
     layout="NCHW",
-    extra_inputs=None,
-    extra_outputs=None,
     rt_info=None,
 ):
     adapter = MagicMock(spec=InferenceAdapter)
     image_meta = FakeMetadata(shape=list(input_shape), layout=layout)
     inputs = {"image": image_meta}
-    if extra_inputs:
-        inputs.update(extra_inputs)
 
     out_meta = FakeMetadata(shape=list(output_shape))
     outputs = {"output": out_meta}
-    if extra_outputs:
-        outputs.update(extra_outputs)
 
     adapter.get_input_layers.return_value = inputs
     adapter.get_output_layers.return_value = outputs

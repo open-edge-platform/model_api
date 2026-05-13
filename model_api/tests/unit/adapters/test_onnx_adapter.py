@@ -266,3 +266,25 @@ class TestGetShapeFromOnnx:
 
         result = get_shape_from_onnx(["batch", 3, 224, 224])
         assert result == (-1, 3, 224, 224)
+
+
+class TestOnnxrtAbsentImportError:
+    def test_onnxrt_absent_on_import_failure(self):
+        """Lines 21-22: except ImportError sets onnxrt_absent = True."""
+        import importlib
+        import sys
+
+        import model_api.adapters.onnx_adapter as mod
+
+        orig = sys.modules["onnx"]
+        sys.modules["onnx"] = None
+        try:
+            importlib.reload(mod)
+            assert mod.onnxrt_absent is True
+        finally:
+            sys.modules["onnx"] = orig
+            importlib.reload(mod)
+            # Refresh stale reference in model.py
+            import model_api.models.model as model_mod
+
+            model_mod.ONNXRuntimeAdapter = mod.ONNXRuntimeAdapter

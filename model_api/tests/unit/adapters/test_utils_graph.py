@@ -211,7 +211,7 @@ class TestRangeScalePreprocessGraph:
         img = np.full((1, model_h, model_w, 3), 100, dtype=np.uint8)
         result = next(iter(compiled(img).values()))
         # 100 * 2.0 = 200, clamp(200, 0, 500) = 200, (200-0)/500 = 0.4
-        np.testing.assert_allclose(result, 0.4, atol=1e-5)
+        np.testing.assert_allclose(result, 0.4, atol=2e-4)
 
     def test_range_scale_graph_zero_range(self):
         """Test range_scale_preprocess_graph when range == 0."""

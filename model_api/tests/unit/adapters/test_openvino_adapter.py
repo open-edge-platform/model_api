@@ -1093,3 +1093,25 @@ class TestEmbedPreprocessingLegacyDtype:
                 dtype=int,
                 input_dtype="unknown_dtype",
             )
+
+
+class TestOpenvinoAbsentImportError:
+    def test_openvino_absent_on_import_failure(self):
+        """Lines 32-33: except ImportError sets openvino_absent = True."""
+        import importlib
+        import sys
+
+        import model_api.adapters.openvino_adapter as mod
+
+        orig = sys.modules["openvino"]
+        sys.modules["openvino"] = None
+        try:
+            importlib.reload(mod)
+            assert mod.openvino_absent is True
+        finally:
+            sys.modules["openvino"] = orig
+            importlib.reload(mod)
+            # Refresh stale reference in model.py
+            import model_api.models.model as model_mod
+
+            model_mod.OpenvinoAdapter = mod.OpenvinoAdapter
