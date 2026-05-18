@@ -32,7 +32,7 @@ dependencies = [
     "nncf",
     "numpy>=1.16.6",
     "onnx",
-    "opencv-python-headless<4.13",
+    "opencv-python-headless<4.14",
     "openvino>=2025.3",
     "timm",
     "torch",
