@@ -11,6 +11,8 @@ import pytest
 
 from model_api.models.instance_segmentation import (
     DETRInstanceSegmentation,
+    InstanceSegmentationModel,
+    MaskRCNNModel,
     _full_image_mask_postprocess,
     _segm_postprocess,
 )
@@ -92,39 +94,45 @@ class TestFullImageVsCropPostprocess:
         assert abs(crop_center_x - 200) < 50
 
 
+def _make_model(cls):
+    """Create an instance segmentation model instance with mocked adapter."""
+    with patch.object(cls, "__init__", lambda self, *a, **kw: None):
+        m = object.__new__(cls)
+
+    m.output_blob_name = {"boxes": "boxes", "labels": "labels", "masks": "masks"}
+    m.is_segmentoly = False
+    m.orig_width = 432
+    m.orig_height = 432
+    m.outputs = {"boxes": MagicMock(), "labels": MagicMock(), "masks": MagicMock()}
+    m.params = SimpleNamespace(
+        resize_type="standard",
+        confidence_threshold=0.3,
+        labels=["background", "horse"],
+        nms_execute=True,
+        agnostic_nms=False,
+        iou_threshold=0.5,
+        nms_max_predictions=200,
+        postprocess_semantic_masks=True,
+    )
+    return m
+
+
+def _make_outputs(boxes, labels, masks):
+    """Helper to create outputs dict in the format expected by postprocess."""
+    return {"boxes": boxes, "labels": labels, "masks": masks}
+
+
+def _make_meta(original_h=480, original_w=640):
+    """Helper to create metadata dict."""
+    return {"original_shape": (original_h, original_w, 3), "resized_shape": (432, 432, 3)}
+
+
 class TestDETRInstanceSegmentationPostprocess:
     """Tests for DETRInstanceSegmentation.postprocess method."""
 
     @pytest.fixture()
     def model(self):
-        """Create a DETRInstanceSegmentation instance with mocked adapter."""
-        with patch.object(DETRInstanceSegmentation, "__init__", lambda self, *a, **kw: None):
-            m = object.__new__(DETRInstanceSegmentation)
-
-        m.output_blob_name = {"boxes": "boxes", "labels": "labels", "masks": "masks"}
-        m.is_segmentoly = False
-        m.orig_width = 432
-        m.orig_height = 432
-        m.outputs = {"boxes": MagicMock(), "labels": MagicMock(), "masks": MagicMock()}
-        m.params = SimpleNamespace(
-            resize_type="standard",
-            confidence_threshold=0.3,
-            labels=["background", "horse"],
-            nms_execute=True,
-            agnostic_nms=False,
-            iou_threshold=0.5,
-            nms_max_predictions=200,
-            postprocess_semantic_masks=True,
-        )
-        return m
-
-    def _make_outputs(self, boxes, labels, masks):
-        """Helper to create outputs dict in the format expected by postprocess."""
-        return {"boxes": boxes, "labels": labels, "masks": masks}
-
-    def _make_meta(self, original_h=480, original_w=640):
-        """Helper to create metadata dict."""
-        return {"original_shape": (original_h, original_w, 3), "resized_shape": (432, 432, 3)}
+        return _make_model(DETRInstanceSegmentation)
 
     def test_basic_postprocess(self, model):
         """Single detection with full-image mask."""
@@ -132,10 +140,7 @@ class TestDETRInstanceSegmentationPostprocess:
         labels = np.array([0], dtype=np.int64)
         masks = np.ones((1, 96, 96), dtype=np.float32)
 
-        outputs = self._make_outputs(boxes, labels, masks)
-        meta = self._make_meta()
-
-        result = model.postprocess(outputs, meta)
+        result = model.postprocess(_make_outputs(boxes, labels, masks), _make_meta())
 
         assert isinstance(result, InstanceSegmentationResult)
         assert len(result.bboxes) == 1
@@ -148,10 +153,7 @@ class TestDETRInstanceSegmentationPostprocess:
         labels = np.array([[0]], dtype=np.int64)
         masks = np.ones((1, 1, 96, 96), dtype=np.float32)
 
-        outputs = self._make_outputs(boxes, labels, masks)
-        meta = self._make_meta()
-
-        result = model.postprocess(outputs, meta)
+        result = model.postprocess(_make_outputs(boxes, labels, masks), _make_meta())
 
         assert isinstance(result, InstanceSegmentationResult)
         assert len(result.bboxes) == 1
@@ -159,19 +161,13 @@ class TestDETRInstanceSegmentationPostprocess:
     def test_confidence_threshold_filters(self, model):
         """Detections below confidence threshold should be filtered out."""
         boxes = np.array(
-            [
-                [100, 100, 300, 300, 0.9],
-                [50, 50, 200, 200, 0.1],
-            ],
+            [[100, 100, 300, 300, 0.9], [50, 50, 200, 200, 0.1]],
             dtype=np.float32,
         )
         labels = np.array([0, 0], dtype=np.int64)
         masks = np.ones((2, 96, 96), dtype=np.float32)
 
-        outputs = self._make_outputs(boxes, labels, masks)
-        meta = self._make_meta()
-
-        result = model.postprocess(outputs, meta)
+        result = model.postprocess(_make_outputs(boxes, labels, masks), _make_meta())
 
         assert len(result.bboxes) == 1
         assert result.scores[0] > 0.3
@@ -182,10 +178,7 @@ class TestDETRInstanceSegmentationPostprocess:
         labels = np.array([0], dtype=np.int64)
         masks = np.ones((1, 96, 96), dtype=np.float32)
 
-        outputs = self._make_outputs(boxes, labels, masks)
-        meta = self._make_meta()
-
-        result = model.postprocess(outputs, meta)
+        result = model.postprocess(_make_outputs(boxes, labels, masks), _make_meta())
 
         assert len(result.bboxes) == 0
         assert result.masks.shape == (0, 16, 16)
@@ -196,10 +189,7 @@ class TestDETRInstanceSegmentationPostprocess:
         labels = np.array([0], dtype=np.int64)
         masks = np.ones((1, 96, 96), dtype=np.float32)
 
-        outputs = self._make_outputs(boxes, labels, masks)
-        meta = self._make_meta()
-
-        result = model.postprocess(outputs, meta)
+        result = model.postprocess(_make_outputs(boxes, labels, masks), _make_meta())
 
         assert result.labels[0] == 1
 
@@ -209,10 +199,7 @@ class TestDETRInstanceSegmentationPostprocess:
         labels = np.array([0], dtype=np.int64)
         masks = np.ones((1, 96, 96), dtype=np.float32)
 
-        outputs = self._make_outputs(boxes, labels, masks)
-        meta = self._make_meta()
-
-        result = model.postprocess(outputs, meta)
+        result = model.postprocess(_make_outputs(boxes, labels, masks), _make_meta())
 
         assert result.label_names == ["horse"]
 
@@ -225,10 +212,7 @@ class TestDETRInstanceSegmentationPostprocess:
         labels = np.array([0], dtype=np.int64)
         masks = mask[np.newaxis]
 
-        outputs = self._make_outputs(boxes, labels, masks)
-        meta = self._make_meta(original_h=480, original_w=640)
-
-        result = model.postprocess(outputs, meta)
+        result = model.postprocess(_make_outputs(boxes, labels, masks), _make_meta(original_h=480, original_w=640))
 
         # The mask center should be near the IMAGE center (240, 320),
         # not near the BOX center (100, 100 in original coords).
@@ -241,29 +225,80 @@ class TestDETRInstanceSegmentationPostprocess:
     def test_multiple_detections(self, model):
         """Multiple valid detections should all be returned."""
         boxes = np.array(
-            [
-                [50, 50, 200, 200, 0.9],
-                [250, 250, 400, 400, 0.8],
-                [10, 10, 50, 50, 0.7],
-            ],
+            [[50, 50, 200, 200, 0.9], [250, 250, 400, 400, 0.8], [10, 10, 50, 50, 0.7]],
             dtype=np.float32,
         )
         labels = np.array([0, 0, 0], dtype=np.int64)
         masks = np.ones((3, 96, 96), dtype=np.float32)
 
-        outputs = self._make_outputs(boxes, labels, masks)
-        meta = self._make_meta()
-
-        result = model.postprocess(outputs, meta)
+        result = model.postprocess(_make_outputs(boxes, labels, masks), _make_meta())
 
         assert len(result.bboxes) == 3
 
-    def test_model_class_attribute(self):
-        """DETRInstanceSegmentation should have __model__ = 'DETRInstSeg'."""
+
+class TestMaskRCNNModelPostprocess:
+    """Tests for MaskRCNNModel.postprocess method (per-box-crop masks)."""
+
+    @pytest.fixture()
+    def model(self):
+        return _make_model(MaskRCNNModel)
+
+    def test_basic_postprocess(self, model):
+        """Single detection with per-box mask."""
+        boxes = np.array([[100, 100, 300, 300, 0.9]], dtype=np.float32)
+        labels = np.array([0], dtype=np.int64)
+        masks = np.ones((1, 28, 28), dtype=np.float32)
+
+        result = model.postprocess(_make_outputs(boxes, labels, masks), _make_meta())
+
+        assert isinstance(result, InstanceSegmentationResult)
+        assert len(result.bboxes) == 1
+        assert result.masks.shape[1:] == (480, 640)
+
+    def test_mask_placed_at_box_position(self, model):
+        """Per-box-crop mask should be placed at the box position in the output."""
+        mask = np.ones((28, 28), dtype=np.float32)
+
+        boxes = np.array([[200, 200, 400, 400, 0.9]], dtype=np.float32)
+        labels = np.array([0], dtype=np.int64)
+        masks = mask[np.newaxis]
+
+        result = model.postprocess(_make_outputs(boxes, labels, masks), _make_meta())
+
+        # Mask should be concentrated around the box area, not the full image
+        mask_ys, mask_xs = np.where(result.masks[0] > 0)
+        # Box in original coords (after rescaling from 432 model input to 640x480 original)
+        # box [200, 200, 400, 400] * (640/432, 480/432) ≈ [296, 222, 593, 444]
+        mask_center_y = mask_ys.mean()
+        mask_center_x = mask_xs.mean()
+        # Should NOT be at image center (240, 320) but shifted toward box position
+        assert mask_center_x > 350
+
+
+class TestClassHierarchy:
+    """Tests for the InstanceSegmentationModel class hierarchy."""
+
+    def test_detr_model_class_attribute(self):
         assert DETRInstanceSegmentation.__model__ == "DETRInstSeg"
 
-    def test_inherits_from_maskrcnn(self):
-        """DETRInstanceSegmentation should inherit from MaskRCNNModel."""
-        from model_api.models.instance_segmentation import MaskRCNNModel
+    def test_maskrcnn_model_class_attribute(self):
+        assert MaskRCNNModel.__model__ == "MaskRCNN"
 
-        assert issubclass(DETRInstanceSegmentation, MaskRCNNModel)
+    def test_detr_inherits_from_base(self):
+        assert issubclass(DETRInstanceSegmentation, InstanceSegmentationModel)
+
+    def test_maskrcnn_inherits_from_base(self):
+        assert issubclass(MaskRCNNModel, InstanceSegmentationModel)
+
+    def test_detr_does_not_inherit_from_maskrcnn(self):
+        assert not issubclass(DETRInstanceSegmentation, MaskRCNNModel)
+
+    def test_maskrcnn_does_not_inherit_from_detr(self):
+        assert not issubclass(MaskRCNNModel, DETRInstanceSegmentation)
+
+    def test_base_class_defines_abstract_hook(self):
+        """InstanceSegmentationModel defines _postprocess_single_mask as the extension point."""
+        assert hasattr(InstanceSegmentationModel, "_postprocess_single_mask")
+        # Both subclasses must provide their own implementation (not the base version)
+        assert MaskRCNNModel._postprocess_single_mask is not InstanceSegmentationModel._postprocess_single_mask
+        assert DETRInstanceSegmentation._postprocess_single_mask is not InstanceSegmentationModel._postprocess_single_mask

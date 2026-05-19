@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
+from abc import abstractmethod
+
 import cv2
 import numpy as np
 
@@ -14,8 +16,13 @@ from .result import InstanceSegmentationResult
 from .utils import ResizeMetadata, calculate_nms, load_labels
 
 
-class MaskRCNNModel(ImageModel):
-    __model__ = "MaskRCNN"
+class InstanceSegmentationModel(ImageModel):
+    """Base class for instance segmentation models.
+
+    Handles common initialization, output detection, preprocessing, box rescaling,
+    confidence filtering, and NMS. Subclasses implement mask-specific postprocessing
+    via `_postprocess_single_mask`.
+    """
 
     def __init__(self, inference_adapter: InferenceAdapter, configuration: dict = {}, preload: bool = False) -> None:
         super().__init__(inference_adapter, configuration, preload)
@@ -106,6 +113,20 @@ class MaskRCNNModel(ImageModel):
             )
             dict_inputs[self.image_info_blob_names[0]] = input_image_info
         return dict_inputs, meta
+
+    @abstractmethod
+    def _postprocess_single_mask(self, box: np.ndarray, raw_cls_mask: np.ndarray, im_h: int, im_w: int) -> np.ndarray:
+        """Process a single raw mask into a full-image binary mask.
+
+        Args:
+            box: Bounding box [x1, y1, x2, y2] in original image coordinates.
+            raw_cls_mask: Raw mask output from the model (2D array).
+            im_h: Original image height.
+            im_w: Original image width.
+
+        Returns:
+            Binary mask of shape (im_h, im_w) with dtype uint8.
+        """
 
     def postprocess(self, outputs: dict, meta: dict) -> InstanceSegmentationResult:
         if (
@@ -213,7 +234,7 @@ class MaskRCNNModel(ImageModel):
 
             raw_cls_mask = raw_mask[label_idx, ...] if self.is_segmentoly else raw_mask
             if self.params.postprocess_semantic_masks or has_feature_vector_name:
-                resized_mask = _segm_postprocess(
+                resized_mask = self._postprocess_single_mask(
                     box,
                     raw_cls_mask,
                     *meta["original_shape"][:-1],
@@ -236,6 +257,32 @@ class MaskRCNNModel(ImageModel):
             saliency_map=_average_and_normalize(saliency_maps),
             feature_vector=outputs.get(_feature_vector_name, np.ndarray(0)),
         )
+
+
+class MaskRCNNModel(InstanceSegmentationModel):
+    """Instance segmentation model for Mask R-CNN-style architectures.
+
+    Uses per-box-crop mask postprocessing: resizes the small mask (e.g. 28x28)
+    to the bounding box dimensions and places it at the box position.
+    """
+
+    __model__ = "MaskRCNN"
+
+    def _postprocess_single_mask(self, box: np.ndarray, raw_cls_mask: np.ndarray, im_h: int, im_w: int) -> np.ndarray:
+        return _segm_postprocess(box, raw_cls_mask, im_h, im_w)
+
+
+class DETRInstanceSegmentation(InstanceSegmentationModel):
+    """Instance segmentation model for DETR-family architectures (e.g. RF-DETR-Seg).
+
+    Uses full-image mask postprocessing: resizes the mask (e.g. 96x96 covering the
+    entire image) to the original image dimensions and applies a threshold.
+    """
+
+    __model__ = "DETRInstSeg"
+
+    def _postprocess_single_mask(self, box: np.ndarray, raw_cls_mask: np.ndarray, im_h: int, im_w: int) -> np.ndarray:
+        return _full_image_mask_postprocess(raw_cls_mask, im_h, im_w)
 
 
 def _average_and_normalize(saliency_maps: list) -> list:
@@ -301,140 +348,3 @@ def _append_xai_names(outputs: dict, output_names: dict) -> None:
         output_names["saliency_map"] = _saliency_map_name
     if _feature_vector_name in outputs:
         output_names["feature_vector"] = _feature_vector_name
-
-
-class DETRInstanceSegmentation(MaskRCNNModel):
-    """Instance segmentation wrapper for DETR-family models (e.g. RF-DETR-Seg).
-
-    Unlike Mask R-CNN which outputs per-box crop masks (28x28), DETR models output
-    full-image masks at reduced resolution (e.g. input_size/4). This class overrides
-    postprocessing to resize masks to the original image dimensions directly.
-    """
-
-    __model__ = "DETRInstSeg"
-
-    def postprocess(self, outputs: dict, meta: dict) -> InstanceSegmentationResult:
-        if (
-            outputs[self.output_blob_name["labels"]].ndim == 2
-            and outputs[self.output_blob_name["boxes"]].ndim == 3
-            and outputs[self.output_blob_name["masks"]].ndim == 4
-        ):
-            (
-                outputs[self.output_blob_name["labels"]],
-                outputs[self.output_blob_name["boxes"]],
-                outputs[self.output_blob_name["masks"]],
-            ) = (
-                outputs[self.output_blob_name["labels"]][0],
-                outputs[self.output_blob_name["boxes"]][0],
-                outputs[self.output_blob_name["masks"]][0],
-            )
-        boxes = (
-            outputs[self.output_blob_name["boxes"]]
-            if self.is_segmentoly
-            else outputs[self.output_blob_name["boxes"]][:, :4]
-        )
-        scores = (
-            outputs[self.output_blob_name["scores"]]
-            if self.is_segmentoly
-            else outputs[self.output_blob_name["boxes"]][:, 4]
-        )
-        labels = outputs[self.output_blob_name["labels"]]
-        masks = outputs[self.output_blob_name["masks"]]
-        if not self.is_segmentoly:
-            labels += 1
-
-        inputImgWidth, inputImgHeight = (
-            meta["original_shape"][1],
-            meta["original_shape"][0],
-        )
-        resize_meta = ResizeMetadata.compute(
-            original_width=inputImgWidth,
-            original_height=inputImgHeight,
-            model_width=self.orig_width,
-            model_height=self.orig_height,
-            resize_type=self.params.resize_type,
-        )
-
-        boxes -= (resize_meta.pad_left, resize_meta.pad_top, resize_meta.pad_left, resize_meta.pad_top)
-        boxes *= (
-            resize_meta.inverted_scale_x,
-            resize_meta.inverted_scale_y,
-            resize_meta.inverted_scale_x,
-            resize_meta.inverted_scale_y,
-        )
-        np.around(boxes, out=boxes)
-        np.clip(
-            boxes,
-            0.0,
-            [inputImgWidth, inputImgHeight, inputImgWidth, inputImgHeight],
-            out=boxes,
-        )
-
-        has_feature_vector_name = _feature_vector_name in self.outputs
-        labels_list = self.params.labels
-        if has_feature_vector_name:
-            if not labels_list:
-                self.raise_error("Can't get number of classes because labels are empty")
-            saliency_maps: list = [[] for _ in range(len(labels_list))]
-        else:
-            saliency_maps = []
-
-        # Apply confidence threshold, bounding box area filter and label index filter.
-        box_widths = np.clip(boxes[:, 2] - boxes[:, 0], 0, None)
-        box_heights = np.clip(boxes[:, 3] - boxes[:, 1], 0, None)
-        box_areas = box_widths.astype(np.float64) * box_heights.astype(np.float64)
-
-        keep = (scores > self.params.confidence_threshold) & (box_areas > 1)
-
-        if labels_list:
-            keep &= labels < len(labels_list)
-
-        boxes = boxes[keep].astype(np.int32)
-        scores = scores[keep]
-        labels = labels[keep]
-        masks = masks[keep]
-
-        keep_nms = calculate_nms(
-            boxes=boxes,
-            scores=scores,
-            labels=labels,
-            execute_nms=self.params.nms_execute,
-            agnostic_nms=self.params.agnostic_nms,
-            iou_threshold=self.params.iou_threshold,
-            max_predictions=self.params.nms_max_predictions,
-        )
-
-        boxes = boxes[keep_nms]
-        scores = scores[keep_nms]
-        labels = labels[keep_nms]
-        masks = masks[keep_nms]
-
-        resized_masks, label_names = [], []
-        for box, label_idx, raw_mask in zip(boxes, labels, masks):
-            if labels_list:
-                label_names.append(labels_list[label_idx])
-
-            raw_cls_mask = raw_mask[label_idx, ...] if self.is_segmentoly else raw_mask
-            if self.params.postprocess_semantic_masks or has_feature_vector_name:
-                resized_mask = _full_image_mask_postprocess(
-                    raw_cls_mask,
-                    *meta["original_shape"][:-1],
-                )
-            else:
-                resized_mask = raw_cls_mask
-
-            output_mask = resized_mask if self.params.postprocess_semantic_masks else raw_cls_mask
-            resized_masks.append(output_mask)
-            if has_feature_vector_name:
-                saliency_maps[label_idx - 1].append(resized_mask)
-
-        _masks = np.stack(resized_masks) if len(resized_masks) > 0 else np.empty((0, 16, 16), dtype=np.uint8)
-        return InstanceSegmentationResult(
-            bboxes=boxes,
-            labels=labels,
-            scores=scores,
-            masks=_masks,
-            label_names=label_names or None,
-            saliency_map=_average_and_normalize(saliency_maps),
-            feature_vector=outputs.get(_feature_vector_name, np.ndarray(0)),
-        )
