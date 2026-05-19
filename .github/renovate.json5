@@ -9,7 +9,7 @@
     ":gitSignOff",
     "helpers:pinGitHubActionDigests",
   ],
-  baseBranches: ["master"],
+  baseBranchPatterns: ["master"],
   enabledManagers: ["github-actions", "pep621"],
   ignorePresets: [":prHourlyLimit2"],
   prHourlyLimit: 10,
