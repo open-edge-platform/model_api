@@ -8,7 +8,7 @@ from .anomaly import AnomalyDetection
 from .classification import ClassificationModel
 from .detection_model import DetectionModel
 from .image_model import ImageModel
-from .instance_segmentation import MaskRCNNModel
+from .instance_segmentation import DETRInstanceSegmentation, MaskRCNNModel
 from .keypoint_detection import KeypointDetectionModel, TopDownKeypointDetectionPipeline
 from .model import Model
 from .result import (
@@ -68,6 +68,7 @@ __all__ = [
     "DetectedKeypoints",
     "DetectionModel",
     "DetectionResult",
+    "DETRInstanceSegmentation",
     "get_contours",
     "ImageModel",
     "ImageResultWithSoftPrediction",
