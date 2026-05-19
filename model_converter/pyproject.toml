@@ -193,6 +193,16 @@ notice-rgx = """
 [tool.bandit]
 skips = ["B101", "B310"]
 
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+
+[tool.coverage.run]
+source = ["model_converter"]
+
 [tool.coverage.report]
-fail_under = 45
+fail_under = 100
 show_missing = true
+exclude_lines = [
+    "if __name__ == .__main__.",
+    "if TYPE_CHECKING:",
+]

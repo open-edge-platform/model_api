@@ -100,8 +100,11 @@ jobs:
 
       - *install-dependencies
 
-      - name: Run python unit tests
+      - name: Run model_api unit tests
         run: uv --directory model_api run pytest tests/unit --cov
+
+      - name: Run model_converter unit tests
+        run: uv --directory model_converter run pytest tests/unit --cov
 
       - &prepare-test-data
         name: Prepare test data
