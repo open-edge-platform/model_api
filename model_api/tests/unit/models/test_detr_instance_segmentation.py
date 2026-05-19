@@ -8,7 +8,6 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
-
 from model_api.models.instance_segmentation import (
     DETRInstanceSegmentation,
     InstanceSegmentationModel,
@@ -268,8 +267,8 @@ class TestMaskRCNNModelPostprocess:
         # Mask should be concentrated around the box area, not the full image
         mask_ys, mask_xs = np.where(result.masks[0] > 0)
         # Box in original coords (after rescaling from 432 model input to 640x480 original)
-        # box [200, 200, 400, 400] * (640/432, 480/432) ≈ [296, 222, 593, 444]
-        mask_center_y = mask_ys.mean()
+        # box [200, 200, 400, 400] * (640/432, 480/432) ~ [296, 222, 593, 444]
+        assert mask_ys.mean() > 200  # not at image top
         mask_center_x = mask_xs.mean()
         # Should NOT be at image center (240, 320) but shifted toward box position
         assert mask_center_x > 350
@@ -300,5 +299,6 @@ class TestClassHierarchy:
         """InstanceSegmentationModel defines _postprocess_single_mask as the extension point."""
         assert hasattr(InstanceSegmentationModel, "_postprocess_single_mask")
         # Both subclasses must provide their own implementation (not the base version)
-        assert MaskRCNNModel._postprocess_single_mask is not InstanceSegmentationModel._postprocess_single_mask
-        assert DETRInstanceSegmentation._postprocess_single_mask is not InstanceSegmentationModel._postprocess_single_mask
+        base_method = getattr(InstanceSegmentationModel, "_postprocess_single_mask")
+        assert getattr(MaskRCNNModel, "_postprocess_single_mask") is not base_method
+        assert getattr(DETRInstanceSegmentation, "_postprocess_single_mask") is not base_method

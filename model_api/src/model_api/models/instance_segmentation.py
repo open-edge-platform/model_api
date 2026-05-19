@@ -247,12 +247,12 @@ class InstanceSegmentationModel(ImageModel):
             if has_feature_vector_name:
                 saliency_maps[label_idx - 1].append(resized_mask)
 
-        _masks = np.stack(resized_masks) if len(resized_masks) > 0 else np.empty((0, 16, 16), dtype=np.uint8)
+        result_masks = np.stack(resized_masks) if len(resized_masks) > 0 else np.empty((0, 16, 16), dtype=np.uint8)
         return InstanceSegmentationResult(
             bboxes=boxes,
             labels=labels,
             scores=scores,
-            masks=_masks,
+            masks=result_masks,
             label_names=label_names or None,
             saliency_map=_average_and_normalize(saliency_maps),
             feature_vector=outputs.get(_feature_vector_name, np.ndarray(0)),
