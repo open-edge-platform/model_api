@@ -1,36 +1,59 @@
 {
-  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  $schema: 'https://docs.renovatebot.com/renovate-schema.json',
   lockFileMaintenance: {
     enabled: true,
-    schedule: ["* * * * 0"],
+    schedule: [
+      '* * * * 0',
+    ],
   },
   extends: [
-    "config:recommended",
-    ":gitSignOff",
-    "helpers:pinGitHubActionDigests",
+    'config:recommended',
+    ':gitSignOff',
+    'helpers:pinGitHubActionDigests',
   ],
-  baseBranches: ["master"],
-  enabledManagers: ["github-actions", "pep621"],
-  ignorePresets: [":prHourlyLimit2"],
+  baseBranchPatterns: [
+    'master',
+  ],
+  enabledManagers: [
+    'github-actions',
+    'pep621',
+  ],
+  ignorePresets: [
+    ':prHourlyLimit2',
+  ],
   prHourlyLimit: 10,
   packageRules: [
     {
       enabled: true,
-      matchManagers: ["pep621"],
-      schedule: ["* * * * 0"],
+      matchManagers: [
+        'pep621',
+      ],
+      schedule: [
+        '* * * * 0',
+      ],
     },
     {
       enabled: false,
-      matchDatasources: ["pypi"],
-      matchDepNames: ["ultralytics"],
+      matchDatasources: [
+        'pypi',
+      ],
+      matchDepNames: [
+        'ultralytics',
+      ],
     },
     {
       enabled: true,
       separateMajorMinor: false,
-      groupName: "GitHub Actions",
-      matchManagers: ["github-actions"],
-      schedule: ["* * 1 * *"],
-      matchPackageNames: ["*"],
+      groupName: 'GitHub Actions',
+      matchManagers: [
+        'github-actions',
+      ],
+      schedule: [
+        '* * 1 * *',
+      ],
+      matchPackageNames: [
+        '*',
+      ],
     },
   ],
   vulnerabilityAlerts: {
