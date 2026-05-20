@@ -73,6 +73,7 @@ jobs:
           severity-level: "LOW"
           confidence-level: "LOW"
           config_file: "${{ matrix.project }}/pyproject.toml"
+          artifact-name: "bandit-results-${{ matrix.project }}"
           fail-on-findings: ${{ (github.event_name == 'pull_request' || github.event_name == 'merge_group') && 'true' || 'false' }}
 
   bandit-scan:
