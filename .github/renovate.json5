@@ -10,7 +10,7 @@
     "helpers:pinGitHubActionDigests",
   ],
   baseBranchPatterns: ["master"],
-  enabledManagers: ["github-actions", "pep621"],
+  enabledManagers: ["github-actions", "pep621", "custom.regex"],
   ignorePresets: [":prHourlyLimit2"],
   prHourlyLimit: 10,
   packageRules: [
@@ -28,7 +28,7 @@
       enabled: true,
       separateMajorMinor: false,
       groupName: "GitHub Actions",
-      matchManagers: ["github-actions"],
+      matchManagers: ["github-actions", "custom.regex"],
       schedule: ["* * 1 * *"],
       matchPackageNames: ["*"],
     },
