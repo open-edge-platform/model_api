@@ -34,13 +34,13 @@ In short, this is a smoke/integration check for model usability, not an accuracy
 
 Defined in `tests/integration/conftest.py`:
 
-- `--model-path` (default: `None`)  
+- `--model-path` (default: `None`)
   Local file, local directory, or `hf://repo_id`
-- `--device` (default: `AUTO`)  
+- `--device` (default: `AUTO`)
   Target inference device, e.g. `CPU`, `GPU`, `AUTO`
-- `--author` (default: `OpenVINO`)  
+- `--author` (default: `OpenVINO`)
   HF Hub author/organization used when `--model-path` is not passed
-- `--collection` (default: `vision`)  
+- `--collection` (default: `vision`)
   HF Hub collection under `author`
 
 > Note: because `author`/`collection` have defaults, running this test without args attempts HF Hub discovery [OpenVINO/vision](https://huggingface.co/collections/OpenVINO/vision) unless you explicitly pass `--model-path`.
@@ -74,7 +74,6 @@ uv --directory model_api run pytest tests/integration/test_model.py --author hf_
 ```bash
 uv --directory model_api run pytest tests/integration/test_model.py --model-path hf://OpenVINO/resnet50-int8-ov
 ```
-
 
 ### Single local model with absolute path
 
