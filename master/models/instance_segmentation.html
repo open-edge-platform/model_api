@@ -442,9 +442,38 @@
 </pre></div>
 </div>
 <dl class="py class" id="module-model_api.models.instance_segmentation">
-<dt class="sig sig-object py" id="model_api.models.instance_segmentation.MaskRCNNModel">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">model_api.models.instance_segmentation.</span></span><span class="sig-name descname"><span class="pre">MaskRCNNModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inference_adapter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configuration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preload</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.instance_segmentation.MaskRCNNModel" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="model_api.models.instance_segmentation.DETRInstanceSegmentation">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">model_api.models.instance_segmentation.</span></span><span class="sig-name descname"><span class="pre">DETRInstanceSegmentation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inference_adapter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configuration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preload</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.instance_segmentation.DETRInstanceSegmentation" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#model_api.models.instance_segmentation.InstanceSegmentationModel" title="model_api.models.instance_segmentation.InstanceSegmentationModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">InstanceSegmentationModel</span></code></a></p>
+<p>Instance segmentation model for DETR-family architectures (e.g. RF-DETR-Seg).</p>
+<p>Uses full-image mask postprocessing: resizes the mask (e.g. 96x96 covering the
+entire image) to the original image dimensions and applies a threshold.</p>
+<p>Image model constructor</p>
+<p>It extends the <cite>Model</cite> constructor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inference_adapter</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../adapters/inference_adapter.html#model_api.adapters.inference_adapter.InferenceAdapter" title="model_api.adapters.inference_adapter.InferenceAdapter"><code class="xref py py-class docutils literal notranslate"><span class="pre">InferenceAdapter</span></code></a></span>) – allows working with the specified executor</p></li>
+<li><p><strong>configuration</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span>) – it contains values for parameters accepted by specific
+wrapper (<cite>confidence_threshold</cite>, <cite>labels</cite> etc.) which are set as data attributes</p></li>
+<li><p><strong>preload</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – a flag whether the model is loaded to device while
+initialization. If <cite>preload=False</cite>, the model must be loaded via <cite>load</cite> method before inference</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="model.html#model_api.models.model.WrapperError" title="model_api.models.model.WrapperError"><strong>WrapperError</strong></a> – if the wrapper failed to define appropriate inputs for images</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="model_api.models.instance_segmentation.InstanceSegmentationModel">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">model_api.models.instance_segmentation.</span></span><span class="sig-name descname"><span class="pre">InstanceSegmentationModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inference_adapter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configuration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preload</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.instance_segmentation.InstanceSegmentationModel" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="image_model.html#model_api.models.image_model.ImageModel" title="model_api.models.image_model.ImageModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImageModel</span></code></a></p>
+<p>Base class for instance segmentation models.</p>
+<p>Handles common initialization, output detection, preprocessing, box rescaling,
+confidence filtering, and NMS. Subclasses implement mask-specific postprocessing
+via <cite>_postprocess_single_mask</cite>.</p>
 <p>Image model constructor</p>
 <p>It extends the <cite>Model</cite> constructor.</p>
 <dl class="field-list simple">
@@ -462,8 +491,8 @@ initialization. If <cite>preload=False</cite>, the model must be loaded via <cit
 </dd>
 </dl>
 <dl class="py method">
-<dt class="sig sig-object py" id="model_api.models.instance_segmentation.MaskRCNNModel.parameters">
-<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.instance_segmentation.MaskRCNNModel.parameters" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="model_api.models.instance_segmentation.InstanceSegmentationModel.parameters">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.instance_segmentation.InstanceSegmentationModel.parameters" title="Link to this definition">#</a></dt>
 <dd><p>Defines the description and type of configurable data parameters for the wrapper.</p>
 <p>See <cite>types.py</cite> to find available types of the data parameter. For each parameter
 the type, default value and description must be provided.</p>
@@ -490,8 +519,8 @@ the type, default value and description must be provided.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="model_api.models.instance_segmentation.MaskRCNNModel.postprocess">
-<span class="sig-name descname"><span class="pre">postprocess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">outputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.instance_segmentation.MaskRCNNModel.postprocess" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="model_api.models.instance_segmentation.InstanceSegmentationModel.postprocess">
+<span class="sig-name descname"><span class="pre">postprocess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">outputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.instance_segmentation.InstanceSegmentationModel.postprocess" title="Link to this definition">#</a></dt>
 <dd><p>Interface for postprocess method.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -521,8 +550,8 @@ the type, default value and description must be provided.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="model_api.models.instance_segmentation.MaskRCNNModel.preprocess">
-<span class="sig-name descname"><span class="pre">preprocess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dict_inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.instance_segmentation.MaskRCNNModel.preprocess" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="model_api.models.instance_segmentation.InstanceSegmentationModel.preprocess">
+<span class="sig-name descname"><span class="pre">preprocess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dict_inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.instance_segmentation.InstanceSegmentationModel.preprocess" title="Link to this definition">#</a></dt>
 <dd><p>Interface for preprocess hook.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -544,6 +573,31 @@ the type, default value and description must be provided.</p>
 </dl>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="model_api.models.instance_segmentation.MaskRCNNModel">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">model_api.models.instance_segmentation.</span></span><span class="sig-name descname"><span class="pre">MaskRCNNModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inference_adapter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configuration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preload</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.models.instance_segmentation.MaskRCNNModel" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#model_api.models.instance_segmentation.InstanceSegmentationModel" title="model_api.models.instance_segmentation.InstanceSegmentationModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">InstanceSegmentationModel</span></code></a></p>
+<p>Instance segmentation model for Mask R-CNN-style architectures.</p>
+<p>Uses per-box-crop mask postprocessing: resizes the small mask (e.g. 28x28)
+to the bounding box dimensions and places it at the box position.</p>
+<p>Image model constructor</p>
+<p>It extends the <cite>Model</cite> constructor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inference_adapter</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../adapters/inference_adapter.html#model_api.adapters.inference_adapter.InferenceAdapter" title="model_api.adapters.inference_adapter.InferenceAdapter"><code class="xref py py-class docutils literal notranslate"><span class="pre">InferenceAdapter</span></code></a></span>) – allows working with the specified executor</p></li>
+<li><p><strong>configuration</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span>) – it contains values for parameters accepted by specific
+wrapper (<cite>confidence_threshold</cite>, <cite>labels</cite> etc.) which are set as data attributes</p></li>
+<li><p><strong>preload</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – a flag whether the model is loaded to device while
+initialization. If <cite>preload=False</cite>, the model must be loaded via <cite>load</cite> method before inference</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="model.html#model_api.models.model.WrapperError" title="model_api.models.model.WrapperError"><strong>WrapperError</strong></a> – if the wrapper failed to define appropriate inputs for images</p>
+</dd>
+</dl>
 </dd></dl>
 
 </section>
@@ -603,12 +657,14 @@ the type, default value and description must be provided.</p>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.instance_segmentation.MaskRCNNModel"><code class="docutils literal notranslate"><span class="pre">MaskRCNNModel</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.instance_segmentation.MaskRCNNModel.parameters"><code class="docutils literal notranslate"><span class="pre">MaskRCNNModel.parameters()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.instance_segmentation.MaskRCNNModel.postprocess"><code class="docutils literal notranslate"><span class="pre">MaskRCNNModel.postprocess()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.instance_segmentation.MaskRCNNModel.preprocess"><code class="docutils literal notranslate"><span class="pre">MaskRCNNModel.preprocess()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.instance_segmentation.DETRInstanceSegmentation"><code class="docutils literal notranslate"><span class="pre">DETRInstanceSegmentation</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.instance_segmentation.InstanceSegmentationModel"><code class="docutils literal notranslate"><span class="pre">InstanceSegmentationModel</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.instance_segmentation.InstanceSegmentationModel.parameters"><code class="docutils literal notranslate"><span class="pre">InstanceSegmentationModel.parameters()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.instance_segmentation.InstanceSegmentationModel.postprocess"><code class="docutils literal notranslate"><span class="pre">InstanceSegmentationModel.postprocess()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.instance_segmentation.InstanceSegmentationModel.preprocess"><code class="docutils literal notranslate"><span class="pre">InstanceSegmentationModel.preprocess()</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.models.instance_segmentation.MaskRCNNModel"><code class="docutils literal notranslate"><span class="pre">MaskRCNNModel</span></code></a></li>
 </ul>
 </li>
 </ul>
