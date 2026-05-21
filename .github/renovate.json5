@@ -10,7 +10,7 @@
     "helpers:pinGitHubActionDigests",
   ],
   baseBranchPatterns: ["master"],
-  enabledManagers: ["github-actions", "pep621"],
+  enabledManagers: ["github-actions", "pep621", "custom.regex"],
   ignorePresets: [":prHourlyLimit2"],
   prHourlyLimit: 10,
   packageRules: [
@@ -28,9 +28,26 @@
       enabled: true,
       separateMajorMinor: false,
       groupName: "GitHub Actions",
-      matchManagers: ["github-actions"],
+      matchManagers: ["github-actions", "custom.regex"],
       schedule: ["* * 1 * *"],
       matchPackageNames: ["*"],
+    },
+    // uv version used in GitHub Actions is updated manually
+    {
+      enabled: false,
+      matchDatasources: ["github-releases"],
+      matchDepNames: ["astral-sh/uv"],
+      matchDepTypes: ["uses-with"],
+    },
+  ],
+  // Is used to upgrade Renovate version
+  customManagers: [
+    {
+      fileMatch: ["^\\.github/workflows/[^/]+\\.ya?ml$"],
+      matchStrings: [
+        "# renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)\\s+.+version: (?<currentValue>.*)",
+        "# renovate: datasource=(?<datasource>.*?)\\s+export RENOVATE_IMAGE=(?<depName>[^:]+):(?<currentValue>[^@]+)(?:@(?<currentDigest>sha256:[a-f0-9]+))?",
+      ],
     },
   ],
   vulnerabilityAlerts: {
