@@ -6,6 +6,13 @@ import json
 from pathlib import Path
 
 import pytest
+from tests.accuracy.comparator.pytest_plugin import (
+    add_comparator_options,
+    enforce_ci_guard,
+    reference_mode,
+)
+
+__all__ = ["reference_mode"]
 
 
 def pytest_addoption(parser):
@@ -34,10 +41,12 @@ def pytest_addoption(parser):
         default="",
         help="directory to store inference result",
     )
+    add_comparator_options(parser)
 
 
 def pytest_configure(config):
     config.test_results = []
+    enforce_ci_guard(config)
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)

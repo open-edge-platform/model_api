@@ -1,0 +1,60 @@
+{
+  "feature_vector": {
+    "argmax_index": [],
+    "dtype": "float64",
+    "histogram": [],
+    "l2_norm": null,
+    "max": null,
+    "mean": null,
+    "min": null,
+    "percentiles": {
+      "p1": null,
+      "p50": null,
+      "p99": null
+    },
+    "sample_values": [],
+    "shape": [
+      0
+    ],
+    "spatial_moments": null,
+    "std": null,
+    "thumbnail": null
+  },
+  "raw_scores": {
+    "__class__": "ndarray",
+    "dtype": "float64",
+    "shape": [
+      0
+    ],
+    "values": []
+  },
+  "saliency_map": {
+    "argmax_index": [],
+    "dtype": "float64",
+    "histogram": [],
+    "l2_norm": null,
+    "max": null,
+    "mean": null,
+    "min": null,
+    "percentiles": {
+      "p1": null,
+      "p50": null,
+      "p99": null
+    },
+    "sample_values": [],
+    "shape": [
+      0
+    ],
+    "spatial_moments": null,
+    "std": null,
+    "thumbnail": null
+  },
+  "top_labels": [
+    {
+      "__class__": "Label",
+      "confidence": 0.8487920761108398,
+      "id": 0,
+      "name": "1"
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "bboxes": {
+    "__class__": "ndarray",
+    "dtype": "int32",
+    "shape": [
+      2,
+      4
+    ],
+    "values": [
+      [
+        458,
+        106,
+        495,
+        150
+      ],
+      [
+        0,
+        30,
+        178,
+        323
+      ]
+    ]
+  },
+  "feature_vector": {
+    "argmax_index": [],
+    "dtype": "float64",
+    "histogram": [],
+    "l2_norm": null,
+    "max": null,
+    "mean": null,
+    "min": null,
+    "percentiles": {
+      "p1": null,
+      "p50": null,
+      "p99": null
+    },
+    "sample_values": [],
+    "shape": [
+      0
+    ],
+    "spatial_moments": null,
+    "std": null,
+    "thumbnail": null
+  },
+  "label_names": [
+    "person",
+    "bicycle"
+  ],
+  "labels": {
+    "__class__": "ndarray",
+    "dtype": "int32",
+    "shape": [
+      2
+    ],
+    "values": [
+      1,
+      2
+    ]
+  },
+  "mask_files": {
+    "masks": "masks.npz"
+  },
+  "saliency_map": [],
+  "scores": {
+    "__class__": "ndarray",
+    "dtype": "float32",
+    "shape": [
+      2
+    ],
+    "values": [
+      0.8159813284873962,
+      0.754048228263855
+    ]
+  }
+}

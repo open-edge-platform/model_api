@@ -1,0 +1,9 @@
+{
+  "git_commit": "b7fb1a16d0fdb19c1779c33365a120f7b0a300dd",
+  "hostname": "soc-5CG4222YFH",
+  "model_api_version": "unknown",
+  "openvino_version": "2026.1.0-21367-63e31528c62-releases/2026/1",
+  "os": "Linux-6.6.114.1-microsoft-standard-WSL2-x86_64-with-glibc2.35",
+  "python_version": "3.14.0",
+  "timestamp": "2026-05-25T10:50:54.546598+00:00"
+}

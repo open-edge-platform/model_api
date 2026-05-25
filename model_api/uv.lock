@@ -2088,6 +2088,7 @@ tests = [
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-mock" },
+    { name = "scipy" },
     { name = "sympy" },
 ]
 yolo-tests = [
@@ -2133,6 +2134,7 @@ tests = [
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-mock" },
+    { name = "scipy" },
     { name = "sympy" },
 ]
 yolo-tests = [

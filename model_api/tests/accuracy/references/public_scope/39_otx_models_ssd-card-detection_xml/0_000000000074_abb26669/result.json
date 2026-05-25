@@ -1,0 +1,101 @@
+{
+  "bboxes": {
+    "__class__": "ndarray",
+    "dtype": "int32",
+    "shape": [
+      3,
+      4
+    ],
+    "values": [
+      [
+        79,
+        281,
+        318,
+        371
+      ],
+      [
+        0,
+        75,
+        172,
+        333
+      ],
+      [
+        109,
+        6,
+        625,
+        224
+      ]
+    ]
+  },
+  "feature_vector": {
+    "argmax_index": [],
+    "dtype": "float64",
+    "histogram": [],
+    "l2_norm": null,
+    "max": null,
+    "mean": null,
+    "min": null,
+    "percentiles": {
+      "p1": null,
+      "p50": null,
+      "p99": null
+    },
+    "sample_values": [],
+    "shape": [
+      0
+    ],
+    "spatial_moments": null,
+    "std": null,
+    "thumbnail": null
+  },
+  "label_names": [
+    "Diamonds",
+    "Diamonds",
+    "Hearts"
+  ],
+  "labels": {
+    "__class__": "ndarray",
+    "dtype": "int32",
+    "shape": [
+      3
+    ],
+    "values": [
+      1,
+      1,
+      3
+    ]
+  },
+  "saliency_map": {
+    "argmax_index": [],
+    "dtype": "float64",
+    "histogram": [],
+    "l2_norm": null,
+    "max": null,
+    "mean": null,
+    "min": null,
+    "percentiles": {
+      "p1": null,
+      "p50": null,
+      "p99": null
+    },
+    "sample_values": [],
+    "shape": [
+      0
+    ],
+    "spatial_moments": null,
+    "std": null,
+    "thumbnail": null
+  },
+  "scores": {
+    "__class__": "ndarray",
+    "dtype": "float32",
+    "shape": [
+      3
+    ],
+    "values": [
+      0.6996850371360779,
+      0.5751937627792358,
+      0.5465648770332336
+    ]
+  }
+}

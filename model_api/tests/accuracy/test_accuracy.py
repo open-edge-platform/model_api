@@ -2,16 +2,28 @@
 # Copyright (C) 2020-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
+"""Accuracy tests for model_api inference results.
+
+See tests/accuracy/comparator/README.md for the comparison framework documentation.
+"""
 import ast
 import contextlib
 import json
 import os
+import re
+import uuid
 from pathlib import Path
 
 import cv2
 import numpy as np
 import onnx
 import pytest
+from tests.accuracy.comparator import (
+    assert_result_matches_reference,
+    generate_reference,
+)
+from tests.accuracy.comparator.dispatch import dispatch
+
 from model_api.adapters.onnx_adapter import ONNXRuntimeAdapter
 from model_api.adapters.openvino_adapter import OpenvinoAdapter, create_core
 from model_api.adapters.utils import load_parameters_from_onnx
@@ -42,7 +54,7 @@ from model_api.models import (
     VisualPromptingResult,
     ZSLVisualPromptingResult,
     add_rotated_rects,
-    get_contours,
+    get_contours, Model,
 )
 from model_api.tilers import (
     DetectionTiler,
@@ -77,7 +89,7 @@ def read_config(fname):
         return json.load(f)
 
 
-def create_models(model_type, model_path, download_dir, force_onnx_adapter=False, device="CPU", configuration=None):
+def create_models(model_type, model_path, download_dir, force_onnx_adapter: bool=False, device="CPU", configuration=None) -> list[Model]:
     if model_path.endswith(".onnx") and force_onnx_adapter:
         wrapper_type = model_type.get_model_class(
             load_parameters_from_onnx(onnx.load(model_path))["model_info"]["model_type"],
@@ -136,6 +148,18 @@ def result(pytestconfig):
 @pytest.fixture(scope="session")
 def model_data_file(pytestconfig):
     return pytestconfig.getoption("model_data")
+
+
+def _slugify(value: str) -> str:
+    return re.sub(r"[^A-Za-z0-9._-]+", "_", value).strip("_") or "unnamed"
+
+
+def _result_supported_by_comparator(outputs) -> bool:
+    try:
+        dispatch(outputs)
+    except NotImplementedError:
+        return False
+    return True
 
 
 def pytest_generate_tests(metafunc):
@@ -277,16 +301,20 @@ def create_detection_result_dump(outputs: DetectionResult) -> dict:
     }
 
 
-def test_image_models(data, device, dump, result, model_data, results_dir):  # noqa: C901
+def test_image_models(  # noqa: C901
+    data, device, dump, result, model_data, results_dir, reference_mode,
+):
     name = model_data["name"]
     if name.endswith((".xml", ".onnx")):
         name = f"{data}/{name}"
+
+    force_onnx_adapter: bool = "True" == model_data.get("force_ort", "False")
 
     for model in create_models(
         MODEL_TYPE_MAPPING[model_data["type"]],
         name,
         data,
-        model_data.get("force_ort", False),
+        force_onnx_adapter,
         device=device,
         configuration=model_data.get("configuration", None),
     ):
@@ -377,14 +405,23 @@ def test_image_models(data, device, dump, result, model_data, results_dir):  # n
 
             store_outputs(name, image, device, outputs, results_dir)
 
+            use_comparator = _result_supported_by_comparator(outputs)
+            if use_comparator:
+                reference_dir_base = Path(results_dir) if results_dir else Path(__file__).resolve().parent
+                ref_dir = reference_dir_base  / "references" / test_data["reference_dir"]  # if this fails, run `uv run tests/accuracy/comparator/scripts/migrate_model_data.py`
+
+                if reference_mode == "update":
+                    test_id = f"{_slugify(name)}::{_slugify(test_data['image'])}"
+                    generate_reference(outputs, ref_dir, test_id=test_id, overwrite=True)
+                    continue
+                else:
+                    assert_result_matches_reference(outputs, ref_dir)
+
             if isinstance(outputs, ClassificationResult):
-                compare_classification_result(outputs, test_data["reference"])
                 image_result = create_classification_result_dump(outputs)
             elif type(outputs) is DetectionResult:
-                compare_detection_result(outputs, test_data["reference"])
                 image_result = create_detection_result_dump(outputs)
             elif isinstance(outputs, ImageResultWithSoftPrediction):
-                assert len(test_data["reference"]) == 1
                 if hasattr(model, "get_contours"):
                     contours = model.get_contours(outputs)
                 else:
@@ -393,28 +430,31 @@ def test_image_models(data, device, dump, result, model_data, results_dir):  # n
                 for contour in contours:
                     contour_str += str(contour) + ", "
                 output_str = str(outputs) + contour_str
-                assert test_data["reference"][0] == output_str
                 image_result = [output_str]
             elif type(outputs) is InstanceSegmentationResult:
-                assert len(test_data["reference"]) == 1
                 output_str = str(add_rotated_rects(outputs)) + "; "
                 with contextlib.suppress(RuntimeError):
                     # getContours() assumes each instance generates only one contour.
                     # That doesn't hold for some models
                     output_str += "; ".join(str(contour) for contour in get_contours(outputs)) + "; "
-                assert test_data["reference"][0] == output_str
                 image_result = [output_str]
             elif isinstance(outputs, AnomalyResult):
-                assert len(test_data["reference"]) == 1
                 output_str = str(outputs)
-                assert test_data["reference"][0] == output_str
                 image_result = [output_str]
             elif isinstance(outputs, (ZSLVisualPromptingResult, VisualPromptingResult, DetectedKeypoints)):
                 output_str = str(outputs)
-                assert test_data["reference"][0] == output_str
                 image_result = [output_str]
             else:
                 pytest.fail(f"Unexpected output type: {type(outputs)}")
+
+            if not use_comparator:
+                if isinstance(outputs, ClassificationResult):
+                    compare_classification_result(outputs, test_data["reference"])
+                elif type(outputs) is DetectionResult:
+                    compare_detection_result(outputs, test_data["reference"])
+                else:
+                    assert test_data["reference"][0] == image_result[0]
+
             if dump:
                 inference_results.append(
                     {"image": test_data["image"], "reference": image_result},

@@ -1,0 +1,120 @@
+{
+  "bboxes": {
+    "__class__": "ndarray",
+    "dtype": "int32",
+    "shape": [
+      7,
+      4
+    ],
+    "values": [
+      [
+        59,
+        277,
+        360,
+        380
+      ],
+      [
+        2,
+        9,
+        162,
+        318
+      ],
+      [
+        294,
+        94,
+        316,
+        153
+      ],
+      [
+        326,
+        97,
+        341,
+        136
+      ],
+      [
+        461,
+        105,
+        493,
+        150
+      ],
+      [
+        350,
+        92,
+        386,
+        149
+      ],
+      [
+        279,
+        110,
+        291,
+        146
+      ]
+    ]
+  },
+  "feature_vector": {
+    "argmax_index": [],
+    "dtype": "float64",
+    "histogram": [],
+    "l2_norm": null,
+    "max": null,
+    "mean": null,
+    "min": null,
+    "percentiles": {
+      "p1": null,
+      "p50": null,
+      "p99": null
+    },
+    "sample_values": [],
+    "shape": [
+      0
+    ],
+    "spatial_moments": null,
+    "std": null,
+    "thumbnail": null
+  },
+  "label_names": [
+    "horse",
+    "car",
+    "bicycle",
+    "bicycle",
+    "bicycle",
+    "bicycle",
+    "bicycle"
+  ],
+  "labels": {
+    "__class__": "ndarray",
+    "dtype": "int32",
+    "shape": [
+      7
+    ],
+    "values": [
+      16,
+      2,
+      1,
+      1,
+      1,
+      1,
+      1
+    ]
+  },
+  "mask_files": {
+    "masks": "masks.npz"
+  },
+  "saliency_map": [],
+  "scores": {
+    "__class__": "ndarray",
+    "dtype": "float32",
+    "shape": [
+      7
+    ],
+    "values": [
+      0.9994712471961975,
+      0.9991148114204407,
+      0.984796404838562,
+      0.9743672013282776,
+      0.9182271361351013,
+      0.8069396615028381,
+      0.7876489162445068
+    ]
+  }
+}

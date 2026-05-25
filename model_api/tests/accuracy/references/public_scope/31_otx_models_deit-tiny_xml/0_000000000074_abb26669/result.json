@@ -1,0 +1,71 @@
+{
+  "feature_vector": {
+    "argmax_index": [],
+    "dtype": "float64",
+    "histogram": [],
+    "l2_norm": null,
+    "max": null,
+    "mean": null,
+    "min": null,
+    "percentiles": {
+      "p1": null,
+      "p50": null,
+      "p99": null
+    },
+    "sample_values": [],
+    "shape": [
+      0
+    ],
+    "spatial_moments": null,
+    "std": null,
+    "thumbnail": null
+  },
+  "raw_scores": {
+    "__class__": "ndarray",
+    "dtype": "float32",
+    "shape": [
+      10
+    ],
+    "values": [
+      0.027470922097563744,
+      0.11825071275234222,
+      0.016329988837242126,
+      0.6480998396873474,
+      0.008704873733222485,
+      0.11668238043785095,
+      0.0060073393397033215,
+      0.0037315546069294214,
+      0.013720362447202206,
+      0.04100194200873375
+    ]
+  },
+  "saliency_map": {
+    "argmax_index": [],
+    "dtype": "float64",
+    "histogram": [],
+    "l2_norm": null,
+    "max": null,
+    "mean": null,
+    "min": null,
+    "percentiles": {
+      "p1": null,
+      "p50": null,
+      "p99": null
+    },
+    "sample_values": [],
+    "shape": [
+      0
+    ],
+    "spatial_moments": null,
+    "std": null,
+    "thumbnail": null
+  },
+  "top_labels": [
+    {
+      "__class__": "Label",
+      "confidence": 0.6480998396873474,
+      "id": 3,
+      "name": "cat"
+    }
+  ]
+}

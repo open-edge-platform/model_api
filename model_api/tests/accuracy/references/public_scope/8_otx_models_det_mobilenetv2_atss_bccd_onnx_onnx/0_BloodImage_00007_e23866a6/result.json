@@ -1,0 +1,128 @@
+{
+  "bboxes": {
+    "__class__": "ndarray",
+    "dtype": "int32",
+    "shape": [
+      6,
+      4
+    ],
+    "values": [
+      [
+        494,
+        159,
+        637,
+        308
+      ],
+      [
+        28,
+        139,
+        136,
+        228
+      ],
+      [
+        535,
+        374,
+        638,
+        479
+      ],
+      [
+        513,
+        8,
+        633,
+        151
+      ],
+      [
+        197,
+        86,
+        412,
+        286
+      ],
+      [
+        21,
+        291,
+        143,
+        399
+      ]
+    ]
+  },
+  "feature_vector": {
+    "argmax_index": [],
+    "dtype": "float64",
+    "histogram": [],
+    "l2_norm": null,
+    "max": null,
+    "mean": null,
+    "min": null,
+    "percentiles": {
+      "p1": null,
+      "p50": null,
+      "p99": null
+    },
+    "sample_values": [],
+    "shape": [
+      0
+    ],
+    "spatial_moments": null,
+    "std": null,
+    "thumbnail": null
+  },
+  "label_names": [
+    "WBC",
+    "RBC",
+    "RBC",
+    "RBC",
+    "RBC",
+    "RBC"
+  ],
+  "labels": {
+    "__class__": "ndarray",
+    "dtype": "int32",
+    "shape": [
+      6
+    ],
+    "values": [
+      2,
+      1,
+      1,
+      1,
+      1,
+      1
+    ]
+  },
+  "saliency_map": {
+    "argmax_index": [],
+    "dtype": "float64",
+    "histogram": [],
+    "l2_norm": null,
+    "max": null,
+    "mean": null,
+    "min": null,
+    "percentiles": {
+      "p1": null,
+      "p50": null,
+      "p99": null
+    },
+    "sample_values": [],
+    "shape": [
+      0
+    ],
+    "spatial_moments": null,
+    "std": null,
+    "thumbnail": null
+  },
+  "scores": {
+    "__class__": "ndarray",
+    "dtype": "float32",
+    "shape": [
+      6
+    ],
+    "values": [
+      0.6997657418251038,
+      0.6234003901481628,
+      0.5347355008125305,
+      0.45407289266586304,
+      0.4050738215446472,
+      0.40131205320358276
+    ]
+  }
+}
