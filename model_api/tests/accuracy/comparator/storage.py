@@ -5,10 +5,8 @@
 
 from __future__ import annotations
 
-import datetime
 import json
 import platform
-import socket
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -130,11 +128,9 @@ def build_generated_by() -> dict:
         model_api_version = "unknown"
 
     return {
-        "hostname": socket.gethostname(),
         "os": platform.platform(),
         "openvino_version": openvino_version,
         "model_api_version": model_api_version,
-        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "python_version": platform.python_version(),
     }
 

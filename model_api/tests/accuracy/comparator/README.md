@@ -30,7 +30,7 @@ Reference artifacts are stored in the following structure:
 tests/accuracy/references/<reference_dir>/
   result.json          # scalar fields + mask file paths
   metadata.json        # test_id, policy_overrides
-  generated_by.json    # platform metadata (OS, CPU, OpenVINO version, git commit)
+  generated_by.json    # platform metadata (OS, OpenVINO version, ModelAPI version, Python version)
   masks/
     <field_name>.png   # binary mask (L mode) or class map (I;16 PNG)
     <field_name>.npz   # instance masks (stacked bool array)
@@ -42,13 +42,13 @@ To update the reference artifacts, run pytest with the `--update-references` fla
 
 ```bash
 # Generate references for all configs (requires --data)
-pytest tests/accuracy/ --data /path/to/data --update-references
+uv --directory model_api run pytest --data=/path/to/data tests/accuracy/test_accuracy.py --update-references
 
 # CI guard: this will FAIL when CI=true
-CI=true pytest tests/accuracy/ --data /path/to/data --update-references
+CI=true uv --directory model_api run pytest --data=/path/to/data tests/accuracy/test_accuracy.py --update-references
 
 # Override (use with caution):
-CI=true pytest tests/accuracy/ --data /path/to/data --update-references --force-update-in-ci
+CI=true uv --directory model_api run pytest --data=/path/to/data tests/accuracy/test_accuracy.py --update-references --force-update-in-ci
 ```
 
 ## Failure Messages
@@ -78,18 +78,6 @@ Example `metadata.json` snippet:
 }
 ```
 
-## Canonical Platform
-
-References should ideally be generated on the canonical platform to ensure consistency and minimize numeric drift.
-
-- **OS**: Linux
-- **CPU**: Intel Ultra 7 165U
-- **OpenVINO**: 2025.2.0
-- **Python**: 3.10.12
-- **Device**: CPU
-
-If you generate references on a different platform, the CI may fail due to small numerical differences. You can check the canonical platform details in `.sisyphus/canonical-platform.json`. Note that regenerating references or investigating flakiness requires access to the original model files and input data.
-
 ## Noise Floor
 
 The noise floor represents the inherent variance in inference results when running the same model on the same input multiple times. This variance can be caused by non-deterministic operations in certain layers or hardware-specific behavior.
@@ -97,7 +85,16 @@ The noise floor represents the inherent variance in inference results when runni
 To measure the noise floor for a model:
 
 ```bash
-python -m tests.accuracy.comparator.noise_floor --help
+uv --directory model_api run python -m tests.accuracy.comparator.noise_floor --help
 ```
 
 Fields with a coefficient of variation (cv) greater than 0.01 are considered "noisy" and may require wider tolerances in their comparison policies.
+
+
+## Testing comparator
+
+Run the comparator tests with:
+
+```bash
+uv --directory model_api run pytest tests/accuracy/comparator
+```

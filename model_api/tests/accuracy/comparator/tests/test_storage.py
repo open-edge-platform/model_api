@@ -16,12 +16,9 @@ from tests.accuracy.comparator.storage import (
 )
 
 REQUIRED_GENERATED_BY_KEYS = {
-    "hostname",
     "os",
     "openvino_version",
     "model_api_version",
-    "git_commit",
-    "timestamp",
     "python_version",
 }
 
