@@ -90,7 +90,6 @@ uv --directory model_api run python -m tests.accuracy.comparator.noise_floor --h
 
 Fields with a coefficient of variation (cv) greater than 0.01 are considered "noisy" and may require wider tolerances in their comparison policies.
 
-
 ## Testing comparator
 
 Run the comparator tests with:

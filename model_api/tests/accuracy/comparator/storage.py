@@ -19,7 +19,7 @@ def save_class_map(path: Path, arr: np.ndarray) -> None:
     if arr.ndim != 2:
         msg = f"class map must be 2-D, got shape {arr.shape}"
         raise ValueError(msg)
-    img = Image.fromarray(arr.astype(np.uint16), mode="I;16")
+    img = Image.fromarray(arr.astype(np.uint16))
     img.save(str(path), format="PNG")
 
 
@@ -35,7 +35,7 @@ def save_binary_mask(path: Path, arr: np.ndarray) -> None:
         msg = f"binary mask must be 2-D, got shape {arr.shape}"
         raise ValueError(msg)
     bool_arr = arr.astype(bool)
-    img = Image.fromarray((bool_arr.astype(np.uint8) * 255), mode="L").convert("1")
+    img = Image.fromarray(bool_arr.astype(np.uint8) * 255).convert("1")
     img.save(str(path), format="PNG")
 
 
