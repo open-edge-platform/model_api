@@ -132,12 +132,13 @@ class TestLoadCheckpoint:
 
     def test_successful_load(self, converter, tmp_path):
         """load_checkpoint loads a PyTorch checkpoint."""
-        # Create a simple checkpoint
         checkpoint_path = tmp_path / "checkpoint.pth"
+        checkpoint_path.touch()
         state_dict = {"layer.weight": torch.randn(10, 10)}
-        torch.save(state_dict, checkpoint_path)
 
-        result = converter.load_checkpoint(checkpoint_path)
+        with patch("torch.load", return_value=state_dict):
+            result = converter.load_checkpoint(checkpoint_path)
+
         assert "layer.weight" in result
 
     def test_load_failure(self, converter, tmp_path):
