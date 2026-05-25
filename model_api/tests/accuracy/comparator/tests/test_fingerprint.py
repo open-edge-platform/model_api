@@ -9,6 +9,7 @@ import json
 import math
 
 import numpy as np
+
 from tests.accuracy.comparator.fingerprint import compute_fingerprint
 
 
@@ -17,9 +18,19 @@ def test_fingerprint_2d_float():
     fp = compute_fingerprint(arr)
     assert fp is not None
     for key in (
-        "shape", "dtype", "min", "max", "mean", "std", "l2_norm",
-        "percentiles", "histogram", "spatial_moments", "argmax_index",
-        "thumbnail", "sample_values",
+        "shape",
+        "dtype",
+        "min",
+        "max",
+        "mean",
+        "std",
+        "l2_norm",
+        "percentiles",
+        "histogram",
+        "spatial_moments",
+        "argmax_index",
+        "thumbnail",
+        "sample_values",
     ):
         assert key in fp, f"missing key: {key}"
     assert fp["shape"] == [256, 256]
@@ -91,7 +102,7 @@ def test_fingerprint_list_of_arrays():
     fp = compute_fingerprint(arrays)
     assert isinstance(fp, list)
     assert len(fp) == 3
-    for i, sub_fp in enumerate(fp):
+    for sub_fp in fp:
         assert sub_fp is not None
         assert sub_fp["shape"] == [16, 16]
         assert sub_fp["dtype"] == "float32"

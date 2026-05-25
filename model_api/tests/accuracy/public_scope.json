@@ -34,9 +34,7 @@
     "type": "SegmentationModel",
     "configuration": {
       "blur_strength": 1,
-      "labels": [
-        "object"
-      ],
+      "labels": ["object"],
       "model_type": "Segmentation",
       "soft_threshold": 0.5
     },

@@ -10,6 +10,7 @@ from enum import Enum
 from typing import TYPE_CHECKING
 
 import numpy as np
+
 from tests.accuracy.comparator.fingerprint import compute_fingerprint
 from tests.accuracy.comparator.matching import match_by_bbox_iou, match_by_mask_iou
 from tests.accuracy.comparator.storage import (
@@ -91,11 +92,7 @@ def compare_exact(actual, reference, *, field_name: str) -> FieldResult:
     else:
         passed = actual == reference
 
-    message = (
-        f"{field_name}: exact match passed"
-        if passed
-        else f"{field_name}: exact match failed"
-    )
+    message = f"{field_name}: exact match passed" if passed else f"{field_name}: exact match failed"
     return FieldResult(
         policy=ComparisonPolicy.EXACT,
         passed=bool(passed),
@@ -135,10 +132,7 @@ def compare_numeric_close(
         return FieldResult(
             policy=ComparisonPolicy.NUMERIC_CLOSE,
             passed=False,
-            message=(
-                f"{field_name}: one value is None "
-                f"(actual={actual_summary}, reference={reference_summary})"
-            ),
+            message=(f"{field_name}: one value is None (actual={actual_summary}, reference={reference_summary})"),
             actual_summary=actual_summary,
             reference_summary=reference_summary,
             delta=None,
@@ -184,9 +178,7 @@ def compare_numeric_close(
     max_abs_delta = float(np.max(abs_delta)) if abs_delta.size else 0.0
     denom = np.maximum(np.abs(reference_arr), np.finfo(float).eps)
     max_rel_delta = float(np.max(abs_delta / denom)) if abs_delta.size else 0.0
-    pct_over_budget = (
-        float(((max_abs_delta - atol) / atol) * 100.0) if atol > 0 and not passed else None
-    )
+    pct_over_budget = float(((max_abs_delta - atol) / atol) * 100.0) if atol > 0 and not passed else None
 
     if passed:
         message = f"{field_name}: values within tolerance"
@@ -209,7 +201,7 @@ def compare_numeric_close(
     )
 
 
-def _compare_single_fingerprint(
+def _compare_single_fingerprint(  # noqa: C901
     actual_array: np.ndarray,
     reference_fingerprint: dict,
     *,
@@ -241,9 +233,7 @@ def _compare_single_fingerprint(
         return FieldResult(
             policy=ComparisonPolicy.STAT_FINGERPRINT,
             passed=False,
-            message=(
-                f"{field_name}: shape mismatch actual={a_shape} reference={r_shape}"
-            ),
+            message=(f"{field_name}: shape mismatch actual={a_shape} reference={r_shape}"),
             actual_summary=_summarize_value(actual_array),
             reference_summary=f"shape={r_shape}, dtype={reference_fingerprint.get('dtype')}",
             delta=None,
@@ -393,7 +383,7 @@ def _compare_single_fingerprint(
     )
 
 
-def compare_fingerprint(  # noqa: C901
+def compare_fingerprint(
     actual_array: np.ndarray | list[np.ndarray] | None,
     reference_fingerprint: dict | list[dict] | None,
     *,
@@ -444,10 +434,7 @@ def compare_fingerprint(  # noqa: C901
         return FieldResult(
             policy=ComparisonPolicy.STAT_FINGERPRINT,
             passed=False,
-            message=(
-                f"{field_name}: type mismatch "
-                f"(actual_is_list={actual_is_list}, reference_is_list={ref_is_list})"
-            ),
+            message=(f"{field_name}: type mismatch (actual_is_list={actual_is_list}, reference_is_list={ref_is_list})"),
             actual_summary=_summarize_value(actual_array),
             reference_summary="fingerprint(list)" if ref_is_list else "fingerprint(dict)",
             delta=None,
@@ -532,9 +519,7 @@ def compare_class_map(
         return FieldResult(
             policy=ComparisonPolicy.MASK_IOU,
             passed=False,
-            message=(
-                f"class_map: shape mismatch actual={actual_arr.shape} reference={ref.shape}"
-            ),
+            message=(f"class_map: shape mismatch actual={actual_arr.shape} reference={ref.shape}"),
             actual_summary=_summarize_value(actual_arr),
             reference_summary=_summarize_value(ref),
             delta=None,
@@ -563,9 +548,7 @@ def compare_class_map(
     if passed:
         message = f"class_map: mean IoU={mean_iou:.4f} >= {iou_threshold} ({breakdown})"
     else:
-        message = (
-            f"class_map: mean IoU={mean_iou:.4f} < {iou_threshold} (per-class: {breakdown})"
-        )
+        message = f"class_map: mean IoU={mean_iou:.4f} < {iou_threshold} (per-class: {breakdown})"
 
     return FieldResult(
         policy=ComparisonPolicy.MASK_IOU,
@@ -595,9 +578,7 @@ def compare_binary_mask(
         return FieldResult(
             policy=ComparisonPolicy.MASK_IOU,
             passed=False,
-            message=(
-                f"binary_mask: shape mismatch actual={actual_bin.shape} reference={ref.shape}"
-            ),
+            message=(f"binary_mask: shape mismatch actual={actual_bin.shape} reference={ref.shape}"),
             actual_summary=_summarize_value(actual_arr),
             reference_summary=_summarize_value(ref),
             delta=None,
@@ -608,9 +589,7 @@ def compare_binary_mask(
     iou = compute_mean_iou(actual_bin, ref)
     passed = iou >= iou_threshold
     message = (
-        f"binary_mask: IoU={iou:.4f} >= {iou_threshold}"
-        if passed
-        else f"binary_mask: IoU={iou:.4f} < {iou_threshold}"
+        f"binary_mask: IoU={iou:.4f} >= {iou_threshold}" if passed else f"binary_mask: IoU={iou:.4f} < {iou_threshold}"
     )
     return FieldResult(
         policy=ComparisonPolicy.MASK_IOU,
@@ -660,15 +639,13 @@ def compare_instance_masks(
     actual_bin = actual_arr >= 0.5 if actual_arr.dtype != bool else actual_arr
 
     # Choose matching strategy
-    use_bbox = (
-        actual_bin.size == 0
-        and actual_bboxes is not None
-        and ref_bboxes is not None
-    )
+    use_bbox = actual_bin.size == 0 and actual_bboxes is not None and ref_bboxes is not None
 
     if use_bbox:
         matched, unmatched_pred, unmatched_ref = match_by_bbox_iou(
-            np.asarray(actual_bboxes), np.asarray(ref_bboxes), iou_threshold=match_iou,
+            np.asarray(actual_bboxes),
+            np.asarray(ref_bboxes),
+            iou_threshold=match_iou,
         )
     else:
         if actual_bin.shape[1:] != ref_masks.shape[1:]:
@@ -676,8 +653,7 @@ def compare_instance_masks(
                 policy=ComparisonPolicy.MASK_IOU,
                 passed=False,
                 message=(
-                    f"instance_masks: spatial shape mismatch actual={actual_bin.shape} "
-                    f"reference={ref_masks.shape}"
+                    f"instance_masks: spatial shape mismatch actual={actual_bin.shape} reference={ref_masks.shape}"
                 ),
                 actual_summary=_summarize_value(actual_arr),
                 reference_summary=_summarize_value(ref_masks),
@@ -686,7 +662,9 @@ def compare_instance_masks(
                 pct_over_budget=None,
             )
         matched, unmatched_pred, unmatched_ref = match_by_mask_iou(
-            actual_bin, ref_masks, iou_threshold=match_iou,
+            actual_bin,
+            ref_masks,
+            iou_threshold=match_iou,
         )
 
     if unmatched_pred or unmatched_ref:

@@ -9,6 +9,8 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import pytest
+from model_api.models.result.anomaly import AnomalyResult
+
 from tests.accuracy.comparator import (
     assert_result_matches_reference,
     generate_reference,
@@ -26,8 +28,6 @@ from tests.accuracy.comparator.storage import (
     save_class_map,
     save_instance_masks,
 )
-
-from model_api.models.result.anomaly import AnomalyResult
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -55,7 +55,11 @@ def _anomaly(
 # 1. Numeric field out of tolerance.
 def test_numeric_close_out_of_tolerance_reports_delta() -> None:
     result = compare_numeric_close(
-        1.0, 5.0, field_name="x", atol=1e-3, rtol=1e-3,
+        1.0,
+        5.0,
+        field_name="x",
+        atol=1e-3,
+        rtol=1e-3,
     )
     assert not result.passed
     assert "delta=" in result.message
@@ -107,7 +111,10 @@ def test_instance_masks_count_mismatch(tmp_path: Path) -> None:
 
     fewer = masks[:2].copy()
     result = compare_instance_masks(
-        fewer, p, actual_bboxes=None, ref_bboxes=None,
+        fewer,
+        p,
+        actual_bboxes=None,
+        ref_bboxes=None,
     )
     assert not result.passed
     assert "count mismatch" in result.message.lower()
@@ -216,7 +223,9 @@ def test_corrupted_reference_missing_result_json(tmp_path: Path) -> None:
 # 14. Numeric_close non-numeric values rejected.
 def test_numeric_close_non_numeric_values() -> None:
     result = compare_numeric_close(
-        np.array(["a", "b"]), np.array(["a", "b"]), field_name="x",
+        np.array(["a", "b"]),
+        np.array(["a", "b"]),
+        field_name="x",
     )
     assert not result.passed
     assert "non-numeric" in result.message
@@ -225,7 +234,9 @@ def test_numeric_close_non_numeric_values() -> None:
 # 15. Numeric_close shape mismatch direct.
 def test_numeric_close_shape_mismatch() -> None:
     result = compare_numeric_close(
-        np.zeros((3,)), np.zeros((4,)), field_name="x",
+        np.zeros((3,)),
+        np.zeros((4,)),
+        field_name="x",
     )
     assert not result.passed
     assert "shape mismatch" in result.message

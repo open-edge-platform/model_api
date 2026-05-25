@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 import pytest
+
 from tests.accuracy.comparator.pytest_plugin import (
     add_comparator_options,
     enforce_ci_guard,

@@ -8,6 +8,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import numpy as np
+
 from tests.accuracy.comparator.policies import (
     compare_binary_mask,
     compare_class_map,
@@ -64,7 +65,10 @@ def test_instance_shuffle_pass(tmp_path: Path) -> None:
 
     shuffled = masks[[2, 0, 1]].copy()
     result = compare_instance_masks(
-        shuffled, p, actual_bboxes=None, ref_bboxes=None,
+        shuffled,
+        p,
+        actual_bboxes=None,
+        ref_bboxes=None,
     )
     assert result.passed, result.message
     assert "3 matched pairs" in result.message
@@ -77,7 +81,10 @@ def test_dropped_instance_fails(tmp_path: Path) -> None:
 
     dropped = masks[:2].copy()
     result = compare_instance_masks(
-        dropped, p, actual_bboxes=None, ref_bboxes=None,
+        dropped,
+        p,
+        actual_bboxes=None,
+        ref_bboxes=None,
     )
     assert not result.passed
     assert "count mismatch" in result.message.lower()

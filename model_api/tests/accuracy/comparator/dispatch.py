@@ -8,8 +8,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-from tests.accuracy.comparator.policies import ComparisonPolicy
-
 from model_api.models.result.anomaly import AnomalyResult
 from model_api.models.result.classification import ClassificationResult
 from model_api.models.result.detection import DetectionResult
@@ -24,6 +22,8 @@ from model_api.models.result.visual_prompting import (
     VisualPromptingResult,
     ZSLVisualPromptingResult,
 )
+
+from tests.accuracy.comparator.policies import ComparisonPolicy
 
 
 @dataclass

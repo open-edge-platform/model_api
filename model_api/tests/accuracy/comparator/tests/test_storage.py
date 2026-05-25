@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
+
 from tests.accuracy.comparator.storage import (
     ReferenceBundle,
     build_generated_by,

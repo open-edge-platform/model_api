@@ -7,9 +7,6 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
-from tests.accuracy.comparator.dispatch import dispatch
-from tests.accuracy.comparator.policies import ComparisonPolicy
-
 from model_api.models.result.anomaly import AnomalyResult
 from model_api.models.result.base import Result
 from model_api.models.result.classification import ClassificationResult, Label
@@ -25,6 +22,9 @@ from model_api.models.result.visual_prompting import (
     VisualPromptingResult,
     ZSLVisualPromptingResult,
 )
+
+from tests.accuracy.comparator.dispatch import dispatch
+from tests.accuracy.comparator.policies import ComparisonPolicy
 
 
 def _assert_policies(specs, expected):

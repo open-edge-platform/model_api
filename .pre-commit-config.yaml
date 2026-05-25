@@ -98,3 +98,5 @@ repos:
           ]
         files: ^model_converter/.*\.py$
         additional_dependencies: ["bandit[toml]"]
+
+exclude: ^model_api/tests/accuracy/references/.*$

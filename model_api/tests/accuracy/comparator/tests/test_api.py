@@ -7,13 +7,13 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
+from model_api.models.result.anomaly import AnomalyResult
+from model_api.models.result.detection import DetectionResult
+
 from tests.accuracy.comparator import (
     assert_result_matches_reference,
     generate_reference,
 )
-
-from model_api.models.result.anomaly import AnomalyResult
-from model_api.models.result.detection import DetectionResult
 
 
 def _make_anomaly_result(seed: int = 0, pred_score: float = 0.85) -> AnomalyResult:

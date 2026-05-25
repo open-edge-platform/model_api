@@ -74,10 +74,7 @@ def measure_noise_floor(
             for key in out:
                 collected[key] = []
         elif set(out.keys()) != set(collected.keys()):
-            msg = (
-                f"Inconsistent field names on run {i}: "
-                f"expected {sorted(collected)}, got {sorted(out)}"
-            )
+            msg = f"Inconsistent field names on run {i}: expected {sorted(collected)}, got {sorted(out)}"
             raise ValueError(msg)
         for key, value in out.items():
             collected[key].append(float(value))

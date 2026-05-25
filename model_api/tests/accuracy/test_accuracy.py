@@ -6,6 +6,7 @@
 
 See tests/accuracy/comparator/README.md for the comparison framework documentation.
 """
+
 import ast
 import contextlib
 import json
@@ -16,12 +17,6 @@ import cv2
 import numpy as np
 import onnx
 import pytest
-from tests.accuracy.comparator import (
-    assert_result_matches_reference,
-    generate_reference,
-)
-from tests.accuracy.comparator.dispatch import dispatch
-
 from model_api.adapters.onnx_adapter import ONNXRuntimeAdapter
 from model_api.adapters.openvino_adapter import OpenvinoAdapter, create_core
 from model_api.adapters.utils import load_parameters_from_onnx
@@ -42,6 +37,7 @@ from model_api.models import (
     InstanceSegmentationResult,
     KeypointDetectionModel,
     MaskRCNNModel,
+    Model,
     PredictedMask,
     Prompt,
     SAMDecoder,
@@ -52,7 +48,7 @@ from model_api.models import (
     VisualPromptingResult,
     ZSLVisualPromptingResult,
     add_rotated_rects,
-    get_contours, Model,
+    get_contours,
 )
 from model_api.tilers import (
     DetectionTiler,
@@ -60,6 +56,12 @@ from model_api.tilers import (
     SemanticSegmentationTiler,
 )
 from model_api.visualizer import Visualizer
+
+from tests.accuracy.comparator import (
+    assert_result_matches_reference,
+    generate_reference,
+)
+from tests.accuracy.comparator.dispatch import dispatch
 
 # Mapping of model type strings to actual classes for security
 MODEL_TYPE_MAPPING = {
@@ -87,7 +89,14 @@ def read_config(fname):
         return json.load(f)
 
 
-def create_models(model_type, model_path, download_dir, force_onnx_adapter: bool=False, device="CPU", configuration=None) -> list[Model]:
+def create_models(
+    model_type,
+    model_path,
+    download_dir,
+    force_onnx_adapter: bool = False,
+    device="CPU",
+    configuration=None,
+) -> list[Model]:
     if model_path.endswith(".onnx") and force_onnx_adapter:
         wrapper_type = model_type.get_model_class(
             load_parameters_from_onnx(onnx.load(model_path))["model_info"]["model_type"],
@@ -300,13 +309,19 @@ def create_detection_result_dump(outputs: DetectionResult) -> dict:
 
 
 def test_image_models(  # noqa: C901
-    data, device, dump, result, model_data, results_dir, reference_mode,
+    data,
+    device,
+    dump,
+    result,
+    model_data,
+    results_dir,
+    reference_mode,
 ):
     name = model_data["name"]
     if name.endswith((".xml", ".onnx")):
         name = f"{data}/{name}"
 
-    force_onnx_adapter: bool = "True" == model_data.get("force_ort", "False")
+    force_onnx_adapter: bool = model_data.get("force_ort", "False") == "True"
 
     for model in create_models(
         MODEL_TYPE_MAPPING[model_data["type"]],
@@ -406,14 +421,15 @@ def test_image_models(  # noqa: C901
             use_comparator = _result_supported_by_comparator(outputs)
             if use_comparator:
                 reference_dir_base = Path(results_dir) if results_dir else Path(__file__).resolve().parent
-                ref_dir = reference_dir_base  / "references" / test_data["reference_dir"]  # if this fails, run `uv --directory model_api run tests/accuracy/comparator/scripts/migrate_model_data.py`
+                # if this fails, run following command to generate reference data:
+                # `uv --directory model_api run tests/accuracy/comparator/scripts/migrate_model_data.py`
+                ref_dir = reference_dir_base / "references" / test_data["reference_dir"]
 
                 if reference_mode == "update":
                     test_id = f"{_slugify(name)}::{_slugify(test_data['image'])}"
                     generate_reference(outputs, ref_dir, test_id=test_id, overwrite=True)
                     continue
-                else:
-                    assert_result_matches_reference(outputs, ref_dir)
+                assert_result_matches_reference(outputs, ref_dir)
 
             if isinstance(outputs, ClassificationResult):
                 image_result = create_classification_result_dump(outputs)
@@ -436,10 +452,10 @@ def test_image_models(  # noqa: C901
                     # That doesn't hold for some models
                     output_str += "; ".join(str(contour) for contour in get_contours(outputs)) + "; "
                 image_result = [output_str]
-            elif isinstance(outputs, AnomalyResult):
-                output_str = str(outputs)
-                image_result = [output_str]
-            elif isinstance(outputs, (ZSLVisualPromptingResult, VisualPromptingResult, DetectedKeypoints)):
+            elif isinstance(
+                outputs,
+                (AnomalyResult, ZSLVisualPromptingResult, VisualPromptingResult, DetectedKeypoints),
+            ):
                 output_str = str(outputs)
                 image_result = [output_str]
             else:

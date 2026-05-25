@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import numpy as np
+
 from tests.accuracy.comparator.matching import match_by_bbox_iou, match_by_mask_iou
 
 

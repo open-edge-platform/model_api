@@ -3,8 +3,6 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-# ruff: noqa: RUF067
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -61,7 +59,7 @@ def _to_json_safe(value: Any) -> Any:
             "__class__": "Label",
             "id": _to_json_safe(value.id),
             "name": value.name,
-            "confidence": _to_json_safe(value.confidence)
+            "confidence": _to_json_safe(value.confidence),
         }
     return value
 
@@ -82,10 +80,7 @@ def _from_json_safe(value: Any) -> Any:
 
 def _coerce_mask_for_save(arr: np.ndarray | list) -> np.ndarray:
     if isinstance(arr, list):
-        if len(arr) == 1:
-            arr = arr[0]
-        else:
-            arr = np.stack(arr)
+        arr = arr[0] if len(arr) == 1 else np.stack(arr)
     arr = np.asarray(arr)
     if arr.ndim == 4 and arr.shape[0] == 1:
         arr = arr.squeeze(0)
@@ -151,10 +146,7 @@ def _compare_mask_field(
     spec_kwargs: dict,
 ) -> FieldResult:
     if isinstance(spec_value, list):
-        if len(spec_value) == 1:
-            actual = np.asarray(spec_value[0])
-        else:
-            actual = np.stack(spec_value)
+        actual = np.asarray(spec_value[0]) if len(spec_value) == 1 else np.stack(spec_value)
     else:
         actual = np.asarray(spec_value)
     if actual.ndim == 4 and actual.shape[0] == 1:
@@ -169,9 +161,8 @@ def _compare_mask_field(
             **kw,
         )
     kw = {k: v for k, v in spec_kwargs.items() if k == "iou_threshold"}
-    is_class_map = (
-        actual.ndim == 2
-        and (actual.dtype == np.uint16 or (np.issubdtype(actual.dtype, np.integer) and actual.max(initial=0) > 1))
+    is_class_map = actual.ndim == 2 and (
+        actual.dtype == np.uint16 or (np.issubdtype(actual.dtype, np.integer) and actual.max(initial=0) > 1)
     )
     if is_class_map:
         return compare_class_map(actual, mask_path, **kw)
@@ -200,17 +191,21 @@ def assert_result_matches_reference(
             ref = _from_json_safe(ref_raw) if ref_raw is not None else None
             kw = {k: v for k, v in spec.kwargs.items() if k in {"atol", "rtol"}}
             field_results[field_name] = compare_numeric_close(
-                spec.value, ref, field_name=field_name, **kw,
+                spec.value,
+                ref,
+                field_name=field_name,
+                **kw,
             )
         elif spec.policy is ComparisonPolicy.STAT_FINGERPRINT:
             ref_fp = bundle.result_json.get(field_name)
             kw = {
-                k: v
-                for k, v in spec.kwargs.items()
-                if k in {"atol", "rtol", "iou_threshold_thumbnail", "sample_atol"}
+                k: v for k, v in spec.kwargs.items() if k in {"atol", "rtol", "iou_threshold_thumbnail", "sample_atol"}
             }
             field_results[field_name] = compare_fingerprint(
-                spec.value, ref_fp, field_name=field_name, **kw,
+                spec.value,
+                ref_fp,
+                field_name=field_name,
+                **kw,
             )
         elif spec.policy is ComparisonPolicy.MASK_IOU:
             if spec.value is None and bundle.result_json.get(field_name, "missing") is None:
@@ -239,7 +234,10 @@ def assert_result_matches_reference(
                 )
                 continue
             field_results[field_name] = _compare_mask_field(
-                field_name, spec.value, mask_path, spec.kwargs,
+                field_name,
+                spec.value,
+                mask_path,
+                spec.kwargs,
             )
 
     passed = all(fr.passed for fr in field_results.values())

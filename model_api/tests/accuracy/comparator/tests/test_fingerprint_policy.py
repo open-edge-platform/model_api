@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import numpy as np
+
 from tests.accuracy.comparator.fingerprint import compute_fingerprint
 from tests.accuracy.comparator.policies import ComparisonPolicy, compare_fingerprint
 

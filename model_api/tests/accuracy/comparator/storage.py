@@ -9,10 +9,8 @@ import datetime
 import json
 import platform
 import socket
-import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
-from shutil import which
 
 import numpy as np
 from PIL import Image
@@ -90,11 +88,7 @@ def compute_class_map_iou(
     if pred.shape != ref.shape:
         msg = f"shape mismatch: {pred.shape} vs {ref.shape}"
         raise ValueError(msg)
-    classes = (
-        np.union1d(np.unique(pred), np.unique(ref))
-        if num_classes is None
-        else np.arange(num_classes)
-    )
+    classes = np.union1d(np.unique(pred), np.unique(ref)) if num_classes is None else np.arange(num_classes)
     ious: list[float] = []
     for c in classes:
         p = pred == c
@@ -122,20 +116,6 @@ class ReferenceBundle:
 def build_generated_by() -> dict:
     """Best-effort capture of environment provenance for a reference bundle."""
     try:
-        git_exe = which("git")
-        if git_exe:
-            git_commit = subprocess.run(  # noqa: S603
-                [git_exe, "rev-parse", "HEAD"],
-                capture_output=True,
-                text=True,
-                check=False,
-            ).stdout.strip() or "unknown"
-        else:
-            git_commit = "unknown"
-    except (OSError, subprocess.SubprocessError):
-        git_commit = "unknown"
-
-    try:
         import openvino  # type: ignore[import-not-found]
 
         openvino_version = getattr(openvino, "__version__", "unknown")
@@ -154,7 +134,6 @@ def build_generated_by() -> dict:
         "os": platform.platform(),
         "openvino_version": openvino_version,
         "model_api_version": model_api_version,
-        "git_commit": git_commit,
         "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "python_version": platform.python_version(),
     }

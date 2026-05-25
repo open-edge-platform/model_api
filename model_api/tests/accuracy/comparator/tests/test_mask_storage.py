@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
+
 from tests.accuracy.comparator.storage import (
     compute_class_map_iou,
     compute_mean_iou,
