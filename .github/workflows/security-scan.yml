@@ -30,6 +30,20 @@ jobs:
       contents: read
       security-events: write # Needed to upload the results to code-scanning dashboard
     steps:
+      - name: Harden the runner
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+        with:
+          disable-sudo: true
+          disable-telemetry: true
+          egress-policy: block
+          allowed-endpoints: >
+            api.github.com:443
+            files.pythonhosted.org:443
+            github.com:443
+            pypi.org:443
+            raw.githubusercontent.com:443
+            releases.astral.sh:443
+
       - &checkout
         name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -56,6 +70,20 @@ jobs:
       contents: read
       security-events: write # Needed to upload the results to code-scanning dashboard
     steps:
+      - name: Harden the runner
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+        with:
+          disable-sudo: true
+          disable-telemetry: true
+          egress-policy: block
+          allowed-endpoints: >
+            api.github.com:443
+            files.pythonhosted.org:443
+            github.com:443
+            pypi.org:443
+            raw.githubusercontent.com:443
+            releases.astral.sh:443
+
       - *checkout
 
       - name: Run Bandit scan
@@ -65,6 +93,7 @@ jobs:
           severity-level: "LOW"
           confidence-level: "LOW"
           config_file: "${{ matrix.project }}/pyproject.toml"
+          artifact-name: "bandit-results-${{ matrix.project }}"
           fail-on-findings: ${{ (github.event_name == 'pull_request' || github.event_name == 'merge_group') && 'true' || 'false' }}
 
   bandit-scan:
@@ -87,6 +116,21 @@ jobs:
       contents: read
       security-events: write # Needed to upload the results to code-scanning dashboard
     steps:
+      - name: Harden the runner
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+        with:
+          disable-sudo: true
+          disable-telemetry: true
+          egress-policy: block
+          allowed-endpoints: >
+            api.github.com:443
+            check.trivy.dev:443
+            get.trivy.dev:443
+            github.com:443
+            mirror.gcr.io:443
+            raw.githubusercontent.com:443
+            release-assets.githubusercontent.com:443
+
       - *checkout
 
       - name: Run Trivy scan
@@ -106,11 +150,25 @@ jobs:
       contents: read
       security-events: write # Needed to upload the results to code-scanning dashboard
     steps:
+      - name: Harden the runner
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+        with:
+          disable-sudo: true
+          disable-telemetry: true
+          egress-policy: block
+          allowed-endpoints: >
+            api.github.com:443
+            files.pythonhosted.org:443
+            github.com:443
+            pypi.org:443
+            releases.astral.sh:443
+            semgrep.dev:443
+
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
-          fetch-depth: 0
+          fetch-depth: 0 # needed to get the list of changed files for semgrep
 
       - name: Run Semgrep scan
         uses: open-edge-platform/geti-ci/actions/semgrep@6fe3ccd4f702a56614487b4aa3a414c4fe5221bf
