@@ -420,10 +420,9 @@ def test_image_models(  # noqa: C901
 
             use_comparator = _result_supported_by_comparator(outputs)
             if use_comparator:
-                reference_dir_base = Path(results_dir) if results_dir else Path(__file__).resolve().parent
                 # if this fails, run following command to generate reference data:
                 # `uv --directory model_api run tests/accuracy/comparator/scripts/migrate_model_data.py`
-                ref_dir = reference_dir_base / "references" / test_data["reference_dir"]
+                ref_dir = Path(__file__).resolve().parent / "references" / test_data["reference_dir"]
 
                 if reference_mode == "update":
                     test_id = f"{_slugify(name)}::{_slugify(test_data['image'])}"

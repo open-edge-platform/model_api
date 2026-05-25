@@ -213,7 +213,7 @@ def _compare_single_fingerprint(  # noqa: C901
 ) -> FieldResult:
     """Compare a single array against a single reference fingerprint."""
     actual_fp = compute_fingerprint(actual_array)
-    if actual_fp is None:
+    if actual_fp is None or isinstance(actual_fp, list):
         return FieldResult(
             policy=ComparisonPolicy.STAT_FINGERPRINT,
             passed=False,
@@ -493,6 +493,10 @@ def compare_fingerprint(
             tolerance=max(atol, rtol),
             pct_over_budget=None,
         )
+
+    # Type narrowing: after the if actual_is_list block, we know these are not lists
+    assert isinstance(actual_array, np.ndarray), f"Expected np.ndarray, got {type(actual_array)}"
+    assert isinstance(reference_fingerprint, dict), f"Expected dict, got {type(reference_fingerprint)}"
 
     return _compare_single_fingerprint(
         actual_array,

@@ -5,6 +5,8 @@
 
 from __future__ import annotations
 
+from typing import Any, cast
+
 import cv2
 import numpy as np
 
@@ -46,7 +48,8 @@ def _compute_thumbnail(array: np.ndarray) -> list[list[float]] | None:
         return None
     plane = np.ascontiguousarray(plane.astype(np.float32))
     resized = cv2.resize(plane, (_THUMB_SIZE, _THUMB_SIZE), interpolation=cv2.INTER_AREA)
-    return [[_round3(v) for v in row] for row in resized.tolist()]
+    rows = cast(list[list[float]], resized.tolist())
+    return [[_round3(v) for v in row] for row in rows]
 
 
 def compute_fingerprint(array: np.ndarray | list[np.ndarray] | None) -> dict | list[dict] | None:
@@ -62,7 +65,12 @@ def compute_fingerprint(array: np.ndarray | list[np.ndarray] | None) -> dict | l
         return None
 
     if isinstance(array, list):
-        return [compute_fingerprint(arr) for arr in array]
+        fps: list[dict[str, Any]] = []
+        for arr in array:
+            fp = compute_fingerprint(arr)
+            if isinstance(fp, dict):
+                fps.append(fp)
+        return fps
 
     shape = [int(d) for d in array.shape]
     dtype = str(array.dtype)
