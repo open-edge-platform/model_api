@@ -22,6 +22,7 @@ from .policies import (
     compare_exact,
     compare_fingerprint,
     compare_instance_masks,
+    compare_labels,
     compare_numeric_close,
 )
 from .storage import (
@@ -186,6 +187,10 @@ def assert_result_matches_reference(
         if spec.policy is ComparisonPolicy.EXACT:
             ref = _from_json_safe(bundle.result_json.get(field_name))
             field_results[field_name] = compare_exact(spec.value, ref, field_name=field_name)
+        elif spec.policy is ComparisonPolicy.LABEL_CLOSE:
+            ref = _from_json_safe(bundle.result_json.get(field_name))
+            kw = {k: v for k, v in spec.kwargs.items() if k in {"atol", "rtol"}}
+            field_results[field_name] = compare_labels(spec.value, ref, field_name=field_name, **kw)
         elif spec.policy is ComparisonPolicy.NUMERIC_CLOSE:
             ref_raw = bundle.result_json.get(field_name)
             ref = _from_json_safe(ref_raw) if ref_raw is not None else None

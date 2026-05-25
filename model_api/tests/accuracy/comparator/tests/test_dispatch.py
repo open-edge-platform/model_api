@@ -46,7 +46,7 @@ def test_classification_result_dispatch():
     _assert_policies(
         specs,
         {
-            "top_labels": ComparisonPolicy.EXACT,
+            "top_labels": ComparisonPolicy.LABEL_CLOSE,
             "raw_scores": ComparisonPolicy.NUMERIC_CLOSE,
             "saliency_map": ComparisonPolicy.STAT_FINGERPRINT,
             "feature_vector": ComparisonPolicy.STAT_FINGERPRINT,

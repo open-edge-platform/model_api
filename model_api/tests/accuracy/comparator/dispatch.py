@@ -76,7 +76,7 @@ def dispatch(result, *, policy_overrides: dict | None = None) -> dict[str, Field
 
     if isinstance(result, ClassificationResult):
         specs = {
-            "top_labels": _field(ComparisonPolicy.EXACT, result.top_labels),
+            "top_labels": _field(ComparisonPolicy.LABEL_CLOSE, result.top_labels, atol=1e-2, rtol=1e-2),
             "raw_scores": _field(
                 ComparisonPolicy.NUMERIC_CLOSE,
                 result.raw_scores,

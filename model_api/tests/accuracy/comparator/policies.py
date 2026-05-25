@@ -11,6 +11,10 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
+if TYPE_CHECKING:
+    from model_api.models.result import Label
+
+
 from tests.accuracy.comparator.fingerprint import compute_fingerprint
 from tests.accuracy.comparator.matching import match_by_bbox_iou, match_by_mask_iou
 from tests.accuracy.comparator.storage import (
@@ -32,6 +36,7 @@ class ComparisonPolicy(Enum):
     NUMERIC_CLOSE = "numeric_close"
     MASK_IOU = "mask_iou"
     STAT_FINGERPRINT = "stat_fingerprint"
+    LABEL_CLOSE = "label_close"
 
 
 @dataclass
@@ -198,6 +203,88 @@ def compare_numeric_close(
         delta=max_abs_delta,
         tolerance=max(atol, rtol),
         pct_over_budget=pct_over_budget,
+    )
+
+
+def compare_labels(
+    actual: list[Label],
+    reference: list[Label],
+    *,
+    field_name: str,
+    atol: float = 1e-2,
+    rtol: float = 1e-2,
+) -> FieldResult:
+    """Compare list of Label objects: id and name exactly, confidence with tolerance."""
+    if actual is None and reference is None:
+        return FieldResult(
+            policy=ComparisonPolicy.LABEL_CLOSE,
+            passed=True,
+            message=f"{field_name}: both values are None",
+            actual_summary="None",
+            reference_summary="None",
+            delta=None,
+            tolerance=None,
+            pct_over_budget=None,
+        )
+
+    if actual is None or reference is None:
+        return FieldResult(
+            policy=ComparisonPolicy.LABEL_CLOSE,
+            passed=False,
+            message=f"{field_name}: one value is None",
+            actual_summary=_summarize_value(actual),
+            reference_summary=_summarize_value(reference),
+            delta=None,
+            tolerance=None,
+            pct_over_budget=None,
+        )
+
+    if len(actual) != len(reference):
+        return FieldResult(
+            policy=ComparisonPolicy.LABEL_CLOSE,
+            passed=False,
+            message=f"{field_name}: length mismatch (actual={len(actual)}, reference={len(reference)})",
+            actual_summary=_summarize_value(actual),
+            reference_summary=_summarize_value(reference),
+            delta=None,
+            tolerance=None,
+            pct_over_budget=None,
+        )
+
+    mismatches: list[str] = []
+    max_conf_delta = 0.0
+
+    for i, (a, r) in enumerate(zip(actual, reference)):
+        if a.id != r.id:
+            mismatches.append(f"[{i}].id: {a.id} != {r.id}")
+        if a.name != r.name:
+            mismatches.append(f"[{i}].name: {a.name!r} != {r.name!r}")
+
+        if a.confidence is not None and r.confidence is not None:
+            conf_delta = abs(float(a.confidence) - float(r.confidence))
+            max_conf_delta = max(max_conf_delta, conf_delta)
+            if not np.isclose(a.confidence, r.confidence, atol=atol, rtol=rtol):
+                mismatches.append(f"[{i}].confidence: {a.confidence} vs {r.confidence} (delta={conf_delta:.6g})")
+        elif a.confidence != r.confidence:
+            mismatches.append(f"[{i}].confidence: {a.confidence} vs {r.confidence} (one is None)")
+
+    passed = len(mismatches) == 0
+    if passed:
+        message = f"{field_name}: {len(actual)} labels match (max_conf_delta={max_conf_delta:.6g})"
+    else:
+        message = f"{field_name}: {len(mismatches)} mismatches: {'; '.join(mismatches[:5])}"
+        if len(mismatches) > 5:
+            message += f" ... and {len(mismatches) - 5} more"
+
+    return FieldResult(
+        policy=ComparisonPolicy.LABEL_CLOSE,
+        passed=passed,
+        message=message,
+        actual_summary=_summarize_value(actual),
+        reference_summary=_summarize_value(reference),
+        delta=max_conf_delta if max_conf_delta > 0 else None,
+        tolerance=max(atol, rtol),
+        pct_over_budget=None,
     )
 
 

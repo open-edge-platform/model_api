@@ -35,11 +35,6 @@ class Label:
     def __str__(self) -> str:
         return f"{self.id} ({self.name}): {self.confidence:.3f}"
 
-    def __eq__(self, other):
-        if not isinstance(other, Label):
-            return NotImplemented
-        return self.id == other.id and self.name == other.name and self.confidence == other.confidence
-
 
 class ClassificationResult(Result):
     """Results for classification models."""
