@@ -5,7 +5,6 @@
 
 """Shared fixtures for model_converter unit tests."""
 
-from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest

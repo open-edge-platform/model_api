@@ -45,9 +45,11 @@ class TestMainModule:
 
     def test_calls_main(self):
         """__main__ calls cli.main() and sys.exit."""
-        with patch("model_converter.cli.main", return_value=0) as mock_main:
-            with patch.object(sys, "exit") as mock_exit:
-                runpy.run_module("model_converter", run_name="__main__", alter_sys=True)
+        with (
+            patch("model_converter.cli.main", return_value=0) as mock_main,
+            patch.object(sys, "exit") as mock_exit,
+        ):
+            runpy.run_module("model_converter", run_name="__main__", alter_sys=True)
 
         mock_main.assert_called_once()
         mock_exit.assert_called_once_with(0)
@@ -58,9 +60,11 @@ class TestModelConverterScript:
 
     def test_calls_main_when_run(self):
         """model_converter.py calls main() when run as __main__."""
-        with patch("model_converter.cli.main", return_value=0) as mock_main:
-            with patch.object(sys, "exit") as mock_exit:
-                runpy.run_module("model_converter.model_converter", run_name="__main__", alter_sys=True)
+        with (
+            patch("model_converter.cli.main", return_value=0) as mock_main,
+            patch.object(sys, "exit") as mock_exit,
+        ):
+            runpy.run_module("model_converter.model_converter", run_name="__main__", alter_sys=True)
 
         mock_main.assert_called_once()
         mock_exit.assert_called_once_with(0)

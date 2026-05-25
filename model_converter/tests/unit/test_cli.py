@@ -8,14 +8,13 @@
 import json
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, mock_open, patch
+from unittest.mock import MagicMock, patch
 
 import cv2
 import numpy as np
 import pytest
 import torch
 import torch.nn as nn
-
 from model_converter.cli import ModelConverter, list_models, main
 
 
@@ -27,7 +26,7 @@ class TestModelConverterInit:
         output_dir = tmp_path / "output"
         cache_dir = tmp_path / "cache"
 
-        converter = ModelConverter(output_dir=output_dir, cache_dir=cache_dir)
+        ModelConverter(output_dir=output_dir, cache_dir=cache_dir)
 
         assert output_dir.exists()
         assert cache_dir.exists()
@@ -66,14 +65,17 @@ class TestGetLabels:
 
     def test_imagenet1k_v1(self, converter):
         """get_labels returns ImageNet1K labels."""
-        with patch("model_converter.cli.importlib") as _:
-            mock_categories = ["tabby cat", "golden retriever", "great white shark"]
-            with patch.dict("sys.modules", {"torchvision.models._meta": MagicMock(_IMAGENET_CATEGORIES=mock_categories)}):
-                from torchvision.models._meta import _IMAGENET_CATEGORIES
-
-                with patch("model_converter.cli.ModelConverter.get_labels", wraps=converter.get_labels):
-                    # Directly test the code path
-                    pass
+        mock_categories = ["tabby cat", "golden retriever", "great white shark"]
+        with (
+            patch("model_converter.cli.importlib") as _,
+            patch.dict(
+                "sys.modules",
+                {"torchvision.models._meta": MagicMock(_IMAGENET_CATEGORIES=mock_categories)},
+            ),
+            patch("model_converter.cli.ModelConverter.get_labels", wraps=converter.get_labels),
+        ):
+            # Directly test the code path
+            pass
 
         # Test with actual mocking of the import
         with patch("torchvision.models._meta._IMAGENET_CATEGORIES", ["tabby cat", "golden retriever"], create=True):
@@ -121,7 +123,7 @@ class TestLoadModelClass:
 
     def test_import_failure(self, converter):
         """load_model_class raises on invalid path."""
-        with pytest.raises(Exception):
+        with pytest.raises(ModuleNotFoundError):
             converter.load_model_class("nonexistent.module.Class")
 
 
@@ -141,7 +143,7 @@ class TestLoadCheckpoint:
     def test_load_failure(self, converter, tmp_path):
         """load_checkpoint raises on invalid file."""
         bad_path = tmp_path / "nonexistent.pth"
-        with pytest.raises(Exception):
+        with pytest.raises(FileNotFoundError):
             converter.load_checkpoint(bad_path)
 
 
@@ -206,13 +208,15 @@ class TestLoadHuggingfaceModel:
 
     def test_load_failure(self, converter):
         """load_huggingface_model raises on failure."""
-        with patch("timm.create_model", side_effect=RuntimeError("Connection error")):
-            with pytest.raises(RuntimeError, match="Connection error"):
-                converter.load_huggingface_model(
-                    repo_id="timm/resnet50",
-                    revision="abc123",
-                    model_library="timm",
-                )
+        with (
+            patch("timm.create_model", side_effect=RuntimeError("Connection error")),
+            pytest.raises(RuntimeError, match="Connection error"),
+        ):
+            converter.load_huggingface_model(
+                repo_id="timm/resnet50",
+                revision="abc123",
+                model_library="timm",
+            )
 
 
 class TestCreateModel:
@@ -324,7 +328,6 @@ class TestCopyReadme:
         output_folder = tmp_path / "model-fp16-ov"
         output_folder.mkdir()
 
-        template_dir = Path(converter.__class__.__module__).parent
         # We mock the template file reading
         template_content = "# <<model_name>>\nLicense: <<license>>\nLink: <<license_link>>\nDocs: <<docs>>"
 
@@ -336,9 +339,11 @@ class TestCopyReadme:
             "model_library": "timm",
         }
 
-        with patch.object(Path, "exists", return_value=True):
-            with patch.object(Path, "read_text", return_value=template_content):
-                converter.copy_readme(config, output_folder, variant="fp16")
+        with (
+            patch.object(Path, "exists", return_value=True),
+            patch.object(Path, "read_text", return_value=template_content),
+        ):
+            converter.copy_readme(config, output_folder, variant="fp16")
 
         readme = output_folder / "README.md"
         assert readme.exists()
@@ -419,9 +424,11 @@ class TestCopyReadme:
             "model_library": "timm",
         }
 
-        with patch.object(Path, "exists", return_value=True):
-            with patch.object(Path, "read_text", return_value=template_content):
-                converter.copy_readme(config, output_folder, variant="fp16")
+        with (
+            patch.object(Path, "exists", return_value=True),
+            patch.object(Path, "read_text", return_value=template_content),
+        ):
+            converter.copy_readme(config, output_folder, variant="fp16")
 
     def test_none_value_in_config(self, converter, tmp_path):
         """copy_readme skips None values in config placeholders."""
@@ -437,9 +444,11 @@ class TestCopyReadme:
             "optional_field": None,
         }
 
-        with patch.object(Path, "exists", return_value=True):
-            with patch.object(Path, "read_text", return_value=template_content):
-                converter.copy_readme(config, output_folder, variant="fp16")
+        with (
+            patch.object(Path, "exists", return_value=True),
+            patch.object(Path, "read_text", return_value=template_content),
+        ):
+            converter.copy_readme(config, output_folder, variant="fp16")
 
 
 class TestCollectDatasetEntries:
@@ -586,7 +595,7 @@ class TestCreateCalibrationDataset:
             scale_values="58.395 57.12 57.375",
             return_labels=True,
         )
-        images, labels = result
+        images, _labels = result
         assert len(images) == 2
 
     def test_empty_dataset(self, tmp_path):
@@ -616,7 +625,7 @@ class TestCreateCalibrationDataset:
             subset_size=1,
             return_labels=True,
         )
-        images, labels = result
+        images, _labels = result
         assert len(images) == 1
 
     def test_image_processing_error(self, tmp_path):
@@ -639,7 +648,7 @@ class TestCreateCalibrationDataset:
                 input_shape=[1, 3, 224, 224],
                 return_labels=True,
             )
-        images, labels = result
+        images, _labels = result
         assert len(images) == 0
 
     def test_image_processing_error_no_labels(self, tmp_path):
@@ -660,7 +669,7 @@ class TestCreateCalibrationDataset:
                 input_shape=[1, 3, 224, 224],
                 return_labels=False,
             )
-        images, labels = result
+        images, _labels = result
         assert len(images) == 0
 
     def test_image_returns_none_with_labels(self, tmp_path):
@@ -681,7 +690,7 @@ class TestCreateCalibrationDataset:
                 input_shape=[1, 3, 224, 224],
                 return_labels=True,
             )
-        images, labels = result
+        images, _labels = result
         assert len(images) == 0
 
     def test_image_returns_none_without_labels(self, tmp_path):
@@ -702,7 +711,7 @@ class TestCreateCalibrationDataset:
                 input_shape=[1, 3, 224, 224],
                 return_labels=False,
             )
-        images, labels = result
+        images, _labels = result
         assert len(images) == 0
 
     def test_progress_logging_with_labels(self, tmp_path):
@@ -726,7 +735,7 @@ class TestCreateCalibrationDataset:
             input_shape=[1, 3, 10, 10],
             return_labels=True,
         )
-        images, labels = result
+        images, _labels = result
         assert len(images) == 51
 
     def test_progress_logging_without_labels(self, tmp_path):
@@ -749,12 +758,11 @@ class TestCreateCalibrationDataset:
             input_shape=[1, 3, 10, 10],
             return_labels=False,
         )
-        images, labels = result
+        images, _labels = result
         assert len(images) == 51
 
     def test_dataset_dir_removed_after_init_check(self, tmp_path):
         """create_calibration_dataset handles dir removed between checks."""
-        import shutil
 
         dataset_path = tmp_path / "dataset"
         dataset_path.mkdir()
@@ -773,9 +781,7 @@ class TestCreateCalibrationDataset:
         def mock_exists(self_path):
             if self_path == dataset_path:
                 call_count[0] += 1
-                if call_count[0] == 1:
-                    return True  # pass first check
-                return False  # fail second check
+                return call_count[0] == 1
             return original_exists(self_path)
 
         with patch.object(Path, "exists", mock_exists):
@@ -814,7 +820,7 @@ class TestValidateModel:
                 labels=[1, 2],
             )
 
-        assert accuracy == 1.0
+        assert accuracy == pytest.approx(1.0)
 
     def test_partial_accuracy(self, converter, tmp_path):
         """validate_model returns partial accuracy."""
@@ -839,7 +845,7 @@ class TestValidateModel:
                 labels=[0, 1],
             )
 
-        assert accuracy == 0.5
+        assert accuracy == pytest.approx(0.5)
 
     def test_validation_failure(self, converter, tmp_path):
         """validate_model returns 0.0 on error."""
@@ -850,7 +856,7 @@ class TestValidateModel:
                 labels=[0],
             )
 
-        assert accuracy == 0.0
+        assert accuracy == pytest.approx(0.0)
 
 
 class TestQuantizeModel:
@@ -888,22 +894,24 @@ class TestQuantizeModel:
             list(gen)  # Consume the generator to cover lines 572-573
             return MagicMock()
 
-        with patch("openvino.Core", return_value=mock_core):
-            with patch("nncf.quantize", return_value=mock_quantized):
-                with patch("nncf.Dataset", side_effect=consume_dataset):
-                    with patch("nncf.QuantizationPreset") as mock_preset:
-                        mock_preset.MIXED = "mixed"
-                        mock_preset.PERFORMANCE = "performance"
-                        with patch("openvino.save_model"):
-                            with patch.object(Path, "exists", return_value=True):
-                                with patch("shutil.copy2"):
-                                    with patch.object(converter, "copy_readme"):
-                                        result = converter.quantize_model(
-                                            model_path=model_path,
-                                            calibration_data=calibration_data,
-                                            model_config=sample_model_config,
-                                            preset="mixed",
-                                        )
+        with (
+            patch("openvino.Core", return_value=mock_core),
+            patch("nncf.quantize", return_value=mock_quantized),
+            patch("nncf.Dataset", side_effect=consume_dataset),
+            patch("nncf.QuantizationPreset") as mock_preset,
+            patch("openvino.save_model"),
+            patch.object(Path, "exists", return_value=True),
+            patch("shutil.copy2"),
+            patch.object(converter, "copy_readme"),
+        ):
+            mock_preset.MIXED = "mixed"
+            mock_preset.PERFORMANCE = "performance"
+            result = converter.quantize_model(
+                model_path=model_path,
+                calibration_data=calibration_data,
+                model_config=sample_model_config,
+                preset="mixed",
+            )
 
         assert result != model_path  # Should return new quantized path
 
@@ -912,13 +920,15 @@ class TestQuantizeModel:
         model_path = tmp_path / "model.xml"
         calibration_data = [np.zeros((1, 3, 224, 224))]
 
-        with patch.dict("sys.modules", {"nncf": None}):
-            with patch("builtins.__import__", side_effect=ImportError("No module named 'nncf'")):
-                result = converter.quantize_model(
-                    model_path=model_path,
-                    calibration_data=calibration_data,
-                    model_config=sample_model_config,
-                )
+        with (
+            patch.dict("sys.modules", {"nncf": None}),
+            patch("builtins.__import__", side_effect=ImportError("No module named 'nncf'")),
+        ):
+            result = converter.quantize_model(
+                model_path=model_path,
+                calibration_data=calibration_data,
+                model_config=sample_model_config,
+            )
 
         assert result == model_path
 
@@ -943,23 +953,25 @@ class TestQuantizeModel:
             list(gen)
             return MagicMock()
 
-        with patch("openvino.Core", return_value=mock_core):
-            with patch("nncf.quantize", return_value=mock_quantized):
-                with patch("nncf.Dataset", side_effect=consume_dataset):
-                    with patch("nncf.QuantizationPreset") as mock_preset:
-                        mock_preset.MIXED = "mixed"
-                        with patch("openvino.save_model"):
-                            with patch.object(Path, "exists", return_value=True):
-                                with patch("shutil.copy2"):
-                                    with patch.object(converter, "copy_readme"):
-                                        with patch.object(converter, "validate_model", return_value=0.95):
-                                            result = converter.quantize_model(
-                                                model_path=model_path,
-                                                calibration_data=calibration_data,
-                                                model_config=sample_model_config,
-                                                validation_data=validation_data,
-                                                validation_labels=validation_labels,
-                                            )
+        with (
+            patch("openvino.Core", return_value=mock_core),
+            patch("nncf.quantize", return_value=mock_quantized),
+            patch("nncf.Dataset", side_effect=consume_dataset),
+            patch("nncf.QuantizationPreset") as mock_preset,
+            patch("openvino.save_model"),
+            patch.object(Path, "exists", return_value=True),
+            patch("shutil.copy2"),
+            patch.object(converter, "copy_readme"),
+            patch.object(converter, "validate_model", return_value=0.95),
+        ):
+            mock_preset.MIXED = "mixed"
+            converter.quantize_model(
+                model_path=model_path,
+                calibration_data=calibration_data,
+                model_config=sample_model_config,
+                validation_data=validation_data,
+                validation_labels=validation_labels,
+            )
 
     def test_quantization_runtime_error(self, converter, sample_model_config, tmp_path):
         """quantize_model handles runtime errors gracefully."""
@@ -994,20 +1006,22 @@ class TestExportToOpenvino:
 
         output_path = converter.output_dir / "test_model"
 
-        with patch("openvino.convert_model", return_value=mock_ov_model):
-            with patch("openvino.save_model"):
-                with patch.object(Path, "exists", return_value=True):
-                    with patch("shutil.copy2"):
-                        with patch.object(converter, "copy_readme"):
-                            fp16_path, fp32_path = converter.export_to_openvino(
-                                model=mock_model,
-                                input_shape=[1, 3, 224, 224],
-                                output_path=output_path,
-                                model_config=sample_model_config,
-                                input_names=["input"],
-                                output_names=["result"],
-                                metadata={("model_info", "model_type"): "Classification"},
-                            )
+        with (
+            patch("openvino.convert_model", return_value=mock_ov_model),
+            patch("openvino.save_model"),
+            patch.object(Path, "exists", return_value=True),
+            patch("shutil.copy2"),
+            patch.object(converter, "copy_readme"),
+        ):
+            fp16_path, _fp32_path = converter.export_to_openvino(
+                model=mock_model,
+                input_shape=[1, 3, 224, 224],
+                output_path=output_path,
+                model_config=sample_model_config,
+                input_names=["input"],
+                output_names=["result"],
+                metadata={("model_info", "model_type"): "Classification"},
+            )
 
         assert "fp16" in str(fp16_path.parent) or fp16_path.name == "test_model.xml"
 
@@ -1018,14 +1032,16 @@ class TestExportToOpenvino:
 
         output_path = converter.output_dir / "test_model"
 
-        with patch("openvino.convert_model", side_effect=RuntimeError("Conversion failed")):
-            with pytest.raises(RuntimeError, match="Conversion failed"):
-                converter.export_to_openvino(
-                    model=mock_model,
-                    input_shape=[1, 3, 224, 224],
-                    output_path=output_path,
-                    model_config=sample_model_config,
-                )
+        with (
+            patch("openvino.convert_model", side_effect=RuntimeError("Conversion failed")),
+            pytest.raises(RuntimeError, match="Conversion failed"),
+        ):
+            converter.export_to_openvino(
+                model=mock_model,
+                input_shape=[1, 3, 224, 224],
+                output_path=output_path,
+                model_config=sample_model_config,
+            )
 
 
 class TestPrepareModelForExport:
@@ -1138,11 +1154,13 @@ class TestLoadModelFromConfig:
         mock_model = MagicMock(spec=nn.Module)
         mock_model.eval.return_value = mock_model
 
-        with patch.object(converter._url_downloader, "download", return_value=tmp_path / "weights.pth"):
-            with patch.object(converter, "load_model_class", return_value=torch.nn.Module):
-                with patch.object(converter, "load_checkpoint", return_value={"model": mock_model}):
-                    with patch.object(converter, "create_model", return_value=mock_model):
-                        result = converter._load_model_from_config(config)
+        with (
+            patch.object(converter._url_downloader, "download", return_value=tmp_path / "weights.pth"),
+            patch.object(converter, "load_model_class", return_value=torch.nn.Module),
+            patch.object(converter, "load_checkpoint", return_value={"model": mock_model}),
+            patch.object(converter, "create_model", return_value=mock_model),
+        ):
+            result = converter._load_model_from_config(config)
 
         assert result is mock_model
 
@@ -1154,11 +1172,13 @@ class TestLoadModelFromConfig:
 
         mock_model = MagicMock(spec=nn.Module)
 
-        with patch.object(converter._url_downloader, "download", return_value=tmp_path / "weights.pth"):
-            with patch.object(converter, "load_model_class", return_value=torch.nn.Module) as mock_load_class:
-                with patch.object(converter, "load_checkpoint", return_value={}):
-                    with patch.object(converter, "create_model", return_value=mock_model):
-                        converter._load_model_from_config(config)
+        with (
+            patch.object(converter._url_downloader, "download", return_value=tmp_path / "weights.pth"),
+            patch.object(converter, "load_model_class", return_value=torch.nn.Module) as mock_load_class,
+            patch.object(converter, "load_checkpoint", return_value={}),
+            patch.object(converter, "create_model", return_value=mock_model),
+        ):
+            converter._load_model_from_config(config)
 
         mock_load_class.assert_called_once_with("torch.nn.Module")
 
@@ -1176,19 +1196,23 @@ class TestQuantizeAndCleanup:
         validation_data = [np.zeros((1, 3, 224, 224))]
         validation_labels = [0]
 
-        with patch.object(
-            converter, "create_calibration_dataset", return_value=(validation_data, validation_labels)
+        with (
+            patch.object(
+                converter,
+                "create_calibration_dataset",
+                return_value=(validation_data, validation_labels),
+            ),
+            patch.object(converter, "quantize_model"),
         ):
-            with patch.object(converter, "quantize_model"):
-                converter._quantize_and_cleanup(
-                    sample_model_config,
-                    fp32_path,
-                    model_type="Classification",
-                    input_shape=[1, 3, 224, 224],
-                    mean_values="123.675 116.28 103.53",
-                    scale_values="58.395 57.12 57.375",
-                    reverse_input_channels=True,
-                )
+            converter._quantize_and_cleanup(
+                sample_model_config,
+                fp32_path,
+                model_type="Classification",
+                input_shape=[1, 3, 224, 224],
+                mean_values="123.675 116.28 103.53",
+                scale_values="58.395 57.12 57.375",
+                reverse_input_channels=True,
+            )
 
         # FP32 files should be cleaned up
         assert not fp32_path.exists()
@@ -1202,17 +1226,19 @@ class TestQuantizeAndCleanup:
         config = {**sample_model_config, "labels": None}
         validation_data = [np.zeros((1, 3, 224, 224))]
 
-        with patch.object(converter, "create_calibration_dataset", return_value=(validation_data, [])):
-            with patch.object(converter, "quantize_model") as mock_quantize:
-                converter._quantize_and_cleanup(
-                    config,
-                    fp32_path,
-                    model_type="Detection",
-                    input_shape=[1, 3, 224, 224],
-                    mean_values="123.675 116.28 103.53",
-                    scale_values="58.395 57.12 57.375",
-                    reverse_input_channels=True,
-                )
+        with (
+            patch.object(converter, "create_calibration_dataset", return_value=(validation_data, [])),
+            patch.object(converter, "quantize_model") as mock_quantize,
+        ):
+            converter._quantize_and_cleanup(
+                config,
+                fp32_path,
+                model_type="Detection",
+                input_shape=[1, 3, 224, 224],
+                mean_values="123.675 116.28 103.53",
+                scale_values="58.395 57.12 57.375",
+                reverse_input_channels=True,
+            )
 
         # Quantize should be called with no validation data/labels
         mock_quantize.assert_called_once()
@@ -1225,17 +1251,19 @@ class TestQuantizeAndCleanup:
         fp32_path = tmp_path / "model_fp32.xml"
         fp32_path.write_text("<net/>")
 
-        with patch.object(converter, "create_calibration_dataset", return_value=([], [])):
-            with patch.object(converter, "quantize_model") as mock_quantize:
-                converter._quantize_and_cleanup(
-                    sample_model_config,
-                    fp32_path,
-                    model_type="Classification",
-                    input_shape=[1, 3, 224, 224],
-                    mean_values="123.675 116.28 103.53",
-                    scale_values="58.395 57.12 57.375",
-                    reverse_input_channels=True,
-                )
+        with (
+            patch.object(converter, "create_calibration_dataset", return_value=([], [])),
+            patch.object(converter, "quantize_model") as mock_quantize,
+        ):
+            converter._quantize_and_cleanup(
+                sample_model_config,
+                fp32_path,
+                model_type="Classification",
+                input_shape=[1, 3, 224, 224],
+                mean_values="123.675 116.28 103.53",
+                scale_values="58.395 57.12 57.375",
+                reverse_input_channels=True,
+            )
 
         mock_quantize.assert_not_called()
 
@@ -1244,19 +1272,21 @@ class TestQuantizeAndCleanup:
         fp32_path = tmp_path / "model_fp32.xml"
         fp32_path.write_text("<net/>")
 
-        with patch.object(converter, "create_calibration_dataset", return_value=([], [])):
-            with patch.object(Path, "exists", return_value=True):
-                with patch.object(Path, "unlink", side_effect=OSError("Permission denied")):
-                    # Should not raise
-                    converter._quantize_and_cleanup(
-                        sample_model_config,
-                        fp32_path,
-                        model_type="Classification",
-                        input_shape=[1, 3, 224, 224],
-                        mean_values="123.675 116.28 103.53",
-                        scale_values="58.395 57.12 57.375",
-                        reverse_input_channels=True,
-                    )
+        with (
+            patch.object(converter, "create_calibration_dataset", return_value=([], [])),
+            patch.object(Path, "exists", return_value=True),
+            patch.object(Path, "unlink", side_effect=OSError("Permission denied")),
+        ):
+            # Should not raise
+            converter._quantize_and_cleanup(
+                sample_model_config,
+                fp32_path,
+                model_type="Classification",
+                input_shape=[1, 3, 224, 224],
+                mean_values="123.675 116.28 103.53",
+                scale_values="58.395 57.12 57.375",
+                reverse_input_channels=True,
+            )
 
 
 class TestProcessModelConfig:
@@ -1296,10 +1326,12 @@ class TestProcessModelConfig:
         fp16_path = converter.output_dir / "test_model-fp16-ov" / "test_model.xml"
         fp32_path = converter.output_dir / "test_model-fp16-ov" / "test_model_fp32.xml"
 
-        with patch.object(converter, "_load_model_from_config", return_value=mock_model):
-            with patch.object(converter, "get_labels", return_value="cat dog"):
-                with patch.object(converter, "export_to_openvino", return_value=(fp16_path, fp32_path)):
-                    result = converter.process_model_config(sample_model_config)
+        with (
+            patch.object(converter, "_load_model_from_config", return_value=mock_model),
+            patch.object(converter, "get_labels", return_value="cat dog"),
+            patch.object(converter, "export_to_openvino", return_value=(fp16_path, fp32_path)),
+        ):
+            result = converter.process_model_config(sample_model_config)
 
         assert result is True
 
@@ -1316,11 +1348,13 @@ class TestProcessModelConfig:
         fp16_path = conv.output_dir / "test_model-fp16-ov" / "test_model.xml"
         fp32_path = conv.output_dir / "test_model-fp16-ov" / "test_model_fp32.xml"
 
-        with patch.object(conv, "_load_model_from_config", return_value=mock_model):
-            with patch.object(conv, "get_labels", return_value="cat dog"):
-                with patch.object(conv, "export_to_openvino", return_value=(fp16_path, fp32_path)):
-                    with patch.object(conv, "_quantize_and_cleanup"):
-                        result = conv.process_model_config(sample_model_config)
+        with (
+            patch.object(conv, "_load_model_from_config", return_value=mock_model),
+            patch.object(conv, "get_labels", return_value="cat dog"),
+            patch.object(conv, "export_to_openvino", return_value=(fp16_path, fp32_path)),
+            patch.object(conv, "_quantize_and_cleanup"),
+        ):
+            result = conv.process_model_config(sample_model_config)
 
         assert result is True
 
@@ -1347,9 +1381,11 @@ class TestProcessModelConfig:
         fp16_path = converter.output_dir / "test_model-fp16-ov" / "test_model.xml"
         fp32_path = converter.output_dir / "test_model-fp16-ov" / "test_model_fp32.xml"
 
-        with patch.object(converter, "_load_model_from_config", return_value=mock_model):
-            with patch.object(converter, "export_to_openvino", return_value=(fp16_path, fp32_path)):
-                result = converter.process_model_config(config)
+        with (
+            patch.object(converter, "_load_model_from_config", return_value=mock_model),
+            patch.object(converter, "export_to_openvino", return_value=(fp16_path, fp32_path)),
+        ):
+            result = converter.process_model_config(config)
 
         assert result is True
 
@@ -1359,10 +1395,12 @@ class TestProcessModelConfig:
         fp16_path = converter.output_dir / "test_model-fp16-ov" / "test_model.xml"
         fp32_path = converter.output_dir / "test_model-fp16-ov" / "test_model_fp32.xml"
 
-        with patch.object(converter, "_load_model_from_config", return_value=mock_model):
-            with patch.object(converter, "get_labels", return_value=None):
-                with patch.object(converter, "export_to_openvino", return_value=(fp16_path, fp32_path)):
-                    result = converter.process_model_config(sample_model_config)
+        with (
+            patch.object(converter, "_load_model_from_config", return_value=mock_model),
+            patch.object(converter, "get_labels", return_value=None),
+            patch.object(converter, "export_to_openvino", return_value=(fp16_path, fp32_path)),
+        ):
+            result = converter.process_model_config(sample_model_config)
 
         assert result is True
 
@@ -1384,9 +1422,11 @@ class TestProcessModelConfig:
         fp16_path = converter.output_dir / "test_model-fp16-ov" / "test_model.xml"
         fp32_path = converter.output_dir / "test_model-fp16-ov" / "test_model_fp32.xml"
 
-        with patch.object(converter, "_load_model_from_config", return_value=mock_model):
-            with patch.object(converter, "export_to_openvino", return_value=(fp16_path, fp32_path)) as mock_export:
-                converter.process_model_config(config)
+        with (
+            patch.object(converter, "_load_model_from_config", return_value=mock_model),
+            patch.object(converter, "export_to_openvino", return_value=(fp16_path, fp32_path)) as mock_export,
+        ):
+            converter.process_model_config(config)
 
         # Check metadata was passed
         call_kwargs = mock_export.call_args[1]
@@ -1442,7 +1482,7 @@ class TestProcessConfigFile:
                     "license_link": "https://mit.edu",
                     "weights_url": "https://example.com/2.pth",
                 },
-            ]
+            ],
         }
         config_path = tmp_path / "config.json"
         config_path.write_text(json.dumps(config))
@@ -1460,13 +1500,13 @@ class TestProcessConfigFile:
             "models": [
                 {"model_short_name": "model1", "license": "MIT", "license_link": "x"},
                 {"model_short_name": "model2", "license": "MIT", "license_link": "x"},
-            ]
+            ],
         }
         config_path = tmp_path / "config.json"
         config_path.write_text(json.dumps(config))
 
         with patch.object(converter, "process_model_config", return_value=True) as mock_process:
-            successful, failed = converter.process_config_file(config_path, model_filter="model2")
+            successful, _failed = converter.process_config_file(config_path, model_filter="model2")
 
         assert successful == 1
         mock_process.assert_called_once()
@@ -1476,7 +1516,7 @@ class TestProcessConfigFile:
         config = {
             "models": [
                 {"model_short_name": "model1"},
-            ]
+            ],
         }
         config_path = tmp_path / "config.json"
         config_path.write_text(json.dumps(config))
@@ -1500,7 +1540,7 @@ class TestProcessConfigFile:
         config_path = tmp_path / "bad.json"
         config_path.write_text("not valid json {{{")
 
-        with pytest.raises(Exception):
+        with pytest.raises(json.JSONDecodeError):
             converter.process_config_file(config_path)
 
     def test_model_failure(self, converter, tmp_path):
@@ -1508,7 +1548,7 @@ class TestProcessConfigFile:
         config = {
             "models": [
                 {"model_short_name": "model1", "license": "MIT", "license_link": "x"},
-            ]
+            ],
         }
         config_path = tmp_path / "config.json"
         config_path.write_text(json.dumps(config))
@@ -1532,7 +1572,7 @@ class TestListModels:
                     "model_full_name": "ResNet-50",
                     "model_type": "Classification",
                 },
-            ]
+            ],
         }
         config_path = tmp_path / "config.json"
         config_path.write_text(json.dumps(config))
@@ -1692,7 +1732,7 @@ class TestMain:
         )
 
         with patch.object(ModelConverter, "process_config_file", return_value=(1, 0)) as mock_process:
-            result = main()
+            main()
 
         mock_process.assert_called_once_with(config_path=config_path, model_filter="target")
 

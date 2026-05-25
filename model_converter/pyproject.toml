@@ -178,6 +178,9 @@ fixable = ["ALL"]
 unfixable = []
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**/*.py" = ["SLF001", "FBT003"]
+
 [tool.ruff.lint.mccabe]
 max-complexity = 15
 

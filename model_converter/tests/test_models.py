@@ -16,6 +16,7 @@ import logging
 from pathlib import Path
 
 import cv2
+
 from model_api.models import Model
 from model_api.visualizer import Visualizer
 

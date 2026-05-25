@@ -5,11 +5,10 @@
 
 """Tests for model_converter.adapters module."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import torch
-
-from model_converter.adapters import ExportAdapter, TorchvisionMaskRCNNExportAdapter, get_adapter
+from model_converter.adapters import TorchvisionMaskRCNNExportAdapter, get_adapter
 from model_converter.adapters.base import ExportAdapter as BaseExportAdapter
 
 
@@ -84,7 +83,7 @@ class TestTorchvisionMaskRCNNExportAdapter:
                 "scores": torch.rand(10),
                 "labels": torch.randint(1, 80, (10,)),
                 "masks": torch.rand(10, 1, 28, 28),
-            }
+            },
         ]
         mock_model.roi_heads.return_value = (mock_predictions, None)
 
@@ -123,7 +122,7 @@ class TestTorchvisionMaskRCNNExportAdapter:
                 "scores": torch.rand(5),
                 "labels": torch.randint(1, 80, (5,)),
                 "masks": torch.rand(5, 1, 28, 28),
-            }
+            },
         ]
         mock_model.roi_heads.return_value = (mock_predictions, None)
 

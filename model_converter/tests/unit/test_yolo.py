@@ -8,9 +8,6 @@
 import json
 from pathlib import Path
 from unittest.mock import MagicMock, patch
-from xml.etree.ElementTree import Element, ElementTree, SubElement
-
-import pytest
 
 
 class TestCopyReadmeTemplate:
@@ -18,7 +15,7 @@ class TestCopyReadmeTemplate:
 
     def test_copies_and_replaces_placeholder(self, tmp_path):
         """copy_readme_template replaces <<yolo_size>> in template."""
-        from model_converter.yolo.yolo import TEMPLATES_DIR, copy_readme_template
+        from model_converter.yolo.yolo import copy_readme_template
 
         # Create a template in the actual templates dir (we need to mock it)
         template_content = "# YOLO11<<yolo_size>> Model\nSize: <<yolo_size>>"
@@ -114,13 +111,11 @@ class TestConvertYoloModels:
         mock_yolo_class.return_value = mock_model
 
         # Mock that the output folders exist after export
-        with patch("model_converter.yolo.yolo.Path") as mock_path_cls:
-            # We need real Paths for some operations but mocked for exists()
-            # Simpler approach: patch at a higher level
-
-            # Just run with patched Path.exists returning False so rename doesn't happen
-            with patch.object(Path, "exists", return_value=False):
-                convert_yolo_models(["yolo11n"])
+        with (
+            patch("model_converter.yolo.yolo.Path"),
+            patch.object(Path, "exists", return_value=False),
+        ):
+            convert_yolo_models(["yolo11n"])
 
         mock_yolo_class.assert_called_once_with("yolo11n.pt")
         assert mock_model.export.call_count == 2
@@ -128,7 +123,14 @@ class TestConvertYoloModels:
     @patch("model_converter.yolo.yolo.copy_readme_template")
     @patch("model_converter.yolo.yolo.update_model_type_in_xml")
     @patch("model_converter.yolo.yolo.YOLO")
-    def test_convert_with_existing_output(self, mock_yolo_class, mock_update_xml, mock_copy_readme, tmp_path, monkeypatch):
+    def test_convert_with_existing_output(
+        self,
+        mock_yolo_class,
+        mock_update_xml,
+        mock_copy_readme,
+        tmp_path,
+        monkeypatch,
+    ):
         """convert_yolo_models handles existing output directories."""
         from model_converter.yolo.yolo import convert_yolo_models
 
@@ -150,9 +152,11 @@ class TestConvertYoloModels:
         (tmp_path / "YOLO11n-fp16-ov").mkdir()
         (tmp_path / "YOLO11n-int8-ov").mkdir()
 
-        with patch("model_converter.yolo.yolo.update_model_type_in_xml"):
-            with patch("model_converter.yolo.yolo.copy_readme_template"):
-                convert_yolo_models(["yolo11n"])
+        with (
+            patch("model_converter.yolo.yolo.update_model_type_in_xml"),
+            patch("model_converter.yolo.yolo.copy_readme_template"),
+        ):
+            convert_yolo_models(["yolo11n"])
 
 
 class TestYoloMain:
