@@ -9,9 +9,7 @@ See tests/accuracy/comparator/README.md for the comparison framework documentati
 import ast
 import contextlib
 import json
-import os
 import re
-import uuid
 from pathlib import Path
 
 import cv2
@@ -408,7 +406,7 @@ def test_image_models(  # noqa: C901
             use_comparator = _result_supported_by_comparator(outputs)
             if use_comparator:
                 reference_dir_base = Path(results_dir) if results_dir else Path(__file__).resolve().parent
-                ref_dir = reference_dir_base  / "references" / test_data["reference_dir"]  # if this fails, run `uv run tests/accuracy/comparator/scripts/migrate_model_data.py`
+                ref_dir = reference_dir_base  / "references" / test_data["reference_dir"]  # if this fails, run `uv --directory model_api run tests/accuracy/comparator/scripts/migrate_model_data.py`
 
                 if reference_mode == "update":
                     test_id = f"{_slugify(name)}::{_slugify(test_data['image'])}"

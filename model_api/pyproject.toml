@@ -269,7 +269,7 @@ notice-rgx = """
 """
 
 [tool.pytest.ini_options]
-pythonpath = ["src", "."]
+pythonpath = ["src"]
 
 [tool.bandit]
 skips = ["B101", "B310"]
