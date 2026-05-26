@@ -6,5 +6,25 @@
 """Tools for converting models to OpenVINO IR."""
 
 from .cli import ModelConverter, list_models, main
+from .converters import (
+    CONVERTER_REGISTRY,
+    BaseConverter,
+    GetituneConverter,
+    PyTorchConverter,
+    TimmConverter,
+    TorchvisionConverter,
+    YoloConverter,
+)
 
-__all__ = ["ModelConverter", "list_models", "main"]
+__all__ = [
+    "CONVERTER_REGISTRY",
+    "BaseConverter",
+    "GetituneConverter",
+    "ModelConverter",
+    "PyTorchConverter",
+    "TimmConverter",
+    "TorchvisionConverter",
+    "YoloConverter",
+    "list_models",
+    "main",
+]

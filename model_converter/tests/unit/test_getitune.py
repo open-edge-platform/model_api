@@ -1,0 +1,487 @@
+#
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+
+"""Tests for GetituneConverter."""
+
+import json
+import logging
+import types
+from pathlib import Path
+from unittest.mock import MagicMock, patch
+
+import numpy as np
+import pytest
+from model_converter.converters.getitune import GetituneConverter
+
+
+def _write_openvino_model(xml_path: Path) -> None:
+    """Create paired OpenVINO XML and BIN files."""
+    xml_path.parent.mkdir(parents=True, exist_ok=True)
+    xml_path.write_text("<net/>")
+    xml_path.with_suffix(".bin").write_bytes(b"bin")
+
+
+def _make_openvino_module(model_info: dict[str, str] | None = None) -> types.ModuleType:
+    """Create a fake openvino module for metadata extraction."""
+    ov_module = types.ModuleType("openvino")
+    core = MagicMock()
+    model = MagicMock()
+    model.get_rt_info.return_value = MagicMock(value=model_info or {"model_type": "Classification"})
+    core.read_model.return_value = model
+    setattr(ov_module, "Core", MagicMock(return_value=core))
+    return ov_module
+
+
+@pytest.fixture
+def sample_getitune_config():
+    """Sample getitune model configuration."""
+    return {
+        "model_short_name": "dino_v2_cls",
+        "model_full_name": "DINOv2 Classification",
+        "model_library": "getitune",
+        "getitune_task": "MULTI_CLASS_CLS",
+        "getitune_recipe": "dino_v2",
+        "input_shape": [1, 3, 224, 224],
+        "model_type": "Classification",
+        "license": "apache-2.0",
+        "license_link": "https://www.apache.org/licenses/LICENSE-2.0",
+        "docs": "https://example.com",
+        "tags": ["classification", "openvino"],
+        "quantize": True,
+    }
+
+
+@pytest.fixture
+def training_extensions_dir(tmp_path):
+    """Temporary training_extensions checkout with export script."""
+    repo_dir = tmp_path / "training_extensions"
+    repo_dir.mkdir()
+    (repo_dir / "export_pretrained_models.py").write_text("print('export')\n")
+    library_dir = repo_dir / "library"
+    library_dir.mkdir()
+    (library_dir / "pyproject.toml").write_text('[project]\nname = "getitune"\n')
+    return repo_dir
+
+
+@pytest.fixture
+def getitune_converter(tmp_output_dir, tmp_cache_dir, training_extensions_dir, dataset_dir):
+    """GetituneConverter with temporary directories."""
+    return GetituneConverter(
+        output_dir=tmp_output_dir,
+        cache_dir=tmp_cache_dir,
+        verbose=True,
+        dataset_path=dataset_dir,
+        training_extensions_dir=training_extensions_dir,
+    )
+
+
+class TestProcessModelConfig:
+    """Tests for GetituneConverter.process_model_config."""
+
+    def test_process_model_config_succeeds(
+        self,
+        getitune_converter,
+        sample_getitune_config,
+        training_extensions_dir,
+        tmp_path,
+    ):
+        """process_model_config exports, repackages, and quantizes a valid model."""
+        export_root = tmp_path / "getitune_export_process"
+        expected_xml = export_root / "multi_class_cls" / "dino_v2" / "exported_model.xml"
+
+        def fake_run(*args, **kwargs):
+            _write_openvino_model(expected_xml)
+            return MagicMock(returncode=0, stdout="ok", stderr="")
+
+        fake_openvino = _make_openvino_module()
+
+        with (
+            patch("model_converter.converters.getitune.tempfile.mkdtemp", return_value=str(export_root)),
+            patch("model_converter.converters.getitune.subprocess.run", side_effect=fake_run),
+            patch.object(getitune_converter, "copy_readme") as mock_copy_readme,
+            patch.object(getitune_converter, "_quantize_exported_model") as mock_quantize,
+            patch.dict("sys.modules", {"openvino": fake_openvino}),
+        ):
+            assert getitune_converter.process_model_config(sample_getitune_config) is True
+
+        output_folder = getitune_converter.output_dir / "dino_v2_cls-fp16-ov"
+        assert (output_folder / "dino_v2_cls.xml").exists()
+        assert (output_folder / "dino_v2_cls.bin").exists()
+        assert json.loads((output_folder / "config.json").read_text()) == {"model_type": "Classification"}
+        mock_copy_readme.assert_called_once_with(sample_getitune_config, output_folder, variant="fp16")
+        mock_quantize.assert_called_once_with(sample_getitune_config)
+        assert not export_root.exists()
+        assert training_extensions_dir.exists()
+
+    def test_process_model_config_skips_when_outputs_exist(self, getitune_converter, sample_getitune_config):
+        """process_model_config skips work when FP16 and INT8 models already exist."""
+        model_short_name = sample_getitune_config["model_short_name"]
+        fp16_model = getitune_converter.output_dir / f"{model_short_name}-fp16-ov" / f"{model_short_name}.xml"
+        int8_model = getitune_converter.output_dir / f"{model_short_name}-int8-ov" / f"{model_short_name}.xml"
+        fp16_model.parent.mkdir(parents=True)
+        int8_model.parent.mkdir(parents=True)
+        fp16_model.write_text("<net/>")
+        int8_model.write_text("<net/>")
+
+        with patch.object(getitune_converter, "_run_export") as mock_run_export:
+            assert getitune_converter.process_model_config(sample_getitune_config) is True
+
+        mock_run_export.assert_not_called()
+
+    def test_process_model_config_returns_false_without_training_extensions_dir(
+        self,
+        tmp_output_dir,
+        tmp_cache_dir,
+        dataset_dir,
+        sample_getitune_config,
+        caplog,
+    ):
+        """process_model_config returns False when training_extensions_dir is not provided."""
+        converter = GetituneConverter(
+            output_dir=tmp_output_dir,
+            cache_dir=tmp_cache_dir,
+            verbose=True,
+            dataset_path=dataset_dir,
+            training_extensions_dir=None,
+        )
+
+        with caplog.at_level(logging.ERROR):
+            result = converter.process_model_config(sample_getitune_config)
+
+        assert result is False
+        assert "training_extensions_dir is required" in caplog.text
+
+    def test_process_model_config_returns_false_when_training_extensions_dir_missing(
+        self,
+        tmp_output_dir,
+        tmp_cache_dir,
+        dataset_dir,
+        sample_getitune_config,
+        tmp_path,
+        caplog,
+    ):
+        """process_model_config returns False when training_extensions_dir is missing."""
+        converter = GetituneConverter(
+            output_dir=tmp_output_dir,
+            cache_dir=tmp_cache_dir,
+            verbose=True,
+            dataset_path=dataset_dir,
+            training_extensions_dir=tmp_path / "missing_training_extensions",
+        )
+
+        with caplog.at_level(logging.ERROR):
+            result = converter.process_model_config(sample_getitune_config)
+
+        assert result is False
+        assert "training_extensions directory not found" in caplog.text
+
+    def test_process_model_config_returns_false_when_export_fails(
+        self,
+        getitune_converter,
+        sample_getitune_config,
+        caplog,
+    ):
+        """process_model_config logs and returns False on export failures."""
+        with (
+            patch.object(getitune_converter, "_run_export", side_effect=RuntimeError("export failed")),
+            patch.object(getitune_converter, "_repackage_model") as mock_repackage,
+            caplog.at_level(logging.ERROR),
+        ):
+            result = getitune_converter.process_model_config(sample_getitune_config)
+
+        assert result is False
+        mock_repackage.assert_not_called()
+        assert "export failed" in caplog.text
+
+    def test_process_model_config_skips_quantization_when_disabled(
+        self,
+        getitune_converter,
+        sample_getitune_config,
+        tmp_path,
+    ):
+        """process_model_config does not quantize when quantize is disabled."""
+        config = sample_getitune_config | {"quantize": False}
+        exported_model_path = tmp_path / "exported_model.xml"
+
+        with (
+            patch.object(getitune_converter, "_run_export", return_value=exported_model_path),
+            patch.object(getitune_converter, "_repackage_model") as mock_repackage,
+            patch.object(getitune_converter, "_quantize_exported_model") as mock_quantize,
+        ):
+            assert getitune_converter.process_model_config(config) is True
+
+        mock_repackage.assert_called_once_with(config, exported_model_path)
+        mock_quantize.assert_not_called()
+
+
+class TestRunExport:
+    """Tests for GetituneConverter._run_export."""
+
+    def test_run_export_builds_expected_command_and_returns_standard_path(
+        self,
+        getitune_converter,
+        sample_getitune_config,
+        tmp_path,
+    ):
+        """_run_export invokes export_pretrained_models.py via uv run and returns the standard output path."""
+        export_root = tmp_path / "getitune_export_standard"
+        expected_xml = export_root / "multi_class_cls" / "dino_v2" / "exported_model.xml"
+
+        def fake_run(*args, **kwargs):
+            _write_openvino_model(expected_xml)
+            return MagicMock(returncode=0, stdout="ok", stderr="")
+
+        with (
+            patch("model_converter.converters.getitune.tempfile.mkdtemp", return_value=str(export_root)),
+            patch("model_converter.converters.getitune.subprocess.run", side_effect=fake_run) as mock_run,
+        ):
+            result = getitune_converter._run_export(sample_getitune_config)
+
+        assert result == expected_xml
+        command = mock_run.call_args.args[0]
+        library_dir = getitune_converter.training_extensions_dir / "library"
+        assert command == [
+            "uv",
+            "run",
+            "--project",
+            str(library_dir),
+            "--extra",
+            "cpu",
+            "python",
+            str(getitune_converter.training_extensions_dir / "export_pretrained_models.py"),
+            "--task",
+            "MULTI_CLASS_CLS",
+            "--model",
+            "dino_v2",
+            "--output-dir",
+            str(export_root),
+            "--format",
+            "OPENVINO",
+            "--precision",
+            "FP16",
+        ]
+        assert mock_run.call_args.kwargs == {
+            "cwd": str(getitune_converter.training_extensions_dir),
+            "capture_output": True,
+            "text": True,
+            "check": False,
+        }
+
+    def test_run_export_falls_back_to_first_found_xml(self, getitune_converter, sample_getitune_config, tmp_path):
+        """_run_export falls back to searching for any exported XML file."""
+        export_root = tmp_path / "getitune_export_fallback"
+        fallback_xml = export_root / "other" / "nested" / "model.xml"
+
+        def fake_run(*args, **kwargs):
+            _write_openvino_model(fallback_xml)
+            return MagicMock(returncode=0, stdout="ok", stderr="")
+
+        with (
+            patch("model_converter.converters.getitune.tempfile.mkdtemp", return_value=str(export_root)),
+            patch("model_converter.converters.getitune.subprocess.run", side_effect=fake_run),
+        ):
+            result = getitune_converter._run_export(sample_getitune_config)
+
+        assert result == fallback_xml
+
+    def test_run_export_raises_on_non_zero_return_code(self, getitune_converter, sample_getitune_config, tmp_path):
+        """_run_export raises RuntimeError when the export script fails."""
+        export_root = tmp_path / "getitune_export_error"
+
+        with (
+            patch("model_converter.converters.getitune.tempfile.mkdtemp", return_value=str(export_root)),
+            patch(
+                "model_converter.converters.getitune.subprocess.run",
+                return_value=MagicMock(returncode=1, stdout="", stderr="boom"),
+            ),
+            pytest.raises(RuntimeError, match="return code 1"),
+        ):
+            getitune_converter._run_export(sample_getitune_config)
+
+    def test_run_export_raises_when_task_is_missing(self, getitune_converter, sample_getitune_config):
+        """_run_export requires getitune_task."""
+        config = dict(sample_getitune_config)
+        config.pop("getitune_task")
+
+        with pytest.raises(ValueError, match="must define 'getitune_task'"):
+            getitune_converter._run_export(config)
+
+    def test_run_export_raises_when_recipe_is_missing(self, getitune_converter, sample_getitune_config):
+        """_run_export requires getitune_recipe."""
+        config = dict(sample_getitune_config)
+        config.pop("getitune_recipe")
+
+        with pytest.raises(ValueError, match="must define 'getitune_recipe'"):
+            getitune_converter._run_export(config)
+
+    def test_run_export_raises_when_export_script_is_missing(
+        self,
+        tmp_output_dir,
+        tmp_cache_dir,
+        dataset_dir,
+        sample_getitune_config,
+        tmp_path,
+    ):
+        """_run_export raises FileNotFoundError when export_pretrained_models.py is absent."""
+        training_extensions_dir = tmp_path / "training_extensions"
+        training_extensions_dir.mkdir()
+        converter = GetituneConverter(
+            output_dir=tmp_output_dir,
+            cache_dir=tmp_cache_dir,
+            verbose=True,
+            dataset_path=dataset_dir,
+            training_extensions_dir=training_extensions_dir,
+        )
+
+        with pytest.raises(FileNotFoundError, match="Export script not found"):
+            converter._run_export(sample_getitune_config)
+
+    def test_run_export_raises_when_library_pyproject_is_missing(
+        self,
+        tmp_output_dir,
+        tmp_cache_dir,
+        dataset_dir,
+        sample_getitune_config,
+        tmp_path,
+    ):
+        """_run_export raises FileNotFoundError when library/pyproject.toml is absent."""
+        training_extensions_dir = tmp_path / "training_extensions"
+        training_extensions_dir.mkdir()
+        (training_extensions_dir / "export_pretrained_models.py").write_text("print('export')\n")
+        converter = GetituneConverter(
+            output_dir=tmp_output_dir,
+            cache_dir=tmp_cache_dir,
+            verbose=True,
+            dataset_path=dataset_dir,
+            training_extensions_dir=training_extensions_dir,
+        )
+
+        with pytest.raises(FileNotFoundError, match="getitune library project not found"):
+            converter._run_export(sample_getitune_config)
+
+    def test_run_export_raises_when_no_xml_files_are_found(
+        self,
+        getitune_converter,
+        sample_getitune_config,
+        tmp_path,
+    ):
+        """_run_export raises FileNotFoundError when the export output contains no XML files."""
+        export_root = tmp_path / "getitune_export_empty"
+
+        with (
+            patch("model_converter.converters.getitune.tempfile.mkdtemp", return_value=str(export_root)),
+            patch(
+                "model_converter.converters.getitune.subprocess.run",
+                return_value=MagicMock(returncode=0, stdout="ok", stderr=""),
+            ),
+            pytest.raises(FileNotFoundError, match="No exported model found"),
+        ):
+            getitune_converter._run_export(sample_getitune_config)
+
+
+class TestRepackageModel:
+    """Tests for GetituneConverter._repackage_model."""
+
+    def test_repackage_model_creates_layout_and_cleans_up(
+        self,
+        getitune_converter,
+        sample_getitune_config,
+        tmp_path,
+    ):
+        """_repackage_model copies files, writes metadata, and removes the export directory."""
+        export_root = tmp_path / "getitune_export_repackage"
+        exported_model_path = export_root / "multi_class_cls" / "dino_v2" / "exported_model.xml"
+        _write_openvino_model(exported_model_path)
+        fake_openvino = _make_openvino_module({"model_type": "Classification", "labels": "cat dog"})
+
+        with (
+            patch.object(getitune_converter, "copy_readme") as mock_copy_readme,
+            patch.dict("sys.modules", {"openvino": fake_openvino}),
+        ):
+            getitune_converter._repackage_model(sample_getitune_config, exported_model_path)
+
+        output_folder = getitune_converter.output_dir / "dino_v2_cls-fp16-ov"
+        assert (output_folder / "dino_v2_cls.xml").exists()
+        assert (output_folder / "dino_v2_cls.bin").exists()
+        assert (output_folder / "dino_v2_cls_fp32.xml").exists()
+        assert (output_folder / "dino_v2_cls_fp32.bin").exists()
+        assert json.loads((output_folder / "config.json").read_text()) == {
+            "model_type": "Classification",
+            "labels": "cat dog",
+        }
+        assert (output_folder / ".gitattributes").exists()
+        mock_copy_readme.assert_called_once_with(sample_getitune_config, output_folder, variant="fp16")
+        assert not export_root.exists()
+
+
+class TestQuantizeExportedModel:
+    """Tests for GetituneConverter._quantize_exported_model."""
+
+    def test_quantize_exported_model_uses_fp32_model_and_cleans_up(
+        self,
+        getitune_converter,
+        sample_getitune_config,
+    ):
+        """_quantize_exported_model uses the FP32 copy and removes it afterward."""
+        output_folder = getitune_converter.output_dir / "dino_v2_cls-fp16-ov"
+        fp32_xml = output_folder / "dino_v2_cls_fp32.xml"
+        fp32_bin = output_folder / "dino_v2_cls_fp32.bin"
+        _write_openvino_model(fp32_xml)
+        calibration_data = [np.zeros((1, 3, 224, 224), dtype=np.float32)]
+
+        with (
+            patch.object(
+                getitune_converter,
+                "create_calibration_dataset",
+                return_value=(calibration_data, []),
+            ) as mock_dataset,
+            patch.object(getitune_converter, "quantize_model") as mock_quantize,
+        ):
+            getitune_converter._quantize_exported_model(sample_getitune_config)
+
+        mock_dataset.assert_called_once_with(
+            input_shape=[1, 3, 224, 224],
+            mean_values="0 0 0",
+            scale_values="1 1 1",
+            reverse_input_channels=True,
+            subset_size=300,
+            return_labels=False,
+        )
+        mock_quantize.assert_called_once_with(
+            model_path=fp32_xml,
+            calibration_data=calibration_data,
+            model_config=sample_getitune_config,
+            preset="mixed",
+        )
+        assert not fp32_xml.exists()
+        assert not fp32_bin.exists()
+
+    def test_quantize_exported_model_falls_back_to_fp16_when_fp32_is_missing(
+        self,
+        getitune_converter,
+        sample_getitune_config,
+    ):
+        """_quantize_exported_model falls back to the FP16 model when no FP32 copy exists."""
+        output_folder = getitune_converter.output_dir / "dino_v2_cls-fp16-ov"
+        fp16_xml = output_folder / "dino_v2_cls.xml"
+        _write_openvino_model(fp16_xml)
+        calibration_data = [np.zeros((1, 3, 224, 224), dtype=np.float32)]
+
+        with (
+            patch.object(
+                getitune_converter,
+                "create_calibration_dataset",
+                return_value=(calibration_data, []),
+            ),
+            patch.object(getitune_converter, "quantize_model") as mock_quantize,
+        ):
+            getitune_converter._quantize_exported_model(sample_getitune_config)
+
+        mock_quantize.assert_called_once_with(
+            model_path=fp16_xml,
+            calibration_data=calibration_data,
+            model_config=sample_getitune_config,
+            preset="mixed",
+        )

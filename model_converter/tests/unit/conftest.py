@@ -24,10 +24,11 @@ def tmp_cache_dir(tmp_path):
 
 @pytest.fixture
 def sample_model_config():
-    """Sample model configuration dictionary."""
+    """Sample torchvision model configuration dictionary."""
     return {
         "model_short_name": "test_model",
         "model_full_name": "Test Model",
+        "model_library": "torchvision",
         "model_class_name": "torchvision.models.resnet.resnet18",
         "weights_url": "https://example.com/weights.pth",
         "input_shape": [1, 3, 224, 224],
@@ -46,11 +47,59 @@ def sample_model_config():
 
 
 @pytest.fixture
-def converter(tmp_output_dir, tmp_cache_dir):
-    """Pre-built ModelConverter instance with temporary directories."""
+def sample_timm_config():
+    """Sample timm model configuration dictionary."""
+    return {
+        "model_short_name": "test_timm_model",
+        "model_full_name": "Test Timm Model",
+        "model_library": "timm",
+        "huggingface_repo": "timm/resnet50.a1_in1k",
+        "huggingface_revision": "abc123",
+        "input_shape": [1, 3, 224, 224],
+        "input_names": ["input"],
+        "output_names": ["result"],
+        "model_type": "Classification",
+        "license": "Apache-2.0",
+        "license_link": "https://www.apache.org/licenses/LICENSE-2.0",
+        "docs": "https://docs.example.com",
+        "labels": "IMAGENET1K_V1",
+        "mean_values": "123.675 116.28 103.53",
+        "scale_values": "58.395 57.12 57.375",
+        "reverse_input_channels": True,
+        "description": "A test timm model",
+    }
+
+
+@pytest.fixture
+def facade_converter(tmp_output_dir, tmp_cache_dir):
+    """Pre-built facade ModelConverter instance with temporary directories."""
     from model_converter.cli import ModelConverter
 
     return ModelConverter(
+        output_dir=tmp_output_dir,
+        cache_dir=tmp_cache_dir,
+        verbose=True,
+    )
+
+
+@pytest.fixture
+def converter(tmp_output_dir, tmp_cache_dir):
+    """Pre-built TorchvisionConverter instance with temporary directories."""
+    from model_converter.converters.torchvision import TorchvisionConverter
+
+    return TorchvisionConverter(
+        output_dir=tmp_output_dir,
+        cache_dir=tmp_cache_dir,
+        verbose=True,
+    )
+
+
+@pytest.fixture
+def timm_converter(tmp_output_dir, tmp_cache_dir):
+    """Pre-built TimmConverter instance with temporary directories."""
+    from model_converter.converters.timm import TimmConverter
+
+    return TimmConverter(
         output_dir=tmp_output_dir,
         cache_dir=tmp_cache_dir,
         verbose=True,
@@ -63,13 +112,12 @@ def mock_ov_model():
     model = MagicMock()
     model.inputs = [MagicMock()]
     model.outputs = [MagicMock()]
-    model.input.return_value = MagicMock()
-    model.output.return_value = MagicMock()
 
-    # Mock input(0).get_names()
     input_mock = MagicMock()
     input_mock.get_names.return_value = {"input"}
     model.input.return_value = input_mock
+    model.output.return_value = MagicMock()
+    model.get_rt_info.return_value = MagicMock(value={"model_type": "Classification"})
 
     return model
 
@@ -97,14 +145,12 @@ def mock_torch_model():
 @pytest.fixture
 def dataset_dir(tmp_path):
     """Create a temporary calibration dataset directory structure."""
+    import cv2
     import numpy as np
 
     dataset_path = tmp_path / "dataset"
     class_dir = dataset_path / "0"
     class_dir.mkdir(parents=True)
-
-    # Create a dummy image file
-    import cv2
 
     img = np.zeros((224, 224, 3), dtype=np.uint8)
     cv2.imwrite(str(class_dir / "image_001.jpg"), img)

@@ -43,7 +43,6 @@ dependencies = [
 
 [project.scripts]
 model-converter = "model_converter.model_converter:main"
-model-converter-yolo = "model_converter.yolo.yolo:main"
 
 [project.urls]
 Homepage = "https://github.com/open-edge-platform/model_api"
