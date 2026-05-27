@@ -204,7 +204,7 @@ def assert_result_matches_reference(
         elif spec.policy is ComparisonPolicy.STAT_FINGERPRINT:
             ref_fp = bundle.result_json.get(field_name)
             kw = {
-                k: v for k, v in spec.kwargs.items() if k in {"atol", "rtol", "iou_threshold_thumbnail", "sample_atol"}
+                k: v for k, v in spec.kwargs.items() if k in {"atol", "rtol", "iou_threshold_thumbnail", "sample_atol", "thumbnail_atol"}
             }
             field_results[field_name] = compare_fingerprint(
                 spec.value,

@@ -297,6 +297,7 @@ def _compare_single_fingerprint(  # noqa: C901
     rtol: float,
     iou_threshold_thumbnail: float,
     sample_atol: float,
+    thumbnail_atol: float = 0.05,
 ) -> FieldResult:
     """Compare a single array against a single reference fingerprint."""
     actual_fp = compute_fingerprint(actual_array)
@@ -432,8 +433,8 @@ def _compare_single_fingerprint(  # noqa: C901
             checks.append(("thumbnail", False, f"shape mismatch a={a_t.shape} r={r_t.shape}"))
         else:
             max_delta = float(np.max(np.abs(a_t - r_t))) if a_t.size else 0.0
-            ok = bool(np.allclose(a_t, r_t, atol=0.05))
-            checks.append(("thumbnail", ok, f"max_delta={max_delta:.4g} atol=0.05"))
+            ok = bool(np.allclose(a_t, r_t, atol=thumbnail_atol))
+            checks.append(("thumbnail", ok, f"max_delta={max_delta:.4g} atol={thumbnail_atol}"))
 
     a_sv = np.asarray(actual_fp.get("sample_values") or [], dtype=np.float64)
     r_sv = np.asarray(reference_fingerprint.get("sample_values") or [], dtype=np.float64)
@@ -479,6 +480,7 @@ def compare_fingerprint(
     rtol: float = 1e-2,
     iou_threshold_thumbnail: float = 0.85,
     sample_atol: float = 1e-2,
+    thumbnail_atol: float = 0.05,
 ) -> FieldResult:
     """Compare an actual array (or list of arrays) against a precomputed reference fingerprint.
 
@@ -555,6 +557,7 @@ def compare_fingerprint(
                 rtol=rtol,
                 iou_threshold_thumbnail=iou_threshold_thumbnail,
                 sample_atol=sample_atol,
+                thumbnail_atol=thumbnail_atol,
             )
             sub_results.append(sub_result)
 
@@ -593,6 +596,7 @@ def compare_fingerprint(
         rtol=rtol,
         iou_threshold_thumbnail=iou_threshold_thumbnail,
         sample_atol=sample_atol,
+        thumbnail_atol=thumbnail_atol,
     )
 
 
