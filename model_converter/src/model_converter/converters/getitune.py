@@ -7,7 +7,7 @@
 
 import json
 import shutil
-import subprocess
+import subprocess  # nosec B404 — fixed-argv invocation of `uv run`, no shell, no untrusted input
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -168,7 +168,7 @@ class GetituneConverter(BaseConverter):
 
         self.logger.info(f"Running export command: {' '.join(cmd)}")
 
-        result = subprocess.run(  # noqa: S603
+        result = subprocess.run(  # noqa: S603  # nosec B603 — cmd is built from validated config, no shell
             cmd,
             cwd=str(self.training_extensions_dir),
             capture_output=True,
