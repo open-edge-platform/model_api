@@ -257,17 +257,52 @@ class GetituneConverter(BaseConverter):
         if "getitune_export_" in temp_dir.name:
             shutil.rmtree(temp_dir, ignore_errors=True)
 
+    @staticmethod
+    def _read_preprocessing_from_model(
+        ov: Any,
+        model_path: Path,
+    ) -> tuple[list[int], str, str, bool]:
+        """Read preprocessing parameters from the model's rt_info metadata.
+
+        Args:
+            ov: The openvino module
+            model_path: Path to the OpenVINO model XML file
+
+        Returns:
+            Tuple of (input_shape, mean_values, scale_values, reverse_input_channels)
+        """
+        core = ov.Core()
+        model = core.read_model(model_path)
+
+        # Get input shape from the model's input layer
+        input_shape = list(model.input(0).shape)
+
+        # Read preprocessing params from model_info rt_info
+        def _get_rt_str(key: str, default: str) -> str:
+            try:
+                return model.get_rt_info(["model_info", key]).astype(str)
+            except RuntimeError:
+                return default
+
+        mean_values = _get_rt_str("mean_values", "0 0 0")
+        scale_values = _get_rt_str("scale_values", "1 1 1")
+        reverse_input_channels = _get_rt_str("reverse_input_channels", "True").lower() in ("true", "1", "yes")
+
+        return input_shape, mean_values, scale_values, reverse_input_channels
+
     def _quantize_exported_model(self, config: dict[str, Any]) -> None:
         """Quantize the exported FP16 model to INT8.
+
+        Reads preprocessing parameters (input_shape, mean_values, scale_values,
+        reverse_input_channels) from the exported model's rt_info metadata,
+        which is embedded by the getitune exporter.
 
         Args:
             config: Model configuration dictionary
         """
+        import openvino as ov
+
         model_short_name = config.get("model_short_name", "unknown")
-        input_shape = config.get("input_shape", [1, 3, 224, 224])
-        mean_values = config.get("mean_values", "0 0 0")
-        scale_values = config.get("scale_values", "1 1 1")
-        reverse_input_channels = config.get("reverse_input_channels", True)
 
         # Use FP32 model for quantization (better quality)
         fp32_model_path = self.output_dir / f"{model_short_name}-fp16-ov" / f"{model_short_name}_fp32.xml"
@@ -275,6 +310,12 @@ class GetituneConverter(BaseConverter):
         if not fp32_model_path.exists():
             # Fall back to the FP16 model
             fp32_model_path = self.output_dir / f"{model_short_name}-fp16-ov" / f"{model_short_name}.xml"
+
+        # Extract preprocessing parameters from model rt_info
+        input_shape, mean_values, scale_values, reverse_input_channels = self._read_preprocessing_from_model(
+            ov,
+            fp32_model_path,
+        )
 
         self.logger.info("Creating calibration dataset for INT8 quantization")
         calibration_data, _ = self.create_calibration_dataset(

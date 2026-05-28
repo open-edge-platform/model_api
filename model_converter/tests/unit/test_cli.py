@@ -1040,7 +1040,8 @@ class TestLibraryFilter:
 
         with patch.object(facade_converter, "process_model_config", return_value=True) as mock_process:
             successful, failed = facade_converter.process_config_file(
-                config_path, library_filter=["getitune"],
+                config_path,
+                library_filter=["getitune"],
             )
 
         assert successful == 1
@@ -1065,7 +1066,8 @@ class TestLibraryFilter:
 
         with patch.object(facade_converter, "process_model_config", return_value=True) as mock_process:
             successful, failed = facade_converter.process_config_file(
-                config_path, library_filter=["getitune", "timm"],
+                config_path,
+                library_filter=["getitune", "timm"],
             )
 
         assert successful == 2
@@ -1106,7 +1108,9 @@ class TestLibraryFilter:
 
         with patch.object(facade_converter, "process_model_config", return_value=True) as mock_process:
             successful, failed = facade_converter.process_config_file(
-                config_path, model_filter="m1", library_filter=["getitune"],
+                config_path,
+                model_filter="m1",
+                library_filter=["getitune"],
             )
 
         assert successful == 1
@@ -1247,7 +1251,9 @@ class TestLibraryFilter:
             main()
 
         mock_process.assert_called_once_with(
-            config_path=config_path, model_filter=None, library_filter=["getitune", "timm"],
+            config_path=config_path,
+            model_filter=None,
+            library_filter=["getitune", "timm"],
         )
 
     def test_main_library_and_model_flags(self, tmp_path, monkeypatch):
@@ -1276,7 +1282,9 @@ class TestLibraryFilter:
             main()
 
         mock_process.assert_called_once_with(
-            config_path=config_path, model_filter="m1", library_filter=["getitune"],
+            config_path=config_path,
+            model_filter="m1",
+            library_filter=["getitune"],
         )
 
     def test_main_list_with_library_filter(self, tmp_path, monkeypatch, capsys):

@@ -43,7 +43,6 @@ def sample_getitune_config():
         "model_library": "getitune",
         "getitune_task": "MULTI_CLASS_CLS",
         "getitune_recipe": "dino_v2",
-        "input_shape": [1, 3, 224, 224],
         "model_type": "Classification",
         "license": "apache-2.0",
         "license_link": "https://www.apache.org/licenses/LICENSE-2.0",
@@ -434,6 +433,11 @@ class TestQuantizeExportedModel:
         with (
             patch.object(
                 getitune_converter,
+                "_read_preprocessing_from_model",
+                return_value=([1, 3, 224, 224], "123.675 116.28 103.53", "58.395 57.12 57.375", True),
+            ) as mock_read_preproc,
+            patch.object(
+                getitune_converter,
                 "create_calibration_dataset",
                 return_value=(calibration_data, []),
             ) as mock_dataset,
@@ -441,10 +445,11 @@ class TestQuantizeExportedModel:
         ):
             getitune_converter._quantize_exported_model(sample_getitune_config)
 
+        mock_read_preproc.assert_called_once()
         mock_dataset.assert_called_once_with(
             input_shape=[1, 3, 224, 224],
-            mean_values="0 0 0",
-            scale_values="1 1 1",
+            mean_values="123.675 116.28 103.53",
+            scale_values="58.395 57.12 57.375",
             reverse_input_channels=True,
             subset_size=300,
             return_labels=False,
@@ -472,6 +477,11 @@ class TestQuantizeExportedModel:
         with (
             patch.object(
                 getitune_converter,
+                "_read_preprocessing_from_model",
+                return_value=([1, 3, 224, 224], "0 0 0", "1 1 1", True),
+            ),
+            patch.object(
+                getitune_converter,
                 "create_calibration_dataset",
                 return_value=(calibration_data, []),
             ),
@@ -485,3 +495,68 @@ class TestQuantizeExportedModel:
             model_config=sample_getitune_config,
             preset="mixed",
         )
+
+
+class TestReadPreprocessingFromModel:
+    """Tests for GetituneConverter._read_preprocessing_from_model."""
+
+    def test_reads_all_params_from_rt_info(self, tmp_path):
+        """_read_preprocessing_from_model extracts params from model rt_info."""
+        model_path = tmp_path / "model.xml"
+        model_path.write_text("<net/>")
+
+        mock_model = MagicMock()
+        mock_model.input.return_value = MagicMock(shape=[1, 3, 640, 640])
+
+        def fake_get_rt_info(path):
+            values = {
+                "mean_values": "123.675 116.28 103.53",
+                "scale_values": "58.395 57.12 57.375",
+                "reverse_input_channels": "True",
+            }
+            key = path[1]
+            if key in values:
+                result = MagicMock()
+                result.astype.return_value = values[key]
+                return result
+            msg = "Cannot get runtime attribute. Path to runtime attribute is incorrect."
+            raise RuntimeError(msg)
+
+        mock_model.get_rt_info.side_effect = fake_get_rt_info
+
+        mock_ov = MagicMock()
+        mock_ov.Core.return_value.read_model.return_value = mock_model
+
+        input_shape, mean_values, scale_values, reverse = GetituneConverter._read_preprocessing_from_model(
+            mock_ov,
+            model_path,
+        )
+
+        assert input_shape == [1, 3, 640, 640]
+        assert mean_values == "123.675 116.28 103.53"
+        assert scale_values == "58.395 57.12 57.375"
+        assert reverse is True
+
+    def test_falls_back_to_defaults_when_rt_info_missing(self, tmp_path):
+        """_read_preprocessing_from_model uses defaults when rt_info keys are absent."""
+        model_path = tmp_path / "model.xml"
+        model_path.write_text("<net/>")
+
+        mock_model = MagicMock()
+        mock_model.input.return_value = MagicMock(shape=[1, 3, 224, 224])
+        mock_model.get_rt_info.side_effect = RuntimeError(
+            "Cannot get runtime attribute. Path to runtime attribute is incorrect.",
+        )
+
+        mock_ov = MagicMock()
+        mock_ov.Core.return_value.read_model.return_value = mock_model
+
+        input_shape, mean_values, scale_values, reverse = GetituneConverter._read_preprocessing_from_model(
+            mock_ov,
+            model_path,
+        )
+
+        assert input_shape == [1, 3, 224, 224]
+        assert mean_values == "0 0 0"
+        assert scale_values == "1 1 1"
+        assert reverse is True
