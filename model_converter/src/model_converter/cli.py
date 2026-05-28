@@ -120,12 +120,14 @@ class ModelConverter:
         self,
         config_path: Path,
         model_filter: str | None = None,
+        library_filter: list[str] | None = None,
     ) -> tuple[int, int]:
         """Process models from a configuration file.
 
         Args:
             config_path: Path to JSON configuration file
             model_filter: Optional model short name to process (process only this model)
+            library_filter: Optional list of library names to process (process only these libraries)
 
         Returns:
             Tuple of (successful_count, failed_count)
@@ -144,6 +146,17 @@ class ModelConverter:
             return 0, 0
 
         self.logger.info(f"Configuration validated: {len(models)} models found")
+
+        # Filter by library if requested
+        if library_filter:
+            unknown_libs = set(library_filter) - set(CONVERTER_REGISTRY.keys())
+            for lib in unknown_libs:
+                self.logger.warning(f"Unknown library '{lib}' (available: {list(CONVERTER_REGISTRY.keys())})")
+            models = [m for m in models if m.get("model_library") in library_filter]
+            if not models:
+                self.logger.error(f"No models found for libraries: {library_filter}")
+                return 0, 0
+            self.logger.info(f"Filtering by libraries: {library_filter} ({len(models)} models)")
 
         # Filter models if requested
         if model_filter:
@@ -165,8 +178,13 @@ class ModelConverter:
         return successful, failed
 
 
-def list_models(config_path: Path) -> None:
-    """List all models in a configuration file."""
+def list_models(config_path: Path, library_filter: list[str] | None = None) -> None:
+    """List all models in a configuration file.
+
+    Args:
+        config_path: Path to JSON configuration file
+        library_filter: Optional list of library names to filter by
+    """
     try:
         with config_path.open() as f:
             config = json.load(f)
@@ -175,6 +193,12 @@ def list_models(config_path: Path) -> None:
         return
 
     models = config.get("models", [])
+
+    if library_filter:
+        unknown_libs = set(library_filter) - set(CONVERTER_REGISTRY.keys())
+        for lib in unknown_libs:
+            print(f"Warning: Unknown library '{lib}' (available: {list(CONVERTER_REGISTRY.keys())})", file=sys.stderr)
+        models = [m for m in models if m.get("model_library") in library_filter]
 
     if not models:
         print("No models found in configuration")
@@ -252,6 +276,16 @@ Examples:
     )
 
     parser.add_argument(
+        "--library",
+        type=str,
+        default=None,
+        help=(
+            "Comma-separated list of model libraries to process (e.g., getitune,timm). "
+            "If not provided, all libraries are exported."
+        ),
+    )
+
+    parser.add_argument(
         "--list",
         action="store_true",
         help="List all models in the configuration file and exit",
@@ -273,6 +307,11 @@ Examples:
 
     args = parser.parse_args()
 
+    # Parse library filter
+    library_filter: list[str] | None = None
+    if args.library:
+        library_filter = [lib.strip() for lib in args.library.split(",") if lib.strip()]
+
     # Check if config file exists
     if not args.config.exists():
         print(f"Error: Configuration file not found: {args.config}", file=sys.stderr)
@@ -280,7 +319,7 @@ Examples:
 
     # List models and exit
     if args.list:
-        list_models(args.config)
+        list_models(args.config, library_filter=library_filter)
         return 0
 
     # Setup logging
@@ -312,6 +351,7 @@ Examples:
         successful, failed = converter.process_config_file(
             config_path=args.config,
             model_filter=args.model,
+            library_filter=library_filter,
         )
 
         # Print summary

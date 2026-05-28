@@ -996,7 +996,7 @@ class TestMain:
         with patch.object(ModelConverter, "process_config_file", return_value=(1, 0)) as mock_process:
             main()
 
-        mock_process.assert_called_once_with(config_path=config_path, model_filter="target")
+        mock_process.assert_called_once_with(config_path=config_path, model_filter="target", library_filter=None)
 
     def test_exception_during_processing(self, tmp_path, monkeypatch):
         """main returns 1 on processing exceptions."""
@@ -1018,3 +1018,284 @@ class TestMain:
 
         with patch.object(ModelConverter, "process_config_file", side_effect=ValueError("bad config")):
             assert main() == 1
+
+
+class TestLibraryFilter:
+    """Tests for --library filter functionality."""
+
+    def test_single_library_filter(self, facade_converter, tmp_path):
+        """process_config_file filters models by a single library."""
+        config_path = tmp_path / "config.json"
+        config_path.write_text(
+            json.dumps(
+                {
+                    "models": [
+                        {"model_short_name": "m1", "model_library": "torchvision"},
+                        {"model_short_name": "m2", "model_library": "getitune"},
+                        {"model_short_name": "m3", "model_library": "timm"},
+                    ],
+                },
+            ),
+        )
+
+        with patch.object(facade_converter, "process_model_config", return_value=True) as mock_process:
+            successful, failed = facade_converter.process_config_file(
+                config_path, library_filter=["getitune"],
+            )
+
+        assert successful == 1
+        assert failed == 0
+        mock_process.assert_called_once_with({"model_short_name": "m2", "model_library": "getitune"})
+
+    def test_multiple_library_filter(self, facade_converter, tmp_path):
+        """process_config_file filters models by multiple libraries."""
+        config_path = tmp_path / "config.json"
+        config_path.write_text(
+            json.dumps(
+                {
+                    "models": [
+                        {"model_short_name": "m1", "model_library": "torchvision"},
+                        {"model_short_name": "m2", "model_library": "getitune"},
+                        {"model_short_name": "m3", "model_library": "timm"},
+                        {"model_short_name": "m4", "model_library": "yolo"},
+                    ],
+                },
+            ),
+        )
+
+        with patch.object(facade_converter, "process_model_config", return_value=True) as mock_process:
+            successful, failed = facade_converter.process_config_file(
+                config_path, library_filter=["getitune", "timm"],
+            )
+
+        assert successful == 2
+        assert failed == 0
+        assert mock_process.call_count == 2
+
+    def test_library_filter_no_match(self, facade_converter, tmp_path):
+        """process_config_file returns 0,0 when no models match library filter."""
+        config_path = tmp_path / "config.json"
+        config_path.write_text(
+            json.dumps(
+                {
+                    "models": [
+                        {"model_short_name": "m1", "model_library": "torchvision"},
+                    ],
+                },
+            ),
+        )
+
+        successful, failed = facade_converter.process_config_file(config_path, library_filter=["yolo"])
+        assert successful == 0
+        assert failed == 0
+
+    def test_library_and_model_filter_combined(self, facade_converter, tmp_path):
+        """process_config_file applies both library and model filters (AND logic)."""
+        config_path = tmp_path / "config.json"
+        config_path.write_text(
+            json.dumps(
+                {
+                    "models": [
+                        {"model_short_name": "m1", "model_library": "getitune"},
+                        {"model_short_name": "m2", "model_library": "getitune"},
+                        {"model_short_name": "m1", "model_library": "torchvision"},
+                    ],
+                },
+            ),
+        )
+
+        with patch.object(facade_converter, "process_model_config", return_value=True) as mock_process:
+            successful, failed = facade_converter.process_config_file(
+                config_path, model_filter="m1", library_filter=["getitune"],
+            )
+
+        assert successful == 1
+        assert failed == 0
+        mock_process.assert_called_once_with({"model_short_name": "m1", "model_library": "getitune"})
+
+    def test_no_library_filter_processes_all(self, facade_converter, tmp_path):
+        """process_config_file processes all models when no library filter is given."""
+        config_path = tmp_path / "config.json"
+        config_path.write_text(
+            json.dumps(
+                {
+                    "models": [
+                        {"model_short_name": "m1", "model_library": "torchvision"},
+                        {"model_short_name": "m2", "model_library": "getitune"},
+                    ],
+                },
+            ),
+        )
+
+        with patch.object(facade_converter, "process_model_config", return_value=True) as mock_process:
+            successful, failed = facade_converter.process_config_file(config_path, library_filter=None)
+
+        assert successful == 2
+        assert failed == 0
+        assert mock_process.call_count == 2
+
+    def test_list_models_with_library_filter(self, tmp_path, capsys):
+        """list_models filters output by library."""
+        config_path = tmp_path / "config.json"
+        config_path.write_text(
+            json.dumps(
+                {
+                    "models": [
+                        {
+                            "model_short_name": "resnet50",
+                            "model_full_name": "ResNet-50",
+                            "model_library": "torchvision",
+                            "model_type": "Classification",
+                        },
+                        {
+                            "model_short_name": "dino_v2",
+                            "model_full_name": "DINOv2",
+                            "model_library": "getitune",
+                            "model_type": "Classification",
+                        },
+                    ],
+                },
+            ),
+        )
+
+        list_models(config_path, library_filter=["getitune"])
+
+        captured = capsys.readouterr()
+        assert "dino_v2" in captured.out
+        assert "resnet50" not in captured.out
+
+    def test_list_models_no_library_filter(self, tmp_path, capsys):
+        """list_models shows all models when no library filter."""
+        config_path = tmp_path / "config.json"
+        config_path.write_text(
+            json.dumps(
+                {
+                    "models": [
+                        {
+                            "model_short_name": "resnet50",
+                            "model_full_name": "ResNet-50",
+                            "model_library": "torchvision",
+                            "model_type": "Classification",
+                        },
+                        {
+                            "model_short_name": "dino_v2",
+                            "model_full_name": "DINOv2",
+                            "model_library": "getitune",
+                            "model_type": "Classification",
+                        },
+                    ],
+                },
+            ),
+        )
+
+        list_models(config_path, library_filter=None)
+
+        captured = capsys.readouterr()
+        assert "dino_v2" in captured.out
+        assert "resnet50" in captured.out
+
+    def test_unknown_library_warns(self, facade_converter, tmp_path, caplog):
+        """process_config_file warns on unknown library names."""
+        config_path = tmp_path / "config.json"
+        config_path.write_text(
+            json.dumps(
+                {
+                    "models": [
+                        {"model_short_name": "m1", "model_library": "torchvision"},
+                    ],
+                },
+            ),
+        )
+
+        with patch.object(facade_converter, "process_model_config", return_value=True):
+            facade_converter.process_config_file(config_path, library_filter=["torchvision", "nonexistent"])
+
+        assert "Unknown library 'nonexistent'" in caplog.text
+
+    def test_list_models_unknown_library_warns(self, tmp_path, capsys):
+        """list_models prints warning for unknown library names."""
+        config_path = tmp_path / "config.json"
+        config_path.write_text(json.dumps({"models": [{"model_short_name": "m1", "model_library": "torchvision"}]}))
+
+        list_models(config_path, library_filter=["nonexistent"])
+
+        captured = capsys.readouterr()
+        assert "Unknown library 'nonexistent'" in captured.err
+        assert "No models found" in captured.out
+
+    def test_main_library_flag(self, tmp_path, monkeypatch):
+        """main passes --library filter through to process_config_file."""
+        config_path = tmp_path / "config.json"
+        config_path.write_text(json.dumps({"models": [{"model_short_name": "m1", "model_library": "getitune"}]}))
+
+        monkeypatch.setattr(
+            sys,
+            "argv",
+            [
+                "model_converter",
+                str(config_path),
+                "-o",
+                str(tmp_path / "output"),
+                "-c",
+                str(tmp_path / "cache"),
+                "--library",
+                "getitune,timm",
+            ],
+        )
+
+        with patch.object(ModelConverter, "process_config_file", return_value=(1, 0)) as mock_process:
+            main()
+
+        mock_process.assert_called_once_with(
+            config_path=config_path, model_filter=None, library_filter=["getitune", "timm"],
+        )
+
+    def test_main_library_and_model_flags(self, tmp_path, monkeypatch):
+        """main passes both --library and --model filters through."""
+        config_path = tmp_path / "config.json"
+        config_path.write_text(json.dumps({"models": [{"model_short_name": "m1", "model_library": "getitune"}]}))
+
+        monkeypatch.setattr(
+            sys,
+            "argv",
+            [
+                "model_converter",
+                str(config_path),
+                "-o",
+                str(tmp_path / "output"),
+                "-c",
+                str(tmp_path / "cache"),
+                "--library",
+                "getitune",
+                "--model",
+                "m1",
+            ],
+        )
+
+        with patch.object(ModelConverter, "process_config_file", return_value=(1, 0)) as mock_process:
+            main()
+
+        mock_process.assert_called_once_with(
+            config_path=config_path, model_filter="m1", library_filter=["getitune"],
+        )
+
+    def test_main_list_with_library_filter(self, tmp_path, monkeypatch, capsys):
+        """main --list with --library filters listed models."""
+        config_path = tmp_path / "config.json"
+        config_path.write_text(
+            json.dumps(
+                {
+                    "models": [
+                        {"model_short_name": "m1", "model_library": "torchvision", "model_type": "cls"},
+                        {"model_short_name": "m2", "model_library": "getitune", "model_type": "cls"},
+                    ],
+                },
+            ),
+        )
+
+        monkeypatch.setattr(sys, "argv", ["model_converter", str(config_path), "--list", "--library", "getitune"])
+        assert main() == 0
+
+        captured = capsys.readouterr()
+        assert "m2" in captured.out
+        assert "m1" not in captured.out
