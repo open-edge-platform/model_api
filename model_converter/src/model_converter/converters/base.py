@@ -357,11 +357,6 @@ class BaseConverter(ABC):
             core = ov.Core()
             model = core.read_model(model_path)
 
-            # Create calibration dataset generator
-            def calibration_dataset():
-                for data in calibration_data:
-                    yield data
-
             # Map preset string to NNCF enum
             preset_map = {
                 "performance": nncf.QuantizationPreset.PERFORMANCE,
@@ -369,12 +364,17 @@ class BaseConverter(ABC):
             }
             nncf_preset = preset_map.get(preset.lower(), nncf.QuantizationPreset.MIXED)
 
-            # Quantize the model
+            quantize_kwargs: dict[str, Any] = {}
+            model_type = model_config.get("quantization_model_type")
+            if model_type and model_type.lower() == "transformer":
+                quantize_kwargs["model_type"] = nncf.ModelType.TRANSFORMER
+
             quantized_model = nncf.quantize(
                 model,
-                calibration_dataset=nncf.Dataset(calibration_dataset()),
+                calibration_dataset=nncf.Dataset(calibration_data),
                 preset=nncf_preset,
                 subset_size=len(calibration_data),
+                **quantize_kwargs,
             )
 
             # Extract model name from the FP32 model path

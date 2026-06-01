@@ -592,9 +592,10 @@
       "output_names": ["logits"],
       "model_params": null,
       "model_type": "Classification",
+      "quantization_model_type": "transformer",
       "reverse_input_channels": true,
-      "mean_values": "123.675 116.28 103.53",
-      "scale_values": "58.395 57.12 57.375",
+      "mean_values": "127.5 127.5 127.5",
+      "scale_values": "127.5 127.5 127.5",
       "license": "apache-2.0",
       "license_link": "https://spdx.org/licenses/Apache-2.0.html",
       "labels": "IMAGENET21K"
@@ -612,6 +613,7 @@
       "output_names": ["output"],
       "model_params": null,
       "model_type": "Classification",
+      "quantization_model_type": "transformer",
       "reverse_input_channels": true,
       "mean_values": "123.675 116.28 103.53",
       "scale_values": "58.395 57.12 57.375",
@@ -721,6 +723,7 @@
       "getitune_recipe": "vit_tiny",
       "getitune_task": "MULTI_CLASS_CLS",
       "model_type": "Classification",
+      "quantization_model_type": "transformer",
       "license": "apache-2.0",
       "license_link": "https://spdx.org/licenses/Apache-2.0.html",
       "tags": ["image-classification", "vision"]
@@ -799,6 +802,7 @@
       "getitune_recipe": "vit_tiny",
       "getitune_task": "MULTI_LABEL_CLS",
       "model_type": "Classification",
+      "quantization_model_type": "transformer",
       "license": "apache-2.0",
       "license_link": "https://spdx.org/licenses/Apache-2.0.html",
       "tags": ["image-classification", "multi-label", "vision"]
@@ -1072,6 +1076,7 @@
       "getitune_recipe": "maskrcnn_swint",
       "getitune_task": "INSTANCE_SEGMENTATION",
       "model_type": "MaskRCNN",
+      "quantization_model_type": "transformer",
       "license": "apache-2.0",
       "license_link": "https://spdx.org/licenses/Apache-2.0.html",
       "tags": ["image-segmentation", "instance-segmentation", "vision"]

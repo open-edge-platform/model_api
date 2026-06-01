@@ -586,6 +586,50 @@ class TestQuantizeModel:
         )
         save_model.assert_called_once()
 
+    def test_passes_transformer_model_type_when_configured(
+        self,
+        converter,
+        sample_model_config,
+        template_dir,
+        tmp_path,
+        monkeypatch,
+    ):
+        """Transformer models forward NNCF's TRANSFORMER model type to quantization."""
+        _set_template_root(monkeypatch, template_dir)
+        (template_dir / "README-torchvision-int8.md").write_text("# <<model_name>>")
+        fp16_dir = tmp_path / "test_model-fp16-ov"
+        fp16_dir.mkdir(parents=True)
+        model_path = fp16_dir / "test_model_fp32.xml"
+        model_path.write_text("<net/>")
+        calibration_data = [np.zeros((1, 3, 224, 224), dtype=np.float32)]
+
+        quantized_model = MagicMock()
+        quantized_model.get_rt_info.return_value = SimpleNamespace(value={"model_type": "Classification"})
+        core = SimpleNamespace(read_model=MagicMock(return_value="ov_model"))
+        fake_ov = ModuleType("openvino")
+        fake_ov.Core = MagicMock(return_value=core)
+        fake_ov.save_model = MagicMock(
+            side_effect=lambda _model, path, compress_to_fp16=True: Path(path).write_text("<int8/>") or None,
+        )
+        quantize = MagicMock(return_value=quantized_model)
+        fake_nncf = ModuleType("nncf")
+        fake_nncf.Dataset = MagicMock(side_effect=lambda generator: list(generator))
+        fake_nncf.quantize = quantize
+        fake_nncf.QuantizationPreset = SimpleNamespace(PERFORMANCE="performance", MIXED="mixed")
+        fake_nncf.ModelType = SimpleNamespace(TRANSFORMER="transformer")
+
+        model_config = sample_model_config | {"quantization_model_type": "transformer"}
+
+        with patch.dict(sys.modules, {"openvino": fake_ov, "nncf": fake_nncf}):
+            converter.quantize_model(
+                model_path=model_path,
+                calibration_data=calibration_data,
+                model_config=model_config,
+                preset="mixed",
+            )
+
+        assert quantize.call_args.kwargs["model_type"] == "transformer"
+
     def test_validates_fp32_and_int8_outputs_when_requested(
         self,
         converter,
