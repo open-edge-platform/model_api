@@ -6,6 +6,7 @@
 """Tests for shared converter helpers via TorchvisionConverter."""
 
 import json
+import logging
 import sys
 from pathlib import Path
 from types import ModuleType, SimpleNamespace
@@ -113,6 +114,53 @@ class TestCopyReadme:
         assert "does not define 'docs' field" in caplog.text
         assert (output_folder / "README.md").read_text() == "Docs: "
 
+    def test_logs_warning_when_template_not_found(self, converter, tmp_path, monkeypatch, caplog):
+        """copy_readme logs a warning and does nothing when the template file doesn't exist."""
+        import model_converter.converters.base as base_module
+
+        empty_templates = tmp_path / "empty_templates"
+        empty_templates.mkdir()
+        monkeypatch.setattr(base_module, "__file__", str(empty_templates.parent / "converters" / "base.py"))
+
+        output_folder = tmp_path / "test_model-fp16-ov"
+        output_folder.mkdir()
+
+        converter.copy_readme(
+            {
+                "model_short_name": "test_model",
+                "model_library": "nonexistent_library",
+                "license": "Apache-2.0",
+                "license_link": "https://apache.org/licenses/LICENSE-2.0",
+            },
+            output_folder,
+            variant="fp16",
+        )
+
+        assert "README template not found" in caplog.text
+        assert not (output_folder / "README.md").exists()
+
+    def test_skips_none_config_values_in_placeholders(self, converter, template_dir, tmp_path, monkeypatch):
+        """copy_readme skips None values in model_config without crashing."""
+        _set_template_root(monkeypatch, template_dir)
+        (template_dir / "README-torchvision-fp16.md").write_text("<<model_short_name>>")
+        output_folder = tmp_path / "test_model-fp16-ov"
+        output_folder.mkdir()
+
+        converter.copy_readme(
+            {
+                "model_short_name": "test_model",
+                "model_library": "torchvision",
+                "license": "Apache-2.0",
+                "license_link": "https://apache.org/licenses/LICENSE-2.0",
+                "some_field": None,
+            },
+            output_folder,
+            variant="fp16",
+        )
+
+        content = (output_folder / "README.md").read_text()
+        assert "test_model" in content
+
 
 class TestCollectDatasetEntries:
     """Tests for BaseConverter._collect_dataset_entries via TorchvisionConverter."""
@@ -186,6 +234,37 @@ class TestCreateCalibrationDataset:
 
         assert converter.create_calibration_dataset(input_shape=[1, 3, 224, 224]) == []
 
+    def test_returns_empty_tuple_when_dataset_dir_does_not_exist(self, tmp_path):
+        """Calibration dataset returns empty tuple when image_dir disappears between checks."""
+        converter = TorchvisionConverter(
+            output_dir=tmp_path / "out",
+            cache_dir=tmp_path / "cache",
+            dataset_path=tmp_path / "dataset",
+        )
+        # Mock dataset_path to simulate a race condition: exists() returns True first then False
+        mock_path = MagicMock(spec=Path)
+        mock_path.exists.side_effect = [True, False]
+        converter.dataset_path = mock_path
+
+        result = converter.create_calibration_dataset(input_shape=[1, 3, 224, 224])
+
+        assert result == ([], [])
+
+    def test_returns_empty_tuple_when_no_images_found(self, tmp_path):
+        """Calibration dataset returns empty tuple when dataset directory has no images."""
+        empty_dataset = tmp_path / "empty_dataset"
+        empty_dataset.mkdir()
+
+        converter = TorchvisionConverter(
+            output_dir=tmp_path / "out",
+            cache_dir=tmp_path / "cache",
+            dataset_path=empty_dataset,
+        )
+
+        result = converter.create_calibration_dataset(input_shape=[1, 3, 224, 224])
+
+        assert result == ([], [])
+
     def test_returns_images_and_labels(self, tmp_path, dataset_dir):
         """Calibration dataset returns preprocessed images and class labels when requested."""
         converter = TorchvisionConverter(
@@ -233,6 +312,156 @@ class TestCreateCalibrationDataset:
         np.testing.assert_array_equal(seen_calls[0]["mean"], np.array([1.0, 2.0, 3.0]))
         np.testing.assert_array_equal(seen_calls[0]["scale"], np.array([4.0, 5.0, 6.0]))
         assert seen_calls[0]["reverse_input_channels"] is False
+
+    def test_skips_unreadable_images_in_return_labels_path(self, tmp_path):
+        """Calibration dataset skips images that fail preprocessing when return_labels=True."""
+        dataset_path = tmp_path / "dataset"
+        class_dir = dataset_path / "0"
+        class_dir.mkdir(parents=True)
+
+        (class_dir / "bad_image.jpg").write_text("not an image")
+        img = np.zeros((10, 10, 3), dtype=np.uint8)
+        cv2.imwrite(str(class_dir / "good_image.png"), img)
+
+        converter = TorchvisionConverter(
+            output_dir=tmp_path / "out",
+            cache_dir=tmp_path / "cache",
+            dataset_path=dataset_path,
+        )
+
+        images, labels = converter.create_calibration_dataset(
+            input_shape=[1, 3, 8, 8],
+            return_labels=True,
+        )
+
+        assert len(images) == 1
+        assert labels == [0]
+
+    def test_handles_preprocess_exception_in_return_labels_path(self, tmp_path, dataset_dir):
+        """Calibration dataset logs warning and continues when preprocessing raises."""
+        converter = TorchvisionConverter(
+            output_dir=tmp_path / "out",
+            cache_dir=tmp_path / "cache",
+            dataset_path=dataset_dir,
+        )
+
+        def raising_preprocess(**kwargs):
+            raise OSError("disk error")
+
+        converter._preprocess_calibration_image = raising_preprocess  # type: ignore[method-assign]
+
+        images, labels = converter.create_calibration_dataset(
+            input_shape=[1, 3, 224, 224],
+            return_labels=True,
+        )
+
+        assert images == []
+        assert labels == []
+
+    def test_skips_unreadable_images_in_non_return_labels_path(self, tmp_path):
+        """Calibration dataset skips images that fail preprocessing when return_labels=False."""
+        dataset_path = tmp_path / "dataset"
+        class_dir = dataset_path / "0"
+        class_dir.mkdir(parents=True)
+
+        (class_dir / "bad_image.jpg").write_text("not an image")
+        img = np.zeros((10, 10, 3), dtype=np.uint8)
+        cv2.imwrite(str(class_dir / "good_image.png"), img)
+
+        converter = TorchvisionConverter(
+            output_dir=tmp_path / "out",
+            cache_dir=tmp_path / "cache",
+            dataset_path=dataset_path,
+        )
+
+        images, labels = converter.create_calibration_dataset(
+            input_shape=[1, 3, 8, 8],
+            return_labels=False,
+        )
+
+        assert len(images) == 1
+        assert labels == []
+
+    def test_handles_preprocess_exception_in_non_return_labels_path(self, tmp_path, dataset_dir):
+        """Calibration dataset logs warning and continues when preprocessing raises (no labels)."""
+        converter = TorchvisionConverter(
+            output_dir=tmp_path / "out",
+            cache_dir=tmp_path / "cache",
+            dataset_path=dataset_dir,
+        )
+
+        def raising_preprocess(**kwargs):
+            raise ValueError("bad pixel data")
+
+        converter._preprocess_calibration_image = raising_preprocess  # type: ignore[method-assign]
+
+        images, labels = converter.create_calibration_dataset(
+            input_shape=[1, 3, 224, 224],
+            return_labels=False,
+        )
+
+        assert images == []
+        assert labels == []
+
+    def test_logs_progress_every_50_images_return_labels(self, tmp_path):
+        """Calibration dataset logs progress every 50 images in return_labels path."""
+        dataset_path = tmp_path / "dataset"
+        class_dir = dataset_path / "0"
+        class_dir.mkdir(parents=True)
+        # Create 50 image files to trigger the modulo-50 logging
+        for i in range(50):
+            (class_dir / f"image_{i:04d}.jpg").write_bytes(b"fake")
+
+        converter = TorchvisionConverter(
+            output_dir=tmp_path / "out",
+            cache_dir=tmp_path / "cache",
+            dataset_path=dataset_path,
+        )
+
+        call_count = [0]
+
+        def fake_preprocess(**kwargs):
+            call_count[0] += 1
+            return np.zeros((1, 3, kwargs["height"], kwargs["width"]), dtype=np.float32)
+
+        converter._preprocess_calibration_image = fake_preprocess  # type: ignore[method-assign]
+
+        images, labels = converter.create_calibration_dataset(
+            input_shape=[1, 3, 8, 8],
+            return_labels=True,
+            subset_size=50,
+        )
+
+        assert len(images) == 50
+        assert call_count[0] == 50
+
+    def test_logs_progress_every_50_images_no_labels(self, tmp_path):
+        """Calibration dataset logs progress every 50 images in non-return_labels path."""
+        dataset_path = tmp_path / "dataset"
+        class_dir = dataset_path / "0"
+        class_dir.mkdir(parents=True)
+        for i in range(50):
+            (class_dir / f"image_{i:04d}.jpg").write_bytes(b"fake")
+
+        converter = TorchvisionConverter(
+            output_dir=tmp_path / "out",
+            cache_dir=tmp_path / "cache",
+            dataset_path=dataset_path,
+        )
+
+        def fake_preprocess(**kwargs):
+            return np.zeros((1, 3, kwargs["height"], kwargs["width"]), dtype=np.float32)
+
+        converter._preprocess_calibration_image = fake_preprocess  # type: ignore[method-assign]
+
+        images, labels = converter.create_calibration_dataset(
+            input_shape=[1, 3, 8, 8],
+            return_labels=False,
+            subset_size=50,
+        )
+
+        assert len(images) == 50
+        assert labels == []
 
 
 class TestValidateModel:
@@ -404,3 +633,38 @@ class TestQuantizeModel:
             validation_labels,
         )
         assert converter.validate_model.call_count == 2
+
+    def test_returns_original_path_when_nncf_not_installed(self, converter, sample_model_config, tmp_path):
+        """Quantization returns original path when nncf is not installed."""
+        model_path = tmp_path / "model.xml"
+        model_path.write_text("<net/>")
+        calibration_data = [np.zeros((1, 3, 224, 224), dtype=np.float32)]
+
+        with patch.dict(sys.modules, {"nncf": None, "openvino": None}):
+            result = converter.quantize_model(model_path, calibration_data, sample_model_config)
+
+        assert result == model_path
+
+    def test_returns_original_path_when_quantize_raises_runtime_error(
+        self,
+        converter,
+        sample_model_config,
+        tmp_path,
+    ):
+        """Quantization returns original path when a runtime error occurs."""
+        model_path = tmp_path / "test_model-fp16-ov" / "test_model_fp32.xml"
+        model_path.parent.mkdir(parents=True)
+        model_path.write_text("<net/>")
+        calibration_data = [np.zeros((1, 3, 224, 224), dtype=np.float32)]
+
+        fake_ov = ModuleType("openvino")
+        fake_ov.Core = MagicMock(return_value=SimpleNamespace(read_model=MagicMock(return_value="ov_model")))
+        fake_nncf = ModuleType("nncf")
+        fake_nncf.Dataset = MagicMock(side_effect=lambda generator: list(generator))
+        fake_nncf.quantize = MagicMock(side_effect=RuntimeError("quantization failed"))
+        fake_nncf.QuantizationPreset = SimpleNamespace(PERFORMANCE="performance", MIXED="mixed")
+
+        with patch.dict(sys.modules, {"openvino": fake_ov, "nncf": fake_nncf}):
+            result = converter.quantize_model(model_path, calibration_data, sample_model_config)
+
+        assert result == model_path

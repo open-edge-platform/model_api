@@ -5,6 +5,8 @@
 
 """Tests for converter registry and individual converter classes."""
 
+import json
+import logging
 import sys
 import types
 from unittest.mock import MagicMock, call, patch
@@ -166,6 +168,95 @@ class TestTimmConverter:
         assert mock_export.call_args.kwargs["model"] is mock_torch_model
         assert mock_export.call_args.kwargs["output_path"] == timm_converter.output_dir / "test_timm_model"
 
+    def test_process_model_config_skips_when_outputs_exist(self, timm_converter, sample_timm_config):
+        """process_model_config skips work when both FP16 and INT8 models already exist."""
+        model_short_name = sample_timm_config["model_short_name"]
+        fp16_dir = timm_converter.output_dir / f"{model_short_name}-fp16-ov"
+        int8_dir = timm_converter.output_dir / f"{model_short_name}-int8-ov"
+        fp16_dir.mkdir(parents=True)
+        int8_dir.mkdir(parents=True)
+        (fp16_dir / f"{model_short_name}.xml").write_text("<net/>")
+        (int8_dir / f"{model_short_name}.xml").write_text("<net/>")
+
+        with patch.object(timm_converter, "load_huggingface_model") as mock_load:
+            result = timm_converter.process_model_config(sample_timm_config)
+
+        assert result is True
+        mock_load.assert_not_called()
+
+    def test_process_model_config_returns_false_when_license_is_missing(
+        self,
+        timm_converter,
+        sample_timm_config,
+        caplog,
+    ):
+        """process_model_config returns False when license is not defined."""
+        config = dict(sample_timm_config)
+        config.pop("license")
+
+        with caplog.at_level(logging.ERROR):
+            result = timm_converter.process_model_config(config)
+
+        assert result is False
+        assert "must define 'license'" in caplog.text
+
+    def test_process_model_config_returns_false_when_license_link_is_missing(
+        self,
+        timm_converter,
+        sample_timm_config,
+        caplog,
+    ):
+        """process_model_config returns False when license_link is not defined."""
+        config = dict(sample_timm_config)
+        config.pop("license_link")
+
+        with caplog.at_level(logging.ERROR):
+            result = timm_converter.process_model_config(config)
+
+        assert result is False
+        assert "must define 'license_link'" in caplog.text
+
+    def test_process_model_config_runs_quantization_when_dataset_available(
+        self,
+        tmp_path,
+        sample_timm_config,
+        mock_torch_model,
+    ):
+        """process_model_config runs quantization when dataset path exists."""
+        dataset_dir = tmp_path / "dataset"
+        dataset_dir.mkdir()
+        timm_converter = TimmConverter(
+            output_dir=tmp_path / "output",
+            cache_dir=tmp_path / "cache",
+            dataset_path=dataset_dir,
+            verbose=True,
+        )
+        fp16_path = timm_converter.output_dir / "test_timm_model-fp16-ov" / "test_timm_model.xml"
+        fp32_path = timm_converter.output_dir / "test_timm_model-fp16-ov" / "test_timm_model_fp32.xml"
+
+        with (
+            patch.object(timm_converter, "load_huggingface_model", return_value=mock_torch_model),
+            patch.object(
+                timm_converter,
+                "_build_metadata",
+                return_value={("model_info", "model_type"): "Classification"},
+            ),
+            patch.object(timm_converter, "export_to_openvino", return_value=(fp16_path, fp32_path)),
+            patch.object(timm_converter, "_quantize_and_cleanup") as mock_quantize,
+        ):
+            result = timm_converter.process_model_config(sample_timm_config)
+
+        assert result is True
+        mock_quantize.assert_called_once_with(
+            sample_timm_config,
+            fp32_path,
+            model_type=sample_timm_config.get("model_type", ""),
+            input_shape=sample_timm_config["input_shape"],
+            mean_values=sample_timm_config["mean_values"],
+            scale_values=sample_timm_config["scale_values"],
+            reverse_input_channels=sample_timm_config["reverse_input_channels"],
+        )
+
 
 class TestYoloConverter:
     """Tests for YoloConverter-specific behavior."""
@@ -225,6 +316,121 @@ class TestYoloConverter:
             result = converter.process_model_config({"model_short_name": "YOLO11n", "yolo_version": "yolo11n"})
 
         assert result is False
+
+    def test_process_model_config_skips_when_outputs_exist(self, tmp_path):
+        """process_model_config skips work when both FP16 and INT8 YOLO models already exist."""
+        converter = YoloConverter(output_dir=tmp_path / "output", cache_dir=tmp_path / "cache")
+        config = {"model_short_name": "YOLO11n", "yolo_version": "yolo11n"}
+
+        fp16_dir = converter.output_dir / "YOLO11n-fp16-ov"
+        int8_dir = converter.output_dir / "YOLO11n-int8-ov"
+        fp16_dir.mkdir(parents=True)
+        int8_dir.mkdir(parents=True)
+        (fp16_dir / "yolo11n.xml").write_text("<net/>")
+        (int8_dir / "yolo11n.xml").write_text("<net/>")
+
+        result = converter.process_model_config(config)
+
+        assert result is True
+
+    def test_process_model_config_replaces_existing_int8_folder(self, tmp_path, monkeypatch):
+        """process_model_config removes pre-existing INT8 folder before renaming new output."""
+        converter = YoloConverter(output_dir=tmp_path / "output", cache_dir=tmp_path / "cache")
+        config = {"model_short_name": "YOLO11n", "yolo_version": "yolo11n"}
+        mock_model = MagicMock()
+        yolo_module = types.ModuleType("ultralytics")
+        yolo_module.YOLO = MagicMock(return_value=mock_model)
+
+        # Pre-create the INT8 folder to trigger the rmtree branch
+        int8_dir = converter.output_dir / "YOLO11n-int8-ov"
+        int8_dir.mkdir(parents=True)
+        (int8_dir / "old_file.txt").write_text("old")
+
+        def export_side_effect(**kwargs):
+            suffix = "_int8_openvino_model" if kwargs.get("int8") else "_openvino_model"
+            export_dir = converter.cache_dir / f"yolo11n{suffix}"
+            export_dir.mkdir(parents=True)
+            (export_dir / "yolo11n.xml").write_text("<net/>")
+
+        mock_model.export.side_effect = export_side_effect
+        monkeypatch.chdir(tmp_path)
+
+        with (
+            patch.dict(sys.modules, {"ultralytics": yolo_module}),
+            patch.object(converter, "_update_model_type_in_xml"),
+            patch.object(converter, "_copy_yolo_readme"),
+        ):
+            result = converter.process_model_config(config)
+
+        assert result is True
+        assert (converter.output_dir / "YOLO11n-int8-ov" / "yolo11n.xml").exists()
+        assert not (converter.output_dir / "YOLO11n-int8-ov" / "old_file.txt").exists()
+
+    def test_copy_yolo_readme_replaces_size_placeholder(self, tmp_path, monkeypatch):
+        """_copy_yolo_readme reads template and replaces <<yolo_size>>."""
+        import model_converter.converters.yolo as yolo_module
+
+        converter = YoloConverter(output_dir=tmp_path / "output", cache_dir=tmp_path / "cache")
+        template_dir = tmp_path / "templates"
+        template_dir.mkdir()
+        (template_dir / "README-yolo-fp16.md").write_text("# YOLO <<yolo_size>> model")
+        monkeypatch.setattr(yolo_module, "__file__", str(template_dir.parent / "converters" / "yolo.py"))
+
+        dest_dir = tmp_path / "YOLO11n-fp16-ov"
+        dest_dir.mkdir()
+
+        converter._copy_yolo_readme("README-yolo-fp16.md", dest_dir, "n")
+
+        assert (dest_dir / "README.md").read_text() == "# YOLO n model"
+
+    def test_copy_yolo_readme_warns_when_template_missing(self, tmp_path, monkeypatch, caplog):
+        """_copy_yolo_readme logs a warning when template file doesn't exist."""
+        import model_converter.converters.yolo as yolo_module
+
+        converter = YoloConverter(output_dir=tmp_path / "output", cache_dir=tmp_path / "cache")
+        empty_templates = tmp_path / "templates"
+        empty_templates.mkdir()
+        monkeypatch.setattr(yolo_module, "__file__", str(empty_templates.parent / "converters" / "yolo.py"))
+
+        dest_dir = tmp_path / "YOLO11n-fp16-ov"
+        dest_dir.mkdir()
+
+        converter._copy_yolo_readme("README-yolo-fp16.md", dest_dir, "n")
+
+        assert "YOLO README template not found" in caplog.text
+        assert not (dest_dir / "README.md").exists()
+
+    def test_update_model_type_in_xml_modifies_element_and_writes_config(self, tmp_path):
+        """_update_model_type_in_xml updates model_type and writes config.json."""
+        converter = YoloConverter(output_dir=tmp_path / "output", cache_dir=tmp_path / "cache")
+        xml_path = tmp_path / "model.xml"
+        xml_path.write_text(
+            '<?xml version="1.0" encoding="utf-8"?>\n'
+            "<net>\n"
+            "  <rt_info>\n"
+            "    <model_info>\n"
+            '      <model_type value="OldType"/>\n'
+            '      <labels value="person car"/>\n'
+            "    </model_info>\n"
+            "  </rt_info>\n"
+            "</net>\n",
+        )
+
+        converter._update_model_type_in_xml(xml_path, "YOLO11")
+
+        config_json = json.loads((tmp_path / "config.json").read_text())
+        assert config_json["model_type"] == "YOLO11"
+        assert config_json["labels"] == "person car"
+
+    def test_update_model_type_in_xml_handles_parse_error(self, tmp_path, caplog):
+        """_update_model_type_in_xml logs a warning when XML is malformed."""
+        converter = YoloConverter(output_dir=tmp_path / "output", cache_dir=tmp_path / "cache")
+        xml_path = tmp_path / "bad.xml"
+        xml_path.write_text("not valid xml <<<>>>")
+
+        converter._update_model_type_in_xml(xml_path, "YOLO11")
+
+        assert "Failed to update" in caplog.text
 
 
 class TestPyTorchConverterSharedLogic:

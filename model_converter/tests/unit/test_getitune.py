@@ -214,6 +214,72 @@ class TestProcessModelConfig:
         mock_repackage.assert_called_once_with(config, exported_model_path)
         mock_quantize.assert_not_called()
 
+    def test_process_model_config_returns_false_when_license_is_missing(
+        self,
+        getitune_converter,
+        sample_getitune_config,
+        caplog,
+    ):
+        """process_model_config returns False when license is not defined."""
+        config = dict(sample_getitune_config)
+        config.pop("license")
+
+        with caplog.at_level(logging.ERROR):
+            result = getitune_converter.process_model_config(config)
+
+        assert result is False
+        assert "must define 'license'" in caplog.text
+
+    def test_process_model_config_returns_false_when_license_link_is_missing(
+        self,
+        getitune_converter,
+        sample_getitune_config,
+        caplog,
+    ):
+        """process_model_config returns False when license_link is not defined."""
+        config = dict(sample_getitune_config)
+        config.pop("license_link")
+
+        with caplog.at_level(logging.ERROR):
+            result = getitune_converter.process_model_config(config)
+
+        assert result is False
+        assert "must define 'license_link'" in caplog.text
+
+    def test_process_model_config_logs_description_when_present(
+        self,
+        getitune_converter,
+        sample_getitune_config,
+        training_extensions_dir,
+        tmp_path,
+        caplog,
+    ):
+        """process_model_config logs model description when config includes it."""
+        config = sample_getitune_config | {"description": "A test getitune model"}
+        export_root = tmp_path / "getitune_export_desc"
+        expected_xml = export_root / "multi_class_cls" / "dino_v2" / "exported_model.xml"
+
+        def fake_run(*args, **kwargs):
+            expected_xml.parent.mkdir(parents=True, exist_ok=True)
+            expected_xml.write_text("<net/>")
+            expected_xml.with_suffix(".bin").write_bytes(b"bin")
+            return MagicMock(returncode=0, stdout="ok", stderr="")
+
+        fake_openvino = _make_openvino_module()
+
+        with (
+            patch("model_converter.converters.getitune.tempfile.mkdtemp", return_value=str(export_root)),
+            patch("model_converter.converters.getitune.subprocess.run", side_effect=fake_run),
+            patch.object(getitune_converter, "copy_readme"),
+            patch.object(getitune_converter, "_quantize_exported_model"),
+            patch.dict("sys.modules", {"openvino": fake_openvino}),
+            caplog.at_level(logging.INFO),
+        ):
+            result = getitune_converter.process_model_config(config)
+
+        assert result is True
+        assert "A test getitune model" in caplog.text
+
 
 class TestRunExport:
     """Tests for GetituneConverter._run_export."""
@@ -414,6 +480,61 @@ class TestRepackageModel:
         mock_copy_readme.assert_called_once_with(sample_getitune_config, output_folder, variant="fp16")
         assert not export_root.exists()
 
+    def test_repackage_model_handles_metadata_extraction_failure(
+        self,
+        getitune_converter,
+        sample_getitune_config,
+        tmp_path,
+        caplog,
+    ):
+        """_repackage_model continues when openvino metadata extraction fails."""
+        export_root = tmp_path / "getitune_export_meta_fail"
+        exported_model_path = export_root / "multi_class_cls" / "dino_v2" / "exported_model.xml"
+        _write_openvino_model(exported_model_path)
+
+        failing_ov = types.ModuleType("openvino")
+        core = MagicMock()
+        model = MagicMock()
+        model.get_rt_info.side_effect = RuntimeError("No rt_info found")
+        core.read_model.return_value = model
+        setattr(failing_ov, "Core", MagicMock(return_value=core))
+
+        with (
+            patch.object(getitune_converter, "copy_readme"),
+            patch.dict("sys.modules", {"openvino": failing_ov}),
+            caplog.at_level(logging.WARNING),
+        ):
+            getitune_converter._repackage_model(sample_getitune_config, exported_model_path)
+
+        output_folder = getitune_converter.output_dir / "dino_v2_cls-fp16-ov"
+        assert (output_folder / "dino_v2_cls.xml").exists()
+        assert "Could not extract model_info metadata" in caplog.text
+        assert not (output_folder / "config.json").exists()
+
+    def test_repackage_model_handles_non_matching_temp_path(
+        self,
+        getitune_converter,
+        sample_getitune_config,
+        tmp_path,
+    ):
+        """_repackage_model handles exported path without getitune_export_ prefix."""
+        export_dir = tmp_path / "some_other_dir" / "sub"
+        exported_model_path = export_dir / "exported_model.xml"
+        _write_openvino_model(exported_model_path)
+
+        fake_openvino = _make_openvino_module()
+
+        with (
+            patch.object(getitune_converter, "copy_readme"),
+            patch.dict("sys.modules", {"openvino": fake_openvino}),
+        ):
+            getitune_converter._repackage_model(sample_getitune_config, exported_model_path)
+
+        output_folder = getitune_converter.output_dir / "dino_v2_cls-fp16-ov"
+        assert (output_folder / "dino_v2_cls.xml").exists()
+        # The temp directory should still exist since it doesn't match the pattern
+        assert export_dir.exists()
+
 
 class TestQuantizeExportedModel:
     """Tests for GetituneConverter._quantize_exported_model."""
@@ -495,6 +616,37 @@ class TestQuantizeExportedModel:
             model_config=sample_getitune_config,
             preset="mixed",
         )
+
+    def test_quantize_exported_model_handles_cleanup_oserror(
+        self,
+        getitune_converter,
+        sample_getitune_config,
+        caplog,
+    ):
+        """_quantize_exported_model logs a warning when FP32 file cleanup fails."""
+        output_folder = getitune_converter.output_dir / "dino_v2_cls-fp16-ov"
+        fp32_xml = output_folder / "dino_v2_cls_fp32.xml"
+        _write_openvino_model(fp32_xml)
+        calibration_data = [np.zeros((1, 3, 224, 224), dtype=np.float32)]
+
+        with (
+            patch.object(
+                getitune_converter,
+                "_read_preprocessing_from_model",
+                return_value=([1, 3, 224, 224], "0 0 0", "1 1 1", True),
+            ),
+            patch.object(
+                getitune_converter,
+                "create_calibration_dataset",
+                return_value=(calibration_data, []),
+            ),
+            patch.object(getitune_converter, "quantize_model"),
+            patch("pathlib.Path.unlink", side_effect=OSError("permission denied")),
+            caplog.at_level(logging.WARNING),
+        ):
+            getitune_converter._quantize_exported_model(sample_getitune_config)
+
+        assert "Failed to remove temporary FP32 files" in caplog.text
 
 
 class TestReadPreprocessingFromModel:
