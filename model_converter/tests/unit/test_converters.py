@@ -6,7 +6,6 @@
 """Tests for shared converter helpers via TorchvisionConverter."""
 
 import json
-import logging
 import sys
 from pathlib import Path
 from types import ModuleType, SimpleNamespace
@@ -346,7 +345,8 @@ class TestCreateCalibrationDataset:
         )
 
         def raising_preprocess(**kwargs):
-            raise OSError("disk error")
+            disk_error_msg = "disk error"
+            raise OSError(disk_error_msg)
 
         converter._preprocess_calibration_image = raising_preprocess  # type: ignore[method-assign]
 
@@ -391,7 +391,8 @@ class TestCreateCalibrationDataset:
         )
 
         def raising_preprocess(**kwargs):
-            raise ValueError("bad pixel data")
+            bad_pixel_msg = "bad pixel data"
+            raise ValueError(bad_pixel_msg)
 
         converter._preprocess_calibration_image = raising_preprocess  # type: ignore[method-assign]
 
@@ -426,7 +427,7 @@ class TestCreateCalibrationDataset:
 
         converter._preprocess_calibration_image = fake_preprocess  # type: ignore[method-assign]
 
-        images, labels = converter.create_calibration_dataset(
+        images, _ = converter.create_calibration_dataset(
             input_shape=[1, 3, 8, 8],
             return_labels=True,
             subset_size=50,
