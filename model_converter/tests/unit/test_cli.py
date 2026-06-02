@@ -299,6 +299,7 @@ class TestApplyTimmDataConfig:
         assert config["mean_values"] == "127.5 127.5 127.5"
         assert config["scale_values"] == "127.5 127.5 127.5"
         assert config["input_shape"] == [1, 3, 256, 256]
+        assert config["reverse_input_channels"] is True
 
     def test_keeps_imagenet_values_when_model_matches(self, timm_converter):
         """Standard ImageNet normalization round-trips to the canonical strings."""
@@ -325,7 +326,22 @@ class TestApplyTimmDataConfig:
         with patch("timm.data.resolve_data_config", return_value={}):
             timm_converter._apply_timm_data_config(model, config)
 
-        assert config == {"mean_values": "1 2 3", "scale_values": "4 5 6", "input_shape": [1, 3, 8, 8]}
+        assert config == {
+            "mean_values": "1 2 3",
+            "scale_values": "4 5 6",
+            "input_shape": [1, 3, 8, 8],
+            "reverse_input_channels": True,
+        }
+
+    def test_forces_reverse_input_channels(self, timm_converter):
+        """reverse_input_channels is always forced to True for timm (RGB) models."""
+        model = MagicMock()
+        config = {"reverse_input_channels": False}
+
+        with patch("timm.data.resolve_data_config", return_value={}):
+            timm_converter._apply_timm_data_config(model, config)
+
+        assert config["reverse_input_channels"] is True
 
     def test_ignores_malformed_input_size(self, timm_converter):
         """A non 3-tuple input_size is ignored, leaving input_shape untouched."""
@@ -356,6 +372,7 @@ class TestApplyTimmDataConfig:
             timm_converter._apply_timm_data_config(model, config)
 
         assert config["mean_values"] == "1 2 3"
+        assert config["reverse_input_channels"] is True
 
 
 class TestCreateModel:

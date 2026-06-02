@@ -82,13 +82,18 @@ class TimmConverter(PyTorchConverter):
         ``config`` in place. timm stores ``mean``/``std`` as 0..1 floats, so they
         are scaled to the 0..255 pixel range used by Model API metadata.
 
-        Any value the model does not provide is left untouched so explicit
-        configuration still wins for fields timm cannot supply.
+        ``reverse_input_channels`` is forced to ``True`` because timm models are
+        trained on RGB images while images are decoded as BGR by OpenCV, so the
+        channels must always be swapped. timm does not expose this through
+        ``resolve_data_config``, but it is an invariant for these models.
 
         Args:
             model: The loaded timm model.
             config: Model configuration dictionary, mutated in place.
         """
+        # timm models consume RGB; OpenCV decodes BGR, so the swap is always needed.
+        self._override_config_value(config, "reverse_input_channels", resolved=True)
+
         try:
             from timm.data import resolve_data_config
         except ImportError:
