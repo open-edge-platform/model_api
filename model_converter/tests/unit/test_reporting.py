@@ -5,6 +5,8 @@
 
 """Tests for the conversion summary reporting module."""
 
+from typing import Any
+
 from model_converter.reporting import (
     STATUS_ACCURACY_DROP,
     STATUS_FAILED_CONVERSION,
@@ -23,7 +25,7 @@ from model_converter.reporting import (
 
 
 def _result(**kwargs) -> ConversionResult:
-    base = {
+    base: dict[str, Any] = {
         "model_short_name": "m",
         "model_full_name": "Model",
         "model_type": "Classification",
@@ -38,6 +40,7 @@ class TestAccuracyResults:
 
     def test_defaults(self):
         acc = AccuracyResults()
+        assert acc.original_accuracy is None
         assert acc.fp32_accuracy is None
         assert acc.fp16_accuracy is None
         assert acc.int8_accuracy is None
@@ -102,17 +105,37 @@ class TestDetermineStatus:
         assert status == STATUS_ACCURACY_DROP
         assert "INT8 drop" in detail
 
+    def test_fp32_conversion_drop_flagged(self):
+        result = _result(original_accuracy=0.90, fp32_accuracy=0.80, fp16_accuracy=0.80, int8_accuracy=0.79)
+        status, detail = determine_status(result, converted=True, quantized=True, skipped=False)
+        assert status == STATUS_ACCURACY_DROP
+        assert "FP32 drop" in detail
+
+    def test_original_within_threshold_is_ok(self):
+        result = _result(original_accuracy=0.90, fp32_accuracy=0.89, fp16_accuracy=0.89, int8_accuracy=0.88)
+        status, detail = determine_status(result, converted=True, quantized=True, skipped=False)
+        assert status == STATUS_OK
+        assert detail == ""
+
 
 class TestRendering:
     """Tests for console and markdown rendering."""
 
     def test_console_table_includes_values_and_na(self):
         results = [
-            _result(fp32_accuracy=0.9012, fp16_accuracy=0.9, int8_accuracy=0.88, status=STATUS_OK),
+            _result(
+                original_accuracy=0.9123,
+                fp32_accuracy=0.9012,
+                fp16_accuracy=0.9,
+                int8_accuracy=0.88,
+                status=STATUS_OK,
+            ),
             _result(model_full_name="NoAcc", original_url=None, status=STATUS_OK_NO_ACCURACY),
         ]
         table = format_console_table(results)
         assert "Conversion Summary Report" in table
+        assert "Original Accuracy" in table
+        assert "91.23%" in table
         assert "90.12%" in table
         assert "N/A" in table
         assert "Status" in table

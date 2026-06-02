@@ -561,6 +561,65 @@ class TestQuantizeAndCleanup:
         assert not fp32_path.exists()
         assert not fp32_bin.exists()
 
+    def test_measures_original_accuracy_with_torch_model(self, converter, tmp_path, sample_model_config):
+        """_quantize_and_cleanup measures the original PyTorch model accuracy when a model is given."""
+        from model_converter.reporting import AccuracyResults
+
+        fp32_path = tmp_path / "model_fp32.xml"
+        fp32_path.write_text("<net/>")
+        validation_data = [np.zeros((1, 3, 224, 224))]
+        validation_labels = [0]
+        torch_model = MagicMock()
+
+        with (
+            patch.object(converter, "create_calibration_dataset", return_value=(validation_data, validation_labels)),
+            patch.object(converter, "validate_torch_model", return_value=0.91) as mock_validate,
+            patch.object(converter, "quantize_model") as mock_quantize,
+        ):
+            accuracy = converter._quantize_and_cleanup(
+                sample_model_config,
+                fp32_path,
+                model_type="Classification",
+                input_shape=[1, 3, 224, 224],
+                mean_values="123.675 116.28 103.53",
+                scale_values="58.395 57.12 57.375",
+                reverse_input_channels=True,
+                torch_model=torch_model,
+            )
+
+        mock_validate.assert_called_once_with(torch_model, validation_data, validation_labels)
+        assert isinstance(accuracy, AccuracyResults)
+        assert accuracy.original_accuracy == pytest.approx(0.91)
+        assert accuracy.measured is True
+        # quantize_model still receives the validation collector.
+        assert mock_quantize.call_args.kwargs["accuracy_results"] is accuracy
+
+    def test_skips_original_accuracy_when_torch_validation_fails(self, converter, tmp_path, sample_model_config):
+        """A failed PyTorch validation leaves the original accuracy unset."""
+        fp32_path = tmp_path / "model_fp32.xml"
+        fp32_path.write_text("<net/>")
+        validation_data = [np.zeros((1, 3, 224, 224))]
+        validation_labels = [0]
+
+        with (
+            patch.object(converter, "create_calibration_dataset", return_value=(validation_data, validation_labels)),
+            patch.object(converter, "validate_torch_model", return_value=None) as mock_validate,
+            patch.object(converter, "quantize_model"),
+        ):
+            accuracy = converter._quantize_and_cleanup(
+                sample_model_config,
+                fp32_path,
+                model_type="Classification",
+                input_shape=[1, 3, 224, 224],
+                mean_values="123.675 116.28 103.53",
+                scale_values="58.395 57.12 57.375",
+                reverse_input_channels=True,
+                torch_model=MagicMock(),
+            )
+
+        mock_validate.assert_called_once()
+        assert accuracy.original_accuracy is None
+
     def test_without_classification_labels(self, converter, tmp_path, sample_model_config):
         """_quantize_and_cleanup skips validation for non-classification models."""
         fp32_path = tmp_path / "model_fp32.xml"

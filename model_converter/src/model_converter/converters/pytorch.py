@@ -336,6 +336,43 @@ class PyTorchConverter(BaseConverter):
 
         return metadata
 
+    def validate_torch_model(
+        self,
+        model: nn.Module,
+        validation_data: list[Any],
+        labels: list[int],
+    ) -> float | None:
+        """Validate the original PyTorch model and compute top-1 accuracy.
+
+        Runs inference on the same preprocessed validation tensors used for the
+        OpenVINO models, so the result is comparable to the FP32/FP16/INT8
+        accuracies.
+
+        Args:
+            model: The original PyTorch model (before OpenVINO conversion).
+            validation_data: Preprocessed validation images (NCHW numpy arrays).
+            labels: Ground truth class labels.
+
+        Returns:
+            Top-1 accuracy (0.0 to 1.0), or ``None`` if validation failed.
+        """
+        try:
+            model.eval()
+            predictions: list[int] = []
+            with torch.no_grad():
+                for img in validation_data:
+                    output = model(torch.from_numpy(img).float())
+                    if isinstance(output, (tuple, list)):
+                        output = output[0]
+                    predictions.append(int(torch.argmax(output, dim=1)[0].item()))
+
+            correct = sum(predicted == label for predicted, label in zip(predictions, labels))
+            return correct / len(labels)
+
+        except (RuntimeError, TypeError, ValueError) as e:
+            self.logger.error(f"Failed to validate PyTorch model: {e}")
+            return None
+
     def _quantize_and_cleanup(self, config: dict[str, Any], fp32_model_path: Path, **kwargs: Any) -> AccuracyResults:
         """Run INT8 quantization and clean up temporary FP32 model files.
 
@@ -359,6 +396,15 @@ class PyTorchConverter(BaseConverter):
         )
 
         if validation_data:
+            torch_model = kwargs.get("torch_model")
+            if validation_labels and torch_model is not None:
+                self.logger.info("Validating original PyTorch model accuracy...")
+                original_accuracy = self.validate_torch_model(torch_model, validation_data, validation_labels)
+                if original_accuracy is not None:
+                    self.logger.info(f"Original Top-1 Accuracy: {original_accuracy * 100:.2f}%")
+                    accuracy.original_accuracy = original_accuracy
+                    accuracy.measured = True
+
             self.quantize_model(
                 model_path=fp32_model_path,
                 calibration_data=validation_data,

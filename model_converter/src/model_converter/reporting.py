@@ -31,6 +31,7 @@ _REPORT_COLUMNS = (
     "Model Type",
     "Model Library",
     "Original URL",
+    "Original Accuracy",
     "FP32 Accuracy",
     "FP16 Accuracy",
     "INT8 Accuracy",
@@ -51,6 +52,7 @@ class ConversionResult:
     model_type: str
     model_library: str
     original_url: str | None = None
+    original_accuracy: float | None = None
     fp32_accuracy: float | None = None
     fp16_accuracy: float | None = None
     int8_accuracy: float | None = None
@@ -62,6 +64,7 @@ class ConversionResult:
 class AccuracyResults:
     """Container for accuracies measured during quantization."""
 
+    original_accuracy: float | None = None
     fp32_accuracy: float | None = None
     fp16_accuracy: float | None = None
     int8_accuracy: float | None = None
@@ -103,8 +106,9 @@ def determine_status(
 ) -> tuple[str, str]:
     """Compute the status and detail for a conversion result.
 
-    FP32 is the baseline. A drop is abnormal when ``(FP32 - FP16)`` or
-    ``(FP32 - INT8)`` exceeds ``threshold`` percentage points.
+    FP32 is the baseline for quantization drops. A drop is abnormal when the
+    original-to-FP32 conversion, ``(FP32 - FP16)``, or ``(FP32 - INT8)`` exceeds
+    ``threshold`` percentage points.
 
     Args:
         result: The conversion result holding accuracy values.
@@ -130,6 +134,11 @@ def determine_status(
 
     fp32_pct = result.fp32_accuracy * 100
     drops: list[str] = []
+
+    if result.original_accuracy is not None:
+        fp32_drop = result.original_accuracy * 100 - fp32_pct
+        if fp32_drop > threshold:
+            drops.append(f"FP32 drop {fp32_drop:.2f}%")
 
     if result.fp16_accuracy is not None:
         fp16_drop = fp32_pct - result.fp16_accuracy * 100
@@ -161,6 +170,7 @@ def _row_values(result: ConversionResult) -> list[str]:
         result.model_type or "N/A",
         result.model_library or "N/A",
         result.original_url or "N/A",
+        _format_accuracy(result.original_accuracy),
         _format_accuracy(result.fp32_accuracy),
         _format_accuracy(result.fp16_accuracy),
         _format_accuracy(result.int8_accuracy),

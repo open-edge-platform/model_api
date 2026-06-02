@@ -168,6 +168,7 @@ class TimmConverter(PyTorchConverter):
                     mean_values=mean_values,
                     scale_values=scale_values,
                     reverse_input_channels=reverse_input_channels,
+                    torch_model=model,
                 )
 
             quantized = accuracy.int8_succeeded if quantization_attempted and accuracy is not None else True

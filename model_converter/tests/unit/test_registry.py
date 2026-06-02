@@ -9,7 +9,7 @@ import json
 import logging
 import sys
 import types
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import ANY, MagicMock, call, patch
 
 import pytest
 import torch.nn as nn
@@ -256,6 +256,7 @@ class TestTimmConverter:
             mean_values=sample_timm_config["mean_values"],
             scale_values=sample_timm_config["scale_values"],
             reverse_input_channels=sample_timm_config["reverse_input_channels"],
+            torch_model=ANY,
         )
 
 

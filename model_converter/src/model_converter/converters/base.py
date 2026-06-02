@@ -93,6 +93,7 @@ class BaseConverter(ABC):
     ) -> ConversionResult:
         """Finalize a ConversionResult: copy accuracies, set status, and store it."""
         if accuracy is not None and accuracy.measured:
+            result.original_accuracy = accuracy.original_accuracy
             result.fp32_accuracy = accuracy.fp32_accuracy
             result.fp16_accuracy = accuracy.fp16_accuracy
             result.int8_accuracy = accuracy.int8_accuracy

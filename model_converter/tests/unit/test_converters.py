@@ -509,7 +509,42 @@ class TestValidateModel:
         assert accuracy == pytest.approx(0.0)
 
 
-class TestQuantizeModel:
+class TestValidateTorchModel:
+    """Tests for PyTorchConverter.validate_torch_model via TorchvisionConverter."""
+
+    def test_computes_top1_accuracy(self, converter):
+        """Top-1 accuracy is computed from the original PyTorch model outputs."""
+        import torch
+
+        model = MagicMock()
+        model.side_effect = [
+            (torch.tensor([[0.1, 0.9, 0.0]]),),
+            torch.tensor([[0.8, 0.1, 0.1]]),
+        ]
+
+        accuracy = converter.validate_torch_model(
+            model,
+            [np.zeros((1, 3, 224, 224), dtype=np.float64), np.zeros((1, 3, 224, 224), dtype=np.float64)],
+            [1, 0],
+        )
+
+        model.eval.assert_called_once()
+        assert accuracy == pytest.approx(1.0)
+        # Inputs are cast to float32 to match PyTorch model weights.
+        assert model.call_args.args[0].dtype == torch.float32
+
+    def test_returns_none_when_inference_fails(self, converter):
+        """Validation returns None when the PyTorch model raises an error."""
+        model = MagicMock(side_effect=RuntimeError("forward failed"))
+
+        accuracy = converter.validate_torch_model(
+            model,
+            [np.zeros((1, 3, 224, 224), dtype=np.float32)],
+            [0],
+        )
+
+        assert accuracy is None
+
     """Tests for BaseConverter.quantize_model via TorchvisionConverter."""
 
     def test_returns_original_model_when_no_calibration_data(self, converter, sample_model_config, tmp_path):
