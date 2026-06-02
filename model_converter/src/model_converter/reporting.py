@@ -11,6 +11,8 @@ form and renders them as a console table and a Markdown report.
 
 from __future__ import annotations
 
+import dataclasses
+import json
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -235,3 +237,45 @@ def write_markdown_report(results: list[ConversionResult], path: Path) -> None:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(format_markdown_report(results))
+
+
+def _load_results_from_json(path: Path) -> list[ConversionResult]:
+    """Load persisted ConversionResult objects from a JSON sidecar file.
+
+    Args:
+        path: Path to the JSON sidecar file.
+
+    Returns:
+        List of ConversionResult objects, or an empty list if the file does not exist.
+    """
+    if not path.exists():
+        return []
+    try:
+        data = json.loads(path.read_text())
+        return [ConversionResult(**entry) for entry in data]
+    except (json.JSONDecodeError, TypeError, KeyError):
+        return []
+
+
+def upsert_result(result: ConversionResult, path: Path) -> None:
+    """Upsert a single result into the report files.
+
+    Reads the existing JSON sidecar (``path.with_suffix('.json')``), replaces
+    the entry whose ``model_short_name`` matches ``result``, or appends it if
+    absent.  Then writes the updated JSON sidecar and regenerates the Markdown
+    report at ``path``.
+
+    Args:
+        result: Conversion result to upsert.
+        path: Destination Markdown file path.
+    """
+    path = Path(path)
+    json_path = path.with_suffix(".json")
+
+    existing = _load_results_from_json(json_path)
+    updated = [r for r in existing if r.model_short_name != result.model_short_name]
+    updated.append(result)
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    json_path.write_text(json.dumps([dataclasses.asdict(r) for r in updated], indent=2))
+    path.write_text(format_markdown_report(updated))

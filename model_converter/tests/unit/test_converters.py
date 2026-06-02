@@ -790,6 +790,48 @@ class TestValidateTorchModel:
         assert result.status == STATUS_OK
         assert converter.results[-1] is result
 
+    def test_record_result_calls_upsert_when_report_path_set(
+        self, tmp_output_dir, tmp_cache_dir, sample_model_config, tmp_path,
+    ):
+        """_record_result calls upsert_result when report_path is set and not skipped."""
+        from unittest.mock import patch
+
+        from model_converter.converters.torchvision import TorchvisionConverter
+
+        report_path = tmp_path / "report.md"
+        conv = TorchvisionConverter(output_dir=tmp_output_dir, cache_dir=tmp_cache_dir, report_path=report_path)
+
+        with patch("model_converter.converters.base.upsert_result") as mock_upsert:
+            conv._record_result(conv._build_result(sample_model_config), converted=True, quantized=True)
+
+        mock_upsert.assert_called_once()
+        assert mock_upsert.call_args.args[1] == report_path
+
+    def test_record_result_skips_upsert_when_skipped(
+        self, tmp_output_dir, tmp_cache_dir, sample_model_config, tmp_path,
+    ):
+        """_record_result does not call upsert_result when the model export is skipped."""
+        from unittest.mock import patch
+
+        from model_converter.converters.torchvision import TorchvisionConverter
+
+        report_path = tmp_path / "report.md"
+        conv = TorchvisionConverter(output_dir=tmp_output_dir, cache_dir=tmp_cache_dir, report_path=report_path)
+
+        with patch("model_converter.converters.base.upsert_result") as mock_upsert:
+            conv._record_result(conv._build_result(sample_model_config), converted=False, quantized=False, skipped=True)
+
+        mock_upsert.assert_not_called()
+
+    def test_record_result_skips_upsert_when_no_report_path(self, converter, sample_model_config, tmp_path):
+        """_record_result does not call upsert_result when report_path is None."""
+        from unittest.mock import patch
+
+        with patch("model_converter.converters.base.upsert_result") as mock_upsert:
+            converter._record_result(converter._build_result(sample_model_config), converted=True, quantized=True)
+
+        mock_upsert.assert_not_called()
+
     def test_returns_original_path_when_nncf_not_installed(self, converter, sample_model_config, tmp_path):
         """Quantization returns original path when nncf is not installed."""
         model_path = tmp_path / "model.xml"

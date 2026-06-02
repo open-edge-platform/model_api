@@ -24,7 +24,6 @@ from model_converter.converters.getitune import GetituneConverter
 from model_converter.reporting import (
     ConversionResult,
     format_console_table,
-    write_markdown_report,
 )
 
 
@@ -43,6 +42,7 @@ class ModelConverter:
         verbose: bool = False,
         dataset_path: Path | None = None,
         training_extensions_dir: Path | None = None,
+        report_path: Path | None = None,
     ):
         """Initialize the ModelConverter.
 
@@ -52,11 +52,15 @@ class ModelConverter:
             verbose: Enable verbose logging
             dataset_path: Path to calibration dataset for quantization
             training_extensions_dir: Path to training_extensions repo (for getitune models)
+            report_path: Path to the Markdown report file.  When set, each
+                non-skipped conversion result is written to the file immediately
+                after export.
         """
         self.output_dir = Path(output_dir)
         self.cache_dir = Path(cache_dir)
         self.dataset_path = Path(dataset_path) if dataset_path else None
         self.training_extensions_dir = Path(training_extensions_dir) if training_extensions_dir else None
+        self.report_path = Path(report_path) if report_path else None
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
@@ -95,6 +99,7 @@ class ModelConverter:
                 "cache_dir": self.cache_dir,
                 "verbose": self._verbose,
                 "dataset_path": self.dataset_path,
+                "report_path": self.report_path,
             }
 
             if converter_cls == GetituneConverter:
@@ -311,13 +316,22 @@ Examples:
         "--report",
         nargs="?",
         const="",
-        default=None,
+        default="",
         metavar="PATH",
         help=(
-            "Generate a conversion summary report. Pass the flag alone to write to "
+            "Generate a conversion summary report (enabled by default). Pass the flag alone to write to "
             "<output>/conversion_report.md, or provide a PATH to override the location. "
-            "The report is printed to the console and saved as Markdown."
+            "The report is printed to the console and saved as Markdown. "
+            "Use --no-report to disable."
         ),
+    )
+
+    parser.add_argument(
+        "--no-report",
+        dest="report",
+        action="store_const",
+        const=None,
+        help="Disable the conversion summary report.",
     )
 
     parser.add_argument(
@@ -362,6 +376,10 @@ Examples:
     logger.info(f"Loading configuration from: {args.config}")
 
     try:
+        report_path: Path | None = None
+        if args.report is not None:
+            report_path = Path(args.report) if args.report else args.output / "conversion_report.md"
+
         # Create converter
         converter = ModelConverter(
             output_dir=args.output,
@@ -369,6 +387,7 @@ Examples:
             verbose=args.verbose,
             dataset_path=args.dataset,
             training_extensions_dir=args.training_extensions_dir,
+            report_path=report_path,
         )
 
         logger.info(f"Output directory: {args.output}")
@@ -391,12 +410,9 @@ Examples:
         logger.info(f"  Total: {successful + failed}")
         logger.info("=" * 80)
 
-        # Generate the conversion summary report when requested
-        if args.report is not None:
-            report_path = Path(args.report) if args.report else args.output / "conversion_report.md"
+        if report_path is not None:
             results = converter.collect_results()
             print(format_console_table(results))
-            write_markdown_report(results, report_path)
             logger.info(f"Conversion report written to: {report_path}")
 
         return 0 if failed == 0 else 1

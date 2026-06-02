@@ -20,6 +20,7 @@ from model_converter.reporting import (
     ConversionResult,
     determine_status,
     original_url_for_config,
+    upsert_result,
 )
 
 
@@ -36,6 +37,7 @@ class BaseConverter(ABC):
         cache_dir: Path,
         verbose: bool = False,
         dataset_path: Path | None = None,
+        report_path: Path | None = None,
     ):
         """Initialize the BaseConverter.
 
@@ -44,10 +46,14 @@ class BaseConverter(ABC):
             cache_dir: Directory to cache downloaded weights
             verbose: Enable verbose logging
             dataset_path: Path to calibration dataset for quantization
+            report_path: Path to the Markdown report file.  When set, each
+                non-skipped result is upserted into the file immediately after
+                conversion.
         """
         self.output_dir = Path(output_dir)
         self.cache_dir = Path(cache_dir)
         self.dataset_path = Path(dataset_path) if dataset_path else None
+        self.report_path = Path(report_path) if report_path else None
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
@@ -104,6 +110,8 @@ class BaseConverter(ABC):
             skipped=skipped,
         )
         self.results.append(result)
+        if self.report_path is not None and not skipped:
+            upsert_result(result, self.report_path)
         return result
 
     def copy_readme(

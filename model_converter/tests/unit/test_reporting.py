@@ -20,6 +20,7 @@ from model_converter.reporting import (
     format_console_table,
     format_markdown_report,
     original_url_for_config,
+    upsert_result,
     write_markdown_report,
 )
 
@@ -167,3 +168,65 @@ class TestRendering:
         write_markdown_report([_result(status=STATUS_OK)], path)
         assert path.exists()
         assert "# Conversion Summary Report" in path.read_text()
+
+
+class TestUpsertResult:
+    """Tests for upsert_result."""
+
+    def test_creates_files_on_first_write(self, tmp_path):
+        """upsert_result creates both the Markdown and JSON sidecar."""
+        path = tmp_path / "report.md"
+        upsert_result(_result(model_short_name="m1", model_full_name="Model One", status=STATUS_OK), path)
+        assert path.exists()
+        assert path.with_suffix(".json").exists()
+        assert "# Conversion Summary Report" in path.read_text()
+
+    def test_appends_new_entry(self, tmp_path):
+        """upsert_result appends a new entry when the model is not yet tracked."""
+        path = tmp_path / "report.md"
+        upsert_result(_result(model_short_name="m1", model_full_name="Model One", status=STATUS_OK), path)
+        upsert_result(_result(model_short_name="m2", model_full_name="Model Two", status=STATUS_OK), path)
+        md = path.read_text()
+        assert "Model One" in md
+        assert "Model Two" in md
+
+    def test_replaces_existing_entry(self, tmp_path):
+        """upsert_result replaces an existing entry for the same model_short_name."""
+        path = tmp_path / "report.md"
+        upsert_result(
+            _result(model_short_name="m1", model_full_name="Model One", status=STATUS_FAILED_CONVERSION), path,
+        )
+        upsert_result(_result(model_short_name="m1", model_full_name="Model One", status=STATUS_OK), path)
+        md = path.read_text()
+        assert STATUS_OK in md
+        assert STATUS_FAILED_CONVERSION not in md
+        # Only one row for Model One
+        assert md.count("Model One") == 1
+
+    def test_preserves_other_entries_on_replace(self, tmp_path):
+        """upsert_result keeps all other entries when replacing one."""
+        path = tmp_path / "report.md"
+        upsert_result(_result(model_short_name="m1", model_full_name="Model One", status=STATUS_OK), path)
+        upsert_result(_result(model_short_name="m2", model_full_name="Model Two", status=STATUS_OK), path)
+        upsert_result(
+            _result(model_short_name="m1", model_full_name="Model One", status=STATUS_FAILED_CONVERSION), path,
+        )
+        md = path.read_text()
+        assert "Model Two" in md
+        assert STATUS_FAILED_CONVERSION in md
+
+    def test_creates_parent_directories(self, tmp_path):
+        """upsert_result creates missing parent directories."""
+        path = tmp_path / "nested" / "deep" / "report.md"
+        upsert_result(_result(status=STATUS_OK), path)
+        assert path.exists()
+
+    def test_json_sidecar_is_valid(self, tmp_path):
+        """upsert_result writes valid JSON to the sidecar file."""
+        import json
+
+        path = tmp_path / "report.md"
+        upsert_result(_result(model_short_name="m1", status=STATUS_OK), path)
+        data = json.loads(path.with_suffix(".json").read_text())
+        assert isinstance(data, list)
+        assert data[0]["model_short_name"] == "m1"

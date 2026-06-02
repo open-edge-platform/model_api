@@ -1008,7 +1008,7 @@ class TestMain:
             assert main() == 0
 
     def test_report_default_path(self, tmp_path, monkeypatch, capsys):
-        """main --report writes report to <output>/conversion_report.md and prints it."""
+        """main --report prints console table (file written by converters during processing)."""
         config_path = tmp_path / "config.json"
         config_path.write_text(json.dumps({"models": [{"model_short_name": "m1"}]}))
         output_dir = tmp_path / "output"
@@ -1035,11 +1035,63 @@ class TestMain:
         ):
             assert main() == 0
 
-        assert (output_dir / "conversion_report.md").exists()
         assert "Conversion Summary Report" in capsys.readouterr().out
 
-    def test_report_custom_path(self, tmp_path, monkeypatch):
-        """main --report PATH writes the report to the provided path."""
+    def test_report_enabled_by_default(self, tmp_path, monkeypatch, capsys):
+        """main prints console table even without --report (reporting is on by default)."""
+        config_path = tmp_path / "config.json"
+        config_path.write_text(json.dumps({"models": [{"model_short_name": "m1"}]}))
+
+        monkeypatch.setattr(
+            sys,
+            "argv",
+            ["model_converter", str(config_path), "-o", str(tmp_path / "output"), "-c", str(tmp_path / "cache")],
+        )
+
+        from model_converter.reporting import STATUS_OK, ConversionResult
+
+        result = ConversionResult(
+            model_short_name="m1",
+            model_full_name="M1",
+            model_type="Classification",
+            model_library="torchvision",
+            status=STATUS_OK,
+        )
+
+        with (
+            patch.object(ModelConverter, "process_config_file", return_value=(1, 0)),
+            patch.object(ModelConverter, "collect_results", return_value=[result]),
+        ):
+            assert main() == 0
+
+        assert "Conversion Summary Report" in capsys.readouterr().out
+
+    def test_no_report_flag_disables_reporting(self, tmp_path, monkeypatch, capsys):
+        """main --no-report suppresses the console table output."""
+        config_path = tmp_path / "config.json"
+        config_path.write_text(json.dumps({"models": [{"model_short_name": "m1"}]}))
+
+        monkeypatch.setattr(
+            sys,
+            "argv",
+            [
+                "model_converter",
+                str(config_path),
+                "-o",
+                str(tmp_path / "output"),
+                "-c",
+                str(tmp_path / "cache"),
+                "--no-report",
+            ],
+        )
+
+        with patch.object(ModelConverter, "process_config_file", return_value=(1, 0)):
+            assert main() == 0
+
+        assert "Conversion Summary Report" not in capsys.readouterr().out
+
+    def test_report_custom_path(self, tmp_path, monkeypatch, capsys):
+        """main --report PATH passes the custom report path to ModelConverter."""
         config_path = tmp_path / "config.json"
         config_path.write_text(json.dumps({"models": [{"model_short_name": "m1"}]}))
         report_path = tmp_path / "custom" / "my_report.md"
@@ -1059,13 +1111,21 @@ class TestMain:
             ],
         )
 
+        captured: dict = {}
+        original_init = ModelConverter.__init__
+
+        def spy_init(self, *args, **kwargs):
+            captured.update(kwargs)
+            return original_init(self, *args, **kwargs)
+
         with (
+            patch.object(ModelConverter, "__init__", autospec=True, side_effect=spy_init),
             patch.object(ModelConverter, "process_config_file", return_value=(0, 0)),
             patch.object(ModelConverter, "collect_results", return_value=[]),
         ):
             assert main() == 0
 
-        assert report_path.exists()
+        assert captured.get("report_path") == report_path
 
     def test_failed_run(self, tmp_path, monkeypatch):
         """main returns 1 when models fail."""
