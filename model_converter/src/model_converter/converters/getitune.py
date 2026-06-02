@@ -146,12 +146,12 @@ class GetituneConverter(BaseConverter):
         temp_dir = tempfile.mkdtemp(prefix="getitune_export_")
         temp_output = Path(temp_dir)
 
-        export_script = self.training_extensions_dir / "export_pretrained_models.py"
+        export_script = (self.training_extensions_dir / "export_pretrained_models.py").resolve()
         if not export_script.exists():
             error_msg = f"Export script not found: {export_script}"
             raise FileNotFoundError(error_msg)
 
-        library_dir = self.training_extensions_dir / "library"
+        library_dir = (self.training_extensions_dir / "library").resolve()
         library_pyproject = library_dir / "pyproject.toml"
         if not library_pyproject.exists():
             error_msg = (
