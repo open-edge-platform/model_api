@@ -180,6 +180,42 @@ class TestCollectDatasetEntries:
         ]
 
 
+class TestCropResize:
+    """Tests for BaseConverter._crop_resize."""
+
+    def test_square_target_tall_image(self, converter):
+        """Tall image is center-cropped to a square before resizing."""
+        img = np.zeros((60, 40, 3), dtype=np.uint8)
+        # Mark the center column so we can verify cropping happened
+        img[:, 10:30, :] = 255
+        result = converter._crop_resize(img, width=40, height=40)
+        assert result.shape == (40, 40, 3)
+
+    def test_square_target_wide_image(self, converter):
+        """Wide image is center-cropped to a square before resizing."""
+        img = np.zeros((40, 80, 3), dtype=np.uint8)
+        result = converter._crop_resize(img, width=20, height=20)
+        assert result.shape == (20, 20, 3)
+
+    def test_square_target_already_square(self, converter):
+        """Square image is resized directly without cropping."""
+        img = np.zeros((100, 100, 3), dtype=np.uint8)
+        result = converter._crop_resize(img, width=50, height=50)
+        assert result.shape == (50, 50, 3)
+
+    def test_non_square_wide_target(self, converter):
+        """Target wider than source aspect ratio crops height."""
+        img = np.zeros((100, 100, 3), dtype=np.uint8)
+        result = converter._crop_resize(img, width=200, height=100)
+        assert result.shape == (100, 200, 3)
+
+    def test_non_square_tall_target(self, converter):
+        """Target taller than source aspect ratio crops width."""
+        img = np.zeros((100, 100, 3), dtype=np.uint8)
+        result = converter._crop_resize(img, width=100, height=200)
+        assert result.shape == (200, 100, 3)
+
+
 class TestPreprocessCalibrationImage:
     """Tests for BaseConverter._preprocess_calibration_image via TorchvisionConverter."""
 
@@ -218,6 +254,44 @@ class TestPreprocessCalibrationImage:
         )
 
         assert result is None
+
+    def test_crop_resize_type_produces_square_output(self, converter, tmp_path):
+        """resize_type='crop' center-crops a wide image before resizing to target."""
+        img_path = tmp_path / "wide.png"
+        # 4x8 wide image (H=4, W=8)
+        img = np.zeros((4, 8, 3), dtype=np.uint8)
+        cv2.imwrite(str(img_path), img)
+
+        result = converter._preprocess_calibration_image(
+            img_path=img_path,
+            width=2,
+            height=2,
+            mean=np.array([0.0, 0.0, 0.0], dtype=np.float32),
+            scale=np.array([1.0, 1.0, 1.0], dtype=np.float32),
+            reverse_input_channels=False,
+            resize_type="crop",
+        )
+
+        assert result is not None
+        assert result.shape == (1, 3, 2, 2)
+
+    def test_standard_resize_type_is_default(self, converter, tmp_path):
+        """Omitting resize_type uses the 'standard' plain-resize path."""
+        img_path = tmp_path / "img.png"
+        img = np.zeros((8, 8, 3), dtype=np.uint8)
+        cv2.imwrite(str(img_path), img)
+
+        result = converter._preprocess_calibration_image(
+            img_path=img_path,
+            width=4,
+            height=4,
+            mean=np.array([0.0, 0.0, 0.0], dtype=np.float32),
+            scale=np.array([1.0, 1.0, 1.0], dtype=np.float32),
+            reverse_input_channels=False,
+        )
+
+        assert result is not None
+        assert result.shape == (1, 3, 4, 4)
 
 
 class TestCreateCalibrationDataset:
@@ -464,8 +538,52 @@ class TestCreateCalibrationDataset:
         assert len(images) == 50
         assert labels == []
 
+    def test_forwards_resize_type_to_preprocess(self, tmp_path, dataset_dir):
+        """create_calibration_dataset passes resize_type to _preprocess_calibration_image."""
+        converter = TorchvisionConverter(
+            output_dir=tmp_path / "out",
+            cache_dir=tmp_path / "cache",
+            dataset_path=dataset_dir,
+        )
+        seen_resize_types: list[str] = []
 
-class TestValidateModel:
+        def fake_preprocess(**kwargs):
+            seen_resize_types.append(kwargs.get("resize_type", "standard"))
+            return np.zeros((1, 3, kwargs["height"], kwargs["width"]), dtype=np.float32)
+
+        converter._preprocess_calibration_image = fake_preprocess  # type: ignore[method-assign]
+
+        converter.create_calibration_dataset(
+            input_shape=[1, 3, 8, 8],
+            resize_type="crop",
+            return_labels=False,
+        )
+
+        assert all(rt == "crop" for rt in seen_resize_types)
+
+    def test_forwards_resize_type_to_preprocess_with_labels(self, tmp_path, dataset_dir):
+        """create_calibration_dataset passes resize_type to _preprocess_calibration_image (return_labels=True)."""
+        converter = TorchvisionConverter(
+            output_dir=tmp_path / "out",
+            cache_dir=tmp_path / "cache",
+            dataset_path=dataset_dir,
+        )
+        seen_resize_types: list[str] = []
+
+        def fake_preprocess(**kwargs):
+            seen_resize_types.append(kwargs.get("resize_type", "standard"))
+            return np.zeros((1, 3, kwargs["height"], kwargs["width"]), dtype=np.float32)
+
+        converter._preprocess_calibration_image = fake_preprocess  # type: ignore[method-assign]
+
+        converter.create_calibration_dataset(
+            input_shape=[1, 3, 8, 8],
+            resize_type="crop",
+            return_labels=True,
+        )
+
+        assert all(rt == "crop" for rt in seen_resize_types)
+
     """Tests for BaseConverter.validate_model via TorchvisionConverter."""
 
     def test_computes_top1_accuracy(self, converter, tmp_path):
@@ -791,7 +909,11 @@ class TestValidateTorchModel:
         assert converter.results[-1] is result
 
     def test_record_result_calls_upsert_when_report_path_set(
-        self, tmp_output_dir, tmp_cache_dir, sample_model_config, tmp_path,
+        self,
+        tmp_output_dir,
+        tmp_cache_dir,
+        sample_model_config,
+        tmp_path,
     ):
         """_record_result calls upsert_result when report_path is set and not skipped."""
         from unittest.mock import patch
@@ -808,7 +930,11 @@ class TestValidateTorchModel:
         assert mock_upsert.call_args.args[1] == report_path
 
     def test_record_result_skips_upsert_when_skipped(
-        self, tmp_output_dir, tmp_cache_dir, sample_model_config, tmp_path,
+        self,
+        tmp_output_dir,
+        tmp_cache_dir,
+        sample_model_config,
+        tmp_path,
     ):
         """_record_result does not call upsert_result when the model export is skipped."""
         from unittest.mock import patch

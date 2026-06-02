@@ -397,7 +397,8 @@
       "scale_values": "58.395 57.12 57.375",
       "license": "apache-2.0",
       "license_link": "https://spdx.org/licenses/Apache-2.0.html",
-      "labels": "IMAGENET1K_V1"
+      "labels": "IMAGENET1K_V1",
+      "resize_type": "crop"
     },
     {
       "model_short_name": "mobilenetv2_100_ra_in1k",
@@ -417,7 +418,8 @@
       "scale_values": "58.395 57.12 57.375",
       "license": "apache-2.0",
       "license_link": "https://spdx.org/licenses/Apache-2.0.html",
-      "labels": "IMAGENET1K_V1"
+      "labels": "IMAGENET1K_V1",
+      "resize_type": "crop"
     },
     {
       "model_short_name": "mobilenetv2_110d_ra_in1k",
@@ -437,7 +439,8 @@
       "scale_values": "58.395 57.12 57.375",
       "license": "apache-2.0",
       "license_link": "https://spdx.org/licenses/Apache-2.0.html",
-      "labels": "IMAGENET1K_V1"
+      "labels": "IMAGENET1K_V1",
+      "resize_type": "crop"
     },
     {
       "model_short_name": "mobilenetv2_120d_ra_in1k",
@@ -457,7 +460,8 @@
       "scale_values": "58.395 57.12 57.375",
       "license": "apache-2.0",
       "license_link": "https://spdx.org/licenses/Apache-2.0.html",
-      "labels": "IMAGENET1K_V1"
+      "labels": "IMAGENET1K_V1",
+      "resize_type": "crop"
     },
     {
       "model_short_name": "mobilenetv2_140_ra_in1k",
@@ -477,7 +481,8 @@
       "scale_values": "58.395 57.12 57.375",
       "license": "apache-2.0",
       "license_link": "https://spdx.org/licenses/Apache-2.0.html",
-      "labels": "IMAGENET1K_V1"
+      "labels": "IMAGENET1K_V1",
+      "resize_type": "crop"
     },
     {
       "model_short_name": "efficientnet_b0_ra_in1k",
@@ -497,7 +502,8 @@
       "scale_values": "58.395 57.12 57.375",
       "license": "apache-2.0",
       "license_link": "https://spdx.org/licenses/Apache-2.0.html",
-      "labels": "IMAGENET1K_V1"
+      "labels": "IMAGENET1K_V1",
+      "resize_type": "crop"
     },
     {
       "model_short_name": "efficientnet_b0_ra4_e3600_r224_in1k",
@@ -513,11 +519,12 @@
       "model_params": null,
       "model_type": "Classification",
       "reverse_input_channels": false,
-      "mean_values": "123.675 116.28 103.53",
-      "scale_values": "58.395 57.12 57.375",
+      "mean_values": "127.5 127.5 127.5",
+      "scale_values": "127.5 127.5 127.5",
       "license": "apache-2.0",
       "license_link": "https://spdx.org/licenses/Apache-2.0.html",
-      "labels": "IMAGENET1K_V1"
+      "labels": "IMAGENET1K_V1",
+      "resize_type": "crop"
     },
     {
       "model_short_name": "efficientnet_b1_ft_in1k",
@@ -537,7 +544,8 @@
       "scale_values": "58.395 57.12 57.375",
       "license": "apache-2.0",
       "license_link": "https://spdx.org/licenses/Apache-2.0.html",
-      "labels": "IMAGENET1K_V1"
+      "labels": "IMAGENET1K_V1",
+      "resize_type": "crop"
     },
     {
       "model_short_name": "efficientnet_b1_pruned_in1k",
@@ -553,11 +561,12 @@
       "model_params": null,
       "model_type": "Classification",
       "reverse_input_channels": false,
-      "mean_values": "123.675 116.28 103.53",
-      "scale_values": "58.395 57.12 57.375",
+      "mean_values": "127.5 127.5 127.5",
+      "scale_values": "127.5 127.5 127.5",
       "license": "apache-2.0",
       "license_link": "https://spdx.org/licenses/Apache-2.0.html",
-      "labels": "IMAGENET1K_V1"
+      "labels": "IMAGENET1K_V1",
+      "resize_type": "crop"
     },
     {
       "model_short_name": "efficientnet_b1_ra4_e3600_r240_in1k",
@@ -573,11 +582,12 @@
       "model_params": null,
       "model_type": "Classification",
       "reverse_input_channels": false,
-      "mean_values": "123.675 116.28 103.53",
-      "scale_values": "58.395 57.12 57.375",
+      "mean_values": "127.5 127.5 127.5",
+      "scale_values": "127.5 127.5 127.5",
       "license": "apache-2.0",
       "license_link": "https://spdx.org/licenses/Apache-2.0.html",
-      "labels": "IMAGENET1K_V1"
+      "labels": "IMAGENET1K_V1",
+      "resize_type": "crop"
     },
     {
       "model_short_name": "vit_tiny_patch16_224_augreg_in21k",
@@ -598,7 +608,8 @@
       "scale_values": "127.5 127.5 127.5",
       "license": "apache-2.0",
       "license_link": "https://spdx.org/licenses/Apache-2.0.html",
-      "labels": "IMAGENET21K"
+      "labels": "IMAGENET21K",
+      "resize_type": "crop"
     },
     {
       "model_short_name": "vit_small_patch14_dinov2.lvd142m",
@@ -618,7 +629,8 @@
       "mean_values": "123.675 116.28 103.53",
       "scale_values": "58.395 57.12 57.375",
       "license": "apache-2.0",
-      "license_link": "https://spdx.org/licenses/Apache-2.0.html"
+      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
+      "resize_type": "crop"
     },
     {
       "model_short_name": "maskrcnn_resnet50_fpn",

@@ -194,7 +194,8 @@ class TestUpsertResult:
         """upsert_result replaces an existing entry for the same model_short_name."""
         path = tmp_path / "report.md"
         upsert_result(
-            _result(model_short_name="m1", model_full_name="Model One", status=STATUS_FAILED_CONVERSION), path,
+            _result(model_short_name="m1", model_full_name="Model One", status=STATUS_FAILED_CONVERSION),
+            path,
         )
         upsert_result(_result(model_short_name="m1", model_full_name="Model One", status=STATUS_OK), path)
         md = path.read_text()
@@ -209,7 +210,8 @@ class TestUpsertResult:
         upsert_result(_result(model_short_name="m1", model_full_name="Model One", status=STATUS_OK), path)
         upsert_result(_result(model_short_name="m2", model_full_name="Model Two", status=STATUS_OK), path)
         upsert_result(
-            _result(model_short_name="m1", model_full_name="Model One", status=STATUS_FAILED_CONVERSION), path,
+            _result(model_short_name="m1", model_full_name="Model One", status=STATUS_FAILED_CONVERSION),
+            path,
         )
         md = path.read_text()
         assert "Model Two" in md

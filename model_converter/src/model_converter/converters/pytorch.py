@@ -383,6 +383,7 @@ class PyTorchConverter(BaseConverter):
         accuracy = AccuracyResults()
         self.logger.info("Creating calibration dataset for INT8 quantization")
         return_validation_labels = model_type == "Classification" and bool(config.get("labels"))
+        resize_type = config.get("resize_type", "standard")
 
         if return_validation_labels:
             self.logger.info("Creating validation dataset for accuracy measurement")
@@ -393,6 +394,7 @@ class PyTorchConverter(BaseConverter):
             reverse_input_channels=kwargs["reverse_input_channels"],
             subset_size=300,
             return_labels=return_validation_labels,
+            resize_type=resize_type,
         )
 
         if validation_data:

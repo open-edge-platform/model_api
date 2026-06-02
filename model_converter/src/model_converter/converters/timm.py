@@ -74,6 +74,55 @@ class TimmConverter(PyTorchConverter):
             self.logger.error(f"Failed to load Hugging Face model: {e}")
             raise
 
+    def _apply_timm_data_config(self, model: nn.Module, config: dict[str, Any]) -> None:
+        """Override preprocessing config with timm's canonical values.
+
+        Reads the model's ``pretrained_cfg`` via :func:`timm.data.resolve_data_config`
+        and updates ``mean_values``, ``scale_values`` and ``input_shape`` in
+        ``config`` in place. timm stores ``mean``/``std`` as 0..1 floats, so they
+        are scaled to the 0..255 pixel range used by Model API metadata.
+
+        Any value the model does not provide is left untouched so explicit
+        configuration still wins for fields timm cannot supply.
+
+        Args:
+            model: The loaded timm model.
+            config: Model configuration dictionary, mutated in place.
+        """
+        try:
+            from timm.data import resolve_data_config
+        except ImportError:
+            self.logger.warning("timm not available; keeping configured preprocessing values")
+            return
+
+        try:
+            data_config = resolve_data_config({}, model=model)
+        except (RuntimeError, ValueError, KeyError, TypeError) as e:
+            self.logger.warning(f"Could not resolve timm data config, keeping configured values: {e}")
+            return
+
+        mean = data_config.get("mean")
+        std = data_config.get("std")
+        input_size = data_config.get("input_size")
+
+        if mean is not None:
+            resolved_mean = " ".join(f"{value * 255:g}" for value in mean)
+            self._override_config_value(config, "mean_values", resolved_mean)
+        if std is not None:
+            resolved_scale = " ".join(f"{value * 255:g}" for value in std)
+            self._override_config_value(config, "scale_values", resolved_scale)
+        if input_size is not None and len(input_size) == 3:
+            channels, height, width = input_size
+            resolved_shape = [1, int(channels), int(height), int(width)]
+            self._override_config_value(config, "input_shape", resolved_shape)
+
+    def _override_config_value(self, config: dict[str, Any], key: str, resolved: Any) -> None:
+        """Set ``config[key]`` to ``resolved``, logging when it changes a value."""
+        existing = config.get(key)
+        if existing is not None and existing != resolved:
+            self.logger.info(f"Overriding {key}: config={existing!r} -> timm={resolved!r}")
+        config[key] = resolved
+
     def process_model_config(self, config: dict[str, Any]) -> bool:
         """Process a timm/HuggingFace model configuration.
 
@@ -131,6 +180,14 @@ class TimmConverter(PyTorchConverter):
                 model_library=model_library,
                 model_params=model_params,
             )
+
+            # Override preprocessing parameters with the values timm ships for
+            # this specific checkpoint.  Hand-maintained config values are easy
+            # to get wrong (e.g. ImageNet vs. inception normalization), which
+            # silently destroys accuracy, so timm's pretrained_cfg is treated as
+            # the source of truth.
+            if model_library == "timm":
+                self._apply_timm_data_config(model, config)
 
             # Prepare export parameters
             input_shape = config.get("input_shape", [1, 3, 224, 224])

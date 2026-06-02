@@ -210,6 +210,39 @@ class BaseConverter(ABC):
                         image_entries.append((img_path, class_label))
         return image_entries
 
+    @staticmethod
+    def _crop_resize(img: np.ndarray, width: int, height: int) -> np.ndarray:
+        """Center-crop to target aspect ratio, then resize.
+
+        Matches the standard ImageNet evaluation pipeline used by timm and
+        torchvision (resize shorter side, then center-crop), giving better
+        accuracy than a plain stretch-to-fit resize.
+
+        Args:
+            img: Input image in HWC layout.
+            width: Target width in pixels.
+            height: Target height in pixels.
+
+        Returns:
+            Cropped and resized image.
+        """
+        h, w = img.shape[:2]
+        desired_ar = width / height
+        if desired_ar == 1:
+            side = min(h, w)
+            y0 = (h - side) // 2
+            x0 = (w - side) // 2
+            img = img[y0 : y0 + side, x0 : x0 + side]
+        elif w / h > desired_ar:  # image is too wide — crop width
+            new_w = int(h * desired_ar)
+            x0 = (w - new_w) // 2
+            img = img[:, x0 : x0 + new_w]
+        else:  # image is too tall — crop height
+            new_h = int(w / desired_ar)
+            y0 = (h - new_h) // 2
+            img = img[y0 : y0 + new_h, :]
+        return cv2.resize(img, (width, height))
+
     def _preprocess_calibration_image(
         self,
         img_path: Path,
@@ -218,13 +251,14 @@ class BaseConverter(ABC):
         mean: np.ndarray,
         scale: np.ndarray,
         reverse_input_channels: bool,
+        resize_type: str = "standard",
     ) -> np.ndarray | None:
         """Load and preprocess a single calibration image."""
         img = cv2.imread(str(img_path))
         if img is None:
             return None
 
-        img = cv2.resize(img, (width, height))
+        img = self._crop_resize(img, width, height) if resize_type == "crop" else cv2.resize(img, (width, height))
         img = img.astype(np.float32)
 
         if reverse_input_channels:
@@ -242,6 +276,7 @@ class BaseConverter(ABC):
         reverse_input_channels: bool = True,
         subset_size: int = 5000,
         return_labels: bool = False,
+        resize_type: str = "standard",
     ) -> tuple[list[np.ndarray], list[int]] | list[np.ndarray]:
         """Create calibration dataset from sample validation images.
 
@@ -252,6 +287,10 @@ class BaseConverter(ABC):
             reverse_input_channels: Whether to reverse RGB to BGR
             subset_size: Number of images to use for calibration
             return_labels: Whether to return labels along with images
+            resize_type: Resize strategy — ``"crop"`` center-crops to the
+                target aspect ratio before resizing (matches standard ImageNet
+                evaluation), ``"standard"`` stretches directly to the target
+                size.
 
         Returns:
             List of preprocessed image arrays, or tuple of (images, labels)
@@ -292,6 +331,7 @@ class BaseConverter(ABC):
                         mean=mean,
                         scale=scale,
                         reverse_input_channels=reverse_input_channels,
+                        resize_type=resize_type,
                     )
                     if img is None:
                         continue
@@ -318,6 +358,7 @@ class BaseConverter(ABC):
                     mean=mean,
                     scale=scale,
                     reverse_input_channels=reverse_input_channels,
+                    resize_type=resize_type,
                 )
                 if img is None:
                     continue

@@ -276,6 +276,88 @@ class TestLoadHuggingfaceModel:
             )
 
 
+class TestApplyTimmDataConfig:
+    """Tests for TimmConverter._apply_timm_data_config."""
+
+    def test_overrides_mean_scale_and_shape(self, timm_converter):
+        """Resolved timm mean/std (0..1) are scaled to 0..255 and shape is applied."""
+        model = MagicMock()
+        config = {
+            "mean_values": "123.675 116.28 103.53",
+            "scale_values": "58.395 57.12 57.375",
+            "input_shape": [1, 3, 224, 224],
+        }
+        resolved = {
+            "mean": (0.5, 0.5, 0.5),
+            "std": (0.5, 0.5, 0.5),
+            "input_size": (3, 256, 256),
+        }
+
+        with patch("timm.data.resolve_data_config", return_value=resolved):
+            timm_converter._apply_timm_data_config(model, config)
+
+        assert config["mean_values"] == "127.5 127.5 127.5"
+        assert config["scale_values"] == "127.5 127.5 127.5"
+        assert config["input_shape"] == [1, 3, 256, 256]
+
+    def test_keeps_imagenet_values_when_model_matches(self, timm_converter):
+        """Standard ImageNet normalization round-trips to the canonical strings."""
+        model = MagicMock()
+        config = {}
+        resolved = {
+            "mean": (0.485, 0.456, 0.406),
+            "std": (0.229, 0.224, 0.225),
+            "input_size": (3, 224, 224),
+        }
+
+        with patch("timm.data.resolve_data_config", return_value=resolved):
+            timm_converter._apply_timm_data_config(model, config)
+
+        assert config["mean_values"] == "123.675 116.28 103.53"
+        assert config["scale_values"] == "58.395 57.12 57.375"
+        assert config["input_shape"] == [1, 3, 224, 224]
+
+    def test_ignores_missing_fields(self, timm_converter):
+        """Fields timm does not provide leave the existing config untouched."""
+        model = MagicMock()
+        config = {"mean_values": "1 2 3", "scale_values": "4 5 6", "input_shape": [1, 3, 8, 8]}
+
+        with patch("timm.data.resolve_data_config", return_value={}):
+            timm_converter._apply_timm_data_config(model, config)
+
+        assert config == {"mean_values": "1 2 3", "scale_values": "4 5 6", "input_shape": [1, 3, 8, 8]}
+
+    def test_ignores_malformed_input_size(self, timm_converter):
+        """A non 3-tuple input_size is ignored, leaving input_shape untouched."""
+        model = MagicMock()
+        config = {"input_shape": [1, 3, 8, 8]}
+
+        with patch("timm.data.resolve_data_config", return_value={"input_size": (224, 224)}):
+            timm_converter._apply_timm_data_config(model, config)
+
+        assert config["input_shape"] == [1, 3, 8, 8]
+
+    def test_handles_resolution_failure(self, timm_converter):
+        """A failure inside resolve_data_config keeps the configured values."""
+        model = MagicMock()
+        config = {"mean_values": "1 2 3"}
+
+        with patch("timm.data.resolve_data_config", side_effect=RuntimeError("boom")):
+            timm_converter._apply_timm_data_config(model, config)
+
+        assert config["mean_values"] == "1 2 3"
+
+    def test_handles_missing_timm(self, timm_converter):
+        """If timm.data cannot be imported, configured values are kept."""
+        model = MagicMock()
+        config = {"mean_values": "1 2 3"}
+
+        with patch.dict(sys.modules, {"timm.data": None}):
+            timm_converter._apply_timm_data_config(model, config)
+
+        assert config["mean_values"] == "1 2 3"
+
+
 class TestCreateModel:
     """Tests for PyTorchConverter.create_model via TorchvisionConverter."""
 
