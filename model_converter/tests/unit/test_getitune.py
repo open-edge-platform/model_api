@@ -585,6 +585,8 @@ class TestQuantizeExportedModel:
             calibration_data=calibration_data,
             model_config=sample_getitune_config,
             preset="mixed",
+            validation_data=None,
+            validation_labels=None,
             accuracy_results=ANY,
         )
         assert not fp32_xml.exists()
@@ -621,6 +623,8 @@ class TestQuantizeExportedModel:
             calibration_data=calibration_data,
             model_config=sample_getitune_config,
             preset="mixed",
+            validation_data=None,
+            validation_labels=None,
             accuracy_results=ANY,
         )
 
@@ -654,6 +658,175 @@ class TestQuantizeExportedModel:
             getitune_converter._quantize_exported_model(sample_getitune_config)
 
         assert "Failed to remove temporary FP32 files" in caplog.text
+
+    def test_quantize_exported_model_measures_accuracy_for_imagenet1k(
+        self,
+        getitune_converter,
+        sample_getitune_config,
+    ):
+        """Accuracy is measured for MULTI_CLASS_CLS IMAGENET1K_V1 models."""
+        config = {**sample_getitune_config, "labels": "IMAGENET1K_V1"}
+        output_folder = getitune_converter.output_dir / "dino_v2_cls-fp16-ov"
+        fp32_xml = output_folder / "dino_v2_cls_fp32.xml"
+        _write_openvino_model(fp32_xml)
+        calibration_data = [np.zeros((1, 3, 224, 224), dtype=np.float32)]
+        validation_labels = [7]
+
+        with (
+            patch.object(
+                getitune_converter,
+                "_read_preprocessing_from_model",
+                return_value=([1, 3, 224, 224], "0 0 0", "1 1 1", True),
+            ),
+            patch.object(
+                getitune_converter,
+                "create_calibration_dataset",
+                return_value=(calibration_data, validation_labels),
+            ) as mock_dataset,
+            patch.object(getitune_converter, "quantize_model") as mock_quantize,
+        ):
+            getitune_converter._quantize_exported_model(config)
+
+        mock_dataset.assert_called_once_with(
+            input_shape=[1, 3, 224, 224],
+            mean_values="0 0 0",
+            scale_values="1 1 1",
+            reverse_input_channels=True,
+            subset_size=300,
+            return_labels=True,
+        )
+        mock_quantize.assert_called_once_with(
+            model_path=fp32_xml,
+            calibration_data=calibration_data,
+            model_config=config,
+            preset="mixed",
+            validation_data=calibration_data,
+            validation_labels=validation_labels,
+            accuracy_results=ANY,
+        )
+
+    def test_quantize_exported_model_skips_accuracy_for_non_classification(
+        self,
+        getitune_converter,
+        sample_getitune_config,
+    ):
+        """Accuracy is not measured for non MULTI_CLASS_CLS tasks."""
+        config = {**sample_getitune_config, "getitune_task": "DETECTION", "labels": "IMAGENET1K_V1"}
+        output_folder = getitune_converter.output_dir / "dino_v2_cls-fp16-ov"
+        fp32_xml = output_folder / "dino_v2_cls_fp32.xml"
+        _write_openvino_model(fp32_xml)
+        calibration_data = [np.zeros((1, 3, 224, 224), dtype=np.float32)]
+
+        with (
+            patch.object(
+                getitune_converter,
+                "_read_preprocessing_from_model",
+                return_value=([1, 3, 224, 224], "0 0 0", "1 1 1", True),
+            ),
+            patch.object(
+                getitune_converter,
+                "create_calibration_dataset",
+                return_value=(calibration_data, []),
+            ) as mock_dataset,
+            patch.object(getitune_converter, "quantize_model") as mock_quantize,
+        ):
+            getitune_converter._quantize_exported_model(config)
+
+        assert mock_dataset.call_args.kwargs["return_labels"] is False
+        mock_quantize.assert_called_once_with(
+            model_path=fp32_xml,
+            calibration_data=calibration_data,
+            model_config=config,
+            preset="mixed",
+            validation_data=None,
+            validation_labels=None,
+            accuracy_results=ANY,
+        )
+
+
+class TestApplyConfigLabels:
+    """Tests for GetituneConverter._apply_config_labels."""
+
+    def test_no_labels_in_config_is_a_noop(self, getitune_converter, sample_getitune_config, tmp_path):
+        """Without a labels config, no OpenVINO work is attempted."""
+        with patch.object(getitune_converter, "get_labels") as mock_get_labels:
+            getitune_converter._apply_config_labels(sample_getitune_config, tmp_path / "model.xml")
+        mock_get_labels.assert_not_called()
+
+    def test_unresolved_labels_logs_warning(self, getitune_converter, sample_getitune_config, tmp_path, caplog):
+        """An unknown label set logs a warning and skips rewriting."""
+        config = {**sample_getitune_config, "labels": "UNKNOWN_SET"}
+        with (
+            patch.object(getitune_converter, "get_labels", return_value=None),
+            caplog.at_level(logging.WARNING),
+        ):
+            getitune_converter._apply_config_labels(config, tmp_path / "model.xml")
+        assert "Could not load labels for: UNKNOWN_SET" in caplog.text
+
+    def test_rewrites_labels_into_existing_models(self, getitune_converter, sample_getitune_config, tmp_path):
+        """Labels are written to rt_info and the models are re-saved.
+
+        The save must go to a temporary path that is then moved over the
+        original, never writing back to the file currently being read (which
+        OpenVINO memory-maps and would corrupt).
+        """
+        config = {**sample_getitune_config, "labels": "IMAGENET1K_V1"}
+        fp16_xml = tmp_path / "dino_v2_cls.xml"
+        fp32_xml = tmp_path / "dino_v2_cls_fp32.xml"
+        _write_openvino_model(fp16_xml)
+        _write_openvino_model(fp32_xml)
+        missing_xml = tmp_path / "missing.xml"
+
+        fake_ov = types.ModuleType("openvino")
+        core = MagicMock()
+        model = MagicMock()
+        core.read_model.return_value = model
+        setattr(fake_ov, "Core", MagicMock(return_value=core))
+
+        def fake_save_model(_model, path, compress_to_fp16):
+            # Never overwrite the source model directly.
+            assert path != fp16_xml
+            assert path != fp32_xml
+            _write_openvino_model(Path(path))
+
+        save_model = MagicMock(side_effect=fake_save_model)
+        setattr(fake_ov, "save_model", save_model)
+
+        with (
+            patch.object(getitune_converter, "get_labels", return_value="cat dog"),
+            patch.dict("sys.modules", {"openvino": fake_ov}),
+        ):
+            getitune_converter._apply_config_labels(config, fp16_xml, fp32_xml, missing_xml)
+
+        model.set_rt_info.assert_called_with("cat dog", ["model_info", "labels"])
+        assert save_model.call_count == 2
+        assert save_model.call_args_list[0].kwargs["compress_to_fp16"] is True
+        assert save_model.call_args_list[1].kwargs["compress_to_fp16"] is False
+        # Final models exist and the temporary files were moved away.
+        assert fp16_xml.exists()
+        assert fp32_xml.exists()
+        assert not (tmp_path / "dino_v2_cls_labeled_tmp.xml").exists()
+        assert not (tmp_path / "dino_v2_cls_fp32_labeled_tmp.xml").exists()
+
+    def test_handles_openvino_runtime_error(self, getitune_converter, sample_getitune_config, tmp_path, caplog):
+        """A failure while rewriting labels is logged and swallowed."""
+        config = {**sample_getitune_config, "labels": "IMAGENET1K_V1"}
+        model_xml = tmp_path / "dino_v2_cls.xml"
+        _write_openvino_model(model_xml)
+
+        fake_ov = types.ModuleType("openvino")
+        core = MagicMock()
+        core.read_model.side_effect = RuntimeError("read failed")
+        setattr(fake_ov, "Core", MagicMock(return_value=core))
+
+        with (
+            patch.object(getitune_converter, "get_labels", return_value="cat dog"),
+            patch.dict("sys.modules", {"openvino": fake_ov}),
+            caplog.at_level(logging.WARNING),
+        ):
+            getitune_converter._apply_config_labels(config, model_xml)
+
+        assert "Could not apply labels to exported model" in caplog.text
 
 
 class TestReadPreprocessingFromModel:

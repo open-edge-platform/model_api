@@ -616,6 +616,7 @@
     {
       "model_short_name": "dino_v2",
       "model_library": "getitune",
+      "labels": "IMAGENET1K_V1",
       "model_full_name": "DINOv2 Classification",
       "description": "DINOv2 - Self-supervised Vision Transformer for image classification",
       "docs": "https://github.com/open-edge-platform/training_extensions",
@@ -629,6 +630,7 @@
     {
       "model_short_name": "efficientnet_b0_cls",
       "model_library": "getitune",
+      "labels": "IMAGENET1K_V1",
       "model_full_name": "EfficientNet-B0 Classification",
       "description": "EfficientNet-B0 trained with getitune for multi-class classification",
       "docs": "https://github.com/open-edge-platform/training_extensions",
@@ -642,6 +644,7 @@
     {
       "model_short_name": "efficientnet_v2_cls",
       "model_library": "getitune",
+      "labels": "IMAGENET21K",
       "model_full_name": "EfficientNet-V2 Classification",
       "description": "EfficientNet-V2 trained with getitune for multi-class classification",
       "docs": "https://github.com/open-edge-platform/training_extensions",
@@ -655,6 +658,7 @@
     {
       "model_short_name": "mobilenet_v3_large_cls",
       "model_library": "getitune",
+      "labels": "IMAGENET1K_V1",
       "model_full_name": "MobileNet-V3 Large Classification",
       "description": "MobileNet-V3 Large trained with getitune for multi-class classification",
       "docs": "https://github.com/open-edge-platform/training_extensions",
@@ -668,6 +672,7 @@
     {
       "model_short_name": "efficientnet_b3_cls",
       "model_library": "getitune",
+      "labels": "IMAGENET1K_V1",
       "model_full_name": "EfficientNet-B3 Classification",
       "description": "EfficientNet-B3 trained with getitune for multi-class classification",
       "docs": "https://github.com/open-edge-platform/training_extensions",
@@ -681,6 +686,7 @@
     {
       "model_short_name": "vit_tiny_cls",
       "model_library": "getitune",
+      "labels": "IMAGENET1K_V1",
       "model_full_name": "ViT-Tiny Classification",
       "description": "Vision Transformer Tiny trained with getitune for multi-class classification",
       "docs": "https://github.com/open-edge-platform/training_extensions",

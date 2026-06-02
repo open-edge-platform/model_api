@@ -243,6 +243,9 @@ class GetituneConverter(BaseConverter):
 
         self.logger.info(f"✓ Model repackaged to: {target_xml}")
 
+        # Overwrite the exporter's placeholder labels with real class names.
+        self._apply_config_labels(config, target_xml, fp32_xml)
+
         # Extract and save model_info as config.json
         try:
             import openvino as ov
@@ -271,6 +274,50 @@ class GetituneConverter(BaseConverter):
                 break
         if "getitune_export_" in temp_dir.name:
             shutil.rmtree(temp_dir, ignore_errors=True)
+
+    def _apply_config_labels(self, config: dict[str, Any], *model_paths: Path) -> None:
+        """Overwrite ``model_info/labels`` rt_info with configured class names.
+
+        The getitune exporter embeds only numeric placeholder ids and no
+        human-readable labels.  When the configuration defines a ``labels`` set
+        (e.g. ``IMAGENET1K_V1``), resolve it to the real class names and rewrite
+        the rt_info of each given OpenVINO model in place so the repackaged
+        ``config.json`` (and any model quantized from these files) carries the
+        correct labels.
+
+        Args:
+            config: Model configuration dictionary.
+            *model_paths: OpenVINO model XML files to update in place.
+        """
+        labels_config = config.get("labels")
+        if not labels_config:
+            return
+
+        labels = self.get_labels(labels_config)
+        if not labels:
+            self.logger.warning(f"Could not load labels for: {labels_config}")
+            return
+
+        try:
+            import openvino as ov
+
+            core = ov.Core()
+            for model_path in model_paths:
+                if not model_path.exists():
+                    continue
+                model = core.read_model(model_path)
+                model.set_rt_info(labels, ["model_info", "labels"])
+                # Save to a temporary path first: OpenVINO memory-maps the
+                # source weights file, so writing back to the same path would
+                # truncate the file while it is still being read, corrupting
+                # the model (and crashing the process).
+                tmp_xml = model_path.with_name(f"{model_path.stem}_labeled_tmp.xml")
+                ov.save_model(model, tmp_xml, compress_to_fp16=not model_path.stem.endswith("_fp32"))
+                tmp_xml.replace(model_path)
+                tmp_xml.with_suffix(".bin").replace(model_path.with_suffix(".bin"))
+            self.logger.info(f"✓ Applied {labels_config} labels to exported model(s)")
+        except (ImportError, RuntimeError) as e:
+            self.logger.warning(f"Could not apply labels to exported model: {e}")
 
     @staticmethod
     def _read_preprocessing_from_model(
@@ -336,14 +383,20 @@ class GetituneConverter(BaseConverter):
             fp32_model_path,
         )
 
+        # Measure top-1 accuracy only for 1000-class ImageNet classification
+        # models, whose label space matches the validation dataset (0-999).
+        measure_accuracy = config.get("getitune_task") == "MULTI_CLASS_CLS" and config.get("labels") == "IMAGENET1K_V1"
+
         self.logger.info("Creating calibration dataset for INT8 quantization")
-        calibration_data, _ = self.create_calibration_dataset(
+        if measure_accuracy:
+            self.logger.info("Creating validation dataset for accuracy measurement")
+        calibration_data, validation_labels = self.create_calibration_dataset(
             input_shape=input_shape,
             mean_values=mean_values,
             scale_values=scale_values,
             reverse_input_channels=reverse_input_channels,
             subset_size=300,
-            return_labels=False,
+            return_labels=measure_accuracy,
         )
 
         if calibration_data:
@@ -352,6 +405,8 @@ class GetituneConverter(BaseConverter):
                 calibration_data=calibration_data,
                 model_config=config,
                 preset="mixed",
+                validation_data=calibration_data if validation_labels else None,
+                validation_labels=validation_labels or None,
                 accuracy_results=accuracy,
             )
 

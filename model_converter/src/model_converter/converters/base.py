@@ -199,6 +199,39 @@ class BaseConverter(ABC):
         except (OSError, UnicodeError, ValueError) as e:
             self.logger.warning(f"Failed to copy README: {e}")
 
+    def get_labels(self, label_set: str) -> str | None:
+        """Get label list for a given label set.
+
+        Args:
+            label_set: Name of the label set (e.g., "IMAGENET1K_V1")
+
+        Returns:
+            Space-separated string of labels, or None if not found
+        """
+        if label_set == "IMAGENET1K_V1":
+            from torchvision.models._meta import _IMAGENET_CATEGORIES
+
+            categories = _IMAGENET_CATEGORIES
+            categories = [label.replace(" ", "_") for label in categories]
+            return " ".join(categories)
+
+        if label_set == "IMAGENET21K":
+            from timm.data import ImageNetInfo
+
+            info = ImageNetInfo("imagenet21k")
+            categories = info.label_descriptions()
+            categories = [desc.split(",")[0].strip().replace(" ", "_") for desc in categories]
+            return " ".join(categories)
+
+        if label_set == "COCO_V1":
+            from torchvision.models.detection import MaskRCNN_ResNet50_FPN_Weights
+
+            categories = MaskRCNN_ResNet50_FPN_Weights.COCO_V1.meta["categories"]
+            categories = [label.replace(" ", "_") for label in categories]
+            return " ".join(categories)
+
+        return None
+
     def _collect_dataset_entries(self, image_dir: Path) -> list[tuple[Path, int]]:
         """Collect dataset image paths with their class labels."""
         image_entries: list[tuple[Path, int]] = []
