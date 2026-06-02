@@ -9,11 +9,12 @@ import json
 import logging
 import types
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import ANY, MagicMock, patch
 
 import numpy as np
 import pytest
 from model_converter.converters.getitune import GetituneConverter
+from model_converter.reporting import AccuracyResults
 
 
 def _write_openvino_model(xml_path: Path) -> None:
@@ -100,7 +101,11 @@ class TestProcessModelConfig:
             patch("model_converter.converters.getitune.tempfile.mkdtemp", return_value=str(export_root)),
             patch("model_converter.converters.getitune.subprocess.run", side_effect=fake_run),
             patch.object(getitune_converter, "copy_readme") as mock_copy_readme,
-            patch.object(getitune_converter, "_quantize_exported_model") as mock_quantize,
+            patch.object(
+                getitune_converter,
+                "_quantize_exported_model",
+                return_value=AccuracyResults(),
+            ) as mock_quantize,
             patch.dict("sys.modules", {"openvino": fake_openvino}),
         ):
             assert getitune_converter.process_model_config(sample_getitune_config) is True
@@ -271,7 +276,7 @@ class TestProcessModelConfig:
             patch("model_converter.converters.getitune.tempfile.mkdtemp", return_value=str(export_root)),
             patch("model_converter.converters.getitune.subprocess.run", side_effect=fake_run),
             patch.object(getitune_converter, "copy_readme"),
-            patch.object(getitune_converter, "_quantize_exported_model"),
+            patch.object(getitune_converter, "_quantize_exported_model", return_value=AccuracyResults()),
             patch.dict("sys.modules", {"openvino": fake_openvino}),
             caplog.at_level(logging.INFO),
         ):
@@ -580,6 +585,7 @@ class TestQuantizeExportedModel:
             calibration_data=calibration_data,
             model_config=sample_getitune_config,
             preset="mixed",
+            accuracy_results=ANY,
         )
         assert not fp32_xml.exists()
         assert not fp32_bin.exists()
@@ -615,6 +621,7 @@ class TestQuantizeExportedModel:
             calibration_data=calibration_data,
             model_config=sample_getitune_config,
             preset="mixed",
+            accuracy_results=ANY,
         )
 
     def test_quantize_exported_model_handles_cleanup_oserror(

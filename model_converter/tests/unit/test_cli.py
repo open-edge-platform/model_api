@@ -18,6 +18,7 @@ from model_converter.cli import ModelConverter, list_models, main
 from model_converter.converters.getitune import GetituneConverter
 from model_converter.converters.timm import TimmConverter
 from model_converter.converters.torchvision import TorchvisionConverter
+from model_converter.reporting import AccuracyResults
 
 
 class TestModelConverterInit:
@@ -689,7 +690,7 @@ class TestTorchvisionProcessModelConfig:
             patch.object(converter, "create_model", return_value=mock_model),
             patch.object(converter, "_build_metadata", return_value={("model_info", "model_type"): "Classification"}),
             patch.object(converter, "export_to_openvino", return_value=(fp16_path, fp32_path)),
-            patch.object(converter, "_quantize_and_cleanup") as mock_quantize,
+            patch.object(converter, "_quantize_and_cleanup", return_value=AccuracyResults()) as mock_quantize,
         ):
             result = converter.process_model_config(sample_model_config)
 
@@ -759,6 +760,23 @@ class TestMetadataValue:
 
 class TestProcessConfigFile:
     """Tests for facade ModelConverter.process_config_file."""
+
+    def test_collect_results_aggregates_converters(self, facade_converter):
+        """collect_results concatenates results from every instantiated converter."""
+        from model_converter.reporting import ConversionResult
+
+        assert facade_converter.collect_results() == []
+
+        converter = facade_converter._get_converter("torchvision")
+        result = ConversionResult(
+            model_short_name="m",
+            model_full_name="M",
+            model_type="Classification",
+            model_library="torchvision",
+        )
+        converter.results.append(result)
+
+        assert facade_converter.collect_results() == [result]
 
     def test_multiple_models(self, facade_converter, tmp_path):
         """process_config_file processes multiple models."""
@@ -929,6 +947,66 @@ class TestMain:
 
         with patch.object(ModelConverter, "process_config_file", return_value=(1, 0)):
             assert main() == 0
+
+    def test_report_default_path(self, tmp_path, monkeypatch, capsys):
+        """main --report writes report to <output>/conversion_report.md and prints it."""
+        config_path = tmp_path / "config.json"
+        config_path.write_text(json.dumps({"models": [{"model_short_name": "m1"}]}))
+        output_dir = tmp_path / "output"
+
+        monkeypatch.setattr(
+            sys,
+            "argv",
+            ["model_converter", str(config_path), "-o", str(output_dir), "-c", str(tmp_path / "cache"), "--report"],
+        )
+
+        from model_converter.reporting import STATUS_OK, ConversionResult
+
+        result = ConversionResult(
+            model_short_name="m1",
+            model_full_name="M1",
+            model_type="Classification",
+            model_library="torchvision",
+            status=STATUS_OK,
+        )
+
+        with (
+            patch.object(ModelConverter, "process_config_file", return_value=(1, 0)),
+            patch.object(ModelConverter, "collect_results", return_value=[result]),
+        ):
+            assert main() == 0
+
+        assert (output_dir / "conversion_report.md").exists()
+        assert "Conversion Summary Report" in capsys.readouterr().out
+
+    def test_report_custom_path(self, tmp_path, monkeypatch):
+        """main --report PATH writes the report to the provided path."""
+        config_path = tmp_path / "config.json"
+        config_path.write_text(json.dumps({"models": [{"model_short_name": "m1"}]}))
+        report_path = tmp_path / "custom" / "my_report.md"
+
+        monkeypatch.setattr(
+            sys,
+            "argv",
+            [
+                "model_converter",
+                str(config_path),
+                "-o",
+                str(tmp_path / "output"),
+                "-c",
+                str(tmp_path / "cache"),
+                "--report",
+                str(report_path),
+            ],
+        )
+
+        with (
+            patch.object(ModelConverter, "process_config_file", return_value=(0, 0)),
+            patch.object(ModelConverter, "collect_results", return_value=[]),
+        ):
+            assert main() == 0
+
+        assert report_path.exists()
 
     def test_failed_run(self, tmp_path, monkeypatch):
         """main returns 1 when models fail."""

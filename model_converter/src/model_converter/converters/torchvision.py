@@ -5,10 +5,13 @@
 
 """Torchvision model converter."""
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from model_converter.converters.pytorch import PyTorchConverter
 from model_converter.downloaders import URLDownloader
+
+if TYPE_CHECKING:
+    from model_converter.reporting import AccuracyResults
 
 
 class TorchvisionConverter(PyTorchConverter):
@@ -40,6 +43,7 @@ class TorchvisionConverter(PyTorchConverter):
 
         if fp16_model_path.exists() and int8_model_path.exists():
             self.logger.info(f"Skipping {model_short_name}: FP16 and INT8 models already exist")
+            self._record_result(self._build_result(config), converted=False, quantized=False, skipped=True)
             return True
 
         try:
@@ -95,8 +99,12 @@ class TorchvisionConverter(PyTorchConverter):
             )
 
             # Quantize the model if dataset is available
-            if config.get("quantize", True) and self.dataset_path and self.dataset_path.exists():
-                self._quantize_and_cleanup(
+            accuracy: AccuracyResults | None = None
+            quantization_attempted = bool(
+                config.get("quantize", True) and self.dataset_path and self.dataset_path.exists(),
+            )
+            if quantization_attempted:
+                accuracy = self._quantize_and_cleanup(
                     config,
                     fp32_model_path,
                     model_type=model_type,
@@ -106,11 +114,20 @@ class TorchvisionConverter(PyTorchConverter):
                     reverse_input_channels=reverse_input_channels,
                 )
 
+            quantized = accuracy.int8_succeeded if quantization_attempted and accuracy is not None else True
+            self._record_result(
+                self._build_result(config),
+                converted=True,
+                quantized=quantized,
+                accuracy=accuracy,
+            )
+
             self.logger.info(f"✓ Successfully converted {model_short_name}")
             return True
 
         except (ValueError, RuntimeError, ImportError, FileNotFoundError) as e:
             self.logger.error(f"✗ Failed to process model {model_short_name}: {e}")
+            self._record_result(self._build_result(config), converted=False, quantized=False)
             import traceback
 
             self.logger.debug(traceback.format_exc())

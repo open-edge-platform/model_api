@@ -22,6 +22,7 @@ from model_converter.converters import (
     TorchvisionConverter,
     YoloConverter,
 )
+from model_converter.reporting import AccuracyResults
 
 
 class TestConverterRegistry:
@@ -242,7 +243,7 @@ class TestTimmConverter:
                 return_value={("model_info", "model_type"): "Classification"},
             ),
             patch.object(timm_converter, "export_to_openvino", return_value=(fp16_path, fp32_path)),
-            patch.object(timm_converter, "_quantize_and_cleanup") as mock_quantize,
+            patch.object(timm_converter, "_quantize_and_cleanup", return_value=AccuracyResults()) as mock_quantize,
         ):
             result = timm_converter.process_model_config(sample_timm_config)
 

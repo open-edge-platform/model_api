@@ -679,6 +679,82 @@ class TestQuantizeModel:
         )
         assert converter.validate_model.call_count == 2
 
+    def test_measures_fp16_accuracy_and_populates_results(
+        self,
+        converter,
+        sample_model_config,
+        tmp_path,
+        template_dir,
+        monkeypatch,
+    ):
+        """Quantization measures FP16 accuracy and fills the AccuracyResults collector."""
+        from model_converter.reporting import AccuracyResults
+
+        _set_template_root(monkeypatch, template_dir)
+        (template_dir / "README-torchvision-int8.md").write_text("# <<model_name>>")
+        fp16_dir = tmp_path / "test_model-fp16-ov"
+        fp16_dir.mkdir(parents=True)
+        model_path = fp16_dir / "test_model_fp32.xml"
+        model_path.write_text("<net/>")
+        (fp16_dir / "test_model.xml").write_text("<net/>")
+
+        quantized_model = MagicMock()
+        quantized_model.get_rt_info.return_value = SimpleNamespace(value={"model_type": "Classification"})
+        fake_ov = ModuleType("openvino")
+        fake_ov.Core = MagicMock(return_value=SimpleNamespace(read_model=MagicMock(return_value="ov_model")))
+        fake_ov.save_model = MagicMock()
+        fake_nncf = ModuleType("nncf")
+        fake_nncf.Dataset = MagicMock(side_effect=lambda generator: list(generator))
+        fake_nncf.quantize = MagicMock(return_value=quantized_model)
+        fake_nncf.QuantizationPreset = SimpleNamespace(PERFORMANCE="performance", MIXED="mixed")
+
+        calibration_data = [np.zeros((1, 3, 224, 224), dtype=np.float32)]
+        validation_data = [np.zeros((1, 3, 224, 224), dtype=np.float32)]
+        validation_labels = [0]
+        converter.validate_model = MagicMock(side_effect=[0.97, 0.96, 0.95])
+        accuracy = AccuracyResults()
+
+        with patch.dict(sys.modules, {"openvino": fake_ov, "nncf": fake_nncf}):
+            converter.quantize_model(
+                model_path=model_path,
+                calibration_data=calibration_data,
+                model_config=sample_model_config,
+                validation_data=validation_data,
+                validation_labels=validation_labels,
+                accuracy_results=accuracy,
+            )
+
+        assert converter.validate_model.call_count == 3
+        assert accuracy.measured is True
+        assert accuracy.int8_succeeded is True
+        assert accuracy.fp32_accuracy == pytest.approx(0.97)
+        assert accuracy.fp16_accuracy == pytest.approx(0.96)
+        assert accuracy.int8_accuracy == pytest.approx(0.95)
+
+    def test_record_result_copies_measured_accuracy(self, converter, sample_model_config):
+        """_record_result copies measured accuracies onto the conversion result."""
+        from model_converter.reporting import STATUS_OK, AccuracyResults
+
+        accuracy = AccuracyResults(
+            fp32_accuracy=0.9,
+            fp16_accuracy=0.89,
+            int8_accuracy=0.88,
+            int8_succeeded=True,
+            measured=True,
+        )
+        result = converter._record_result(
+            converter._build_result(sample_model_config),
+            converted=True,
+            quantized=True,
+            accuracy=accuracy,
+        )
+
+        assert result.fp32_accuracy == pytest.approx(0.9)
+        assert result.fp16_accuracy == pytest.approx(0.89)
+        assert result.int8_accuracy == pytest.approx(0.88)
+        assert result.status == STATUS_OK
+        assert converter.results[-1] is result
+
     def test_returns_original_path_when_nncf_not_installed(self, converter, sample_model_config, tmp_path):
         """Quantization returns original path when nncf is not installed."""
         model_path = tmp_path / "model.xml"

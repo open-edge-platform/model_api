@@ -15,6 +15,13 @@ from typing import Any
 import cv2
 import numpy as np
 
+from model_converter.reporting import (
+    AccuracyResults,
+    ConversionResult,
+    determine_status,
+    original_url_for_config,
+)
+
 
 class BaseConverter(ABC):
     """Abstract base class for model converters.
@@ -44,6 +51,8 @@ class BaseConverter(ABC):
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
+        self.results: list[ConversionResult] = []
+
         log_level = logging.DEBUG if verbose else logging.INFO
         logging.basicConfig(
             level=log_level,
@@ -61,6 +70,40 @@ class BaseConverter(ABC):
         Returns:
             True if successful, False otherwise
         """
+
+    def _build_result(self, config: dict[str, Any]) -> ConversionResult:
+        """Create a ConversionResult seeded from a model configuration."""
+        model_short_name = str(config.get("model_short_name", "unknown"))
+        return ConversionResult(
+            model_short_name=model_short_name,
+            model_full_name=str(config.get("model_full_name", model_short_name)),
+            model_type=str(config.get("model_type", "")),
+            model_library=str(config.get("model_library", "")),
+            original_url=original_url_for_config(config),
+        )
+
+    def _record_result(
+        self,
+        result: ConversionResult,
+        *,
+        converted: bool,
+        quantized: bool,
+        skipped: bool = False,
+        accuracy: AccuracyResults | None = None,
+    ) -> ConversionResult:
+        """Finalize a ConversionResult: copy accuracies, set status, and store it."""
+        if accuracy is not None and accuracy.measured:
+            result.fp32_accuracy = accuracy.fp32_accuracy
+            result.fp16_accuracy = accuracy.fp16_accuracy
+            result.int8_accuracy = accuracy.int8_accuracy
+        result.status, result.status_detail = determine_status(
+            result,
+            converted=converted,
+            quantized=quantized,
+            skipped=skipped,
+        )
+        self.results.append(result)
+        return result
 
     def copy_readme(
         self,
@@ -328,6 +371,7 @@ class BaseConverter(ABC):
         preset: str = "accuracy",
         validation_data: list[np.ndarray] | None = None,
         validation_labels: list[int] | None = None,
+        accuracy_results: AccuracyResults | None = None,
     ) -> Path:
         """Quantize OpenVINO model to INT8 using NNCF.
 
@@ -338,6 +382,8 @@ class BaseConverter(ABC):
             preset: Quantization preset ('accuracy', 'performance', 'mixed')
             validation_data: Optional validation images for accuracy measurement
             validation_labels: Optional validation labels for accuracy measurement
+            accuracy_results: Optional collector populated with measured accuracies
+                and the INT8 success flag.
 
         Returns:
             Path to the quantized model
@@ -390,6 +436,8 @@ class BaseConverter(ABC):
             output_path = output_folder / f"{model_name}.xml"
             ov.save_model(quantized_model, output_path, compress_to_fp16=True)
             self.logger.info(f"✓ Quantized model saved: {output_path}")
+            if accuracy_results is not None:
+                accuracy_results.int8_succeeded = True
 
             # Save model_info as config.json to track downloads
             with (output_folder / "config.json").open("w") as f:
@@ -401,12 +449,27 @@ class BaseConverter(ABC):
                 fp32_accuracy = self.validate_model(model_path, validation_data, validation_labels)
                 self.logger.info(f"FP32 Top-1 Accuracy: {fp32_accuracy * 100:.2f}%")
 
+                fp16_model_path = model_path.parent / f"{model_name}.xml"
+                fp16_accuracy: float | None = None
+                if fp16_model_path.exists():
+                    self.logger.info("Validating FP16 model accuracy...")
+                    fp16_accuracy = self.validate_model(fp16_model_path, validation_data, validation_labels)
+                    self.logger.info(f"FP16 Top-1 Accuracy: {fp16_accuracy * 100:.2f}%")
+                else:
+                    self.logger.warning(f"FP16 model not found for accuracy measurement: {fp16_model_path}")
+
                 self.logger.info("Validating INT8 model accuracy...")
                 int8_accuracy = self.validate_model(output_path, validation_data, validation_labels)
                 self.logger.info(f"INT8 Top-1 Accuracy: {int8_accuracy * 100:.2f}%")
 
                 accuracy_drop = (fp32_accuracy - int8_accuracy) * 100
                 self.logger.info(f"Accuracy Drop: {accuracy_drop:.2f}%")
+
+                if accuracy_results is not None:
+                    accuracy_results.fp32_accuracy = fp32_accuracy
+                    accuracy_results.fp16_accuracy = fp16_accuracy
+                    accuracy_results.int8_accuracy = int8_accuracy
+                    accuracy_results.measured = True
 
             # Copy .gitattributes file
             gitattributes_template = Path(__file__).parent.parent / "templates" / ".gitattributes"

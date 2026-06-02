@@ -16,6 +16,7 @@ import torch.nn as nn
 
 from model_converter.adapters import get_adapter
 from model_converter.converters.base import BaseConverter
+from model_converter.reporting import AccuracyResults
 
 _MODEL_API_METADATA_FIELDS = (
     "resize_type",
@@ -335,9 +336,14 @@ class PyTorchConverter(BaseConverter):
 
         return metadata
 
-    def _quantize_and_cleanup(self, config: dict[str, Any], fp32_model_path: Path, **kwargs: Any) -> None:
-        """Run INT8 quantization and clean up temporary FP32 model files."""
+    def _quantize_and_cleanup(self, config: dict[str, Any], fp32_model_path: Path, **kwargs: Any) -> AccuracyResults:
+        """Run INT8 quantization and clean up temporary FP32 model files.
+
+        Returns:
+            The accuracies measured during quantization and the INT8 success flag.
+        """
         model_type = kwargs["model_type"]
+        accuracy = AccuracyResults()
         self.logger.info("Creating calibration dataset for INT8 quantization")
         return_validation_labels = model_type == "Classification" and bool(config.get("labels"))
 
@@ -360,6 +366,7 @@ class PyTorchConverter(BaseConverter):
                 preset="mixed",
                 validation_data=validation_data if validation_labels else None,
                 validation_labels=validation_labels or None,
+                accuracy_results=accuracy,
             )
 
         # Clean up temporary FP32 model after quantization
@@ -373,3 +380,5 @@ class PyTorchConverter(BaseConverter):
                 self.logger.debug(f"Removed temporary FP32 weights: {fp32_bin_path}")
         except OSError as e:
             self.logger.warning(f"Failed to remove temporary FP32 files: {e}")
+
+        return accuracy

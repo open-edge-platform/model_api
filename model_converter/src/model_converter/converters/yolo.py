@@ -42,6 +42,7 @@ class YoloConverter(BaseConverter):
 
         if (fp16_folder / f"{yolo_version}.xml").exists() and (int8_folder / f"{yolo_version}.xml").exists():
             self.logger.info(f"Skipping {model_short_name}: FP16 and INT8 models already exist")
+            self._record_result(self._build_result(config), converted=False, quantized=False, skipped=True)
             return True
 
         try:
@@ -97,10 +98,13 @@ class YoloConverter(BaseConverter):
                 self._copy_yolo_readme("README-yolo-int8.md", int8_folder, yolo_size)
 
             self.logger.info(f"✓ Successfully converted {model_short_name}")
+            quantized = (int8_folder / f"{yolo_version}.xml").exists()
+            self._record_result(self._build_result(config), converted=True, quantized=quantized)
             return True
 
         except (ValueError, RuntimeError, ImportError, FileNotFoundError, OSError) as e:
             self.logger.error(f"✗ Failed to process YOLO model {model_short_name}: {e}")
+            self._record_result(self._build_result(config), converted=False, quantized=False)
             import traceback
 
             self.logger.debug(traceback.format_exc())

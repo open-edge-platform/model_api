@@ -21,6 +21,11 @@ from typing import Any
 
 from model_converter.converters import CONVERTER_REGISTRY, BaseConverter
 from model_converter.converters.getitune import GetituneConverter
+from model_converter.reporting import (
+    ConversionResult,
+    format_console_table,
+    write_markdown_report,
+)
 
 
 class ModelConverter:
@@ -177,6 +182,17 @@ class ModelConverter:
 
         return successful, failed
 
+    def collect_results(self) -> list[ConversionResult]:
+        """Aggregate conversion results from every instantiated converter.
+
+        Returns:
+            The combined list of per-model conversion results.
+        """
+        results: list[ConversionResult] = []
+        for converter in self._converters.values():
+            results.extend(converter.results)
+        return results
+
 
 def list_models(config_path: Path, library_filter: list[str] | None = None) -> None:
     """List all models in a configuration file.
@@ -292,6 +308,19 @@ Examples:
     )
 
     parser.add_argument(
+        "--report",
+        nargs="?",
+        const="",
+        default=None,
+        metavar="PATH",
+        help=(
+            "Generate a conversion summary report. Pass the flag alone to write to "
+            "<output>/conversion_report.md, or provide a PATH to override the location. "
+            "The report is printed to the console and saved as Markdown."
+        ),
+    )
+
+    parser.add_argument(
         "-v",
         "--verbose",
         action="store_true",
@@ -361,6 +390,14 @@ Examples:
         logger.info(f"  Failed: {failed}")
         logger.info(f"  Total: {successful + failed}")
         logger.info("=" * 80)
+
+        # Generate the conversion summary report when requested
+        if args.report is not None:
+            report_path = Path(args.report) if args.report else args.output / "conversion_report.md"
+            results = converter.collect_results()
+            print(format_console_table(results))
+            write_markdown_report(results, report_path)
+            logger.info(f"Conversion report written to: {report_path}")
 
         return 0 if failed == 0 else 1
     except (ValueError, RuntimeError, ImportError, FileNotFoundError) as e:
