@@ -3,21 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""Custom ModelAPI wrapper for YOLO instance-segmentation inference.
-
-YOLO segmentation models exported with ``end2end=False`` produce two outputs:
-  * Output 0: ``[1, num_classes + 4 + mask_dim, num_boxes]`` — detection
-    predictions concatenated with mask coefficients.
-  * Output 1: ``[1, mask_dim, proto_h, proto_w]`` — mask prototypes.
-
-The standard ModelAPI ``YOLO11`` wrapper only handles a single detection
-output. This wrapper extends it to decode instance masks by multiplying
-mask coefficients by prototypes, cropping to bounding boxes, and resizing
-to original image dimensions.
-
-The wrapper registers itself as ``"YOLO11-seg"`` so OVEngine can discover
-it via ``model_type`` metadata in the exported IR.
-"""
+"""Custom ModelAPI wrapper for Ultralytics YOLO instance-segmentation inference."""
 
 from __future__ import annotations
 
