@@ -77,6 +77,20 @@ class TestYOLOSeg:
         with pytest.raises(WrapperError):
             YOLOSeg(adapter, configuration={})
 
+    def test_init_invalid_output_shapes(self):
+        adapter = MagicMock(spec=InferenceAdapter)
+        image_meta = FakeMetadata(shape=[1, 3, 640, 640], layout="NCHW")
+        adapter.get_input_layers.return_value = {"image": image_meta}
+        adapter.get_output_layers.return_value = {
+            "a": FakeMetadata(shape=[1, 10]),
+            "b": FakeMetadata(shape=[1, 20]),
+        }
+        adapter.get_rt_info.side_effect = _RT_INFO_ERROR
+        adapter.embed_preprocessing = MagicMock()
+        adapter.load_model.return_value = None
+        with pytest.raises(WrapperError, match="Expected one rank-3 detection output"):
+            YOLOSeg(adapter, configuration={})
+
     def test_init_invalid_channel_dim(self):
         adapter = MagicMock(spec=InferenceAdapter)
         image_meta = FakeMetadata(shape=[1, 3, 640, 640], layout="NCHW")

@@ -71,6 +71,7 @@ class YOLOSeg(DetectionModel):
         parameters["pad_value"].update_default_value(114)
         parameters["resize_type"].update_default_value("fit_to_window_letterbox")
         parameters["reverse_input_channels"].update_default_value(default_value=False)
+        parameters["scale_values"].update_default_value([255.0])
         parameters["confidence_threshold"].update_default_value(0.25)
         parameters["iou_threshold"].update_default_value(0.5)
         return parameters
@@ -124,9 +125,6 @@ class YOLOSeg(DetectionModel):
         confidences = confidences[keep_nms]
         labels = labels[keep_nms]
         mask_coeffs = mask_coeffs[keep_nms]
-
-        if len(boxes_xyxy) == 0:
-            return self._empty_result(meta)
 
         masks = self._decode_masks(mask_coeffs, protos, boxes_xyxy, meta)
 
