@@ -185,7 +185,21 @@ jobs:
         with:
           disable-sudo: true
           disable-telemetry: true
-          egress-policy: audit
+          egress-policy: block
+          allowed-endpoints: >
+            auth.docker.io:443
+            download.pytorch.org:443
+            dseasb33srnrn.cloudfront.net:443
+            files.pythonhosted.org:443
+            github.com:443
+            production.cloudflare.docker.com:443
+            production.cloudfront.docker.com:443
+            pypi.org:443
+            raw.githubusercontent.com:443
+            registry-1.docker.io:443
+            releases.astral.sh:443
+            storage.geti.intel.com:443
+            index.docker.io:443
       - name: Set up docker for macOS
         if: startsWith(matrix.os, 'macos-1')
         run: |
