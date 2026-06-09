@@ -143,8 +143,12 @@ def test_load_oserror(tmp_path):
     config_file = tmp_path / "datasets.json"
     config_file.write_text('{"datasets": {}}')
 
-    with patch("pathlib.Path.open", side_effect=OSError("permission denied")), pytest.raises(
-        ValueError, match="Failed to read dataset configuration file",
+    with (
+        patch("pathlib.Path.open", side_effect=OSError("permission denied")),
+        pytest.raises(
+            ValueError,
+            match="Failed to read dataset configuration file",
+        ),
     ):
         DatasetRegistry(config_file)
 
