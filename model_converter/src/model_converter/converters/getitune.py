@@ -400,6 +400,7 @@ class GetituneConverter(BaseConverter):
             subset_size=300,
             return_labels=measure_accuracy,
             dataset_path=dataset_path,
+            dataset_type=config.get("dataset_type"),
         )
 
         if calibration_data:

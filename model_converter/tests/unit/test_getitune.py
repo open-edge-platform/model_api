@@ -581,6 +581,7 @@ class TestQuantizeExportedModel:
             subset_size=300,
             return_labels=False,
             dataset_path=ANY,
+            dataset_type="imagenet-1k",
         )
         mock_quantize.assert_called_once_with(
             model_path=fp32_xml,
@@ -697,6 +698,7 @@ class TestQuantizeExportedModel:
             subset_size=300,
             return_labels=True,
             dataset_path=ANY,
+            dataset_type="imagenet-1k",
         )
         mock_quantize.assert_called_once_with(
             model_path=fp32_xml,

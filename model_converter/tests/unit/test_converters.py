@@ -179,6 +179,35 @@ class TestCollectDatasetEntries:
             ("image_002.jpg", 1),
         ]
 
+    def test_dataset_type_dispatches_to_coco_reader(self, converter, tmp_path):
+        """Passing dataset_type='coco-detection' uses the COCO images reader."""
+        images = tmp_path / "images"
+        annotations = tmp_path / "annotations"
+        images.mkdir()
+        annotations.mkdir()
+        (images / "img1.jpg").write_bytes(b"")
+        (annotations / "instances_val2017.json").write_text("{}")
+
+        entries = converter._collect_dataset_entries(tmp_path, dataset_type="coco-detection")
+
+        assert len(entries) == 1
+        assert entries[0][0].name == "img1.jpg"
+        assert entries[0][1] == 0  # placeholder label for non-classification layouts
+
+    def test_dataset_type_dispatches_to_ade20k_reader(self, converter, tmp_path):
+        """Passing dataset_type='ade20k' uses the ADE20K image/mask reader."""
+        images = tmp_path / "images"
+        annotations = tmp_path / "annotations"
+        images.mkdir()
+        annotations.mkdir()
+        (images / "ADE_val_00000001.jpg").write_bytes(b"")
+        (annotations / "ADE_val_00000001.png").write_bytes(b"")
+
+        entries = converter._collect_dataset_entries(tmp_path, dataset_type="ade20k")
+
+        assert len(entries) == 1
+        assert entries[0][0].name == "ADE_val_00000001.jpg"
+
 
 class TestCropResize:
     """Tests for BaseConverter._crop_resize."""

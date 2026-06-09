@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, Any
 import cv2
 import numpy as np
 
+from model_converter.datasets import reader_for
 from model_converter.reporting import (
     AccuracyResults,
     ConversionResult,
@@ -256,16 +257,19 @@ class BaseConverter(ABC):
 
         return None
 
-    def _collect_dataset_entries(self, image_dir: Path) -> list[tuple[Path, int]]:
-        """Collect dataset image paths with their class labels."""
-        image_entries: list[tuple[Path, int]] = []
-        for class_dir in sorted(image_dir.iterdir()):
-            if class_dir.is_dir():
-                class_label = int(class_dir.name)
-                for pattern in ["*.JPEG", "*.jpg", "*.png"]:
-                    for img_path in class_dir.glob(pattern):
-                        image_entries.append((img_path, class_label))
-        return image_entries
+    def _collect_dataset_entries(
+        self,
+        image_dir: Path,
+        dataset_type: str | None = None,
+    ) -> list[tuple[Path, int]]:
+        """Collect dataset image paths with their class labels.
+
+        Dispatches by ``dataset_type`` to the appropriate
+        :class:`~model_converter.datasets.DatasetReader`. ``None`` (the
+        default) preserves the legacy class-folder behaviour.
+        """
+        reader = reader_for(dataset_type, image_dir)
+        return [(sample.image_path, sample.label) for sample in reader]
 
     @staticmethod
     def _crop_resize(img: np.ndarray, width: int, height: int) -> np.ndarray:
@@ -331,10 +335,11 @@ class BaseConverter(ABC):
         mean_values: str | None = None,
         scale_values: str | None = None,
         reverse_input_channels: bool = True,
-        subset_size: int = 5000,
+        subset_size: int = 500,
         return_labels: bool = False,
         resize_type: str = "standard",
         dataset_path: Path | None = None,
+        dataset_type: str | None = None,
     ) -> tuple[list[np.ndarray], list[int]]:
         """Create calibration dataset from sample validation images.
 
@@ -350,6 +355,9 @@ class BaseConverter(ABC):
                 evaluation), ``"standard"`` stretches directly to the target
                 size.
             dataset_path: Path to dataset directory (overrides registry resolution)
+            dataset_type: Optional dataset_type identifier (e.g. ``"coco-detection"``)
+                used to dispatch path enumeration to the matching reader. Defaults
+                to ``None`` for backward-compatible class-folder behaviour.
 
         Returns:
             Tuple of (images, labels); both empty lists when dataset is unavailable.
@@ -371,7 +379,7 @@ class BaseConverter(ABC):
             self.logger.error(f"Image directory not found: {image_dir}")
             return ([], [])
 
-        image_entries = self._collect_dataset_entries(image_dir)
+        image_entries = self._collect_dataset_entries(image_dir, dataset_type=dataset_type)
         if not image_entries:
             self.logger.error("No images found in dataset")
             return ([], [])

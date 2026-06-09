@@ -366,6 +366,7 @@ class PyTorchConverter(BaseConverter):
             return_labels=return_validation_labels,
             resize_type=resize_type,
             dataset_path=dataset_path,
+            dataset_type=config.get("dataset_type"),
         )
 
         if validation_data:
