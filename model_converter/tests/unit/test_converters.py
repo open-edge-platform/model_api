@@ -1031,3 +1031,648 @@ class TestValidateTorchModel:
             result = converter.quantize_model(model_path, calibration_data, sample_model_config)
 
         assert result == model_path
+
+
+class TestMeasureMetric:
+    """Tests for BaseConverter._measure_metric (Model API → metric dispatch)."""
+
+    @staticmethod
+    def _install_fake_model_api(monkeypatch, wrapper):
+        """Install a fake ``model_api.models`` module so ``Model.create_model`` returns ``wrapper``."""
+        fake_models = ModuleType("model_api.models")
+
+        class FakeModel:
+            @staticmethod
+            def create_model(_path):
+                return wrapper
+
+        fake_models.Model = FakeModel
+        fake_root = ModuleType("model_api")
+        fake_root.models = fake_models
+        monkeypatch.setitem(sys.modules, "model_api", fake_root)
+        monkeypatch.setitem(sys.modules, "model_api.models", fake_models)
+
+    def test_multilabel_dispatch_uses_raw_scores_and_returns_compute(
+        self,
+        converter,
+        tmp_path,
+        monkeypatch,
+    ):
+        from model_converter.datasets import CalibrationSample
+        from model_converter.metrics import MultilabelMAP
+
+        img_path = tmp_path / "img.jpg"
+        cv2.imwrite(str(img_path), np.zeros((10, 10, 3), dtype=np.uint8))
+        wrapper = MagicMock(return_value=SimpleNamespace(raw_scores=np.array([0.1, 0.9, 0.2], dtype=np.float32)))
+        self._install_fake_model_api(monkeypatch, wrapper)
+
+        metric = MultilabelMAP(num_labels=3)
+        metric.update = MagicMock()
+        metric.compute = MagicMock(return_value=0.42)
+        metric.reset = MagicMock()
+        sample = CalibrationSample(image_path=img_path, label=1)
+
+        value = converter._measure_metric(tmp_path / "model.xml", [sample], metric)
+
+        assert value == pytest.approx(0.42)
+        metric.reset.assert_called_once()
+        update_kwargs = metric.update.call_args.kwargs
+        assert "prediction" in update_kwargs
+        assert "ground_truth" in update_kwargs
+        np.testing.assert_array_equal(update_kwargs["ground_truth"], np.array([0, 1, 0], dtype=np.int64))
+
+    def test_bbox_dispatch_converts_xyxy_to_xywh_and_uses_image_id(
+        self,
+        converter,
+        tmp_path,
+        monkeypatch,
+    ):
+        from model_converter.datasets import CalibrationSample
+        from model_converter.metrics import CocoDetectionMAP
+
+        img_path = tmp_path / "img.jpg"
+        cv2.imwrite(str(img_path), np.zeros((10, 10, 3), dtype=np.uint8))
+        wrapper = MagicMock(
+            return_value=SimpleNamespace(
+                bboxes=np.array([[10, 20, 30, 50]], dtype=np.int32),
+                labels=np.array([4], dtype=np.int32),
+                scores=np.array([0.9], dtype=np.float32),
+            ),
+        )
+        self._install_fake_model_api(monkeypatch, wrapper)
+
+        ann = tmp_path / "ann.json"
+        ann.write_text('{"images":[],"annotations":[],"categories":[]}')
+        metric = CocoDetectionMAP(annotation_file=ann, iou_type="bbox")
+        metric.update = MagicMock()
+        metric.compute = MagicMock(return_value=0.55)
+        metric.reset = MagicMock()
+        sample = CalibrationSample(image_path=img_path, label=0, image_id=42)
+
+        value = converter._measure_metric(tmp_path / "model.xml", [sample], metric)
+
+        assert value == pytest.approx(0.55)
+        preds = metric.update.call_args.kwargs["predictions"]
+        assert len(preds) == 1
+        assert preds[0]["image_id"] == 42
+        # XYXY (10, 20, 30, 50) → XYWH (10, 20, 20, 30)
+        assert preds[0]["bbox"] == [10.0, 20.0, 20.0, 30.0]
+        # category_id is the model label + 1 (COCO is 1-indexed)
+        assert preds[0]["category_id"] == 5
+        assert preds[0]["score"] == pytest.approx(0.9)
+
+    def test_bbox_dispatch_skips_samples_without_image_id(
+        self,
+        converter,
+        tmp_path,
+        monkeypatch,
+    ):
+        from model_converter.datasets import CalibrationSample
+        from model_converter.metrics import CocoDetectionMAP
+
+        img_path = tmp_path / "img.jpg"
+        cv2.imwrite(str(img_path), np.zeros((10, 10, 3), dtype=np.uint8))
+        wrapper = MagicMock(
+            return_value=SimpleNamespace(
+                bboxes=np.array([[1, 2, 3, 4]], dtype=np.int32),
+                labels=np.array([0], dtype=np.int32),
+                scores=np.array([0.5], dtype=np.float32),
+            ),
+        )
+        self._install_fake_model_api(monkeypatch, wrapper)
+
+        ann = tmp_path / "ann.json"
+        ann.write_text('{"images":[],"annotations":[],"categories":[]}')
+        metric = CocoDetectionMAP(annotation_file=ann, iou_type="bbox")
+        metric.update = MagicMock()
+        metric.compute = MagicMock(return_value=0.0)
+        sample = CalibrationSample(image_path=img_path, label=0)  # image_id=None
+
+        converter._measure_metric(tmp_path / "model.xml", [sample], metric)
+
+        metric.update.assert_not_called()
+
+    def test_metric_update_errors_are_swallowed_per_sample(
+        self,
+        converter,
+        tmp_path,
+        monkeypatch,
+    ):
+        """A bad single-sample dispatch must not abort metric measurement."""
+        from model_converter.datasets import CalibrationSample
+        from model_converter.metrics import MultilabelMAP
+
+        img_path = tmp_path / "img.jpg"
+        cv2.imwrite(str(img_path), np.zeros((10, 10, 3), dtype=np.uint8))
+        # Wrapper returns malformed raw_scores that will trip metric.update.
+        wrapper = MagicMock(return_value=SimpleNamespace(raw_scores=np.array([0.1, 0.2, 0.3], dtype=np.float32)))
+        self._install_fake_model_api(monkeypatch, wrapper)
+
+        metric = MultilabelMAP(num_labels=3)
+        metric.update = MagicMock(side_effect=TypeError("boom"))
+        metric.compute = MagicMock(return_value=0.0)
+        sample = CalibrationSample(image_path=img_path, label=0)
+
+        value = converter._measure_metric(tmp_path / "m.xml", [sample], metric)
+
+        assert value == pytest.approx(0.0)
+        metric.compute.assert_called_once()
+
+    def test_semseg_dispatch_shifts_ade20k_mask_and_updates_metric(
+        self,
+        converter,
+        tmp_path,
+        monkeypatch,
+    ):
+        from model_converter.datasets import CalibrationSample
+        from model_converter.metrics import SemSegMIoU
+
+        img_path = tmp_path / "img.jpg"
+        mask_path = tmp_path / "mask.png"
+        cv2.imwrite(str(img_path), np.zeros((10, 10, 3), dtype=np.uint8))
+        # ADE20K convention: 0 = unlabeled (ignore), 1..N = classes
+        cv2.imwrite(str(mask_path), np.array([[0, 1, 2], [1, 2, 3]], dtype=np.uint8))
+
+        pred_mask = np.array([[0, 0, 1], [0, 1, 2]], dtype=np.uint8)
+        wrapper = MagicMock(return_value=SimpleNamespace(resultImage=pred_mask))
+        self._install_fake_model_api(monkeypatch, wrapper)
+
+        metric = SemSegMIoU(num_classes=150, ignore_index=255)
+        metric.update = MagicMock()
+        metric.compute = MagicMock(return_value=0.3)
+        sample = CalibrationSample(image_path=img_path, label=0, mask_path=mask_path)
+
+        converter._measure_metric(tmp_path / "model.xml", [sample], metric)
+
+        call = metric.update.call_args
+        gt_arg = call.args[1] if len(call.args) > 1 else call.kwargs["ground_truth"]
+        # Mask is shifted: 0 → 255 (ignore), 1 → 0, 2 → 1, 3 → 2
+        np.testing.assert_array_equal(gt_arg, np.array([[255, 0, 1], [0, 1, 2]], dtype=np.int32))
+
+    def test_semseg_skips_sample_without_mask_path(
+        self,
+        converter,
+        tmp_path,
+        monkeypatch,
+    ):
+        from model_converter.datasets import CalibrationSample
+        from model_converter.metrics import SemSegMIoU
+
+        img_path = tmp_path / "img.jpg"
+        cv2.imwrite(str(img_path), np.zeros((10, 10, 3), dtype=np.uint8))
+        wrapper = MagicMock(return_value=SimpleNamespace(resultImage=np.zeros((10, 10), dtype=np.uint8)))
+        self._install_fake_model_api(monkeypatch, wrapper)
+
+        metric = SemSegMIoU(num_classes=150, ignore_index=255)
+        metric.update = MagicMock()
+        metric.compute = MagicMock(return_value=0.0)
+        sample = CalibrationSample(image_path=img_path, label=0)  # mask_path=None
+
+        converter._measure_metric(tmp_path / "model.xml", [sample], metric)
+
+        metric.update.assert_not_called()
+
+    def test_returns_none_when_model_api_unavailable(self, converter, tmp_path, monkeypatch):
+        """If ``model_api`` cannot be imported, return None rather than raising."""
+        from model_converter.metrics import MultilabelMAP
+
+        monkeypatch.setitem(sys.modules, "model_api", None)
+
+        metric = MultilabelMAP(num_labels=3)
+        assert converter._measure_metric(tmp_path / "m.xml", [], metric) is None
+
+    def test_returns_none_when_create_model_raises(self, converter, tmp_path, monkeypatch):
+        from model_converter.metrics import MultilabelMAP
+
+        fake_models = ModuleType("model_api.models")
+
+        class FakeModel:
+            @staticmethod
+            def create_model(_path):
+                msg = "bad model"
+                raise RuntimeError(msg)
+
+        fake_models.Model = FakeModel
+        fake_root = ModuleType("model_api")
+        fake_root.models = fake_models
+        monkeypatch.setitem(sys.modules, "model_api", fake_root)
+        monkeypatch.setitem(sys.modules, "model_api.models", fake_models)
+
+        metric = MultilabelMAP(num_labels=3)
+        assert converter._measure_metric(tmp_path / "m.xml", [], metric) is None
+
+    def test_skips_samples_that_fail_to_load(self, converter, tmp_path, monkeypatch):
+        from model_converter.datasets import CalibrationSample
+        from model_converter.metrics import MultilabelMAP
+
+        wrapper = MagicMock()
+        self._install_fake_model_api(monkeypatch, wrapper)
+
+        metric = MultilabelMAP(num_labels=3)
+        metric.update = MagicMock()
+        metric.compute = MagicMock(return_value=0.0)
+        sample = CalibrationSample(image_path=tmp_path / "nonexistent.jpg", label=0)
+
+        converter._measure_metric(tmp_path / "m.xml", [sample], metric)
+
+        wrapper.assert_not_called()
+        metric.update.assert_not_called()
+
+    def test_inference_errors_are_swallowed_per_sample(self, converter, tmp_path, monkeypatch):
+        from model_converter.datasets import CalibrationSample
+        from model_converter.metrics import MultilabelMAP
+
+        img_path = tmp_path / "img.jpg"
+        cv2.imwrite(str(img_path), np.zeros((10, 10, 3), dtype=np.uint8))
+        wrapper = MagicMock(side_effect=RuntimeError("boom"))
+        self._install_fake_model_api(monkeypatch, wrapper)
+
+        metric = MultilabelMAP(num_labels=3)
+        metric.update = MagicMock()
+        metric.compute = MagicMock(return_value=0.0)
+        sample = CalibrationSample(image_path=img_path, label=0)
+
+        value = converter._measure_metric(tmp_path / "m.xml", [sample], metric)
+
+        assert value == pytest.approx(0.0)
+        metric.update.assert_not_called()
+
+    def test_multilabel_skips_when_result_has_no_raw_scores(
+        self,
+        converter,
+        tmp_path,
+        monkeypatch,
+    ):
+        from model_converter.datasets import CalibrationSample
+        from model_converter.metrics import MultilabelMAP
+
+        img_path = tmp_path / "img.jpg"
+        cv2.imwrite(str(img_path), np.zeros((10, 10, 3), dtype=np.uint8))
+        # Result lacks the ``raw_scores`` attribute — wrapper returns a bare namespace.
+        wrapper = MagicMock(return_value=SimpleNamespace())
+        self._install_fake_model_api(monkeypatch, wrapper)
+
+        metric = MultilabelMAP(num_labels=3)
+        metric.update = MagicMock()
+        metric.compute = MagicMock(return_value=0.0)
+        sample = CalibrationSample(image_path=img_path, label=0)
+
+        converter._measure_metric(tmp_path / "m.xml", [sample], metric)
+
+        metric.update.assert_not_called()
+
+    def test_coco_dispatch_unknown_iou_type_does_nothing(
+        self,
+        converter,
+        tmp_path,
+        monkeypatch,
+    ):
+        from model_converter.datasets import CalibrationSample
+        from model_converter.metrics import CocoDetectionMAP
+
+        img_path = tmp_path / "img.jpg"
+        cv2.imwrite(str(img_path), np.zeros((10, 10, 3), dtype=np.uint8))
+        wrapper = MagicMock(return_value=SimpleNamespace())
+        self._install_fake_model_api(monkeypatch, wrapper)
+
+        ann = tmp_path / "ann.json"
+        ann.write_text('{"images":[],"annotations":[],"categories":[]}')
+        metric = CocoDetectionMAP(annotation_file=ann, iou_type="bbox")
+        metric.iou_type = "segm"  # Force an unsupported branch (not wired up here)
+        metric.update = MagicMock()
+        metric.compute = MagicMock(return_value=0.0)
+        sample = CalibrationSample(image_path=img_path, label=0, image_id=1)
+
+        converter._measure_metric(tmp_path / "m.xml", [sample], metric)
+
+        metric.update.assert_not_called()
+
+    def test_bbox_dispatch_skips_when_result_missing_fields(
+        self,
+        converter,
+        tmp_path,
+        monkeypatch,
+    ):
+        from model_converter.datasets import CalibrationSample
+        from model_converter.metrics import CocoDetectionMAP
+
+        img_path = tmp_path / "img.jpg"
+        cv2.imwrite(str(img_path), np.zeros((10, 10, 3), dtype=np.uint8))
+        # Result without bboxes / labels / scores attrs.
+        wrapper = MagicMock(return_value=SimpleNamespace())
+        self._install_fake_model_api(monkeypatch, wrapper)
+
+        ann = tmp_path / "ann.json"
+        ann.write_text('{"images":[],"annotations":[],"categories":[]}')
+        metric = CocoDetectionMAP(annotation_file=ann, iou_type="bbox")
+        metric.update = MagicMock()
+        metric.compute = MagicMock(return_value=0.0)
+        sample = CalibrationSample(image_path=img_path, label=0, image_id=1)
+
+        converter._measure_metric(tmp_path / "m.xml", [sample], metric)
+
+        metric.update.assert_not_called()
+
+    def test_semseg_skips_when_mask_unreadable(self, converter, tmp_path, monkeypatch):
+        from model_converter.datasets import CalibrationSample
+        from model_converter.metrics import SemSegMIoU
+
+        img_path = tmp_path / "img.jpg"
+        cv2.imwrite(str(img_path), np.zeros((10, 10, 3), dtype=np.uint8))
+        mask_path = tmp_path / "bad_mask.png"
+        mask_path.write_bytes(b"not a png")  # cv2.imread will return None
+
+        wrapper = MagicMock(return_value=SimpleNamespace(resultImage=np.zeros((10, 10), dtype=np.uint8)))
+        self._install_fake_model_api(monkeypatch, wrapper)
+
+        metric = SemSegMIoU(num_classes=150, ignore_index=255)
+        metric.update = MagicMock()
+        metric.compute = MagicMock(return_value=0.0)
+        sample = CalibrationSample(image_path=img_path, label=0, mask_path=mask_path)
+
+        converter._measure_metric(tmp_path / "m.xml", [sample], metric)
+
+        metric.update.assert_not_called()
+
+    def test_semseg_resizes_prediction_when_shape_mismatch(
+        self,
+        converter,
+        tmp_path,
+        monkeypatch,
+    ):
+        """Hard predictions in a different resolution are nearest-resized to match the GT mask."""
+        from model_converter.datasets import CalibrationSample
+        from model_converter.metrics import SemSegMIoU
+
+        img_path = tmp_path / "img.jpg"
+        cv2.imwrite(str(img_path), np.zeros((10, 10, 3), dtype=np.uint8))
+        mask_path = tmp_path / "mask.png"
+        cv2.imwrite(str(mask_path), np.array([[1, 2], [1, 2]], dtype=np.uint8))
+
+        # Prediction at half the GT resolution → must be resized.
+        pred_mask = np.array([[0]], dtype=np.uint8)
+        wrapper = MagicMock(return_value=SimpleNamespace(resultImage=pred_mask))
+        self._install_fake_model_api(monkeypatch, wrapper)
+
+        metric = SemSegMIoU(num_classes=150, ignore_index=255)
+        metric.update = MagicMock()
+        metric.compute = MagicMock(return_value=0.0)
+        sample = CalibrationSample(image_path=img_path, label=0, mask_path=mask_path)
+
+        converter._measure_metric(tmp_path / "m.xml", [sample], metric)
+
+        # Prediction should have been resized to GT shape (2, 2) and filled with 0.
+        pred_arg = metric.update.call_args.args[0]
+        assert pred_arg.shape == (2, 2)
+        np.testing.assert_array_equal(pred_arg, np.zeros((2, 2), dtype=np.uint8))
+
+
+class TestQuantizeModelMetricPath:
+    """Tests for the new metric-aware accuracy path inside quantize_model."""
+
+    def test_uses_measure_metric_when_non_top1_metric_provided(
+        self,
+        converter,
+        sample_model_config,
+        template_dir,
+        tmp_path,
+        monkeypatch,
+    ):
+        from model_converter.datasets import CalibrationSample
+        from model_converter.metrics import MultilabelMAP
+
+        _set_template_root(monkeypatch, template_dir)
+        (template_dir / "README-torchvision-int8.md").write_text("# <<model_name>>")
+        fp16_dir = tmp_path / "test_model-fp16-ov"
+        fp16_dir.mkdir(parents=True)
+        model_path = fp16_dir / "test_model_fp32.xml"
+        model_path.write_text("<net/>")
+        (fp16_dir / "test_model.xml").write_text("<net/>")
+
+        quantized_model = MagicMock()
+        quantized_model.get_rt_info.return_value = SimpleNamespace(value={"model_type": "Classification"})
+        fake_ov = ModuleType("openvino")
+        fake_ov.Core = MagicMock(return_value=SimpleNamespace(read_model=MagicMock(return_value="ov_model")))
+        fake_ov.save_model = MagicMock()
+        fake_nncf = ModuleType("nncf")
+        fake_nncf.Dataset = MagicMock(side_effect=lambda generator: list(generator))
+        fake_nncf.quantize = MagicMock(return_value=quantized_model)
+        fake_nncf.QuantizationPreset = SimpleNamespace(PERFORMANCE="performance", MIXED="mixed")
+
+        calibration_data = [np.zeros((1, 3, 224, 224), dtype=np.float32)]
+        samples = [CalibrationSample(image_path=tmp_path / "img.jpg", label=0)]
+        metric = MultilabelMAP(num_labels=3)
+        converter._measure_metric = MagicMock(side_effect=[0.81, 0.80, 0.78])
+
+        from model_converter.reporting import AccuracyResults
+
+        accuracy = AccuracyResults()
+        with patch.dict(sys.modules, {"openvino": fake_ov, "nncf": fake_nncf}):
+            converter.quantize_model(
+                model_path=model_path,
+                calibration_data=calibration_data,
+                model_config=sample_model_config,
+                validation_samples=samples,
+                metric=metric,
+                accuracy_results=accuracy,
+            )
+
+        assert converter._measure_metric.call_count == 3
+        assert accuracy.measured is True
+        assert accuracy.fp32_accuracy == pytest.approx(0.81)
+        assert accuracy.fp16_accuracy == pytest.approx(0.80)
+        assert accuracy.int8_accuracy == pytest.approx(0.78)
+
+    def test_falls_back_to_validate_model_when_top1_metric(
+        self,
+        converter,
+        sample_model_config,
+        template_dir,
+        tmp_path,
+        monkeypatch,
+    ):
+        """A TopOneAccuracy metric must use the existing validate_model path (not _measure_metric)."""
+        from model_converter.metrics import TopOneAccuracy
+
+        _set_template_root(monkeypatch, template_dir)
+        (template_dir / "README-torchvision-int8.md").write_text("# <<model_name>>")
+        fp16_dir = tmp_path / "test_model-fp16-ov"
+        fp16_dir.mkdir(parents=True)
+        model_path = fp16_dir / "test_model_fp32.xml"
+        model_path.write_text("<net/>")
+
+        quantized_model = MagicMock()
+        quantized_model.get_rt_info.return_value = SimpleNamespace(value={"model_type": "Classification"})
+        fake_ov = ModuleType("openvino")
+        fake_ov.Core = MagicMock(return_value=SimpleNamespace(read_model=MagicMock(return_value="ov_model")))
+        fake_ov.save_model = MagicMock()
+        fake_nncf = ModuleType("nncf")
+        fake_nncf.Dataset = MagicMock(side_effect=lambda generator: list(generator))
+        fake_nncf.quantize = MagicMock(return_value=quantized_model)
+        fake_nncf.QuantizationPreset = SimpleNamespace(PERFORMANCE="performance", MIXED="mixed")
+
+        calibration_data = [np.zeros((1, 3, 224, 224), dtype=np.float32)]
+        validation_data = [np.zeros((1, 3, 224, 224), dtype=np.float32)]
+        validation_labels = [0]
+        converter.validate_model = MagicMock(return_value=0.9)
+        converter._measure_metric = MagicMock()
+
+        with patch.dict(sys.modules, {"openvino": fake_ov, "nncf": fake_nncf}):
+            converter.quantize_model(
+                model_path=model_path,
+                calibration_data=calibration_data,
+                model_config=sample_model_config,
+                validation_data=validation_data,
+                validation_labels=validation_labels,
+                metric=TopOneAccuracy(),
+            )
+
+        # Old path is used; _measure_metric is never called.
+        converter._measure_metric.assert_not_called()
+        assert converter.validate_model.call_count == 2
+
+    def test_metric_path_logs_warning_when_fp16_missing(
+        self,
+        converter,
+        sample_model_config,
+        template_dir,
+        tmp_path,
+        monkeypatch,
+        caplog,
+    ):
+        """When FP16 model file is absent, metric path skips fp16 and logs a warning."""
+        import logging as _logging
+
+        from model_converter.datasets import CalibrationSample
+        from model_converter.metrics import MultilabelMAP
+
+        _set_template_root(monkeypatch, template_dir)
+        (template_dir / "README-torchvision-int8.md").write_text("# <<model_name>>")
+        fp16_dir = tmp_path / "test_model-fp16-ov"
+        fp16_dir.mkdir(parents=True)
+        # Only FP32 exists; the FP16 .xml is missing → warning branch.
+        model_path = fp16_dir / "test_model_fp32.xml"
+        model_path.write_text("<net/>")
+
+        quantized_model = MagicMock()
+        quantized_model.get_rt_info.return_value = SimpleNamespace(value={"model_type": "Classification"})
+        fake_ov = ModuleType("openvino")
+        fake_ov.Core = MagicMock(return_value=SimpleNamespace(read_model=MagicMock(return_value="ov_model")))
+        fake_ov.save_model = MagicMock()
+        fake_nncf = ModuleType("nncf")
+        fake_nncf.Dataset = MagicMock(side_effect=lambda generator: list(generator))
+        fake_nncf.quantize = MagicMock(return_value=quantized_model)
+        fake_nncf.QuantizationPreset = SimpleNamespace(PERFORMANCE="performance", MIXED="mixed")
+
+        calibration_data = [np.zeros((1, 3, 224, 224), dtype=np.float32)]
+        samples = [CalibrationSample(image_path=tmp_path / "img.jpg", label=0)]
+        metric = MultilabelMAP(num_labels=3)
+        converter._measure_metric = MagicMock(side_effect=[0.81, 0.78])
+
+        with (
+            patch.dict(sys.modules, {"openvino": fake_ov, "nncf": fake_nncf}),
+            caplog.at_level(_logging.WARNING),
+        ):
+            converter.quantize_model(
+                model_path=model_path,
+                calibration_data=calibration_data,
+                model_config=sample_model_config,
+                validation_samples=samples,
+                metric=metric,
+            )
+
+        # FP32 + INT8 only (FP16 was skipped); warning logged.
+        assert converter._measure_metric.call_count == 2
+        assert "FP16 model not found" in caplog.text
+
+
+class TestMetricForConfig:
+    """Tests for BaseConverter._metric_for_config (config → metric dispatch)."""
+
+    def test_imagenet_classification_returns_top1(self, converter, tmp_path):
+        from model_converter.metrics import TopOneAccuracy
+
+        metric = converter._metric_for_config(
+            {"dataset_type": "imagenet-1k", "model_type": "Classification"},
+            dataset_path=tmp_path,
+        )
+        assert isinstance(metric, TopOneAccuracy)
+
+    def test_imagenet_with_multilabel_task_returns_multilabel(self, converter, tmp_path):
+        from model_converter.metrics import MultilabelMAP
+
+        metric = converter._metric_for_config(
+            {
+                "dataset_type": "imagenet-1k",
+                "model_type": "Classification",
+                "getitune_task": "MULTI_LABEL_CLS",
+            },
+            dataset_path=tmp_path,
+        )
+        assert isinstance(metric, MultilabelMAP)
+
+    def test_coco_detection_resolves_annotation_file(self, converter, tmp_path):
+        from model_converter.metrics import CocoDetectionMAP
+
+        ann_dir = tmp_path / "annotations"
+        ann_dir.mkdir()
+        (ann_dir / "instances_val2017.json").write_text(
+            '{"images":[],"annotations":[],"categories":[]}',
+        )
+        metric = converter._metric_for_config(
+            {"dataset_type": "coco-detection", "model_type": "YOLOX"},
+            dataset_path=tmp_path,
+        )
+        assert isinstance(metric, CocoDetectionMAP)
+        assert metric.annotation_file == ann_dir / "instances_val2017.json"
+
+    def test_unknown_dataset_returns_none(self, converter, tmp_path):
+        assert (
+            converter._metric_for_config(
+                {"dataset_type": "unknown", "model_type": "Classification"},
+                dataset_path=tmp_path,
+            )
+            is None
+        )
+
+    def test_returns_none_when_dataset_path_missing_for_coco(self, converter):
+        # Without a dataset_path, COCO cannot resolve the annotation file → None
+        metric = converter._metric_for_config(
+            {"dataset_type": "coco-detection", "model_type": "YOLOX"},
+            dataset_path=None,
+        )
+        assert metric is None
+
+
+class TestCollectValidationSamples:
+    """Tests for BaseConverter._collect_validation_samples."""
+
+    def test_returns_empty_when_dataset_path_missing(self, converter, tmp_path):
+        assert converter._collect_validation_samples(tmp_path / "nope", "imagenet-1k") == []
+
+    def test_returns_empty_when_dataset_type_unknown(self, converter, tmp_path):
+        assert converter._collect_validation_samples(tmp_path, "totally-fake") == []
+
+    def test_returns_empty_when_dataset_path_none(self, converter):
+        assert converter._collect_validation_samples(None, "imagenet-1k") == []
+
+    def test_respects_subset_size(self, converter, tmp_path):
+        class_dir = tmp_path / "0"
+        class_dir.mkdir()
+        for i in range(5):
+            (class_dir / f"img{i}.JPEG").write_bytes(b"")
+        samples = converter._collect_validation_samples(tmp_path, "imagenet-1k", subset_size=3)
+        assert len(samples) == 3
+
+    def test_collects_coco_samples_with_image_id(self, converter, tmp_path):
+        images = tmp_path / "images"
+        annotations = tmp_path / "annotations"
+        images.mkdir()
+        annotations.mkdir()
+        (images / "000001.jpg").write_bytes(b"")
+        (annotations / "instances_val2017.json").write_text(
+            '{"images":[{"id":1,"file_name":"000001.jpg"}],"annotations":[],"categories":[]}',
+        )
+        samples = converter._collect_validation_samples(tmp_path, "coco-detection")
+        assert len(samples) == 1
+        assert samples[0].image_id == 1

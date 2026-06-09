@@ -1285,34 +1285,6 @@
       "dataset_type": "coco-detection"
     },
     {
-      "model_short_name": "litehrnet_18_keypoint",
-      "model_library": "getitune",
-      "model_full_name": "Lite-HRNet-18 Keypoint Detection",
-      "description": "Lite-HRNet-18 for keypoint detection trained with getitune",
-      "docs": "https://github.com/open-edge-platform/training_extensions",
-      "getitune_task": "KEYPOINT_DETECTION",
-      "getitune_recipe": "litehrnet_18",
-      "model_type": "keypoint_detection",
-      "tags": ["keypoint-detection", "pose-estimation", "vision"],
-      "license": "apache-2.0",
-      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
-      "dataset_type": "coco-keypoints"
-    },
-    {
-      "model_short_name": "rtmpose_tiny",
-      "model_library": "getitune",
-      "model_full_name": "RTMPose Tiny",
-      "description": "RTMPose Tiny for keypoint detection trained with getitune",
-      "docs": "https://github.com/open-edge-platform/training_extensions",
-      "getitune_recipe": "rtmpose_tiny",
-      "getitune_task": "KEYPOINT_DETECTION",
-      "model_type": "keypoint_detection",
-      "license": "apache-2.0",
-      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
-      "tags": ["keypoint-detection", "pose-estimation", "vision"],
-      "dataset_type": "coco-keypoints"
-    },
-    {
       "model_short_name": "YOLO11n",
       "model_library": "yolo",
       "model_full_name": "YOLO11n",

@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, Any
 import cv2
 import numpy as np
 
-from model_converter.datasets import reader_for
+from model_converter.datasets import CalibrationSample, reader_for
 from model_converter.reporting import (
     AccuracyResults,
     ConversionResult,
@@ -26,6 +26,7 @@ from model_converter.reporting import (
 
 if TYPE_CHECKING:
     from model_converter.dataset_registry import DatasetRegistry
+    from model_converter.metrics import CocoDetectionMAP, Metric
 
 
 class BaseConverter(ABC):
@@ -116,6 +117,59 @@ class BaseConverter(ABC):
             model_library=str(config.get("model_library", "")),
             original_url=original_url_for_config(config),
         )
+
+    def _metric_for_config(
+        self,
+        config: dict[str, Any],
+        dataset_path: Path | None,
+    ) -> "Metric | None":
+        """Build the task-appropriate :class:`Metric` for a model config.
+
+        Resolves the COCO annotation file when the dataset_type calls for it
+        and forwards ``getitune_task`` so that ``Classification`` model_type
+        with ``MULTI_LABEL_CLS`` is routed to multilabel mAP rather than
+        top-1.
+        """
+        from model_converter.datasets.factory import _COCO_ANNOTATION_FILES
+        from model_converter.metrics import metric_for
+
+        dataset_type = config.get("dataset_type")
+        model_type = config.get("model_type")
+        task = config.get("getitune_task")
+        annotation_file: Path | None = None
+        if dataset_path is not None and dataset_type in _COCO_ANNOTATION_FILES:
+            annotation_file = dataset_path / "annotations" / _COCO_ANNOTATION_FILES[dataset_type]
+        return metric_for(dataset_type, model_type, annotation_file=annotation_file, task=task)
+
+    def _collect_validation_samples(
+        self,
+        dataset_path: Path | None,
+        dataset_type: str | None,
+        subset_size: int = 500,
+    ) -> "list[CalibrationSample]":
+        """Collect up to ``subset_size`` raw samples from the dataset reader.
+
+        Used by metric paths that need raw image paths (and per-task GT
+        pointers like COCO ``image_id`` or ADE20K ``mask_path``) rather than
+        preprocessed calibration tensors. Returns an empty list when the
+        dataset is unavailable, unreadable, or unknown.
+        """
+        if dataset_path is None or not dataset_path.exists():
+            return []
+        try:
+            reader = reader_for(dataset_type, dataset_path)
+        except ValueError:
+            return []
+        samples: list[CalibrationSample] = []
+        try:
+            for sample in reader:
+                samples.append(sample)
+                if len(samples) >= subset_size:
+                    break
+        except (FileNotFoundError, OSError, ValueError) as e:
+            self.logger.warning(f"Failed to enumerate validation samples: {e}")
+            return []
+        return samples
 
     def _record_result(
         self,
@@ -484,6 +538,133 @@ class BaseConverter(ABC):
             self.logger.error(f"Failed to validate model: {e}")
             return 0.0
 
+    def _measure_metric(
+        self,
+        model_path: Path,
+        samples: "list[CalibrationSample]",
+        metric: "Metric",
+    ) -> float | None:
+        """Measure a task-specific :class:`Metric` over an OpenVINO model via Model API.
+
+        Loads the model through ``model_api.models.Model.create_model`` so that
+        task-correct preprocessing and postprocessing (including resize-info
+        reversal for detection and per-class argmax for segmentation) are
+        applied. Each sample's raw image is decoded with OpenCV and passed to
+        the wrapper, whose result is dispatched into ``metric.update`` by
+        metric type.
+
+        Args:
+            model_path: Path to the OpenVINO ``.xml`` model whose rt_info
+                identifies the model_type used by ``Model.create_model``.
+            samples: Per-image ground-truth pointers (image path, optional
+                COCO ``image_id``, optional ADE20K ``mask_path``).
+            metric: A reset-or-fresh metric instance. The metric is reset
+                before iterating and ``compute()`` is returned at the end.
+
+        Returns:
+            The scalar metric value, or ``None`` if the Model API import
+            fails or model loading raises.
+        """
+        try:
+            from model_api.models import Model
+        except ImportError as e:
+            self.logger.error(f"Failed to import model_api: {e}")
+            return None
+        try:
+            metric.reset()
+            wrapper = Model.create_model(str(model_path))
+        except (OSError, RuntimeError, TypeError, ValueError) as e:
+            self.logger.error(f"Failed to load model {model_path}: {e}")
+            return None
+        for sample in samples:
+            img = cv2.imread(str(sample.image_path))
+            if img is None:
+                continue
+            try:
+                result = wrapper(img)
+            except (RuntimeError, TypeError, ValueError) as e:
+                self.logger.debug(f"Inference failed for {sample.image_path}: {e}")
+                continue
+            try:
+                self._update_metric_with_result(metric, result, sample)
+            except (RuntimeError, TypeError, ValueError, IndexError) as e:
+                self.logger.debug(f"Metric update failed for {sample.image_path}: {e}")
+                continue
+        return float(metric.compute())
+
+    def _update_metric_with_result(
+        self,
+        metric: "Metric",
+        result: Any,
+        sample: "CalibrationSample",
+    ) -> None:
+        """Translate a Model API result into the right ``metric.update`` call."""
+        from model_converter.metrics import (
+            CocoDetectionMAP,
+            MultilabelMAP,
+            SemSegMIoU,
+        )
+
+        if isinstance(metric, MultilabelMAP):
+            scores = getattr(result, "raw_scores", None)
+            if scores is None:
+                return
+            gt = np.zeros(metric.num_labels, dtype=np.int64)
+            if 0 <= sample.label < metric.num_labels:
+                gt[sample.label] = 1
+            metric.update(prediction=np.asarray(scores, dtype=np.float32), ground_truth=gt)
+            return
+
+        if isinstance(metric, CocoDetectionMAP):
+            if sample.image_id is None:
+                return
+            if metric.iou_type == "bbox":
+                self._feed_bbox_predictions(metric, result, sample)
+            return
+
+        if isinstance(metric, SemSegMIoU):
+            if sample.mask_path is None:
+                return
+            gt_raw = cv2.imread(str(sample.mask_path), cv2.IMREAD_GRAYSCALE)
+            if gt_raw is None:
+                return
+            # ADE20K convention: 0=unlabeled (ignore), 1..N=classes - shift down by 1.
+            gt_mask = gt_raw.astype(np.int32) - 1
+            gt_mask[gt_mask < 0] = metric.ignore_index
+            pred_mask = getattr(result, "resultImage", result)
+            pred_mask = np.asarray(pred_mask)
+            if pred_mask.shape[:2] != gt_mask.shape[:2]:
+                pred_mask = cv2.resize(
+                    pred_mask,
+                    (gt_mask.shape[1], gt_mask.shape[0]),
+                    interpolation=cv2.INTER_NEAREST,
+                )
+            metric.update(pred_mask, gt_mask)
+
+    @staticmethod
+    def _feed_bbox_predictions(
+        metric: "CocoDetectionMAP",
+        result: Any,
+        sample: "CalibrationSample",
+    ) -> None:
+        bboxes = getattr(result, "bboxes", None)
+        labels = getattr(result, "labels", None)
+        scores = getattr(result, "scores", None)
+        if bboxes is None or labels is None or scores is None:
+            return
+        preds: list[dict[str, Any]] = []
+        for bbox, label, score in zip(bboxes, labels, scores):
+            x_min, y_min, x_max, y_max = (float(v) for v in bbox)
+            preds.append(
+                {
+                    "image_id": int(sample.image_id) if sample.image_id is not None else 0,
+                    "category_id": int(label) + 1,  # COCO category ids are 1-indexed
+                    "bbox": [x_min, y_min, x_max - x_min, y_max - y_min],
+                    "score": float(score),
+                },
+            )
+        metric.update(predictions=preds)
+
     def quantize_model(
         self,
         model_path: Path,
@@ -493,6 +674,8 @@ class BaseConverter(ABC):
         validation_data: list[np.ndarray] | None = None,
         validation_labels: list[int] | None = None,
         accuracy_results: AccuracyResults | None = None,
+        validation_samples: "list[CalibrationSample] | None" = None,
+        metric: "Metric | None" = None,
     ) -> Path:
         """Quantize OpenVINO model to INT8 using NNCF.
 
@@ -505,6 +688,12 @@ class BaseConverter(ABC):
             validation_labels: Optional validation labels for accuracy measurement
             accuracy_results: Optional collector populated with measured accuracies
                 and the INT8 success flag.
+            validation_samples: Optional per-image GT pointers consumed by
+                Model API-based metrics (multilabel mAP, COCO mAP, mIoU).
+            metric: Optional task-specific :class:`Metric`. When supplied and
+                not a :class:`TopOneAccuracy`, accuracy is measured via the
+                Model API path using ``validation_samples`` instead of the
+                preprocessed-tensor classification path.
 
         Returns:
             Path to the quantized model
@@ -564,13 +753,44 @@ class BaseConverter(ABC):
             with (output_folder / "config.json").open("w") as f:
                 json.dump(quantized_model.get_rt_info(["model_info"]).value, f, indent=4)
 
-            # Validate accuracy if validation data provided
-            if validation_data and validation_labels:
+            # Validate accuracy if validation data provided.
+            # Two paths: (1) Top-1 classification uses preprocessed validation_data + labels via raw
+            # OpenVINO; (2) other task metrics (multilabel mAP, COCO mAP, mIoU) iterate raw image
+            # paths through the Model API wrapper so per-task postprocessing is applied.
+            from model_converter.metrics import TopOneAccuracy
+
+            fp16_model_path = model_path.parent / f"{model_name}.xml"
+            metric_path_active = (
+                metric is not None and not isinstance(metric, TopOneAccuracy) and bool(validation_samples)
+            )
+            if metric_path_active:
+                metric_name = getattr(metric, "name", "metric")
+                self.logger.info(f"Validating FP32 model {metric_name}...")
+                fp32_metric = self._measure_metric(model_path, validation_samples, metric)
+                self.logger.info(f"FP32 {metric_name}: {fp32_metric}")
+
+                fp16_metric: float | None = None
+                if fp16_model_path.exists():
+                    self.logger.info(f"Validating FP16 model {metric_name}...")
+                    fp16_metric = self._measure_metric(fp16_model_path, validation_samples, metric)
+                    self.logger.info(f"FP16 {metric_name}: {fp16_metric}")
+                else:
+                    self.logger.warning(f"FP16 model not found for accuracy measurement: {fp16_model_path}")
+
+                self.logger.info(f"Validating INT8 model {metric_name}...")
+                int8_metric = self._measure_metric(output_path, validation_samples, metric)
+                self.logger.info(f"INT8 {metric_name}: {int8_metric}")
+
+                if accuracy_results is not None:
+                    accuracy_results.fp32_accuracy = fp32_metric
+                    accuracy_results.fp16_accuracy = fp16_metric
+                    accuracy_results.int8_accuracy = int8_metric
+                    accuracy_results.measured = True
+            elif validation_data and validation_labels:
                 self.logger.info("Validating FP32 model accuracy...")
                 fp32_accuracy = self.validate_model(model_path, validation_data, validation_labels)
                 self.logger.info(f"FP32 Top-1 Accuracy: {fp32_accuracy * 100:.2f}%")
 
-                fp16_model_path = model_path.parent / f"{model_name}.xml"
                 fp16_accuracy: float | None = None
                 if fp16_model_path.exists():
                     self.logger.info("Validating FP16 model accuracy...")

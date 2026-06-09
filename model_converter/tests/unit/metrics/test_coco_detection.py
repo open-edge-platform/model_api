@@ -36,9 +36,6 @@ class TestCocoDetectionMAP:
     def test_name_for_bbox_iou_type(self):
         assert CocoDetectionMAP(annotation_file=Path("/nonexistent"), iou_type="bbox").name == "mAP"
 
-    def test_name_for_keypoints_iou_type(self):
-        assert CocoDetectionMAP(annotation_file=Path("/nonexistent"), iou_type="keypoints").name == "mAP"
-
     def test_perfect_detection_scores_one(self, tmp_path):
         gt_file = tmp_path / "gt.json"
         _write_minimal_coco_gt(gt_file)

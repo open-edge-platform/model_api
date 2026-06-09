@@ -66,3 +66,11 @@ def test_results_sorted_by_image_name(ade20k_root):
     reader = Ade20kReader(ade20k_root)
     names = [s.image_path.name for s in reader]
     assert names == sorted(names)
+
+
+def test_mask_path_populated_for_each_sample(ade20k_root):
+    reader = Ade20kReader(ade20k_root)
+    for sample in reader:
+        assert sample.mask_path is not None
+        assert sample.mask_path == ade20k_root / "annotations" / f"{sample.image_path.stem}.png"
+        assert sample.mask_path.exists()

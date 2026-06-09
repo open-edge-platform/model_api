@@ -764,6 +764,52 @@ class TestQuantizeAndCleanup:
 
         mock_quantize.assert_not_called()
 
+    def test_collects_validation_samples_for_non_top1_metric(
+        self,
+        converter,
+        tmp_path,
+        sample_model_config,
+    ):
+        """When the dispatched metric is non-Top1, raw image samples are forwarded to quantize_model."""
+        from model_converter.datasets import CalibrationSample
+        from model_converter.metrics import MultilabelMAP
+
+        fp32_path = tmp_path / "model_fp32.xml"
+        fp32_path.write_text("<net/>")
+        samples = [CalibrationSample(image_path=tmp_path / "x.jpg", label=0)]
+
+        with (
+            patch.object(
+                converter,
+                "_metric_for_config",
+                return_value=MultilabelMAP(num_labels=3),
+            ),
+            patch.object(
+                converter,
+                "_collect_validation_samples",
+                return_value=samples,
+            ) as mock_collect,
+            patch.object(
+                converter,
+                "create_calibration_dataset",
+                return_value=([np.zeros((1, 3, 224, 224))], []),
+            ),
+            patch.object(converter, "quantize_model") as mock_quantize,
+        ):
+            converter._quantize_and_cleanup(
+                sample_model_config,
+                fp32_path,
+                model_type="Classification",
+                input_shape=[1, 3, 224, 224],
+                mean_values="123.675 116.28 103.53",
+                scale_values="58.395 57.12 57.375",
+                reverse_input_channels=True,
+            )
+
+        mock_collect.assert_called_once()
+        assert mock_quantize.call_args.kwargs["validation_samples"] == samples
+        assert isinstance(mock_quantize.call_args.kwargs["metric"], MultilabelMAP)
+
     def test_cleanup_failure(self, converter, tmp_path, sample_model_config):
         """_quantize_and_cleanup swallows cleanup errors."""
         fp32_path = tmp_path / "model_fp32.xml"

@@ -18,15 +18,19 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True)
 class CalibrationSample:
-    """One image plus an optional integer label.
+    """One image plus optional task-specific ground-truth pointers.
 
     ``label`` is the class id for class-folder datasets and a placeholder
     ``0`` for layouts (COCO, ADE20K) where per-image classification labels
-    do not apply.
+    do not apply. ``image_id`` is the COCO image identifier used to match
+    predictions against the annotation JSON; ``mask_path`` is the ADE20K
+    ground-truth mask file. Both are ``None`` when not applicable.
     """
 
     image_path: Path
     label: int
+    image_id: int | None = None
+    mask_path: Path | None = None
 
 
 class DatasetReader(ABC):

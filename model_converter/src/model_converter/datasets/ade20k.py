@@ -36,5 +36,10 @@ class Ade20kReader(DatasetReader):
             msg = f"ADE20K annotations directory missing: {self.annotations_dir}"
             raise FileNotFoundError(msg)
         for img_path in sorted(self.images_dir.glob("*.jpg")):
-            if (self.annotations_dir / f"{img_path.stem}.png").exists():
-                yield CalibrationSample(image_path=img_path, label=0)
+            mask_path = self.annotations_dir / f"{img_path.stem}.png"
+            if mask_path.exists():
+                yield CalibrationSample(
+                    image_path=img_path,
+                    label=0,
+                    mask_path=mask_path,
+                )

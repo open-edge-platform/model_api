@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""COCO-format mean Average Precision (bbox / segm / keypoints) via pycocotools."""
+"""COCO-format mean Average Precision (bbox / segm) via pycocotools."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from typing import Any
 
 from model_converter.metrics.base import Metric
 
-_VALID_IOU_TYPES = {"bbox", "segm", "keypoints"}
+_VALID_IOU_TYPES = {"bbox", "segm"}
 
 
 class CocoDetectionMAP(Metric):
@@ -56,7 +56,7 @@ class CocoDetectionMAP(Metric):
             evaluator.evaluate()
             evaluator.accumulate()
             evaluator.summarize()
-        # stats[0] is the primary mAP @ IoU=0.50:0.95 (or OKS for keypoints).
+        # stats[0] is the primary mAP @ IoU=0.50:0.95.
         return float(evaluator.stats[0])
 
     def reset(self) -> None:

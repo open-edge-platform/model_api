@@ -1410,8 +1410,11 @@ dependencies = [
     { name = "onnx" },
     { name = "opencv-python-headless" },
     { name = "openvino" },
+    { name = "openvino-model-api" },
+    { name = "pycocotools" },
     { name = "timm" },
     { name = "torch" },
+    { name = "torchmetrics" },
     { name = "torchvision" },
     { name = "transformers" },
     { name = "ultralytics" },
@@ -1419,12 +1422,9 @@ dependencies = [
 
 [package.dev-dependencies]
 tests = [
-    { name = "openvino-model-api" },
-    { name = "pycocotools" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-mock" },
-    { name = "torchmetrics" },
 ]
 
 [package.metadata]
@@ -1436,8 +1436,11 @@ requires-dist = [
     { name = "onnx" },
     { name = "opencv-python-headless", specifier = "<4.14" },
     { name = "openvino", specifier = ">=2025.3" },
+    { name = "openvino-model-api", editable = "../model_api" },
+    { name = "pycocotools" },
     { name = "timm" },
     { name = "torch" },
+    { name = "torchmetrics" },
     { name = "torchvision" },
     { name = "transformers" },
     { name = "ultralytics" },
@@ -1446,12 +1449,9 @@ requires-dist = [
 [package.metadata.requires-dev]
 docs = []
 tests = [
-    { name = "openvino-model-api", editable = "../model_api" },
-    { name = "pycocotools" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-mock" },
-    { name = "torchmetrics" },
 ]
 
 [[package]]

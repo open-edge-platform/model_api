@@ -20,7 +20,6 @@ if TYPE_CHECKING:
 _CLASS_FOLDER_TYPES = frozenset({"imagenet-1k", "imagenet-21k"})
 _COCO_ANNOTATION_FILES = {
     "coco-detection": "instances_val2017.json",
-    "coco-keypoints": "person_keypoints_val2017.json",
 }
 
 

@@ -591,6 +591,8 @@ class TestQuantizeExportedModel:
             preset="mixed",
             validation_data=None,
             validation_labels=None,
+            validation_samples=None,
+            metric=ANY,
             accuracy_results=ANY,
         )
         assert not fp32_xml.exists()
@@ -629,6 +631,8 @@ class TestQuantizeExportedModel:
             preset="mixed",
             validation_data=None,
             validation_labels=None,
+            validation_samples=None,
+            metric=ANY,
             accuracy_results=ANY,
         )
 
@@ -708,6 +712,8 @@ class TestQuantizeExportedModel:
             preset="mixed",
             validation_data=calibration_data,
             validation_labels=validation_labels,
+            validation_samples=None,
+            metric=ANY,
             accuracy_results=ANY,
         )
 
@@ -752,6 +758,8 @@ class TestQuantizeExportedModel:
             preset="mixed",
             validation_data=None,
             validation_labels=None,
+            validation_samples=None,
+            metric=ANY,
             accuracy_results=ANY,
         )
 

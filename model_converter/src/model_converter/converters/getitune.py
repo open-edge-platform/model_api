@@ -10,11 +10,14 @@ import shutil
 import subprocess  # nosec B404 — fixed-argv invocation of `uv run`, no shell, no untrusted input
 import tempfile
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from model_converter.converters.base import BaseConverter
-from model_converter.metrics import TopOneAccuracy, metric_for
+from model_converter.metrics import TopOneAccuracy
 from model_converter.reporting import AccuracyResults
+
+if TYPE_CHECKING:
+    from model_converter.datasets import CalibrationSample
 
 
 class GetituneConverter(BaseConverter):
@@ -382,21 +385,19 @@ class GetituneConverter(BaseConverter):
             fp32_model_path,
         )
 
-        # Pick a metric strategy for this dataset/model_type combo. Phase 4
-        # wires only :class:`TopOneAccuracy` end-to-end through validate_model;
-        # other metrics (multilabel mAP, COCO mAP, mIoU) live in the metrics
-        # package and are exercised in Phase 5.
-        metric = metric_for(config.get("dataset_type"), config.get("model_type")) if self.measure_accuracy else None
-        measure_accuracy = isinstance(metric, TopOneAccuracy)
+        # Pick a metric strategy for this dataset/model_type combo. Top-1
+        # uses the preprocessed-tensor classification path; other metrics
+        # (multilabel mAP, COCO mAP, mIoU) flow through Model API via
+        # :meth:`_measure_metric` with raw image samples.
+        dataset_path = self._resolve_dataset_path(config)
+        metric = self._metric_for_config(config, dataset_path) if self.measure_accuracy else None
+        is_top1 = isinstance(metric, TopOneAccuracy)
         if metric is not None:
             accuracy.metric_name = metric.name
 
         self.logger.info("Creating calibration dataset for INT8 quantization")
-        if measure_accuracy:
+        if is_top1:
             self.logger.info("Creating validation dataset for accuracy measurement")
-
-        # Resolve dataset path from model config
-        dataset_path = self._resolve_dataset_path(config)
 
         calibration_data, validation_labels = self.create_calibration_dataset(
             input_shape=input_shape,
@@ -404,10 +405,21 @@ class GetituneConverter(BaseConverter):
             scale_values=scale_values,
             reverse_input_channels=reverse_input_channels,
             subset_size=500,
-            return_labels=measure_accuracy,
+            return_labels=is_top1,
             dataset_path=dataset_path,
             dataset_type=config.get("dataset_type"),
         )
+
+        validation_samples: "list[CalibrationSample] | None" = None
+        if metric is not None and not is_top1:
+            validation_samples = (
+                self._collect_validation_samples(
+                    dataset_path,
+                    config.get("dataset_type"),
+                    subset_size=500,
+                )
+                or None
+            )
 
         if calibration_data:
             self.quantize_model(
@@ -417,6 +429,8 @@ class GetituneConverter(BaseConverter):
                 preset="mixed",
                 validation_data=calibration_data if validation_labels else None,
                 validation_labels=validation_labels or None,
+                validation_samples=validation_samples,
+                metric=metric,
                 accuracy_results=accuracy,
             )
 

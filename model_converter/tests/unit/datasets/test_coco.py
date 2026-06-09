@@ -66,3 +66,25 @@ def test_raises_when_annotation_file_missing(tmp_path):
     reader = CocoImagesReader(tmp_path, annotation_filename="instances_val2017.json")
     with pytest.raises(FileNotFoundError, match="annotations"):
         list(reader)
+
+
+def test_image_id_populated_from_annotation_json(coco_root):
+    reader = CocoImagesReader(coco_root, annotation_filename="instances_val2017.json")
+    samples = {s.image_path.name: s for s in reader}
+    assert samples["000001.jpg"].image_id == 1
+    assert samples["000002.jpg"].image_id == 2
+    assert samples["000003.jpg"].image_id == 3
+
+
+def test_image_id_is_none_when_filename_not_in_annotations(tmp_path):
+    images = tmp_path / "images"
+    annotations = tmp_path / "annotations"
+    images.mkdir()
+    annotations.mkdir()
+    (images / "missing_from_json.jpg").write_bytes(b"")
+    (annotations / "instances_val2017.json").write_text(
+        json.dumps({"images": [], "annotations": [], "categories": []}),
+    )
+    reader = CocoImagesReader(tmp_path, annotation_filename="instances_val2017.json")
+    samples = list(reader)
+    assert samples[0].image_id is None

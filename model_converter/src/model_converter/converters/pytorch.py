@@ -9,15 +9,18 @@ import importlib
 import json
 import shutil
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import torch
 import torch.nn as nn
 
 from model_converter.adapters import get_adapter
 from model_converter.converters.base import BaseConverter
-from model_converter.metrics import TopOneAccuracy, metric_for
+from model_converter.metrics import TopOneAccuracy
 from model_converter.reporting import AccuracyResults
+
+if TYPE_CHECKING:
+    from model_converter.datasets import CalibrationSample
 
 _MODEL_API_METADATA_FIELDS = (
     "resize_type",
@@ -350,18 +353,17 @@ class PyTorchConverter(BaseConverter):
         model_type = kwargs["model_type"]
         accuracy = AccuracyResults()
         self.logger.info("Creating calibration dataset for INT8 quantization")
-        # Pick a metric strategy. Phase 4 wires only TopOneAccuracy end-to-end;
-        # other metrics live in the metrics package for Phase 5.
-        metric = metric_for(config.get("dataset_type"), model_type) if self.measure_accuracy else None
-        return_validation_labels = isinstance(metric, TopOneAccuracy)
+        # Pick a metric strategy. Top-1 uses the preprocessed-tensor path;
+        # multilabel/COCO/mIoU flow through Model API via :meth:`_measure_metric`.
+        dataset_path = self._resolve_dataset_path(config)
+        config_with_type = {**config, "model_type": model_type}
+        metric = self._metric_for_config(config_with_type, dataset_path) if self.measure_accuracy else None
+        is_top1 = isinstance(metric, TopOneAccuracy)
         if metric is not None:
             accuracy.metric_name = metric.name
         resize_type = config.get("resize_type", "standard")
 
-        # Resolve dataset path from model config
-        dataset_path = self._resolve_dataset_path(config)
-
-        if return_validation_labels:
+        if is_top1:
             self.logger.info("Creating validation dataset for accuracy measurement")
         validation_data, validation_labels = self.create_calibration_dataset(
             input_shape=kwargs["input_shape"],
@@ -369,11 +371,22 @@ class PyTorchConverter(BaseConverter):
             scale_values=kwargs["scale_values"],
             reverse_input_channels=kwargs["reverse_input_channels"],
             subset_size=500,
-            return_labels=return_validation_labels,
+            return_labels=is_top1,
             resize_type=resize_type,
             dataset_path=dataset_path,
             dataset_type=config.get("dataset_type"),
         )
+
+        validation_samples: "list[CalibrationSample] | None" = None
+        if metric is not None and not is_top1:
+            validation_samples = (
+                self._collect_validation_samples(
+                    dataset_path,
+                    config.get("dataset_type"),
+                    subset_size=500,
+                )
+                or None
+            )
 
         if validation_data:
             torch_model = kwargs.get("torch_model")
@@ -392,6 +405,8 @@ class PyTorchConverter(BaseConverter):
                 preset="mixed",
                 validation_data=validation_data if validation_labels else None,
                 validation_labels=validation_labels or None,
+                validation_samples=validation_samples,
+                metric=metric,
                 accuracy_results=accuracy,
             )
 
