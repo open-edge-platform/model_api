@@ -612,7 +612,8 @@
       "quantization_model_type": "transformer",
       "license": "apache-2.0",
       "license_link": "https://spdx.org/licenses/Apache-2.0.html",
-      "resize_type": "crop"
+      "resize_type": "crop",
+      "dataset_type": "imagenet-1k"
     },
     {
       "model_short_name": "maskrcnn_resnet50_fpn",
@@ -746,7 +747,8 @@
       "model_type": "Classification",
       "tags": ["image-classification", "multi-label-classification", "vision"],
       "license": "apache-2.0",
-      "license_link": "https://spdx.org/licenses/Apache-2.0.html"
+      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
+      "dataset_type": "imagenet-1k"
     },
     {
       "model_short_name": "efficientnet_v2_multilabel",
@@ -759,7 +761,8 @@
       "model_type": "Classification",
       "tags": ["image-classification", "multi-label-classification", "vision"],
       "license": "apache-2.0",
-      "license_link": "https://spdx.org/licenses/Apache-2.0.html"
+      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
+      "dataset_type": "imagenet-1k"
     },
     {
       "model_short_name": "dino_v2_multilabel",
@@ -772,7 +775,8 @@
       "model_type": "Classification",
       "license": "apache-2.0",
       "license_link": "https://spdx.org/licenses/Apache-2.0.html",
-      "tags": ["image-classification", "multi-label", "vision"]
+      "tags": ["image-classification", "multi-label", "vision"],
+      "dataset_type": "imagenet-1k"
     },
     {
       "model_short_name": "efficientnet_b3_multilabel",
@@ -785,7 +789,8 @@
       "model_type": "Classification",
       "license": "apache-2.0",
       "license_link": "https://spdx.org/licenses/Apache-2.0.html",
-      "tags": ["image-classification", "multi-label", "vision"]
+      "tags": ["image-classification", "multi-label", "vision"],
+      "dataset_type": "imagenet-1k"
     },
     {
       "model_short_name": "mobilenet_v3_large_multilabel",
@@ -798,7 +803,8 @@
       "model_type": "Classification",
       "license": "apache-2.0",
       "license_link": "https://spdx.org/licenses/Apache-2.0.html",
-      "tags": ["image-classification", "multi-label", "vision"]
+      "tags": ["image-classification", "multi-label", "vision"],
+      "dataset_type": "imagenet-1k"
     },
     {
       "model_short_name": "vit_tiny_multilabel",
@@ -812,7 +818,8 @@
       "quantization_model_type": "transformer",
       "license": "apache-2.0",
       "license_link": "https://spdx.org/licenses/Apache-2.0.html",
-      "tags": ["image-classification", "multi-label", "vision"]
+      "tags": ["image-classification", "multi-label", "vision"],
+      "dataset_type": "imagenet-1k"
     },
     {
       "model_short_name": "yolox_s",
@@ -825,7 +832,8 @@
       "model_type": "YOLOX",
       "tags": ["object-detection", "vision"],
       "license": "apache-2.0",
-      "license_link": "https://spdx.org/licenses/Apache-2.0.html"
+      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
+      "dataset_type": "coco-detection"
     },
     {
       "model_short_name": "yolox_l",
@@ -838,7 +846,8 @@
       "model_type": "YOLOX",
       "tags": ["object-detection", "vision"],
       "license": "apache-2.0",
-      "license_link": "https://spdx.org/licenses/Apache-2.0.html"
+      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
+      "dataset_type": "coco-detection"
     },
     {
       "model_short_name": "yolox_x",
@@ -851,7 +860,8 @@
       "model_type": "YOLOX",
       "tags": ["object-detection", "vision"],
       "license": "apache-2.0",
-      "license_link": "https://spdx.org/licenses/Apache-2.0.html"
+      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
+      "dataset_type": "coco-detection"
     },
     {
       "model_short_name": "ssd_mobilenet_v2",
@@ -906,7 +916,8 @@
       "model_type": "YOLOX",
       "license": "apache-2.0",
       "license_link": "https://spdx.org/licenses/Apache-2.0.html",
-      "tags": ["object-detection", "vision"]
+      "tags": ["object-detection", "vision"],
+      "dataset_type": "coco-detection"
     },
     {
       "model_short_name": "deim_dfine_l",
@@ -1186,7 +1197,8 @@
       "model_type": "Segmentation",
       "tags": ["image-segmentation", "semantic-segmentation", "vision"],
       "license": "apache-2.0",
-      "license_link": "https://spdx.org/licenses/Apache-2.0.html"
+      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
+      "dataset_type": "ade20k"
     },
     {
       "model_short_name": "segnext_b_semseg",
@@ -1199,7 +1211,8 @@
       "model_type": "Segmentation",
       "tags": ["image-segmentation", "semantic-segmentation", "vision"],
       "license": "apache-2.0",
-      "license_link": "https://spdx.org/licenses/Apache-2.0.html"
+      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
+      "dataset_type": "ade20k"
     },
     {
       "model_short_name": "segnext_s_semseg",
@@ -1212,7 +1225,8 @@
       "model_type": "Segmentation",
       "tags": ["image-segmentation", "semantic-segmentation", "vision"],
       "license": "apache-2.0",
-      "license_link": "https://spdx.org/licenses/Apache-2.0.html"
+      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
+      "dataset_type": "ade20k"
     },
     {
       "model_short_name": "dino_v2_semseg",
@@ -1225,7 +1239,8 @@
       "model_type": "Segmentation",
       "license": "apache-2.0",
       "license_link": "https://spdx.org/licenses/Apache-2.0.html",
-      "tags": ["image-segmentation", "semantic-segmentation", "vision"]
+      "tags": ["image-segmentation", "semantic-segmentation", "vision"],
+      "dataset_type": "ade20k"
     },
     {
       "model_short_name": "segnext_t_semseg",
@@ -1238,7 +1253,8 @@
       "model_type": "Segmentation",
       "license": "apache-2.0",
       "license_link": "https://spdx.org/licenses/Apache-2.0.html",
-      "tags": ["image-segmentation", "semantic-segmentation", "vision"]
+      "tags": ["image-segmentation", "semantic-segmentation", "vision"],
+      "dataset_type": "ade20k"
     },
     {
       "model_short_name": "maskrcnn_r50_rotated",
@@ -1279,7 +1295,8 @@
       "model_type": "keypoint_detection",
       "tags": ["keypoint-detection", "pose-estimation", "vision"],
       "license": "apache-2.0",
-      "license_link": "https://spdx.org/licenses/Apache-2.0.html"
+      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
+      "dataset_type": "coco-keypoints"
     },
     {
       "model_short_name": "rtmpose_tiny",
@@ -1292,7 +1309,8 @@
       "model_type": "keypoint_detection",
       "license": "apache-2.0",
       "license_link": "https://spdx.org/licenses/Apache-2.0.html",
-      "tags": ["keypoint-detection", "pose-estimation", "vision"]
+      "tags": ["keypoint-detection", "pose-estimation", "vision"],
+      "dataset_type": "coco-keypoints"
     },
     {
       "model_short_name": "YOLO11n",
@@ -1303,7 +1321,8 @@
       "yolo_version": "yolo11n",
       "model_type": "YOLO11",
       "license": "agpl-3.0",
-      "license_link": "https://spdx.org/licenses/AGPL-3.0-only.html"
+      "license_link": "https://spdx.org/licenses/AGPL-3.0-only.html",
+      "dataset_type": "coco-detection"
     },
     {
       "model_short_name": "YOLO11s",
@@ -1314,7 +1333,8 @@
       "yolo_version": "yolo11s",
       "model_type": "YOLO11",
       "license": "agpl-3.0",
-      "license_link": "https://spdx.org/licenses/AGPL-3.0-only.html"
+      "license_link": "https://spdx.org/licenses/AGPL-3.0-only.html",
+      "dataset_type": "coco-detection"
     },
     {
       "model_short_name": "YOLO11m",
@@ -1325,7 +1345,8 @@
       "yolo_version": "yolo11m",
       "model_type": "YOLO11",
       "license": "agpl-3.0",
-      "license_link": "https://spdx.org/licenses/AGPL-3.0-only.html"
+      "license_link": "https://spdx.org/licenses/AGPL-3.0-only.html",
+      "dataset_type": "coco-detection"
     },
     {
       "model_short_name": "YOLO11l",
@@ -1336,7 +1357,8 @@
       "yolo_version": "yolo11l",
       "model_type": "YOLO11",
       "license": "agpl-3.0",
-      "license_link": "https://spdx.org/licenses/AGPL-3.0-only.html"
+      "license_link": "https://spdx.org/licenses/AGPL-3.0-only.html",
+      "dataset_type": "coco-detection"
     },
     {
       "model_short_name": "YOLO11x",
@@ -1347,7 +1369,8 @@
       "yolo_version": "yolo11x",
       "model_type": "YOLO11",
       "license": "agpl-3.0",
-      "license_link": "https://spdx.org/licenses/AGPL-3.0-only.html"
+      "license_link": "https://spdx.org/licenses/AGPL-3.0-only.html",
+      "dataset_type": "coco-detection"
     }
   ]
 }

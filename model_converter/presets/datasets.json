@@ -1,8 +1,10 @@
 {
   "datasets": {
-    "imagenet-1k": "/home/user/data/imagenet/validation",
-    "imagenet-21k": "/home/user/data/imagenet21k/validation",
-    "coco-detection": "/home/user/data/coco2017/val2017",
-    "coco-segmentation": "/home/user/data/coco2017/val2017"
+    "imagenet-1k": "/home/mariusz/datasets/imagenet/validation",
+    "imagenet-21k": "/home/mariusz/datasets/imagenet21k",
+    "coco-detection": "/home/mariusz/datasets/coco-detection",
+    "coco-keypoints": "/home/mariusz/datasets/coco-keypoints",
+    "ade20k": "/home/mariusz/datasets/ade20k",
+    "coco-segmentation": "/home/mariusz/datasets"
   }
 }
