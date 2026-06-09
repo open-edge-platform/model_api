@@ -47,6 +47,11 @@ class TestAccuracyResults:
         assert acc.int8_accuracy is None
         assert acc.int8_succeeded is False
         assert acc.measured is False
+        assert acc.metric_name is None
+
+    def test_metric_name_can_be_set(self):
+        acc = AccuracyResults(metric_name="mIoU")
+        assert acc.metric_name == "mIoU"
 
 
 class TestOriginalUrlForConfig:

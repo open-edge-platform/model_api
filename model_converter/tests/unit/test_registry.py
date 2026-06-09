@@ -13,6 +13,7 @@ from unittest.mock import ANY, MagicMock, call, patch
 
 import pytest
 import torch.nn as nn
+
 from model_converter.converters import (
     CONVERTER_REGISTRY,
     BaseConverter,

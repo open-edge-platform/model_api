@@ -42,6 +42,7 @@ class BaseConverter(ABC):
         verbose: bool = False,
         dataset_registry: "DatasetRegistry | None" = None,
         report_path: Path | None = None,
+        measure_accuracy: bool = True,
     ):
         """Initialize the BaseConverter.
 
@@ -53,11 +54,14 @@ class BaseConverter(ABC):
             report_path: Path to the Markdown report file.  When set, each
                 non-skipped result is upserted into the file immediately after
                 conversion.
+            measure_accuracy: When ``False``, skip per-model accuracy
+                measurement even if a metric strategy is available.
         """
         self.output_dir = Path(output_dir)
         self.cache_dir = Path(cache_dir)
         self.dataset_registry = dataset_registry
         self.report_path = Path(report_path) if report_path else None
+        self.measure_accuracy = measure_accuracy
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 

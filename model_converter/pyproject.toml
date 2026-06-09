@@ -52,9 +52,11 @@ Repository = "https://github.com/open-edge-platform/model_api.git"
 [dependency-groups]
 tests = [
     "openvino-model-api",
+    "pycocotools",
     "pytest",
     "pytest-cov",
     "pytest-mock",
+    "torchmetrics",
 ]
 docs = []
 

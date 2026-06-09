@@ -8,6 +8,7 @@
 from unittest.mock import MagicMock
 
 import torch
+
 from model_converter.adapters import TorchvisionMaskRCNNExportAdapter, get_adapter
 from model_converter.adapters.base import ExportAdapter as BaseExportAdapter
 

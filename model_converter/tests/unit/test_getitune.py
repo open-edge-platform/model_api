@@ -13,6 +13,7 @@ from unittest.mock import ANY, MagicMock, patch
 
 import numpy as np
 import pytest
+
 from model_converter.converters.getitune import GetituneConverter
 from model_converter.reporting import AccuracyResults
 
@@ -578,8 +579,8 @@ class TestQuantizeExportedModel:
             mean_values="123.675 116.28 103.53",
             scale_values="58.395 57.12 57.375",
             reverse_input_channels=True,
-            subset_size=300,
-            return_labels=False,
+            subset_size=500,
+            return_labels=True,
             dataset_path=ANY,
             dataset_type="imagenet-1k",
         )
@@ -695,7 +696,7 @@ class TestQuantizeExportedModel:
             mean_values="0 0 0",
             scale_values="1 1 1",
             reverse_input_channels=True,
-            subset_size=300,
+            subset_size=500,
             return_labels=True,
             dataset_path=ANY,
             dataset_type="imagenet-1k",
@@ -715,8 +716,14 @@ class TestQuantizeExportedModel:
         getitune_converter,
         sample_getitune_config,
     ):
-        """Accuracy is not measured for non MULTI_CLASS_CLS tasks."""
-        config = {**sample_getitune_config, "getitune_task": "DETECTION", "labels": "IMAGENET1K_V1"}
+        """Accuracy is not measured for non-classification model types."""
+        config = {
+            **sample_getitune_config,
+            "getitune_task": "DETECTION",
+            "model_type": "SSD",
+            "dataset_type": "coco-detection",
+            "labels": "IMAGENET1K_V1",
+        }
         output_folder = getitune_converter.output_dir / "dino_v2_cls-fp16-ov"
         fp32_xml = output_folder / "dino_v2_cls_fp32.xml"
         _write_openvino_model(fp32_xml)
@@ -747,6 +754,47 @@ class TestQuantizeExportedModel:
             validation_labels=None,
             accuracy_results=ANY,
         )
+
+    def test_quantize_exported_model_honours_measure_accuracy_false(
+        self,
+        tmp_output_dir,
+        tmp_cache_dir,
+        training_extensions_dir,
+        mock_dataset_registry,
+        sample_getitune_config,
+    ):
+        """measure_accuracy=False on the converter disables accuracy measurement entirely."""
+        converter = GetituneConverter(
+            output_dir=tmp_output_dir,
+            cache_dir=tmp_cache_dir,
+            verbose=True,
+            dataset_registry=mock_dataset_registry,
+            training_extensions_dir=training_extensions_dir,
+            measure_accuracy=False,
+        )
+        config = {**sample_getitune_config, "labels": "IMAGENET1K_V1"}
+        output_folder = converter.output_dir / "dino_v2_cls-fp16-ov"
+        fp32_xml = output_folder / "dino_v2_cls_fp32.xml"
+        _write_openvino_model(fp32_xml)
+        calibration_data = [np.zeros((1, 3, 224, 224), dtype=np.float32)]
+
+        with (
+            patch.object(
+                converter,
+                "_read_preprocessing_from_model",
+                return_value=([1, 3, 224, 224], "0 0 0", "1 1 1", True),
+            ),
+            patch.object(
+                converter,
+                "create_calibration_dataset",
+                return_value=(calibration_data, []),
+            ) as mock_dataset,
+            patch.object(converter, "quantize_model"),
+        ):
+            result = converter._quantize_exported_model(config)
+
+        assert mock_dataset.call_args.kwargs["return_labels"] is False
+        assert result.metric_name is None
 
 
 class TestApplyConfigLabels:

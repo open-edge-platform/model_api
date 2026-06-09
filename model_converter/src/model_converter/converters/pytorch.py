@@ -16,6 +16,7 @@ import torch.nn as nn
 
 from model_converter.adapters import get_adapter
 from model_converter.converters.base import BaseConverter
+from model_converter.metrics import TopOneAccuracy, metric_for
 from model_converter.reporting import AccuracyResults
 
 _MODEL_API_METADATA_FIELDS = (
@@ -349,7 +350,12 @@ class PyTorchConverter(BaseConverter):
         model_type = kwargs["model_type"]
         accuracy = AccuracyResults()
         self.logger.info("Creating calibration dataset for INT8 quantization")
-        return_validation_labels = model_type == "Classification" and bool(config.get("labels"))
+        # Pick a metric strategy. Phase 4 wires only TopOneAccuracy end-to-end;
+        # other metrics live in the metrics package for Phase 5.
+        metric = metric_for(config.get("dataset_type"), model_type) if self.measure_accuracy else None
+        return_validation_labels = isinstance(metric, TopOneAccuracy)
+        if metric is not None:
+            accuracy.metric_name = metric.name
         resize_type = config.get("resize_type", "standard")
 
         # Resolve dataset path from model config
@@ -362,7 +368,7 @@ class PyTorchConverter(BaseConverter):
             mean_values=kwargs["mean_values"],
             scale_values=kwargs["scale_values"],
             reverse_input_channels=kwargs["reverse_input_channels"],
-            subset_size=300,
+            subset_size=500,
             return_labels=return_validation_labels,
             resize_type=resize_type,
             dataset_path=dataset_path,

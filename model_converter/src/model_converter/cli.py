@@ -44,6 +44,7 @@ class ModelConverter:
         dataset_registry: DatasetRegistry | None = None,
         training_extensions_dir: Path | None = None,
         report_path: Path | None = None,
+        measure_accuracy: bool = True,
     ):
         """Initialize the ModelConverter.
 
@@ -56,12 +57,15 @@ class ModelConverter:
             report_path: Path to the Markdown report file.  When set, each
                 non-skipped conversion result is written to the file immediately
                 after export.
+            measure_accuracy: When ``False``, skip per-model accuracy
+                measurement during quantization.
         """
         self.output_dir = Path(output_dir)
         self.cache_dir = Path(cache_dir)
         self.dataset_registry = dataset_registry
         self.training_extensions_dir = Path(training_extensions_dir) if training_extensions_dir else None
         self.report_path = Path(report_path) if report_path else None
+        self.measure_accuracy = measure_accuracy
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
@@ -101,6 +105,7 @@ class ModelConverter:
                 "verbose": self._verbose,
                 "dataset_registry": self.dataset_registry,
                 "report_path": self.report_path,
+                "measure_accuracy": self.measure_accuracy,
             }
 
             if converter_cls == GetituneConverter:
@@ -335,6 +340,21 @@ Examples:
     )
 
     parser.add_argument(
+        "--measure-accuracy",
+        dest="measure_accuracy",
+        action="store_true",
+        default=True,
+        help="Measure per-model accuracy during quantization (default).",
+    )
+
+    parser.add_argument(
+        "--no-measure-accuracy",
+        dest="measure_accuracy",
+        action="store_false",
+        help="Skip per-model accuracy measurement during quantization.",
+    )
+
+    parser.add_argument(
         "-v",
         "--verbose",
         action="store_true",
@@ -401,6 +421,7 @@ Examples:
             dataset_registry=dataset_registry,
             training_extensions_dir=args.training_extensions_dir,
             report_path=report_path,
+            measure_accuracy=args.measure_accuracy,
         )
 
         logger.info(f"Output directory: {args.output}")

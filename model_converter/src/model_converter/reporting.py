@@ -72,6 +72,7 @@ class AccuracyResults:
     int8_accuracy: float | None = None
     int8_succeeded: bool = False
     measured: bool = field(default=False)
+    metric_name: str | None = None
 
 
 def original_url_for_config(config: dict[str, Any]) -> str | None:

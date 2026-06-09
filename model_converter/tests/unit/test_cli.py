@@ -14,6 +14,7 @@ import numpy as np
 import pytest
 import torch
 import torch.nn as nn
+
 from model_converter.cli import ModelConverter, list_models, main
 from model_converter.converters.getitune import GetituneConverter
 from model_converter.converters.timm import TimmConverter
@@ -1244,6 +1245,68 @@ class TestMain:
             assert main() == 0
 
         assert captured.get("report_path") == report_path
+
+    def test_measure_accuracy_default_true(self, tmp_path, monkeypatch):
+        """main passes measure_accuracy=True to ModelConverter by default."""
+        config_path = tmp_path / "config.json"
+        config_path.write_text(json.dumps({"models": []}))
+
+        monkeypatch.setattr(
+            sys,
+            "argv",
+            ["model_converter", str(config_path), "-o", str(tmp_path / "output"), "-c", str(tmp_path / "cache")],
+        )
+
+        captured: dict = {}
+        original_init = ModelConverter.__init__
+
+        def spy_init(self, *args, **kwargs):
+            captured.update(kwargs)
+            return original_init(self, *args, **kwargs)
+
+        with (
+            patch.object(ModelConverter, "__init__", autospec=True, side_effect=spy_init),
+            patch.object(ModelConverter, "process_config_file", return_value=(0, 0)),
+            patch.object(ModelConverter, "collect_results", return_value=[]),
+        ):
+            assert main() == 0
+
+        assert captured.get("measure_accuracy") is True
+
+    def test_no_measure_accuracy_flag(self, tmp_path, monkeypatch):
+        """main --no-measure-accuracy passes measure_accuracy=False."""
+        config_path = tmp_path / "config.json"
+        config_path.write_text(json.dumps({"models": []}))
+
+        monkeypatch.setattr(
+            sys,
+            "argv",
+            [
+                "model_converter",
+                str(config_path),
+                "-o",
+                str(tmp_path / "output"),
+                "-c",
+                str(tmp_path / "cache"),
+                "--no-measure-accuracy",
+            ],
+        )
+
+        captured: dict = {}
+        original_init = ModelConverter.__init__
+
+        def spy_init(self, *args, **kwargs):
+            captured.update(kwargs)
+            return original_init(self, *args, **kwargs)
+
+        with (
+            patch.object(ModelConverter, "__init__", autospec=True, side_effect=spy_init),
+            patch.object(ModelConverter, "process_config_file", return_value=(0, 0)),
+            patch.object(ModelConverter, "collect_results", return_value=[]),
+        ):
+            assert main() == 0
+
+        assert captured.get("measure_accuracy") is False
 
     def test_failed_run(self, tmp_path, monkeypatch):
         """main returns 1 when models fail."""

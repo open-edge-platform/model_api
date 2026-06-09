@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 from model_converter.converters.base import BaseConverter
+from model_converter.metrics import TopOneAccuracy, metric_for
 from model_converter.reporting import AccuracyResults
 
 
@@ -381,9 +382,14 @@ class GetituneConverter(BaseConverter):
             fp32_model_path,
         )
 
-        # Measure top-1 accuracy only for 1000-class ImageNet classification
-        # models, whose label space matches the validation dataset (0-999).
-        measure_accuracy = config.get("getitune_task") == "MULTI_CLASS_CLS" and config.get("labels") == "IMAGENET1K_V1"
+        # Pick a metric strategy for this dataset/model_type combo. Phase 4
+        # wires only :class:`TopOneAccuracy` end-to-end through validate_model;
+        # other metrics (multilabel mAP, COCO mAP, mIoU) live in the metrics
+        # package and are exercised in Phase 5.
+        metric = metric_for(config.get("dataset_type"), config.get("model_type")) if self.measure_accuracy else None
+        measure_accuracy = isinstance(metric, TopOneAccuracy)
+        if metric is not None:
+            accuracy.metric_name = metric.name
 
         self.logger.info("Creating calibration dataset for INT8 quantization")
         if measure_accuracy:
@@ -397,7 +403,7 @@ class GetituneConverter(BaseConverter):
             mean_values=mean_values,
             scale_values=scale_values,
             reverse_input_channels=reverse_input_channels,
-            subset_size=300,
+            subset_size=500,
             return_labels=measure_accuracy,
             dataset_path=dataset_path,
             dataset_type=config.get("dataset_type"),
