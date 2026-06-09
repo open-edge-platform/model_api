@@ -43,6 +43,7 @@ def sample_model_config():
         "scale_values": "58.395 57.12 57.375",
         "reverse_input_channels": True,
         "description": "A test model",
+        "dataset_type": "imagenet-1k",
     }
 
 
@@ -67,6 +68,7 @@ def sample_timm_config():
         "scale_values": "58.395 57.12 57.375",
         "reverse_input_channels": True,
         "description": "A test timm model",
+        "dataset_type": "imagenet-1k",
     }
 
 
@@ -172,3 +174,31 @@ def template_dir(tmp_path):
     (templates / "README-torchvision-fp16.md").write_text("# <<model_name>> (<<variant>>)\nLicense: <<license>>")
     (templates / ".gitattributes").write_text("*.bin filter=lfs diff=lfs merge=lfs -text\n")
     return templates
+
+
+@pytest.fixture
+def datasets_config(tmp_path, dataset_dir):
+    """Create a datasets configuration JSON file for testing."""
+    import json
+
+    config = {"datasets": {"imagenet-1k": str(dataset_dir), "coco-detection": str(tmp_path / "coco")}}
+    config_file = tmp_path / "datasets.json"
+    with config_file.open("w") as f:
+        json.dump(config, f)
+    return config_file
+
+
+@pytest.fixture
+def dataset_registry(datasets_config):
+    """Create a DatasetRegistry for testing."""
+    from model_converter.dataset_registry import DatasetRegistry
+
+    return DatasetRegistry(datasets_config)
+
+
+@pytest.fixture
+def mock_dataset_registry(dataset_dir):
+    """Create a mocked DatasetRegistry for testing."""
+    mock = MagicMock()
+    mock.resolve_from_config.return_value = dataset_dir
+    return mock

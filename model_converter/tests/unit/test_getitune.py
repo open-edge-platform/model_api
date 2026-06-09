@@ -50,6 +50,7 @@ def sample_getitune_config():
         "docs": "https://example.com",
         "tags": ["classification", "openvino"],
         "quantize": True,
+        "dataset_type": "imagenet-1k",
     }
 
 
@@ -66,13 +67,13 @@ def training_extensions_dir(tmp_path):
 
 
 @pytest.fixture
-def getitune_converter(tmp_output_dir, tmp_cache_dir, training_extensions_dir, dataset_dir):
+def getitune_converter(tmp_output_dir, tmp_cache_dir, training_extensions_dir, mock_dataset_registry):
     """GetituneConverter with temporary directories."""
     return GetituneConverter(
         output_dir=tmp_output_dir,
         cache_dir=tmp_cache_dir,
         verbose=True,
-        dataset_path=dataset_dir,
+        dataset_registry=mock_dataset_registry,
         training_extensions_dir=training_extensions_dir,
     )
 
@@ -147,7 +148,7 @@ class TestProcessModelConfig:
             output_dir=tmp_output_dir,
             cache_dir=tmp_cache_dir,
             verbose=True,
-            dataset_path=dataset_dir,
+            dataset_registry=dataset_dir,
             training_extensions_dir=None,
         )
 
@@ -171,7 +172,7 @@ class TestProcessModelConfig:
             output_dir=tmp_output_dir,
             cache_dir=tmp_cache_dir,
             verbose=True,
-            dataset_path=dataset_dir,
+            dataset_registry=dataset_dir,
             training_extensions_dir=tmp_path / "missing_training_extensions",
         )
 
@@ -401,7 +402,7 @@ class TestRunExport:
             output_dir=tmp_output_dir,
             cache_dir=tmp_cache_dir,
             verbose=True,
-            dataset_path=dataset_dir,
+            dataset_registry=dataset_dir,
             training_extensions_dir=training_extensions_dir,
         )
 
@@ -424,7 +425,7 @@ class TestRunExport:
             output_dir=tmp_output_dir,
             cache_dir=tmp_cache_dir,
             verbose=True,
-            dataset_path=dataset_dir,
+            dataset_registry=dataset_dir,
             training_extensions_dir=training_extensions_dir,
         )
 
@@ -579,6 +580,7 @@ class TestQuantizeExportedModel:
             reverse_input_channels=True,
             subset_size=300,
             return_labels=False,
+            dataset_path=ANY,
         )
         mock_quantize.assert_called_once_with(
             model_path=fp32_xml,
@@ -694,6 +696,7 @@ class TestQuantizeExportedModel:
             reverse_input_channels=True,
             subset_size=300,
             return_labels=True,
+            dataset_path=ANY,
         )
         mock_quantize.assert_called_once_with(
             model_path=fp32_xml,

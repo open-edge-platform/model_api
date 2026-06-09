@@ -1,0 +1,8 @@
+{
+  "datasets": {
+    "imagenet-1k": "/home/user/data/imagenet/validation",
+    "imagenet-21k": "/home/user/data/imagenet21k/validation",
+    "coco-detection": "/home/user/data/coco2017/val2017",
+    "coco-segmentation": "/home/user/data/coco2017/val2017"
+  }
+}

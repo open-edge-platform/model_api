@@ -10,7 +10,7 @@ import logging
 import shutil
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import cv2
 import numpy as np
@@ -22,6 +22,9 @@ from model_converter.reporting import (
     original_url_for_config,
     upsert_result,
 )
+
+if TYPE_CHECKING:
+    from model_converter.dataset_registry import DatasetRegistry
 
 
 class BaseConverter(ABC):
@@ -36,7 +39,7 @@ class BaseConverter(ABC):
         output_dir: Path,
         cache_dir: Path,
         verbose: bool = False,
-        dataset_path: Path | None = None,
+        dataset_registry: "DatasetRegistry | None" = None,
         report_path: Path | None = None,
     ):
         """Initialize the BaseConverter.
@@ -45,14 +48,14 @@ class BaseConverter(ABC):
             output_dir: Directory to save converted models
             cache_dir: Directory to cache downloaded weights
             verbose: Enable verbose logging
-            dataset_path: Path to calibration dataset for quantization
+            dataset_registry: Dataset registry for resolving dataset paths
             report_path: Path to the Markdown report file.  When set, each
                 non-skipped result is upserted into the file immediately after
                 conversion.
         """
         self.output_dir = Path(output_dir)
         self.cache_dir = Path(cache_dir)
-        self.dataset_path = Path(dataset_path) if dataset_path else None
+        self.dataset_registry = dataset_registry
         self.report_path = Path(report_path) if report_path else None
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.cache_dir.mkdir(parents=True, exist_ok=True)
@@ -76,6 +79,27 @@ class BaseConverter(ABC):
         Returns:
             True if successful, False otherwise
         """
+
+    def _resolve_dataset_path(self, config: dict[str, Any]) -> Path | None:
+        """Resolve dataset path from model configuration.
+
+        Extracts the 'dataset_type' field from the model config and resolves
+        it to a filesystem path using the dataset registry. Returns None if
+        no dataset_type is specified or no registry is available.
+
+        Args:
+            config: Model configuration dictionary
+
+        Returns:
+            Path to the dataset directory, or None if not applicable
+
+        Raises:
+            ValueError: If dataset_type is specified but not in registry
+        """
+        if self.dataset_registry is None:
+            return None
+
+        return self.dataset_registry.resolve_from_config(config)
 
     def _build_result(self, config: dict[str, Any]) -> ConversionResult:
         """Create a ConversionResult seeded from a model configuration."""
@@ -310,7 +334,8 @@ class BaseConverter(ABC):
         subset_size: int = 5000,
         return_labels: bool = False,
         resize_type: str = "standard",
-    ) -> tuple[list[np.ndarray], list[int]] | list[np.ndarray]:
+        dataset_path: Path | None = None,
+    ) -> tuple[list[np.ndarray], list[int]]:
         """Create calibration dataset from sample validation images.
 
         Args:
@@ -324,13 +349,14 @@ class BaseConverter(ABC):
                 target aspect ratio before resizing (matches standard ImageNet
                 evaluation), ``"standard"`` stretches directly to the target
                 size.
+            dataset_path: Path to dataset directory (overrides registry resolution)
 
         Returns:
-            List of preprocessed image arrays, or tuple of (images, labels)
+            Tuple of (images, labels); both empty lists when dataset is unavailable.
         """
-        if not self.dataset_path or not self.dataset_path.exists():
+        if not dataset_path or not dataset_path.exists():
             self.logger.warning("Dataset path not provided or doesn't exist. Skipping quantization.")
-            return []
+            return [], []
 
         # Parse mean and scale values
         mean = np.array([float(x) for x in mean_values.split()]) if mean_values else np.array([0, 0, 0])
@@ -340,7 +366,7 @@ class BaseConverter(ABC):
         calibration_data: list[np.ndarray] = []
 
         # Find all images in the dataset
-        image_dir = self.dataset_path
+        image_dir = dataset_path
         if not image_dir.exists():
             self.logger.error(f"Image directory not found: {image_dir}")
             return ([], [])

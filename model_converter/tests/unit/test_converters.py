@@ -302,24 +302,23 @@ class TestCreateCalibrationDataset:
         converter = TorchvisionConverter(
             output_dir=tmp_path / "out",
             cache_dir=tmp_path / "cache",
-            dataset_path=None,
+            dataset_registry=None,
         )
 
-        assert converter.create_calibration_dataset(input_shape=[1, 3, 224, 224]) == []
+        assert converter.create_calibration_dataset(input_shape=[1, 3, 224, 224]) == ([], [])
 
     def test_returns_empty_tuple_when_dataset_dir_does_not_exist(self, tmp_path):
         """Calibration dataset returns empty tuple when image_dir disappears between checks."""
         converter = TorchvisionConverter(
             output_dir=tmp_path / "out",
             cache_dir=tmp_path / "cache",
-            dataset_path=tmp_path / "dataset",
+            dataset_registry=None,
         )
         # Mock dataset_path to simulate a race condition: exists() returns True first then False
         mock_path = MagicMock(spec=Path)
         mock_path.exists.side_effect = [True, False]
-        converter.dataset_path = mock_path
 
-        result = converter.create_calibration_dataset(input_shape=[1, 3, 224, 224])
+        result = converter.create_calibration_dataset(input_shape=[1, 3, 224, 224], dataset_path=mock_path)
 
         assert result == ([], [])
 
@@ -331,10 +330,10 @@ class TestCreateCalibrationDataset:
         converter = TorchvisionConverter(
             output_dir=tmp_path / "out",
             cache_dir=tmp_path / "cache",
-            dataset_path=empty_dataset,
+            dataset_registry=None,
         )
 
-        result = converter.create_calibration_dataset(input_shape=[1, 3, 224, 224])
+        result = converter.create_calibration_dataset(input_shape=[1, 3, 224, 224], dataset_path=empty_dataset)
 
         assert result == ([], [])
 
@@ -343,12 +342,13 @@ class TestCreateCalibrationDataset:
         converter = TorchvisionConverter(
             output_dir=tmp_path / "out",
             cache_dir=tmp_path / "cache",
-            dataset_path=dataset_dir,
+            dataset_registry=None,
         )
 
         images, labels = converter.create_calibration_dataset(
             input_shape=[1, 3, 224, 224],
             return_labels=True,
+            dataset_path=dataset_dir,
         )
 
         assert len(images) == 2
@@ -360,7 +360,7 @@ class TestCreateCalibrationDataset:
         converter = TorchvisionConverter(
             output_dir=tmp_path / "out",
             cache_dir=tmp_path / "cache",
-            dataset_path=dataset_dir,
+            dataset_registry=None,
         )
         seen_calls: list[dict[str, object]] = []
 
@@ -377,6 +377,7 @@ class TestCreateCalibrationDataset:
             reverse_input_channels=False,
             subset_size=1,
             return_labels=False,
+            dataset_path=dataset_dir,
         )
 
         assert len(images) == 1
@@ -399,12 +400,13 @@ class TestCreateCalibrationDataset:
         converter = TorchvisionConverter(
             output_dir=tmp_path / "out",
             cache_dir=tmp_path / "cache",
-            dataset_path=dataset_path,
+            dataset_registry=None,
         )
 
         images, labels = converter.create_calibration_dataset(
             input_shape=[1, 3, 8, 8],
             return_labels=True,
+            dataset_path=dataset_path,
         )
 
         assert len(images) == 1
@@ -415,7 +417,7 @@ class TestCreateCalibrationDataset:
         converter = TorchvisionConverter(
             output_dir=tmp_path / "out",
             cache_dir=tmp_path / "cache",
-            dataset_path=dataset_dir,
+            dataset_registry=None,
         )
 
         def raising_preprocess(**kwargs):
@@ -427,6 +429,7 @@ class TestCreateCalibrationDataset:
         images, labels = converter.create_calibration_dataset(
             input_shape=[1, 3, 224, 224],
             return_labels=True,
+            dataset_path=dataset_dir,
         )
 
         assert images == []
@@ -445,12 +448,13 @@ class TestCreateCalibrationDataset:
         converter = TorchvisionConverter(
             output_dir=tmp_path / "out",
             cache_dir=tmp_path / "cache",
-            dataset_path=dataset_path,
+            dataset_registry=None,
         )
 
         images, labels = converter.create_calibration_dataset(
             input_shape=[1, 3, 8, 8],
             return_labels=False,
+            dataset_path=dataset_path,
         )
 
         assert len(images) == 1
@@ -461,7 +465,7 @@ class TestCreateCalibrationDataset:
         converter = TorchvisionConverter(
             output_dir=tmp_path / "out",
             cache_dir=tmp_path / "cache",
-            dataset_path=dataset_dir,
+            dataset_registry=None,
         )
 
         def raising_preprocess(**kwargs):
@@ -473,6 +477,7 @@ class TestCreateCalibrationDataset:
         images, labels = converter.create_calibration_dataset(
             input_shape=[1, 3, 224, 224],
             return_labels=False,
+            dataset_path=dataset_dir,
         )
 
         assert images == []
@@ -490,7 +495,7 @@ class TestCreateCalibrationDataset:
         converter = TorchvisionConverter(
             output_dir=tmp_path / "out",
             cache_dir=tmp_path / "cache",
-            dataset_path=dataset_path,
+            dataset_registry=None,
         )
 
         call_count = [0]
@@ -505,6 +510,7 @@ class TestCreateCalibrationDataset:
             input_shape=[1, 3, 8, 8],
             return_labels=True,
             subset_size=50,
+            dataset_path=dataset_path,
         )
 
         assert len(images) == 50
@@ -521,7 +527,7 @@ class TestCreateCalibrationDataset:
         converter = TorchvisionConverter(
             output_dir=tmp_path / "out",
             cache_dir=tmp_path / "cache",
-            dataset_path=dataset_path,
+            dataset_registry=None,
         )
 
         def fake_preprocess(**kwargs):
@@ -533,6 +539,7 @@ class TestCreateCalibrationDataset:
             input_shape=[1, 3, 8, 8],
             return_labels=False,
             subset_size=50,
+            dataset_path=dataset_path,
         )
 
         assert len(images) == 50
@@ -543,7 +550,7 @@ class TestCreateCalibrationDataset:
         converter = TorchvisionConverter(
             output_dir=tmp_path / "out",
             cache_dir=tmp_path / "cache",
-            dataset_path=dataset_dir,
+            dataset_registry=None,
         )
         seen_resize_types: list[str] = []
 
@@ -557,6 +564,7 @@ class TestCreateCalibrationDataset:
             input_shape=[1, 3, 8, 8],
             resize_type="crop",
             return_labels=False,
+            dataset_path=dataset_dir,
         )
 
         assert all(rt == "crop" for rt in seen_resize_types)
@@ -566,7 +574,7 @@ class TestCreateCalibrationDataset:
         converter = TorchvisionConverter(
             output_dir=tmp_path / "out",
             cache_dir=tmp_path / "cache",
-            dataset_path=dataset_dir,
+            dataset_registry=None,
         )
         seen_resize_types: list[str] = []
 
@@ -580,6 +588,7 @@ class TestCreateCalibrationDataset:
             input_shape=[1, 3, 8, 8],
             resize_type="crop",
             return_labels=True,
+            dataset_path=dataset_dir,
         )
 
         assert all(rt == "crop" for rt in seen_resize_types)

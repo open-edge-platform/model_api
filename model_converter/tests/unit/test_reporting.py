@@ -232,3 +232,17 @@ class TestUpsertResult:
         data = json.loads(path.with_suffix(".json").read_text())
         assert isinstance(data, list)
         assert data[0]["model_short_name"] == "m1"
+
+    def test_handles_corrupt_json_sidecar(self, tmp_path):
+        """upsert_result gracefully handles a corrupt JSON sidecar by treating it as empty."""
+        import json
+
+        path = tmp_path / "report.md"
+        json_path = path.with_suffix(".json")
+        json_path.write_text("{ not valid json }")
+
+        upsert_result(_result(model_short_name="m1", status=STATUS_OK), path)
+
+        data = json.loads(json_path.read_text())
+        assert len(data) == 1
+        assert data[0]["model_short_name"] == "m1"

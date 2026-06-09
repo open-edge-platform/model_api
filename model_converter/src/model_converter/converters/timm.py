@@ -218,9 +218,7 @@ class TimmConverter(PyTorchConverter):
 
             # Quantize the model if dataset is available
             accuracy: AccuracyResults | None = None
-            quantization_attempted = bool(
-                config.get("quantize", True) and self.dataset_path and self.dataset_path.exists(),
-            )
+            quantization_attempted = bool(config.get("quantize", True) and config.get("dataset_type"))
             if quantization_attempted:
                 accuracy = self._quantize_and_cleanup(
                     config,

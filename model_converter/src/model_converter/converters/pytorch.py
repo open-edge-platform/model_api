@@ -352,6 +352,9 @@ class PyTorchConverter(BaseConverter):
         return_validation_labels = model_type == "Classification" and bool(config.get("labels"))
         resize_type = config.get("resize_type", "standard")
 
+        # Resolve dataset path from model config
+        dataset_path = self._resolve_dataset_path(config)
+
         if return_validation_labels:
             self.logger.info("Creating validation dataset for accuracy measurement")
         validation_data, validation_labels = self.create_calibration_dataset(
@@ -362,6 +365,7 @@ class PyTorchConverter(BaseConverter):
             subset_size=300,
             return_labels=return_validation_labels,
             resize_type=resize_type,
+            dataset_path=dataset_path,
         )
 
         if validation_data:

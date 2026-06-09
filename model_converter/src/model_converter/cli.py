@@ -21,6 +21,7 @@ from typing import Any
 
 from model_converter.converters import CONVERTER_REGISTRY, BaseConverter
 from model_converter.converters.getitune import GetituneConverter
+from model_converter.dataset_registry import DatasetRegistry
 from model_converter.reporting import (
     ConversionResult,
     format_console_table,
@@ -40,7 +41,7 @@ class ModelConverter:
         output_dir: Path,
         cache_dir: Path,
         verbose: bool = False,
-        dataset_path: Path | None = None,
+        dataset_registry: DatasetRegistry | None = None,
         training_extensions_dir: Path | None = None,
         report_path: Path | None = None,
     ):
@@ -50,7 +51,7 @@ class ModelConverter:
             output_dir: Directory to save converted models
             cache_dir: Directory to cache downloaded weights
             verbose: Enable verbose logging
-            dataset_path: Path to calibration dataset for quantization
+            dataset_registry: Dataset registry for resolving dataset paths
             training_extensions_dir: Path to training_extensions repo (for getitune models)
             report_path: Path to the Markdown report file.  When set, each
                 non-skipped conversion result is written to the file immediately
@@ -58,7 +59,7 @@ class ModelConverter:
         """
         self.output_dir = Path(output_dir)
         self.cache_dir = Path(cache_dir)
-        self.dataset_path = Path(dataset_path) if dataset_path else None
+        self.dataset_registry = dataset_registry
         self.training_extensions_dir = Path(training_extensions_dir) if training_extensions_dir else None
         self.report_path = Path(report_path) if report_path else None
         self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -98,7 +99,7 @@ class ModelConverter:
                 "output_dir": self.output_dir,
                 "cache_dir": self.cache_dir,
                 "verbose": self._verbose,
-                "dataset_path": self.dataset_path,
+                "dataset_registry": self.dataset_registry,
                 "report_path": self.report_path,
             }
 
@@ -283,11 +284,10 @@ Examples:
     )
 
     parser.add_argument(
-        "-d",
-        "--dataset",
+        "--datasets-config",
         type=Path,
-        default=Path.home() / "model_api" / "validation_dataset",
-        help=("Path to calibration dataset for INT8 quantization (default: ~/model_api/validation_dataset)"),
+        default=Path("presets/datasets.json"),
+        help="Path to datasets configuration JSON file (default: presets/datasets.json)",
     )
 
     parser.add_argument(
@@ -380,20 +380,31 @@ Examples:
         if args.report is not None:
             report_path = Path(args.report) if args.report else args.output / "conversion_report.md"
 
+        # Load dataset registry
+        dataset_registry: DatasetRegistry | None = None
+        if args.datasets_config.exists():
+            try:
+                dataset_registry = DatasetRegistry(args.datasets_config)
+                logger.info(f"Loaded dataset registry from: {args.datasets_config}")
+            except (FileNotFoundError, ValueError) as e:
+                logger.warning(f"Failed to load dataset registry: {e}")
+                logger.warning("Quantization will be skipped for all models")
+        else:
+            logger.warning(f"Dataset configuration not found: {args.datasets_config}")
+            logger.warning("Quantization will be skipped for all models")
+
         # Create converter
         converter = ModelConverter(
             output_dir=args.output,
             cache_dir=args.cache,
             verbose=args.verbose,
-            dataset_path=args.dataset,
+            dataset_registry=dataset_registry,
             training_extensions_dir=args.training_extensions_dir,
             report_path=report_path,
         )
 
         logger.info(f"Output directory: {args.output}")
         logger.info(f"Cache directory: {args.cache}")
-        if args.dataset:
-            logger.info(f"Calibration dataset: {args.dataset}")
 
         # Process models
         successful, failed = converter.process_config_file(

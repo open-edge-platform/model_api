@@ -31,7 +31,7 @@ uv sync
 ### Basic Usage
 
 ```bash
-uv run model-converter examples/config.json -o ./output_models
+uv run model-converter presets/config.json -o ./output_models --datasets-config datasets.json
 ```
 
 ### Command-Line Options
@@ -46,6 +46,8 @@ options:
                         Output directory for converted models (default: ./converted_models)
   -c CACHE, --cache CACHE
                         Cache directory for downloaded weights (default: ~/.cache/torch/hub/checkpoints)
+  --datasets-config DATASETS_CONFIG
+                        Path to datasets configuration JSON file (default: presets/datasets.json)
   --model MODEL         Process only the specified model (by model_short_name)
   --library LIBRARY     Comma-separated list of model libraries to process (e.g., getitune,timm)
   --report [PATH]       Generate a conversion summary report. Pass the flag alone to write to
@@ -165,7 +167,8 @@ The configuration file is a JSON file with the following structure:
       "input_names": ["images"],
       "output_names": ["output"],
       "model_params": null,
-      "model_type": "Classification"
+      "model_type": "Classification",
+      "dataset_type": "imagenet-1k"
     }
   ]
 }
@@ -179,6 +182,36 @@ Common `model_type` values:
 - `"DetectionModel"` - Object detection models
 - `"YOLOX"` - YOLOX detection models
 - `"SegmentationModel"` - Segmentation models
+
+### Dataset Configuration
+
+The converter uses a separate `datasets.json` file to map dataset types to local filesystem paths. This allows model configurations to remain portable across different environments.
+
+**datasets.json format:**
+
+```json
+{
+  "datasets": {
+    "imagenet-1k": "/path/to/imagenet/validation",
+    "imagenet-21k": "/path/to/imagenet21k/validation",
+    "coco-detection": "/path/to/coco2017/val2017",
+    "coco-segmentation": "/path/to/coco2017/val2017"
+  }
+}
+```
+
+Models that require calibration for INT8 quantization should specify a `dataset_type` field that matches one of the keys in `datasets.json`:
+
+```json
+{
+  "model_short_name": "efficientnet_b0",
+  "model_type": "Classification",
+  "dataset_type": "imagenet-1k",
+  ...
+}
+```
+
+If a model does not specify a `dataset_type`, INT8 quantization will be skipped for that model.
 
 ### Configuration Fields
 
@@ -205,3 +238,4 @@ For Hugging Face-backed models, use these required fields instead of `model_clas
 - **`output_names`** (array of strings): Names for output tensors (default: auto-generated)
 - **`model_params`** (object): Parameters to pass to model constructor (default: `null`)
 - **`model_type`** (string): Model type for model_api auto-detection (e.g., `"Classification"`, `"DetectionModel"`, `"YOLOX"`, etc.)
+- **`dataset_type`** (string): Dataset type identifier that maps to a path in `datasets.json` (e.g., `"imagenet-1k"`, `"coco-detection"`). Required for INT8 quantization. If omitted, quantization is skipped for this model.

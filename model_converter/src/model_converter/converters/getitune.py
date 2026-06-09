@@ -93,9 +93,7 @@ class GetituneConverter(BaseConverter):
 
             # Quantize if enabled and dataset is available
             accuracy: AccuracyResults | None = None
-            quantization_attempted = bool(
-                config.get("quantize", True) and self.dataset_path and self.dataset_path.exists(),
-            )
+            quantization_attempted = bool(config.get("quantize", True) and config.get("dataset_type"))
             if quantization_attempted:
                 accuracy = self._quantize_exported_model(config)
 
@@ -390,6 +388,10 @@ class GetituneConverter(BaseConverter):
         self.logger.info("Creating calibration dataset for INT8 quantization")
         if measure_accuracy:
             self.logger.info("Creating validation dataset for accuracy measurement")
+
+        # Resolve dataset path from model config
+        dataset_path = self._resolve_dataset_path(config)
+
         calibration_data, validation_labels = self.create_calibration_dataset(
             input_shape=input_shape,
             mean_values=mean_values,
@@ -397,6 +399,7 @@ class GetituneConverter(BaseConverter):
             reverse_input_channels=reverse_input_channels,
             subset_size=300,
             return_labels=measure_accuracy,
+            dataset_path=dataset_path,
         )
 
         if calibration_data:

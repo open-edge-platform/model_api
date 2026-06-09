@@ -229,7 +229,7 @@ class TestTimmConverter:
         timm_converter = TimmConverter(
             output_dir=tmp_path / "output",
             cache_dir=tmp_path / "cache",
-            dataset_path=dataset_dir,
+            dataset_registry=dataset_dir,
             verbose=True,
         )
         fp16_path = timm_converter.output_dir / "test_timm_model-fp16-ov" / "test_timm_model.xml"

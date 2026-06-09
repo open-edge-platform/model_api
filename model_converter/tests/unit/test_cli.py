@@ -44,23 +44,23 @@ class TestModelConverterInit:
         assert converter.logger is not None
 
     def test_dataset_path(self, tmp_path):
-        """ModelConverter stores dataset path."""
+        """ModelConverter stores dataset registry."""
         dataset = tmp_path / "dataset"
         converter = ModelConverter(
             output_dir=tmp_path / "out",
             cache_dir=tmp_path / "cache",
-            dataset_path=dataset,
+            dataset_registry=dataset,
         )
-        assert converter.dataset_path == dataset
+        assert converter.dataset_registry == dataset
 
     def test_dataset_path_none(self, tmp_path):
-        """ModelConverter handles None dataset path."""
+        """ModelConverter handles None dataset registry."""
         converter = ModelConverter(
             output_dir=tmp_path / "out",
             cache_dir=tmp_path / "cache",
-            dataset_path=None,
+            dataset_registry=None,
         )
-        assert converter.dataset_path is None
+        assert converter.dataset_registry is None
 
 
 class TestModelConverterDispatch:
@@ -834,7 +834,7 @@ class TestTorchvisionProcessModelConfig:
         converter = TorchvisionConverter(
             output_dir=tmp_path / "out",
             cache_dir=tmp_path / "cache",
-            dataset_path=dataset_dir,
+            dataset_registry=dataset_dir,
         )
         mock_model = MagicMock(spec=nn.Module)
         mock_model.eval.return_value = mock_model
@@ -1098,45 +1098,64 @@ class TestMain:
                 str(tmp_path / "output"),
                 "-c",
                 str(tmp_path / "cache"),
-                "-d",
-                str(tmp_path / "dataset"),
             ],
         )
 
         with patch.object(ModelConverter, "process_config_file", return_value=(1, 0)):
             assert main() == 0
 
-    def test_report_default_path(self, tmp_path, monkeypatch, capsys):
-        """main --report prints console table (file written by converters during processing)."""
+    def test_datasets_config_not_found_warns(self, tmp_path, monkeypatch, caplog):
+        """main warns and continues when --datasets-config path does not exist."""
         config_path = tmp_path / "config.json"
         config_path.write_text(json.dumps({"models": [{"model_short_name": "m1"}]}))
-        output_dir = tmp_path / "output"
+        missing_datasets = tmp_path / "missing_datasets.json"
 
         monkeypatch.setattr(
             sys,
             "argv",
-            ["model_converter", str(config_path), "-o", str(output_dir), "-c", str(tmp_path / "cache"), "--report"],
+            [
+                "model_converter",
+                str(config_path),
+                "-o",
+                str(tmp_path / "output"),
+                "-c",
+                str(tmp_path / "cache"),
+                "--datasets-config",
+                str(missing_datasets),
+            ],
         )
 
-        from model_converter.reporting import STATUS_OK, ConversionResult
-
-        result = ConversionResult(
-            model_short_name="m1",
-            model_full_name="M1",
-            model_type="Classification",
-            model_library="torchvision",
-            status=STATUS_OK,
-        )
-
-        with (
-            patch.object(ModelConverter, "process_config_file", return_value=(1, 0)),
-            patch.object(ModelConverter, "collect_results", return_value=[result]),
-        ):
+        with patch.object(ModelConverter, "process_config_file", return_value=(1, 0)):
             assert main() == 0
+        assert "Dataset configuration not found" in caplog.text
 
-        assert "Conversion Summary Report" in capsys.readouterr().out
+    def test_datasets_config_invalid_warns(self, tmp_path, monkeypatch, caplog):
+        """main warns and continues when --datasets-config contains invalid content."""
+        config_path = tmp_path / "config.json"
+        config_path.write_text(json.dumps({"models": [{"model_short_name": "m1"}]}))
+        bad_datasets = tmp_path / "bad_datasets.json"
+        bad_datasets.write_text('{"not_datasets": {}}')
 
-    def test_report_enabled_by_default(self, tmp_path, monkeypatch, capsys):
+        monkeypatch.setattr(
+            sys,
+            "argv",
+            [
+                "model_converter",
+                str(config_path),
+                "-o",
+                str(tmp_path / "output"),
+                "-c",
+                str(tmp_path / "cache"),
+                "--datasets-config",
+                str(bad_datasets),
+            ],
+        )
+
+        with patch.object(ModelConverter, "process_config_file", return_value=(1, 0)):
+            assert main() == 0
+        assert "Failed to load dataset registry" in caplog.text
+
+    def test_report_default_path(self, tmp_path, monkeypatch, capsys):
         """main prints console table even without --report (reporting is on by default)."""
         config_path = tmp_path / "config.json"
         config_path.write_text(json.dumps({"models": [{"model_short_name": "m1"}]}))
