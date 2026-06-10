@@ -109,9 +109,11 @@ def determine_status(
 ) -> tuple[str, str]:
     """Compute the status and detail for a conversion result.
 
-    FP32 is the baseline for quantization drops. A drop is abnormal when the
-    original-to-FP32 conversion, ``(FP32 - FP16)``, or ``(FP32 - INT8)`` exceeds
-    ``threshold`` percentage points.
+    FP32 is the preferred baseline for quantization drops. When FP32 accuracy
+    is absent (e.g. for YOLO11 models where no FP32 OV artifact is produced),
+    ``original_accuracy`` is used as baseline instead. A drop is abnormal when
+    ``(baseline - FP16)`` or ``(baseline - INT8)`` exceeds ``threshold``
+    percentage points.
 
     Args:
         result: The conversion result holding accuracy values.
@@ -132,24 +134,27 @@ def determine_status(
     if not quantized:
         return STATUS_FAILED_QUANTIZATION, "INT8 model was not produced"
 
-    if result.fp32_accuracy is None:
+    # Determine the baseline accuracy for drop checks.
+    # Prefer FP32 (standard OV export); fall back to original (e.g. YOLO PT model).
+    baseline = result.fp32_accuracy if result.fp32_accuracy is not None else result.original_accuracy
+    if baseline is None:
         return STATUS_OK_NO_ACCURACY, "No accuracy measurement available"
 
-    fp32_pct = result.fp32_accuracy * 100
+    baseline_pct = baseline * 100
     drops: list[str] = []
 
-    if result.original_accuracy is not None:
-        fp32_drop = result.original_accuracy * 100 - fp32_pct
+    if result.fp32_accuracy is not None and result.original_accuracy is not None:
+        fp32_drop = result.original_accuracy * 100 - baseline_pct
         if fp32_drop > threshold:
             drops.append(f"FP32 drop {fp32_drop:.2f}%")
 
     if result.fp16_accuracy is not None:
-        fp16_drop = fp32_pct - result.fp16_accuracy * 100
+        fp16_drop = baseline_pct - result.fp16_accuracy * 100
         if fp16_drop > threshold:
             drops.append(f"FP16 drop {fp16_drop:.2f}%")
 
     if result.int8_accuracy is not None:
-        int8_drop = fp32_pct - result.int8_accuracy * 100
+        int8_drop = baseline_pct - result.int8_accuracy * 100
         if int8_drop > threshold:
             drops.append(f"INT8 drop {int8_drop:.2f}%")
 

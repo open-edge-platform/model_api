@@ -85,8 +85,40 @@ class TestDetermineStatus:
         assert status == STATUS_FAILED_QUANTIZATION
 
     def test_no_accuracy_data(self):
-        status, _ = determine_status(_result(fp32_accuracy=None), converted=True, quantized=True, skipped=False)
+        status, _ = determine_status(
+            _result(fp32_accuracy=None, original_accuracy=None),
+            converted=True,
+            quantized=True,
+            skipped=False,
+        )
         assert status == STATUS_OK_NO_ACCURACY
+
+    def test_original_as_baseline_when_no_fp32(self):
+        """When fp32_accuracy is absent, original_accuracy serves as baseline → OK."""
+        result = _result(original_accuracy=0.37, fp16_accuracy=0.37, int8_accuracy=0.365)
+        status, detail = determine_status(result, converted=True, quantized=True, skipped=False)
+        assert status == STATUS_OK
+        assert detail == ""
+
+    def test_fp16_drop_flagged_against_original_baseline(self):
+        """FP16 drop > 5% relative to original_accuracy is flagged when fp32 is absent."""
+        result = _result(original_accuracy=0.37, fp16_accuracy=0.30, int8_accuracy=0.30)
+        status, detail = determine_status(result, converted=True, quantized=True, skipped=False)
+        assert status == STATUS_ACCURACY_DROP
+        assert "FP16 drop" in detail
+
+    def test_int8_drop_flagged_against_original_baseline(self):
+        """INT8 drop > 5% relative to original_accuracy is flagged when fp32 is absent."""
+        result = _result(original_accuracy=0.37, fp16_accuracy=0.37, int8_accuracy=0.30)
+        status, detail = determine_status(result, converted=True, quantized=True, skipped=False)
+        assert status == STATUS_ACCURACY_DROP
+        assert "INT8 drop" in detail
+
+    def test_fp32_drop_not_checked_when_fp32_is_baseline(self):
+        """When fp32 is used as baseline (no original), FP32-drop check is skipped."""
+        result = _result(fp32_accuracy=0.90, fp16_accuracy=0.89, int8_accuracy=0.88)
+        status, _ = determine_status(result, converted=True, quantized=True, skipped=False)
+        assert status == STATUS_OK
 
     def test_ok_within_threshold(self):
         result = _result(fp32_accuracy=0.90, fp16_accuracy=0.89, int8_accuracy=0.88)
