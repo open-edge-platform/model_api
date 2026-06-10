@@ -16,6 +16,7 @@ import cv2
 import numpy as np
 
 from model_converter.datasets import CalibrationSample, reader_for
+from model_converter.metrics.coco_detection import COCO80_TO_COCO91
 from model_converter.reporting import (
     AccuracyResults,
     ConversionResult,
@@ -655,10 +656,12 @@ class BaseConverter(ABC):
         preds: list[dict[str, Any]] = []
         for bbox, label, score in zip(bboxes, labels, scores):
             x_min, y_min, x_max, y_max = (float(v) for v in bbox)
+            n = int(label)
+            coco_cat_id = COCO80_TO_COCO91[n] if n < len(COCO80_TO_COCO91) else n + 1
             preds.append(
                 {
                     "image_id": int(sample.image_id) if sample.image_id is not None else 0,
-                    "category_id": int(label) + 1,  # COCO category ids are 1-indexed
+                    "category_id": coco_cat_id,
                     "bbox": [x_min, y_min, x_max - x_min, y_max - y_min],
                     "score": float(score),
                 },

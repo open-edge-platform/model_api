@@ -9,8 +9,7 @@ import json
 from pathlib import Path
 
 import pytest
-
-from model_converter.metrics.coco_detection import CocoDetectionMAP
+from model_converter.metrics.coco_detection import COCO80_TO_COCO91, CocoDetectionMAP
 
 
 def _write_minimal_coco_gt(path: Path) -> None:
@@ -75,3 +74,21 @@ class TestCocoDetectionMAP:
         metric = CocoDetectionMAP(annotation_file=gt_file, iou_type="bbox")
         metric.update(predictions=None)
         assert metric.compute() == pytest.approx(0.0)
+
+
+class TestCoco80ToCoco91:
+    def test_length_is_80(self):
+        assert len(COCO80_TO_COCO91) == 80
+
+    def test_no_duplicates(self):
+        assert len(set(COCO80_TO_COCO91)) == 80
+
+    def test_first_value_is_person(self):
+        assert COCO80_TO_COCO91[0] == 1  # person
+
+    def test_last_value_is_90(self):
+        assert COCO80_TO_COCO91[-1] == 90  # toothbrush
+
+    def test_stop_sign_maps_to_13_not_12(self):
+        """Class 11 (stop sign) must be COCO ID 13; COCO ID 12 (street sign) is absent."""
+        assert COCO80_TO_COCO91[11] == 13

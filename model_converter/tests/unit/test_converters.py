@@ -14,7 +14,6 @@ from unittest.mock import MagicMock, patch
 import cv2
 import numpy as np
 import pytest
-
 from model_converter.converters.torchvision import TorchvisionConverter
 
 
@@ -1117,9 +1116,43 @@ class TestMeasureMetric:
         assert preds[0]["image_id"] == 42
         # XYXY (10, 20, 30, 50) → XYWH (10, 20, 20, 30)
         assert preds[0]["bbox"] == [10.0, 20.0, 20.0, 30.0]
-        # category_id is the model label + 1 (COCO is 1-indexed)
+        # class index 4 (airplane) → COCO80_TO_COCO91[4] = 5
         assert preds[0]["category_id"] == 5
         assert preds[0]["score"] == pytest.approx(0.9)
+
+    def test_bbox_dispatch_uses_coco80_to_coco91_mapping_for_class_11(
+        self,
+        converter,
+        tmp_path,
+        monkeypatch,
+    ):
+        """Class index 11 (stop sign) must map to COCO category ID 13, not 12."""
+        from model_converter.datasets import CalibrationSample
+        from model_converter.metrics import CocoDetectionMAP
+
+        img_path = tmp_path / "img.jpg"
+        cv2.imwrite(str(img_path), np.zeros((10, 10, 3), dtype=np.uint8))
+        wrapper = MagicMock(
+            return_value=SimpleNamespace(
+                bboxes=np.array([[0, 0, 5, 5]], dtype=np.int32),
+                labels=np.array([11], dtype=np.int32),  # stop sign — first class where +1 diverges
+                scores=np.array([0.8], dtype=np.float32),
+            ),
+        )
+        self._install_fake_model_api(monkeypatch, wrapper)
+
+        ann = tmp_path / "ann.json"
+        ann.write_text('{"images":[],"annotations":[],"categories":[]}')
+        metric = CocoDetectionMAP(annotation_file=ann, iou_type="bbox")
+        metric.update = MagicMock()
+        metric.compute = MagicMock(return_value=0.0)
+        metric.reset = MagicMock()
+        sample = CalibrationSample(image_path=img_path, label=0, image_id=1)
+
+        converter._measure_metric(tmp_path / "model.xml", [sample], metric)
+
+        preds = metric.update.call_args.kwargs["predictions"]
+        assert preds[0]["category_id"] == 13  # COCO80_TO_COCO91[11] = 13 (not 12)
 
     def test_bbox_dispatch_skips_samples_without_image_id(
         self,
@@ -1373,7 +1406,40 @@ class TestMeasureMetric:
 
         metric.update.assert_not_called()
 
-    def test_semseg_skips_when_mask_unreadable(self, converter, tmp_path, monkeypatch):
+    def test_bbox_dispatch_falls_back_for_out_of_range_label(
+        self,
+        converter,
+        tmp_path,
+        monkeypatch,
+    ):
+        """Labels outside 0-79 fall back to idx+1 without raising."""
+        from model_converter.datasets import CalibrationSample
+        from model_converter.metrics import CocoDetectionMAP
+
+        img_path = tmp_path / "img.jpg"
+        cv2.imwrite(str(img_path), np.zeros((10, 10, 3), dtype=np.uint8))
+        wrapper = MagicMock(
+            return_value=SimpleNamespace(
+                bboxes=np.array([[0, 0, 5, 5]], dtype=np.int32),
+                labels=np.array([99], dtype=np.int32),  # out of COCO-80 range
+                scores=np.array([0.5], dtype=np.float32),
+            ),
+        )
+        self._install_fake_model_api(monkeypatch, wrapper)
+
+        ann = tmp_path / "ann.json"
+        ann.write_text('{"images":[],"annotations":[],"categories":[]}')
+        metric = CocoDetectionMAP(annotation_file=ann, iou_type="bbox")
+        metric.update = MagicMock()
+        metric.compute = MagicMock(return_value=0.0)
+        metric.reset = MagicMock()
+        sample = CalibrationSample(image_path=img_path, label=0, image_id=1)
+
+        converter._measure_metric(tmp_path / "model.xml", [sample], metric)
+
+        preds = metric.update.call_args.kwargs["predictions"]
+        assert preds[0]["category_id"] == 100  # fallback: 99 + 1
+
         from model_converter.datasets import CalibrationSample
         from model_converter.metrics import SemSegMIoU
 
