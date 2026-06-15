@@ -8,7 +8,6 @@
 from __future__ import annotations
 
 import pytest
-
 from model_converter.datasets import ClassFolderReader
 
 

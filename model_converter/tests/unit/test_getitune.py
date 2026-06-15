@@ -13,7 +13,6 @@ from unittest.mock import ANY, MagicMock, patch
 
 import numpy as np
 import pytest
-
 from model_converter.converters.getitune import GetituneConverter
 from model_converter.reporting import AccuracyResults
 

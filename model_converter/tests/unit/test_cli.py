@@ -14,7 +14,6 @@ import numpy as np
 import pytest
 import torch
 import torch.nn as nn
-
 from model_converter.cli import ModelConverter, list_models, main
 from model_converter.converters.getitune import GetituneConverter
 from model_converter.converters.timm import TimmConverter

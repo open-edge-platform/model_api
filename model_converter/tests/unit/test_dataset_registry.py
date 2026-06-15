@@ -8,7 +8,6 @@
 import json
 
 import pytest
-
 from model_converter.dataset_registry import DatasetRegistry
 
 

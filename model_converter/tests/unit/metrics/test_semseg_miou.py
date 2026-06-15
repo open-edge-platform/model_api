@@ -7,7 +7,6 @@
 
 import numpy as np
 import pytest
-
 from model_converter.metrics.semseg_miou import SemSegMIoU
 
 
