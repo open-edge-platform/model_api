@@ -31,6 +31,8 @@ class ClassFolderReader(DatasetReader):
             if not class_dir.is_dir():
                 continue
             class_label = int(class_dir.name)  # raises ValueError on bad layout
+            img_paths: set[object] = set()
             for pattern in _IMAGE_PATTERNS:
-                for img_path in sorted(class_dir.glob(pattern)):
-                    yield CalibrationSample(image_path=img_path, label=class_label)
+                img_paths.update(class_dir.glob(pattern))
+            for img_path in sorted(img_paths):
+                yield CalibrationSample(image_path=img_path, label=class_label)
