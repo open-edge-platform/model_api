@@ -27,7 +27,7 @@ class SemSegMIoU(Metric):
         self.ignore_index = ignore_index
         self._confusion = np.zeros((num_classes, num_classes), dtype=np.int64)
 
-    def update(self, prediction: np.ndarray, ground_truth: np.ndarray) -> None:
+    def update(self, prediction: np.ndarray, ground_truth: np.ndarray | None = None) -> None:
         """Accept ``prediction`` and ``ground_truth`` as same-shape class-id arrays."""
         gt = np.asarray(ground_truth).ravel()
         pred = np.asarray(prediction).ravel()

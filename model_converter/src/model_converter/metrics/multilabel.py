@@ -23,7 +23,7 @@ class MultilabelMAP(Metric):
         self.num_labels = num_labels
         self._impl = MultilabelAveragePrecision(num_labels=num_labels, average="macro")
 
-    def update(self, prediction: np.ndarray, ground_truth: np.ndarray) -> None:
+    def update(self, prediction: np.ndarray, ground_truth: np.ndarray | None = None) -> None:
         """Accept ``prediction`` as logits of shape ``(1, num_labels)`` and ``ground_truth`` as a 0/1 vector."""
         logits = torch.from_numpy(np.asarray(prediction, dtype=np.float32))
         target = torch.from_numpy(np.asarray(ground_truth, dtype=np.int64))

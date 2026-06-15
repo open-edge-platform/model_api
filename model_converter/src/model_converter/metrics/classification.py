@@ -21,8 +21,9 @@ class TopOneAccuracy(Metric):
         self._correct = 0
         self._total = 0
 
-    def update(self, prediction: np.ndarray, ground_truth: int) -> None:
+    def update(self, prediction: np.ndarray, ground_truth: int | None = None) -> None:
         """Accept ``prediction`` as a logits tensor and ``ground_truth`` as a class id."""
+        assert ground_truth is not None
         pred_class = int(np.argmax(prediction, axis=1)[0])
         self._correct += int(pred_class == int(ground_truth))
         self._total += 1

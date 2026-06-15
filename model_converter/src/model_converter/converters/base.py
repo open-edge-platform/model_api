@@ -767,6 +767,8 @@ class BaseConverter(ABC):
                 metric is not None and not isinstance(metric, TopOneAccuracy) and bool(validation_samples)
             )
             if metric_path_active:
+                assert metric is not None  # guaranteed by metric_path_active
+                assert validation_samples is not None  # guaranteed by metric_path_active
                 metric_name = getattr(metric, "name", "metric")
                 self.logger.info(f"Validating FP32 model {metric_name}...")
                 fp32_metric = self._measure_metric(model_path, validation_samples, metric)
