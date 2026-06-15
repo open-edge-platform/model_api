@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from .base import CalibrationSample, DatasetReader
@@ -31,7 +32,7 @@ class ClassFolderReader(DatasetReader):
             if not class_dir.is_dir():
                 continue
             class_label = int(class_dir.name)  # raises ValueError on bad layout
-            img_paths: set[object] = set()
+            img_paths: set[Path] = set()
             for pattern in _IMAGE_PATTERNS:
                 img_paths.update(class_dir.glob(pattern))
             for img_path in sorted(img_paths):
