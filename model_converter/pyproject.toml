@@ -34,8 +34,11 @@ dependencies = [
     "onnx",
     "opencv-python-headless<4.14",
     "openvino>=2025.3",
+    "openvino-model-api",
+    "pycocotools",
     "timm",
     "torch",
+    "torchmetrics",
     "torchvision",
     "transformers",
     "ultralytics",
@@ -43,7 +46,6 @@ dependencies = [
 
 [project.scripts]
 model-converter = "model_converter.model_converter:main"
-model-converter-yolo = "model_converter.yolo.yolo:main"
 
 [project.urls]
 Homepage = "https://github.com/open-edge-platform/model_api"
@@ -52,7 +54,6 @@ Repository = "https://github.com/open-edge-platform/model_api.git"
 
 [dependency-groups]
 tests = [
-    "openvino-model-api",
     "pytest",
     "pytest-cov",
     "pytest-mock",

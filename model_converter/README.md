@@ -14,6 +14,7 @@ This tool reads a JSON configuration file containing model specifications, downl
 - **Input/Output Naming**: Configurable input and output tensor names
 - **Batch Processing**: Process multiple models from a single configuration file
 - **Selective Conversion**: Convert specific models using the `--model` flag
+- **Summary Report**: Generate a console + Markdown conversion report with the `--report` flag
 
 ## Installation
 
@@ -30,7 +31,7 @@ uv sync
 ### Basic Usage
 
 ```bash
-uv run model-converter examples/config.json -o ./output_models
+uv run model-converter presets/config.json -o ./output_models --datasets-config datasets.json
 ```
 
 ### Command-Line Options
@@ -45,7 +46,13 @@ options:
                         Output directory for converted models (default: ./converted_models)
   -c CACHE, --cache CACHE
                         Cache directory for downloaded weights (default: ~/.cache/torch/hub/checkpoints)
+  --datasets-config DATASETS_CONFIG
+                        Path to datasets configuration JSON file (default: presets/datasets.json)
   --model MODEL         Process only the specified model (by model_short_name)
+  --library LIBRARY     Comma-separated list of model libraries to process (e.g., getitune,timm)
+  --report [PATH]       Generate a conversion summary report. Pass the flag alone to write to
+                        <output>/conversion_report.md, or provide a PATH to override the location.
+                        The report is printed to the console and saved as Markdown.
   --list                List all models in the configuration file and exit
   -v, --verbose         Enable verbose logging
 ```
@@ -82,6 +89,65 @@ uv run model-converter examples/config.json -o ./output -c ./my_cache
 uv run model-converter examples/config.json -o ./output -v
 ```
 
+**Generate a conversion summary report:**
+
+```bash
+# Write the report to <output>/conversion_report.md
+uv run model-converter examples/config.json -o ./output --report
+
+# Write the report to a custom path
+uv run model-converter examples/config.json -o ./output --report ./reports/summary.md
+```
+
+## Conversion Summary Report
+
+Passing `--report` produces a summary of every processed model. The report is
+printed to the console **and** saved as a Markdown file (default
+`<output>/conversion_report.md`, or the path given to `--report`).
+
+The report contains one row per model with the following columns:
+
+| Column            | Description                                                                                       |
+| ----------------- | ------------------------------------------------------------------------------------------------- |
+| Model Full Name   | Human-readable model name (`model_full_name`).                                                    |
+| Model Type        | Task/architecture type (e.g. `Classification`, `SSD`).                                            |
+| Model Library     | Source library (`torchvision`, `timm`, `yolo`, `getitune`).                                       |
+| Original URL      | Exact download URL — `weights_url` or the Hugging Face repository URL; `N/A` when not applicable. |
+| Original Accuracy | Top-1 accuracy of the original PyTorch model (before OpenVINO conversion), or `N/A`.              |
+| FP32 Accuracy     | Top-1 accuracy of the FP32 model, or `N/A` when not measured.                                     |
+| FP16 Accuracy     | Top-1 accuracy of the FP16 model, or `N/A` when not measured.                                     |
+| INT8 Accuracy     | Top-1 accuracy of the quantized INT8 model, or `N/A` when not measured.                           |
+| Status            | Outcome of the conversion (see below).                                                            |
+
+Accuracy is measured only for classification models that define `labels`, over the
+calibration subset. The original accuracy is computed by running the source PyTorch
+model on the same preprocessed validation images, so it is directly comparable to the
+FP32/FP16/INT8 numbers. Models without measurable accuracy report `N/A` and a status of
+`OK (no accuracy data)`.
+
+### Status values
+
+| Status                  | Meaning                                                                            |
+| ----------------------- | ---------------------------------------------------------------------------------- |
+| `OK`                    | Converted, accuracy measured, all drops within 5%.                                 |
+| `OK (no accuracy data)` | Converted (FP16 + INT8) but no accuracy could be measured.                         |
+| `ACCURACY DROP >5%`     | Original→FP32, FP16, or INT8 top-1 accuracy dropped more than 5 percentage points. |
+| `FAILED: conversion`    | Model load or export failed (no FP16 produced).                                    |
+| `FAILED: quantization`  | FP16 produced but the INT8 model was not produced.                                 |
+| `SKIPPED`               | FP16 and INT8 models already existed, so processing was skipped.                   |
+
+### Sample report
+
+```markdown
+# Conversion Summary Report
+
+| Model Full Name | Model Type     | Model Library | Original URL                                     | Original Accuracy | FP32 Accuracy | FP16 Accuracy | INT8 Accuracy | Status                |
+| --------------- | -------------- | ------------- | ------------------------------------------------ | ----------------- | ------------- | ------------- | ------------- | --------------------- |
+| ResNet-50       | Classification | torchvision   | https://download.pytorch.org/models/resnet50.pth | 80.20%            | 80.12%        | 80.10%        | 79.85%        | OK                    |
+| EfficientNet-B0 | Classification | timm          | https://huggingface.co/timm/efficientnet_b0      | 77.72%            | 77.70%        | 77.65%        | 70.10%        | ACCURACY DROP >5%     |
+| YOLO11n         | YOLO11         | yolo          | N/A                                              | N/A               | N/A           | N/A           | N/A           | OK (no accuracy data) |
+```
+
 ## Configuration File Format
 
 The configuration file is a JSON file with the following structure:
@@ -101,7 +167,8 @@ The configuration file is a JSON file with the following structure:
       "input_names": ["images"],
       "output_names": ["output"],
       "model_params": null,
-      "model_type": "Classification"
+      "model_type": "Classification",
+      "dataset_type": "imagenet-1k"
     }
   ]
 }
@@ -115,6 +182,36 @@ Common `model_type` values:
 - `"DetectionModel"` - Object detection models
 - `"YOLOX"` - YOLOX detection models
 - `"SegmentationModel"` - Segmentation models
+
+### Dataset Configuration
+
+The converter uses a separate `datasets.json` file to map dataset types to local filesystem paths. This allows model configurations to remain portable across different environments.
+
+**datasets.json format:**
+
+```json
+{
+  "datasets": {
+    "imagenet-1k": "/path/to/imagenet/validation",
+    "imagenet-21k": "/path/to/imagenet21k/validation",
+    "coco-detection": "/path/to/coco2017/val2017",
+    "coco-segmentation": "/path/to/coco2017/val2017"
+  }
+}
+```
+
+Models that require calibration for INT8 quantization should specify a `dataset_type` field that matches one of the keys in `datasets.json`:
+
+```json
+{
+  "model_short_name": "efficientnet_b0",
+  "model_type": "Classification",
+  "dataset_type": "imagenet-1k",
+  ...
+}
+```
+
+If a model does not specify a `dataset_type`, INT8 quantization will be skipped for that model.
 
 ### Configuration Fields
 
@@ -141,3 +238,4 @@ For Hugging Face-backed models, use these required fields instead of `model_clas
 - **`output_names`** (array of strings): Names for output tensors (default: auto-generated)
 - **`model_params`** (object): Parameters to pass to model constructor (default: `null`)
 - **`model_type`** (string): Model type for model_api auto-detection (e.g., `"Classification"`, `"DetectionModel"`, `"YOLOX"`, etc.)
+- **`dataset_type`** (string): Dataset type identifier that maps to a path in `datasets.json` (e.g., `"imagenet-1k"`, `"coco-detection"`). Required for INT8 quantization. If omitted, quantization is skipped for this model.

@@ -1,0 +1,9 @@
+{
+  "datasets": {
+    "imagenet-1k": "/path/to/imagenet1k",
+    "imagenet-21k": "/path/to/imagenet21k",
+    "coco-detection": "/path/to/coco-detection",
+    "ade20k": "/path/to/ade20k",
+    "coco-segmentation": "/path/to/coco-segmentation"
+  }
+}
