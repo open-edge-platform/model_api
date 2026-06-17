@@ -77,7 +77,7 @@ def read_config(fname):
         return json.load(f)
 
 
-def create_models(model_type, model_path, download_dir, force_onnx_adapter=False, device="CPU", configuration=None):
+def create_models(model_type, model_path, download_dir, force_onnx_adapter=False, device="CPU", configuration=None, dump: bool=False):
     if model_path.endswith(".onnx") and force_onnx_adapter:
         wrapper_type = model_type.get_model_class(
             load_parameters_from_onnx(onnx.load(model_path))["model_info"]["model_type"],
@@ -96,7 +96,7 @@ def create_models(model_type, model_path, download_dir, force_onnx_adapter=False
     models = [
         model_type.create_model(model_path, device=device, download_dir=download_dir, configuration=configuration),
     ]
-    if model_path.endswith(".xml"):
+    if model_path.endswith(".xml") and not dump:
         model = create_core().read_model(model_path)
         if model.has_rt_info(["model_info", "model_type"]):
             wrapper_type = model_type.get_model_class(
@@ -289,6 +289,7 @@ def test_image_models(data, device, dump, result, model_data, results_dir):  # n
         model_data.get("force_ort", False),
         device=device,
         configuration=model_data.get("configuration", None),
+        dump=dump,
     ):
         if "tiler" in model_data:
             if "extra_model" in model_data:
@@ -378,10 +379,12 @@ def test_image_models(data, device, dump, result, model_data, results_dir):  # n
             store_outputs(name, image, device, outputs, results_dir)
 
             if isinstance(outputs, ClassificationResult):
-                compare_classification_result(outputs, test_data["reference"])
+                if not dump:
+                    compare_classification_result(outputs, test_data["reference"])
                 image_result = create_classification_result_dump(outputs)
             elif type(outputs) is DetectionResult:
-                compare_detection_result(outputs, test_data["reference"])
+                if not dump:
+                    compare_detection_result(outputs, test_data["reference"])
                 image_result = create_detection_result_dump(outputs)
             elif isinstance(outputs, ImageResultWithSoftPrediction):
                 assert len(test_data["reference"]) == 1
@@ -393,25 +396,29 @@ def test_image_models(data, device, dump, result, model_data, results_dir):  # n
                 for contour in contours:
                     contour_str += str(contour) + ", "
                 output_str = str(outputs) + contour_str
-                assert test_data["reference"][0] == output_str
+                if not dump:
+                    assert test_data["reference"][0] == output_str
                 image_result = [output_str]
             elif type(outputs) is InstanceSegmentationResult:
-                assert len(test_data["reference"]) == 1
                 output_str = str(add_rotated_rects(outputs)) + "; "
                 with contextlib.suppress(RuntimeError):
                     # getContours() assumes each instance generates only one contour.
                     # That doesn't hold for some models
                     output_str += "; ".join(str(contour) for contour in get_contours(outputs)) + "; "
-                assert test_data["reference"][0] == output_str
+                if not dump:
+                    assert len(test_data["reference"]) == 1
+                    assert test_data["reference"][0] == output_str
                 image_result = [output_str]
             elif isinstance(outputs, AnomalyResult):
-                assert len(test_data["reference"]) == 1
                 output_str = str(outputs)
-                assert test_data["reference"][0] == output_str
+                if not dump:
+                    assert len(test_data["reference"]) == 1
+                    assert test_data["reference"][0] == output_str
                 image_result = [output_str]
             elif isinstance(outputs, (ZSLVisualPromptingResult, VisualPromptingResult, DetectedKeypoints)):
                 output_str = str(outputs)
-                assert test_data["reference"][0] == output_str
+                if not dump:
+                    assert test_data["reference"][0] == output_str
                 image_result = [output_str]
             else:
                 pytest.fail(f"Unexpected output type: {type(outputs)}")
