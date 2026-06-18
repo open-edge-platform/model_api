@@ -314,6 +314,15 @@ class BaseConverter(ABC):
             categories = [label.replace(" ", "_") for label in categories]
             return " ".join(categories)
 
+        if label_set == "COCO_80":
+            from torchvision.models.detection import MaskRCNN_ResNet50_FPN_Weights
+
+            from model_converter.metrics.coco_detection import COCO80_TO_COCO91
+
+            categories = MaskRCNN_ResNet50_FPN_Weights.COCO_V1.meta["categories"]
+            categories = [categories[cat_id].replace(" ", "_") for cat_id in COCO80_TO_COCO91]
+            return " ".join(categories)
+
         return None
 
     def _collect_dataset_entries(

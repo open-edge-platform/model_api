@@ -97,8 +97,16 @@ class TestTorchvisionMaskRCNNExportAdapter:
         assert labels.shape == (10,)
         assert masks.shape == (10, 28, 28)  # squeezed from (10, 1, 28, 28)
 
-        # Labels should be shifted by -1
-        expected_labels = mock_predictions[0]["labels"] - 1
+        # Labels should be remapped from COCO 91-class IDs to 80-class indices
+        from model_converter.metrics.coco_detection import COCO91_TO_COCO80
+
+        expected_labels = torch.tensor(
+            [
+                COCO91_TO_COCO80[int(cat_id)] if COCO91_TO_COCO80[int(cat_id)] is not None else 0
+                for cat_id in mock_predictions[0]["labels"]
+            ],
+            dtype=torch.int64,
+        )
         assert torch.equal(labels, expected_labels)
 
     def test_forward_with_tensor_features(self):
