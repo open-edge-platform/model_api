@@ -5,19 +5,14 @@
 
 """Getitune (training_extensions) model converter."""
 
-import json
 import shutil
 import subprocess  # nosec B404 — fixed-argv invocation of `uv run`, no shell, no untrusted input
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from model_converter.converters.base import BaseConverter
-from model_converter.metrics import TopOneAccuracy
 from model_converter.reporting import AccuracyResults
-
-if TYPE_CHECKING:
-    from model_converter.datasets import CalibrationSample
 
 
 class GetituneConverter(BaseConverter):
@@ -51,13 +46,7 @@ class GetituneConverter(BaseConverter):
         """
         model_short_name = config.get("model_short_name", "unknown")
 
-        # Check if both FP16 and INT8 models already exist
-        fp16_model_path = self.output_dir / f"{model_short_name}-fp16-ov" / f"{model_short_name}.xml"
-        int8_model_path = self.output_dir / f"{model_short_name}-int8-ov" / f"{model_short_name}.xml"
-
-        if fp16_model_path.exists() and int8_model_path.exists():
-            self.logger.info(f"Skipping {model_short_name}: FP16 and INT8 models already exist")
-            self._record_result(self._build_result(config), converted=False, quantized=False, skipped=True)
+        if self._skip_if_already_converted(config, model_short_name):
             return True
 
         try:
@@ -72,22 +61,9 @@ class GetituneConverter(BaseConverter):
                 error_msg = f"training_extensions directory not found: {self.training_extensions_dir}"
                 raise FileNotFoundError(error_msg)
 
-            model_license = config.get("license")
-            model_license_link = config.get("license_link")
+            self._validate_license(config, model_short_name)
 
-            if not model_license:
-                error_msg = f"Model '{model_short_name}' must define 'license' in configuration"
-                raise ValueError(error_msg)
-            if not model_license_link:
-                error_msg = f"Model '{model_short_name}' must define 'license_link' in configuration"
-                raise ValueError(error_msg)
-
-            self.logger.info("=" * 80)
-            self.logger.info(f"Processing getitune model: {config.get('model_full_name', model_short_name)}")
-            self.logger.info(f"Short name: {model_short_name}")
-            if "description" in config:
-                self.logger.info(f"Description: {config['description']}")
-            self.logger.info("=" * 80)
+            self._log_model_banner(config, model_short_name, label="getitune model")
 
             # Export model using training_extensions script
             exported_model_path = self._run_export(config)
@@ -101,24 +77,15 @@ class GetituneConverter(BaseConverter):
             if quantization_attempted:
                 accuracy = self._quantize_exported_model(config)
 
-            quantized = accuracy.int8_succeeded if quantization_attempted and accuracy is not None else True
-            self._record_result(
-                self._build_result(config),
-                converted=True,
-                quantized=quantized,
+            return self._finalize_success(
+                config,
+                model_short_name,
                 accuracy=accuracy,
+                quantization_attempted=quantization_attempted,
             )
 
-            self.logger.info(f"✓ Successfully converted {model_short_name}")
-            return True
-
         except (ValueError, RuntimeError, FileNotFoundError, OSError, subprocess.CalledProcessError) as e:
-            self.logger.error(f"✗ Failed to process getitune model {model_short_name}: {e}")
-            self._record_result(self._build_result(config), converted=False, quantized=False)
-            import traceback
-
-            self.logger.debug(traceback.format_exc())
-            return False
+            return self._record_failure(config, model_short_name, e, label="getitune model")
 
     def _run_export(self, config: dict[str, Any]) -> Path:
         """Run the export_pretrained_models.py script.
@@ -255,15 +222,12 @@ class GetituneConverter(BaseConverter):
             core = ov.Core()
             model = core.read_model(target_xml)
             model_info = model.get_rt_info(["model_info"]).value
-            with (output_folder / "config.json").open("w") as f:
-                json.dump(model_info, f, indent=4)
+            self._write_config_json(output_folder, model_info)
         except (ImportError, RuntimeError, KeyError) as e:
             self.logger.warning(f"Could not extract model_info metadata: {e}")
 
         # Copy .gitattributes file
-        gitattributes_template = Path(__file__).parent.parent / "templates" / ".gitattributes"
-        if gitattributes_template.exists():
-            shutil.copy2(gitattributes_template, output_folder / ".gitattributes")
+        self._copy_gitattributes(output_folder)
 
         # Copy README
         self.copy_readme(config, output_folder, variant="fp16")
@@ -390,10 +354,7 @@ class GetituneConverter(BaseConverter):
         # (multilabel mAP, COCO mAP, mIoU) flow through Model API via
         # :meth:`_measure_metric` with raw image samples.
         dataset_path = self._resolve_dataset_path(config)
-        metric = self._metric_for_config(config, dataset_path) if self.measure_accuracy else None
-        is_top1 = isinstance(metric, TopOneAccuracy)
-        if metric is not None:
-            accuracy.metric_name = metric.name
+        metric, is_top1 = self._select_accuracy_metric(config, dataset_path, accuracy)
 
         self.logger.info("Creating calibration dataset for INT8 quantization")
         if is_top1:
@@ -410,16 +371,12 @@ class GetituneConverter(BaseConverter):
             dataset_type=config.get("dataset_type"),
         )
 
-        validation_samples: "list[CalibrationSample] | None" = None
-        if metric is not None and not is_top1:
-            validation_samples = (
-                self._collect_validation_samples(
-                    dataset_path,
-                    config.get("dataset_type"),
-                    subset_size=500,
-                )
-                or None
-            )
+        validation_samples = self._collect_metric_validation_samples(
+            metric,
+            is_top1,
+            dataset_path,
+            config.get("dataset_type"),
+        )
 
         if calibration_data:
             self.quantize_model(
@@ -435,16 +392,7 @@ class GetituneConverter(BaseConverter):
             )
 
         # Clean up temporary FP32 model after quantization
-        try:
-            fp32_path = self.output_dir / f"{model_short_name}-fp16-ov" / f"{model_short_name}_fp32.xml"
-            if fp32_path.exists():
-                fp32_path.unlink()
-                self.logger.debug(f"Removed temporary FP32 model: {fp32_path}")
-            fp32_bin_path = fp32_path.with_suffix(".bin")
-            if fp32_bin_path.exists():
-                fp32_bin_path.unlink()
-                self.logger.debug(f"Removed temporary FP32 weights: {fp32_bin_path}")
-        except OSError as e:
-            self.logger.warning(f"Failed to remove temporary FP32 files: {e}")
+        fp32_path = self.output_dir / f"{model_short_name}-fp16-ov" / f"{model_short_name}_fp32.xml"
+        self._cleanup_fp32(fp32_path)
 
         return accuracy

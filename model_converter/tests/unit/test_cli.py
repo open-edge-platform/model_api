@@ -498,7 +498,7 @@ class TestExportToOpenvino:
             patch("openvino.convert_model", return_value=mock_ov_model),
             patch("openvino.save_model") as mock_save,
             patch.object(Path, "exists", return_value=True),
-            patch("model_converter.converters.pytorch.shutil.copy2"),
+            patch("model_converter.converters.base.shutil.copy2"),
             patch.object(converter, "copy_readme"),
         ):
             fp16_path, fp32_path = converter.export_to_openvino(

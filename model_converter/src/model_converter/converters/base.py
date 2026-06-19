@@ -119,6 +119,128 @@ class BaseConverter(ABC):
             original_url=original_url_for_config(config),
         )
 
+    def _skip_if_already_converted(
+        self,
+        config: dict[str, Any],
+        model_short_name: str,
+        xml_stem: str | None = None,
+    ) -> bool:
+        """Record a skip and return ``True`` when FP16 and INT8 models both exist.
+
+        ``xml_stem`` overrides the ``.xml`` file name inside the variant folders
+        (defaults to ``model_short_name``); YOLO uses the Ultralytics
+        ``yolo_version`` here.
+        """
+        xml_stem = xml_stem or model_short_name
+        fp16_model_path = self.output_dir / f"{model_short_name}-fp16-ov" / f"{xml_stem}.xml"
+        int8_model_path = self.output_dir / f"{model_short_name}-int8-ov" / f"{xml_stem}.xml"
+        if fp16_model_path.exists() and int8_model_path.exists():
+            self.logger.info(f"Skipping {model_short_name}: FP16 and INT8 models already exist")
+            self._record_result(self._build_result(config), converted=False, quantized=False, skipped=True)
+            return True
+        return False
+
+    def _validate_license(self, config: dict[str, Any], model_short_name: str) -> None:
+        """Raise ``ValueError`` when ``license`` or ``license_link`` is missing."""
+        if not config.get("license"):
+            error_msg = f"Model '{model_short_name}' must define 'license' in configuration"
+            raise ValueError(error_msg)
+        if not config.get("license_link"):
+            error_msg = f"Model '{model_short_name}' must define 'license_link' in configuration"
+            raise ValueError(error_msg)
+
+    def _log_model_banner(self, config: dict[str, Any], model_short_name: str, *, label: str = "model") -> None:
+        """Log the ``"=" * 80`` processing banner shared by the converters."""
+        self.logger.info("=" * 80)
+        self.logger.info(f"Processing {label}: {config.get('model_full_name', model_short_name)}")
+        self.logger.info(f"Short name: {model_short_name}")
+        if "description" in config:
+            self.logger.info(f"Description: {config['description']}")
+        self.logger.info("=" * 80)
+
+    def _finalize_success(
+        self,
+        config: dict[str, Any],
+        model_short_name: str,
+        *,
+        accuracy: "AccuracyResults | None",
+        quantization_attempted: bool,
+    ) -> bool:
+        """Record a successful conversion result and log it; always returns ``True``."""
+        quantized = accuracy.int8_succeeded if quantization_attempted and accuracy is not None else True
+        self._record_result(
+            self._build_result(config),
+            converted=True,
+            quantized=quantized,
+            accuracy=accuracy,
+        )
+        self.logger.info(f"✓ Successfully converted {model_short_name}")
+        return True
+
+    def _record_failure(
+        self,
+        config: dict[str, Any],
+        model_short_name: str,
+        error: Exception,
+        *,
+        label: str = "model",
+    ) -> bool:
+        """Log a conversion failure, record a failed result, and return ``False``."""
+        import traceback
+
+        self.logger.error(f"✗ Failed to process {label} {model_short_name}: {error}")
+        self._record_result(self._build_result(config), converted=False, quantized=False)
+        self.logger.debug(traceback.format_exc())
+        return False
+
+    def _select_accuracy_metric(
+        self,
+        config: dict[str, Any],
+        dataset_path: Path | None,
+        accuracy: "AccuracyResults",
+    ) -> "tuple[Metric | None, bool]":
+        """Resolve the metric for a config and flag whether it is top-1.
+
+        Returns ``(metric, is_top1)``. ``metric`` is ``None`` when accuracy
+        measurement is disabled or no metric applies. When a metric is found its
+        ``name`` is copied onto ``accuracy``.
+        """
+        from model_converter.metrics import TopOneAccuracy
+
+        metric = self._metric_for_config(config, dataset_path) if self.measure_accuracy else None
+        if metric is not None:
+            accuracy.metric_name = metric.name
+        return metric, isinstance(metric, TopOneAccuracy)
+
+    def _collect_metric_validation_samples(
+        self,
+        metric: "Metric | None",
+        is_top1: bool,
+        dataset_path: Path | None,
+        dataset_type: str | None,
+    ) -> "list[CalibrationSample] | None":
+        """Collect raw validation samples for Model API-based metrics, else ``None``.
+
+        Top-1 classification and the no-metric case use the preprocessed-tensor
+        path and do not need raw samples.
+        """
+        if metric is None or is_top1:
+            return None
+        return self._collect_validation_samples(dataset_path, dataset_type, subset_size=500) or None
+
+    def _cleanup_fp32(self, fp32_model_path: Path) -> None:
+        """Remove the temporary FP32 ``.xml``/``.bin`` pair used for quantization."""
+        try:
+            if fp32_model_path.exists():
+                fp32_model_path.unlink()
+                self.logger.debug(f"Removed temporary FP32 model: {fp32_model_path}")
+            fp32_bin_path = fp32_model_path.with_suffix(".bin")
+            if fp32_bin_path.exists():
+                fp32_bin_path.unlink()
+                self.logger.debug(f"Removed temporary FP32 weights: {fp32_bin_path}")
+        except OSError as e:
+            self.logger.warning(f"Failed to remove temporary FP32 files: {e}")
+
     def _metric_for_config(
         self,
         config: dict[str, Any],
@@ -652,6 +774,30 @@ class BaseConverter(ABC):
             metric.update(pred_mask, gt_mask)
 
     @staticmethod
+    def _build_coco_prediction(
+        image_id: Any,
+        label: Any,
+        bbox_xyxy: Any,
+        score: Any,
+    ) -> dict[str, Any]:
+        """Build one COCO-format prediction dict from an xyxy box and 80-class label.
+
+        The 0-79 ``label`` index is mapped to the original COCO 91-class category
+        ID via :data:`COCO80_TO_COCO91`; out-of-range indices fall back to
+        ``label + 1``. The ``[x_min, y_min, x_max, y_max]`` box is converted to
+        COCO ``[x, y, w, h]`` format.
+        """
+        x_min, y_min, x_max, y_max = (float(v) for v in bbox_xyxy)
+        n = int(label)
+        coco_cat_id = COCO80_TO_COCO91[n] if n < len(COCO80_TO_COCO91) else n + 1
+        return {
+            "image_id": int(image_id),
+            "category_id": coco_cat_id,
+            "bbox": [x_min, y_min, x_max - x_min, y_max - y_min],
+            "score": float(score),
+        }
+
+    @staticmethod
     def _feed_bbox_predictions(
         metric: "CocoDetectionMAP",
         result: Any,
@@ -662,19 +808,11 @@ class BaseConverter(ABC):
         scores = getattr(result, "scores", None)
         if bboxes is None or labels is None or scores is None:
             return
-        preds: list[dict[str, Any]] = []
-        for bbox, label, score in zip(bboxes, labels, scores):
-            x_min, y_min, x_max, y_max = (float(v) for v in bbox)
-            n = int(label)
-            coco_cat_id = COCO80_TO_COCO91[n] if n < len(COCO80_TO_COCO91) else n + 1
-            preds.append(
-                {
-                    "image_id": int(sample.image_id) if sample.image_id is not None else 0,
-                    "category_id": coco_cat_id,
-                    "bbox": [x_min, y_min, x_max - x_min, y_max - y_min],
-                    "score": float(score),
-                },
-            )
+        image_id = sample.image_id if sample.image_id is not None else 0
+        preds = [
+            BaseConverter._build_coco_prediction(image_id, label, bbox, score)
+            for bbox, label, score in zip(bboxes, labels, scores)
+        ]
         metric.update(predictions=preds)
 
     def quantize_model(
@@ -762,8 +900,7 @@ class BaseConverter(ABC):
                 accuracy_results.int8_succeeded = True
 
             # Save model_info as config.json to track downloads
-            with (output_folder / "config.json").open("w") as f:
-                json.dump(quantized_model.get_rt_info(["model_info"]).value, f, indent=4)
+            self._write_config_json(output_folder, quantized_model.get_rt_info(["model_info"]).value)
 
             # Validate accuracy if validation data provided.
             # Two paths: (1) Top-1 classification uses preprocessed validation_data + labels via raw
@@ -827,10 +964,7 @@ class BaseConverter(ABC):
                     accuracy_results.measured = True
 
             # Copy .gitattributes file
-            gitattributes_template = Path(__file__).parent.parent / "templates" / ".gitattributes"
-            if gitattributes_template.exists():
-                shutil.copy2(gitattributes_template, output_folder / ".gitattributes")
-                self.logger.debug(f"Copied .gitattributes to: {output_folder}")
+            self._copy_gitattributes(output_folder)
 
             # Copy README for INT8 model
             self.copy_readme(
@@ -850,6 +984,19 @@ class BaseConverter(ABC):
 
             self.logger.debug(traceback.format_exc())
             return model_path
+
+    def _copy_gitattributes(self, output_folder: Path) -> None:
+        """Copy the shared ``.gitattributes`` template into ``output_folder`` if present."""
+        gitattributes_template = Path(__file__).parent.parent / "templates" / ".gitattributes"
+        if gitattributes_template.exists():
+            shutil.copy2(gitattributes_template, output_folder / ".gitattributes")
+            self.logger.debug(f"Copied .gitattributes to: {output_folder}")
+
+    @staticmethod
+    def _write_config_json(output_folder: Path, model_info: Any) -> None:
+        """Write ``model_info`` rt_info as ``config.json`` to track downloads."""
+        with (output_folder / "config.json").open("w") as f:
+            json.dump(model_info, f, indent=4)
 
     @staticmethod
     def _metadata_value(value: Any) -> str:
