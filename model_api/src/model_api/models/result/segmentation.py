@@ -220,6 +220,8 @@ class ImageResultWithSoftPrediction(Result):
 
     def __str__(self):
         hist = ", ".join([f"{idx}: {value:.3f}" for idx, value in self.hist().items()])
+        if hist:
+            hist += ", "
         return (
             f"{hist}{array_shape_to_str(self.soft_prediction)}, "
             f"{array_shape_to_str(self.saliency_map)}, "
