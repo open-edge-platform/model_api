@@ -5,9 +5,75 @@
     "test_data": [
       {
         "image": "coco128/images/train2017/000000000074.jpg",
-        "reference": [
-          "0: 0.537, 1: 0.463, [426,640,2], [0], [0]; object: 0.675, 508, 0, object: 0.530, 65, 1, object: 0.507, 18, 0, object: 0.624, 144, 0, object: 0.538, 67, 0, object: 0.507, 15, 0, object: 0.518, 41, 0, object: 0.507, 8, 0, object: 0.505, 14, 0, object: 0.885, 2138, 2, "
-        ]
+        "reference": {
+          "hist": {
+            "0": 0.5366637323943662,
+            "1": 0.4633362676056338
+          },
+          "soft_prediction_shape": [426, 640, 2],
+          "contours": [
+            {
+              "label": "object",
+              "probability": 0.8850233982270691,
+              "length": 2138,
+              "num_children": 2
+            },
+            {
+              "label": "object",
+              "probability": 0.6753585171194935,
+              "length": 508,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.6237598032671577,
+              "length": 144,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.537959021894939,
+              "length": 67,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.5298263802564234,
+              "length": 65,
+              "num_children": 1
+            },
+            {
+              "label": "object",
+              "probability": 0.5179787927096889,
+              "length": 41,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.5074133746551746,
+              "length": 18,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.5073340755921822,
+              "length": 15,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.5069852897099086,
+              "length": 8,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.5045926736460792,
+              "length": 14,
+              "num_children": 0
+            }
+          ]
+        }
       }
     ]
   },
@@ -17,9 +83,45 @@
     "test_data": [
       {
         "image": "coco128/images/train2017/000000000074.jpg",
-        "reference": [
-          "0: 0.992, 1: 0.008, [426,640,2], [0], [0]; object: 0.555, 112, 0, object: 0.506, 17, 0, object: 0.555, 154, 0, object: 0.511, 19, 0, object: 0.514, 52, 0, "
-        ]
+        "reference": {
+          "hist": {
+            "0": 0.9924992664319249,
+            "1": 0.007500733568075117
+          },
+          "soft_prediction_shape": [426, 640, 2],
+          "contours": [
+            {
+              "label": "object",
+              "probability": 0.5552073366346613,
+              "length": 154,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.5550735299827672,
+              "length": 112,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.5139730864001396,
+              "length": 52,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.5106937510626657,
+              "length": 19,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.5060466943365155,
+              "length": 17,
+              "num_children": 0
+            }
+          ]
+        }
       }
     ]
   },
@@ -29,9 +131,81 @@
     "test_data": [
       {
         "image": "coco128/images/train2017/000000000074.jpg",
-        "reference": [
-          "0: 0.563, 1: 0.437, [426,640,2], [0], [0]; object: 0.520, 26, 0, object: 0.530, 42, 0, object: 0.501, 4, 0, object: 0.507, 27, 0, object: 0.503, 8, 0, object: 0.502, 6, 0, object: 0.505, 18, 0, object: 0.504, 13, 0, object: 0.524, 87, 0, object: 0.521, 89, 0, object: 0.757, 2706, 2, "
-        ]
+        "reference": {
+          "hist": {
+            "0": 0.5627530809859155,
+            "1": 0.4372469190140845
+          },
+          "soft_prediction_shape": [426, 640, 2],
+          "contours": [
+            {
+              "label": "object",
+              "probability": 0.7571414171173731,
+              "length": 2706,
+              "num_children": 2
+            },
+            {
+              "label": "object",
+              "probability": 0.5299241416097626,
+              "length": 42,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.5243839968423374,
+              "length": 87,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.5214916930116456,
+              "length": 89,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.5197155945228809,
+              "length": 26,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.5070827367405096,
+              "length": 27,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.5048428368568421,
+              "length": 18,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.503517277100507,
+              "length": 13,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.5028394924269782,
+              "length": 8,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.5021905700365702,
+              "length": 6,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.5008948147296906,
+              "length": 4,
+              "num_children": 0
+            }
+          ]
+        }
       }
     ]
   },
@@ -47,9 +221,81 @@
     "test_data": [
       {
         "image": "coco128/images/train2017/000000000074.jpg",
-        "reference": [
-          "0: 0.563, 1: 0.437, [426,640,2], [0], [0]; object: 0.520, 26, 0, object: 0.530, 42, 0, object: 0.501, 4, 0, object: 0.507, 27, 0, object: 0.503, 8, 0, object: 0.502, 6, 0, object: 0.505, 18, 0, object: 0.504, 13, 0, object: 0.524, 87, 0, object: 0.521, 89, 0, object: 0.757, 2706, 2, "
-        ]
+        "reference": {
+          "hist": {
+            "0": 0.5627530809859155,
+            "1": 0.4372469190140845
+          },
+          "soft_prediction_shape": [426, 640, 2],
+          "contours": [
+            {
+              "label": "object",
+              "probability": 0.7571414171173731,
+              "length": 2706,
+              "num_children": 2
+            },
+            {
+              "label": "object",
+              "probability": 0.5299241416097626,
+              "length": 42,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.5243839968423374,
+              "length": 87,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.5214916930116456,
+              "length": 89,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.5197155945228809,
+              "length": 26,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.5070827367405096,
+              "length": 27,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.5048428368568421,
+              "length": 18,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.503517277100507,
+              "length": 13,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.5028394924269782,
+              "length": 8,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.5021905700365702,
+              "length": 6,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.5008948147296906,
+              "length": 4,
+              "num_children": 0
+            }
+          ]
+        }
       }
     ]
   },
@@ -59,9 +305,81 @@
     "test_data": [
       {
         "image": "coco128/images/train2017/000000000074.jpg",
-        "reference": [
-          "0: 0.563, 1: 0.437, [426,640,2], [0], [0]; object: 0.520, 26, 0, object: 0.530, 42, 0, object: 0.501, 4, 0, object: 0.507, 27, 0, object: 0.503, 8, 0, object: 0.502, 6, 0, object: 0.505, 18, 0, object: 0.504, 13, 0, object: 0.524, 87, 0, object: 0.521, 89, 0, object: 0.757, 2706, 2, "
-        ]
+        "reference": {
+          "hist": {
+            "0": 0.5627530809859155,
+            "1": 0.4372469190140845
+          },
+          "soft_prediction_shape": [426, 640, 2],
+          "contours": [
+            {
+              "label": "object",
+              "probability": 0.7571414171173731,
+              "length": 2706,
+              "num_children": 2
+            },
+            {
+              "label": "object",
+              "probability": 0.5299241416097626,
+              "length": 42,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.5243839968423374,
+              "length": 87,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.5214916930116456,
+              "length": 89,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.5197155945228809,
+              "length": 26,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.5070827367405096,
+              "length": 27,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.5048428368568421,
+              "length": 18,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.503517277100507,
+              "length": 13,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.5028394924269782,
+              "length": 8,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.5021905700365702,
+              "length": 6,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.5008948147296906,
+              "length": 4,
+              "num_children": 0
+            }
+          ]
+        }
       }
     ]
   },
@@ -72,9 +390,69 @@
     "test_data": [
       {
         "image": "coco128/images/train2017/000000000074.jpg",
-        "reference": [
-          "0: 0.561, 1: 0.439, [426,640,2], [0], [0]; object: 0.519, 26, 0, object: 0.531, 42, 0, object: 0.502, 21, 0, object: 0.505, 9, 0, object: 0.501, 4, 0, object: 0.509, 22, 0, object: 0.524, 85, 0, object: 0.520, 93, 0, object: 0.757, 2564, 3, "
-        ]
+        "reference": {
+          "hist": {
+            "0": 0.5607577758215962,
+            "1": 0.43924222417840375
+          },
+          "soft_prediction_shape": [426, 640, 2],
+          "contours": [
+            {
+              "label": "object",
+              "probability": 0.756655582516119,
+              "length": 2564,
+              "num_children": 3
+            },
+            {
+              "label": "object",
+              "probability": 0.5306053400039673,
+              "length": 42,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.5242160468073616,
+              "length": 85,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.5202652068482232,
+              "length": 93,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.519208163022995,
+              "length": 26,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.5091089171667893,
+              "length": 22,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.5051479041576385,
+              "length": 9,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.5022344902942055,
+              "length": 21,
+              "num_children": 0
+            },
+            {
+              "label": "object",
+              "probability": 0.5010206898053486,
+              "length": 4,
+              "num_children": 0
+            }
+          ]
+        }
       }
     ]
   },
@@ -616,9 +994,21 @@
     "test_data": [
       {
         "image": "coco128/images/train2017/000000000074.jpg",
-        "reference": [
-          "0: 1.000, 1: 0.000, [426,640,3], [426,640,3], [1,600,1,1]; backpack: 0.505, 2, 0, "
-        ]
+        "reference": {
+          "hist": {
+            "0": 0.9999926643192488,
+            "1": 7.335680751173709e-6
+          },
+          "soft_prediction_shape": [426, 640, 3],
+          "contours": [
+            {
+              "label": "backpack",
+              "probability": 0.5046117305755615,
+              "length": 2,
+              "num_children": 0
+            }
+          ]
+        }
       }
     ]
   },
@@ -772,9 +1162,201 @@
     "test_data": [
       {
         "image": "coco128/images/train2017/000000000074.jpg",
-        "reference": [
-          "0: 0.272, 1: 0.728, [3500,3500,5], [0], [0]; background: 1.404, 311, 0, background: 1.397, 44, 0, background: 1.371, 34, 0, background: 1.377, 12, 0, background: 1.356, 155, 0, background: 1.345, 12, 0, background: 1.183, 219, 0, background: 1.524, 8, 0, background: 1.533, 4, 0, background: 1.519, 2, 0, background: 1.524, 4, 0, background: 1.530, 6, 0, background: 1.537, 2, 0, background: 1.514, 4, 0, background: 1.519, 8, 0, background: 1.529, 6, 0, background: 1.550, 6, 0, background: 1.558, 4, 0, background: 1.520, 2, 0, background: 1.529, 4, 0, background: 1.532, 6, 0, background: 1.535, 6, 0, background: 1.530, 2, 0, background: 1.529, 50, 0, background: 1.528, 22, 0, background: 1.527, 38, 0, background: 1.451, 1476, 0, background: 1.344, 2743, 9, background: 1.609, 2987, 1, background: 1.398, 20, 0, background: 1.644, 29909, 8, "
-        ]
+        "reference": {
+          "hist": {
+            "0": 0.2722332244897959,
+            "1": 0.7277667755102041
+          },
+          "soft_prediction_shape": [3500, 3500, 5],
+          "contours": [
+            {
+              "label": "background",
+              "probability": 1.6440972197774382,
+              "length": 29909,
+              "num_children": 8
+            },
+            {
+              "label": "background",
+              "probability": 1.6087436141670186,
+              "length": 2987,
+              "num_children": 1
+            },
+            {
+              "label": "background",
+              "probability": 1.5583280324935913,
+              "length": 4,
+              "num_children": 0
+            },
+            {
+              "label": "background",
+              "probability": 1.5501803159713745,
+              "length": 6,
+              "num_children": 0
+            },
+            {
+              "label": "background",
+              "probability": 1.5374500751495361,
+              "length": 2,
+              "num_children": 0
+            },
+            {
+              "label": "background",
+              "probability": 1.5351775884628296,
+              "length": 6,
+              "num_children": 0
+            },
+            {
+              "label": "background",
+              "probability": 1.5327001810073853,
+              "length": 4,
+              "num_children": 0
+            },
+            {
+              "label": "background",
+              "probability": 1.5321317911148071,
+              "length": 6,
+              "num_children": 0
+            },
+            {
+              "label": "background",
+              "probability": 1.5302029848098755,
+              "length": 2,
+              "num_children": 0
+            },
+            {
+              "label": "background",
+              "probability": 1.5297877788543701,
+              "length": 6,
+              "num_children": 0
+            },
+            {
+              "label": "background",
+              "probability": 1.529085659980774,
+              "length": 50,
+              "num_children": 0
+            },
+            {
+              "label": "background",
+              "probability": 1.5288794040679932,
+              "length": 4,
+              "num_children": 0
+            },
+            {
+              "label": "background",
+              "probability": 1.528852939605713,
+              "length": 6,
+              "num_children": 0
+            },
+            {
+              "label": "background",
+              "probability": 1.5282878756523133,
+              "length": 22,
+              "num_children": 0
+            },
+            {
+              "label": "background",
+              "probability": 1.5269821643829347,
+              "length": 38,
+              "num_children": 0
+            },
+            {
+              "label": "background",
+              "probability": 1.5240988731384277,
+              "length": 4,
+              "num_children": 0
+            },
+            {
+              "label": "background",
+              "probability": 1.524024486541748,
+              "length": 8,
+              "num_children": 0
+            },
+            {
+              "label": "background",
+              "probability": 1.5204098224639893,
+              "length": 2,
+              "num_children": 0
+            },
+            {
+              "label": "background",
+              "probability": 1.519100308418274,
+              "length": 8,
+              "num_children": 0
+            },
+            {
+              "label": "background",
+              "probability": 1.5186645984649658,
+              "length": 2,
+              "num_children": 0
+            },
+            {
+              "label": "background",
+              "probability": 1.5139133930206299,
+              "length": 4,
+              "num_children": 0
+            },
+            {
+              "label": "background",
+              "probability": 1.4508879439263394,
+              "length": 1476,
+              "num_children": 0
+            },
+            {
+              "label": "background",
+              "probability": 1.404362308984695,
+              "length": 311,
+              "num_children": 0
+            },
+            {
+              "label": "background",
+              "probability": 1.3980765559456565,
+              "length": 20,
+              "num_children": 0
+            },
+            {
+              "label": "background",
+              "probability": 1.3968202515652306,
+              "length": 44,
+              "num_children": 0
+            },
+            {
+              "label": "background",
+              "probability": 1.3766632080078125,
+              "length": 12,
+              "num_children": 0
+            },
+            {
+              "label": "background",
+              "probability": 1.3710573464632034,
+              "length": 34,
+              "num_children": 0
+            },
+            {
+              "label": "background",
+              "probability": 1.3558982382585973,
+              "length": 155,
+              "num_children": 0
+            },
+            {
+              "label": "background",
+              "probability": 1.3446847200393677,
+              "length": 12,
+              "num_children": 0
+            },
+            {
+              "label": "background",
+              "probability": 1.344141222643126,
+              "length": 2743,
+              "num_children": 9
+            },
+            {
+              "label": "background",
+              "probability": 1.18320956469566,
+              "length": 219,
+              "num_children": 0
+            }
+          ]
+        }
       }
     ]
   },
