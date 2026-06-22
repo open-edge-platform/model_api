@@ -298,7 +298,7 @@ def create_semantic_segmentation_result_dump(outputs: ImageResultWithSoftPredict
 def sorted_contours_dicts(contours: list[Contour]) -> list[dict]:
     return sorted(
         [contour.summarized_dict() for contour in contours],
-        key=operator.itemgetter("probability"),
+        key=operator.itemgetter("probability", "label", "length", "num_children"),
         reverse=True,
     )
 
