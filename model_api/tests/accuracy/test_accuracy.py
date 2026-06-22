@@ -311,6 +311,9 @@ def compare_semantic_segmentation_result(
     assert "hist" in reference
     assert outputs.hist() == pytest.approx(reference["hist"], abs=1e-3), "hist values mismatch"
 
+    assert "soft_prediction_shape" in reference
+    assert list(outputs.soft_prediction.shape) == reference["soft_prediction_shape"], f"soft_prediction shape mismatch {list(outputs.soft_prediction.shape)} vs {reference['soft_prediction_shape']}"
+
     assert "contours" in reference
     assert len(reference["contours"]) == len(contours), f"Number of contours mismatch: {len(contours)} vs {len(reference['contours'])}"
     for idx, actual_contour in enumerate(sorted_contours_dicts(contours)):
