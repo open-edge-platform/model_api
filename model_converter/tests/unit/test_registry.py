@@ -456,7 +456,7 @@ class TestPyTorchConverterSharedLogic:
             patch.object(converter, "_prepare_model_for_export", return_value=mock_torch_model) as mock_prepare,
             patch.object(converter, "_create_example_input", return_value=dummy_input) as mock_example_input,
             patch.object(converter, "_postprocess_openvino_model", return_value=mock_ov_model) as mock_postprocess,
-            patch("model_converter.converters.pytorch.shutil.copy2") as mock_copy,
+            patch("model_converter.converters.base.shutil.copy2") as mock_copy,
             patch.object(converter, "copy_readme") as mock_copy_readme,
         ):
             fp16_path, fp32_path = converter.export_to_openvino(

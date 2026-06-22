@@ -50,9 +50,7 @@ class YoloConverter(BaseConverter):
         fp16_folder = self.output_dir / f"{model_short_name}-fp16-ov"
         int8_folder = self.output_dir / f"{model_short_name}-int8-ov"
 
-        if (fp16_folder / f"{yolo_version}.xml").exists() and (int8_folder / f"{yolo_version}.xml").exists():
-            self.logger.info(f"Skipping {model_short_name}: FP16 and INT8 models already exist")
-            self._record_result(self._build_result(config), converted=False, quantized=False, skipped=True)
+        if self._skip_if_already_converted(config, model_short_name, xml_stem=yolo_version):
             return True
 
         try:
@@ -116,12 +114,7 @@ class YoloConverter(BaseConverter):
             return True
 
         except (ValueError, RuntimeError, ImportError, FileNotFoundError, OSError) as e:
-            self.logger.error(f"✗ Failed to process YOLO model {model_short_name}: {e}")
-            self._record_result(self._build_result(config), converted=False, quantized=False)
-            import traceback
-
-            self.logger.debug(traceback.format_exc())
-            return False
+            return self._record_failure(config, model_short_name, e, label="YOLO model")
 
     def _measure_yolo_accuracy(
         self,
@@ -245,15 +238,8 @@ class YoloConverter(BaseConverter):
             scores = results.boxes.conf.cpu().tolist()
 
             for (x1, y1, x2, y2), cls_idx, score in zip(boxes_xyxy, cls_ids, scores):
-                n = int(cls_idx)
-                coco_cat_id = _COCO80_TO_COCO91[n] if n < len(_COCO80_TO_COCO91) else n + 1
                 predictions.append(
-                    {
-                        "image_id": int(sample.image_id),
-                        "category_id": coco_cat_id,
-                        "bbox": [x1, y1, x2 - x1, y2 - y1],
-                        "score": float(score),
-                    },
+                    self._build_coco_prediction(sample.image_id, cls_idx, (x1, y1, x2, y2), score),
                 )
 
         metric.update(predictions=predictions)

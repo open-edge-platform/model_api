@@ -139,32 +139,13 @@ class TimmConverter(PyTorchConverter):
         """
         model_short_name = config.get("model_short_name", "unknown")
 
-        # Check if both FP16 and INT8 models already exist
-        fp16_model_path = self.output_dir / f"{model_short_name}-fp16-ov" / f"{model_short_name}.xml"
-        int8_model_path = self.output_dir / f"{model_short_name}-int8-ov" / f"{model_short_name}.xml"
-
-        if fp16_model_path.exists() and int8_model_path.exists():
-            self.logger.info(f"Skipping {model_short_name}: FP16 and INT8 models already exist")
-            self._record_result(self._build_result(config), converted=False, quantized=False, skipped=True)
+        if self._skip_if_already_converted(config, model_short_name):
             return True
 
         try:
-            model_license = config.get("license")
-            model_license_link = config.get("license_link")
+            self._validate_license(config, model_short_name)
 
-            if not model_license:
-                error_msg = f"Model '{model_short_name}' must define 'license' in configuration"
-                raise ValueError(error_msg)
-            if not model_license_link:
-                error_msg = f"Model '{model_short_name}' must define 'license_link' in configuration"
-                raise ValueError(error_msg)
-
-            self.logger.info("=" * 80)
-            self.logger.info(f"Processing model: {config.get('model_full_name', model_short_name)}")
-            self.logger.info(f"Short name: {model_short_name}")
-            if "description" in config:
-                self.logger.info(f"Description: {config['description']}")
-            self.logger.info("=" * 80)
+            self._log_model_banner(config, model_short_name)
 
             # Load model from HuggingFace
             huggingface_repo = config.get("huggingface_repo")
@@ -195,24 +176,18 @@ class TimmConverter(PyTorchConverter):
                 self._apply_timm_data_config(model, config)
 
             # Prepare export parameters
-            input_shape = config.get("input_shape", [1, 3, 224, 224])
-            input_names = config.get("input_names", ["input"])
-            output_names = config.get("output_names", ["result"])
-            reverse_input_channels = config.get("reverse_input_channels", True)
-            mean_values = config.get("mean_values", "123.675 116.28 103.53")
-            scale_values = config.get("scale_values", "58.395 57.12 57.375")
-            model_type = config.get("model_type", "")
+            params = self._extract_export_params(config)
 
             metadata = self._build_metadata(config)
 
             output_path = self.output_dir / model_short_name
-            fp16_model_path, fp32_model_path = self.export_to_openvino(
+            _fp16_model_path, fp32_model_path = self.export_to_openvino(
                 model=model,
-                input_shape=input_shape,
+                input_shape=params.input_shape,
                 output_path=output_path,
                 model_config=config,
-                input_names=input_names,
-                output_names=output_names,
+                input_names=params.input_names,
+                output_names=params.output_names,
                 metadata=metadata,
             )
 
@@ -223,29 +198,20 @@ class TimmConverter(PyTorchConverter):
                 accuracy = self._quantize_and_cleanup(
                     config,
                     fp32_model_path,
-                    model_type=model_type,
-                    input_shape=input_shape,
-                    mean_values=mean_values,
-                    scale_values=scale_values,
-                    reverse_input_channels=reverse_input_channels,
+                    model_type=params.model_type,
+                    input_shape=params.input_shape,
+                    mean_values=params.mean_values,
+                    scale_values=params.scale_values,
+                    reverse_input_channels=params.reverse_input_channels,
                     torch_model=model,
                 )
 
-            quantized = accuracy.int8_succeeded if quantization_attempted and accuracy is not None else True
-            self._record_result(
-                self._build_result(config),
-                converted=True,
-                quantized=quantized,
+            return self._finalize_success(
+                config,
+                model_short_name,
                 accuracy=accuracy,
+                quantization_attempted=quantization_attempted,
             )
 
-            self.logger.info(f"✓ Successfully converted {model_short_name}")
-            return True
-
         except (ValueError, RuntimeError, ImportError, FileNotFoundError) as e:
-            self.logger.error(f"✗ Failed to process model {model_short_name}: {e}")
-            self._record_result(self._build_result(config), converted=False, quantized=False)
-            import traceback
-
-            self.logger.debug(traceback.format_exc())
-            return False
+            return self._record_failure(config, model_short_name, e)

@@ -6,21 +6,16 @@
 """PyTorch-based converter shared by torchvision and timm converters."""
 
 import importlib
-import json
-import shutil
+from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import torch
 import torch.nn as nn
 
 from model_converter.adapters import get_adapter
 from model_converter.converters.base import BaseConverter
-from model_converter.metrics import TopOneAccuracy
 from model_converter.reporting import AccuracyResults
-
-if TYPE_CHECKING:
-    from model_converter.datasets import CalibrationSample
 
 _MODEL_API_METADATA_FIELDS = (
     "resize_type",
@@ -33,6 +28,19 @@ _MODEL_API_METADATA_FIELDS = (
     "agnostic_nms",
     "nms_max_predictions",
 )
+
+
+@dataclass(frozen=True)
+class ExportParams:
+    """Export/quantization parameters resolved from a model configuration."""
+
+    input_shape: list[int]
+    input_names: list[str]
+    output_names: list[str]
+    reverse_input_channels: bool
+    mean_values: str
+    scale_values: str
+    model_type: str
 
 
 class PyTorchConverter(BaseConverter):
@@ -202,14 +210,10 @@ class PyTorchConverter(BaseConverter):
             self.logger.info(f"✓ Model saved: {xml_path}")
 
             # Save model_info as config.json to track downloads
-            with (output_folder / "config.json").open("w") as f:
-                json.dump(ov_model.get_rt_info(["model_info"]).value, f, indent=4)
+            self._write_config_json(output_folder, ov_model.get_rt_info(["model_info"]).value)
 
             # Copy .gitattributes file
-            gitattributes_template = Path(__file__).parent.parent / "templates" / ".gitattributes"
-            if gitattributes_template.exists():
-                shutil.copy2(gitattributes_template, output_folder / ".gitattributes")
-                self.logger.debug(f"Copied .gitattributes to: {output_folder}")
+            self._copy_gitattributes(output_folder)
 
             # Copy README for FP16 model
             self.copy_readme(
@@ -307,6 +311,19 @@ class PyTorchConverter(BaseConverter):
 
         return metadata
 
+    @staticmethod
+    def _extract_export_params(config: dict[str, Any]) -> ExportParams:
+        """Resolve the shared export/quantization parameters from ``config``."""
+        return ExportParams(
+            input_shape=config.get("input_shape", [1, 3, 224, 224]),
+            input_names=config.get("input_names", ["input"]),
+            output_names=config.get("output_names", ["result"]),
+            reverse_input_channels=config.get("reverse_input_channels", True),
+            mean_values=config.get("mean_values", "123.675 116.28 103.53"),
+            scale_values=config.get("scale_values", "58.395 57.12 57.375"),
+            model_type=config.get("model_type", ""),
+        )
+
     def validate_torch_model(
         self,
         model: nn.Module,
@@ -357,10 +374,7 @@ class PyTorchConverter(BaseConverter):
         # multilabel/COCO/mIoU flow through Model API via :meth:`_measure_metric`.
         dataset_path = self._resolve_dataset_path(config)
         config_with_type = {**config, "model_type": model_type}
-        metric = self._metric_for_config(config_with_type, dataset_path) if self.measure_accuracy else None
-        is_top1 = isinstance(metric, TopOneAccuracy)
-        if metric is not None:
-            accuracy.metric_name = metric.name
+        metric, is_top1 = self._select_accuracy_metric(config_with_type, dataset_path, accuracy)
         resize_type = config.get("resize_type", "standard")
 
         if is_top1:
@@ -377,16 +391,12 @@ class PyTorchConverter(BaseConverter):
             dataset_type=config.get("dataset_type"),
         )
 
-        validation_samples: "list[CalibrationSample] | None" = None
-        if metric is not None and not is_top1:
-            validation_samples = (
-                self._collect_validation_samples(
-                    dataset_path,
-                    config.get("dataset_type"),
-                    subset_size=500,
-                )
-                or None
-            )
+        validation_samples = self._collect_metric_validation_samples(
+            metric,
+            is_top1,
+            dataset_path,
+            config.get("dataset_type"),
+        )
 
         if validation_data:
             torch_model = kwargs.get("torch_model")
@@ -411,15 +421,6 @@ class PyTorchConverter(BaseConverter):
             )
 
         # Clean up temporary FP32 model after quantization
-        try:
-            if fp32_model_path.exists():
-                fp32_model_path.unlink()
-                self.logger.debug(f"Removed temporary FP32 model: {fp32_model_path}")
-            fp32_bin_path = fp32_model_path.with_suffix(".bin")
-            if fp32_bin_path.exists():
-                fp32_bin_path.unlink()
-                self.logger.debug(f"Removed temporary FP32 weights: {fp32_bin_path}")
-        except OSError as e:
-            self.logger.warning(f"Failed to remove temporary FP32 files: {e}")
+        self._cleanup_fp32(fp32_model_path)
 
         return accuracy

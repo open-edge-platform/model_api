@@ -103,6 +103,14 @@ COCO80_TO_COCO91 = [
     90,
 ]
 
+# Inverse of :data:`COCO80_TO_COCO91`: maps an original COCO 91-class category ID
+# to the contiguous 80-class index (0-79) used by OpenVINO detection models.
+# Category IDs that COCO dropped (and the background ID 0) map to ``None``.
+COCO91_TO_COCO80: list[int | None] = [None] * 91
+for _idx, _cat_id in enumerate(COCO80_TO_COCO91):
+    COCO91_TO_COCO80[_cat_id] = _idx
+del _idx, _cat_id
+
 
 class CocoDetectionMAP(Metric):
     """Wraps :class:`pycocotools.cocoeval.COCOeval` for a single ``iouType``."""
