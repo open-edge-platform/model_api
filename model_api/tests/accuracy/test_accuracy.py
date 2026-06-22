@@ -312,16 +312,29 @@ def compare_semantic_segmentation_result(
     assert outputs.hist() == pytest.approx(reference["hist"], abs=1e-3), "hist values mismatch"
 
     assert "soft_prediction_shape" in reference
-    assert list(outputs.soft_prediction.shape) == reference["soft_prediction_shape"], f"soft_prediction shape mismatch {list(outputs.soft_prediction.shape)} vs {reference['soft_prediction_shape']}"
+    assert (
+        list(outputs.soft_prediction.shape) == reference["soft_prediction_shape"]
+    ), f"soft_prediction shape mismatch {list(outputs.soft_prediction.shape)} vs {reference['soft_prediction_shape']}"
 
     assert "contours" in reference
-    assert len(reference["contours"]) == len(contours), f"Number of contours mismatch: {len(contours)} vs {len(reference['contours'])}"
+    assert len(reference["contours"]) == len(
+        contours,
+    ), f"Number of contours mismatch: {len(contours)} vs {len(reference['contours'])}"
     for idx, actual_contour in enumerate(sorted_contours_dicts(contours)):
         expected_contour = reference["contours"][idx]
-        assert actual_contour["label"] == expected_contour["label"], f"Contour {idx} label mismatch: '{actual_contour['label']}' vs '{expected_contour['label']}'"
-        assert abs(actual_contour["probability"] - expected_contour["probability"]) < 1e-3, f"Contour {idx} probability mismatch: {actual_contour['probability']} vs {expected_contour['probability']}"
-        assert actual_contour["length"] == expected_contour["length"], f"Contour {idx} length mismatch: {actual_contour['length']} vs {expected_contour['length']}"
-        assert actual_contour["num_children"] == expected_contour["num_children"], f"Contour {idx} num_children mismatch: {actual_contour['num_children']} vs {expected_contour['num_children']}"
+        assert (
+            actual_contour["label"] == expected_contour["label"]
+        ), f"Contour {idx} label mismatch: '{actual_contour['label']}' vs '{expected_contour['label']}'"
+        assert (
+            abs(actual_contour["probability"] - expected_contour["probability"]) < 1e-3
+        ), f"Contour {idx} probability mismatch: {actual_contour['probability']} vs {expected_contour['probability']}"
+        assert (
+            actual_contour["length"] == expected_contour["length"]
+        ), f"Contour {idx} length mismatch: {actual_contour['length']} vs {expected_contour['length']}"
+        assert actual_contour["num_children"] == expected_contour["num_children"], (
+            f"Contour {idx} num_children mismatch: "
+            f"{actual_contour['num_children']} vs {expected_contour['num_children']}"
+        )
 
 
 def test_image_models(data, device, dump, result, model_data, results_dir):  # noqa: C901
