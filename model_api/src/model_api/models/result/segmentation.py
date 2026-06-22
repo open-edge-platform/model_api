@@ -176,7 +176,7 @@ class Contour:
         num_children = len(self.excluded_shapes) if self.excluded_shapes is not None else 0
         return {
             "label": self.label,
-            "probability": self.probability,
+            "probability": self.probability.item() if isinstance(self.probability, np.generic) else self.probability,
             "length": len(self.shape),
             "num_children": num_children,
         }
