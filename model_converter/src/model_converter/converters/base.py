@@ -30,6 +30,14 @@ if TYPE_CHECKING:
     from model_converter.metrics import CocoDetectionMAP, Metric
 
 
+def _get_human_license_name(name: str) -> str:
+    mapping = {
+        "apache-2.0": "Apache-2.0",
+    }
+
+    return mapping.get(name, name)
+
+
 class BaseConverter(ABC):
     """Abstract base class for model converters.
 
@@ -337,6 +345,7 @@ class BaseConverter(ABC):
             model_short_name = str(model_config.get("model_short_name", "")).strip()
             model_library = str(model_config.get("model_library", "timm")).strip()
             model_license = str(model_config.get("license", "")).strip()
+            model_license_name = _get_human_license_name(model_license)
             model_license_link = str(model_config.get("license_link", "")).strip()
             docs = str(model_config.get("docs", "")).strip()
 
@@ -373,6 +382,7 @@ class BaseConverter(ABC):
 
             placeholders = {
                 template_placeholder("license"): model_license,
+                template_placeholder("license"): model_license_name,
                 template_placeholder("license_link"): model_license_link,
                 template_placeholder("model_name"): model_short_name,
                 template_placeholder("model_short_name"): model_short_name,
