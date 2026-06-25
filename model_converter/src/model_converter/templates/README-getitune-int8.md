@@ -70,7 +70,7 @@ Check the original [model documentation](<<docs>>) for limitations.
 
 ## Legal information
 
-The original model is distributed under the [<<license_name>>](<<license_link>>) license. More details can be found in [training_extensions](https://github.com/open-edge-platform/training_extensions).
+The original model is distributed under the [<<license_name>>](<<license_link>>) license. More details can be found in [<<model_full_name>>](<<docs>>).
 
 ## Disclaimer
 
