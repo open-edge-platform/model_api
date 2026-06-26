@@ -39,6 +39,7 @@ def _get_human_license_name(name: str) -> str:
 
 
 def _get_model_docs_page_name(url: str) -> str:
+    url = url.lower()
     if "github" in url:
         return "repository"
     if "huggingface" in url:
