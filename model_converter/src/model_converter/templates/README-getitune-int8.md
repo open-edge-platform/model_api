@@ -6,12 +6,12 @@ tags:
 
 # <<model_short_name>>-int8-ov
 
-- Model creator: [Geti™](https://github.com/open-edge-platform/training_extensions)
+- Model creator: [Geti™](https://github.com/open-edge-platform/geti)
 - Original model: [<<model_full_name>>](<<docs>>)
 
 ## Description
 
-This is a [Geti™](https://github.com/open-edge-platform/training_extensions) version of [<<model_full_name>>](<<docs>>) model converted to the [OpenVINO™ IR](https://docs.openvino.ai/2026/documentation/openvino-ir-format.html) (Intermediate Representation) format with weights compressed to INT8.
+This is a [Geti™](https://github.com/open-edge-platform/geti) version of [<<model_full_name>>](<<docs>>) model converted to the [OpenVINO™ IR](https://docs.openvino.ai/2026/documentation/openvino-ir-format.html) (Intermediate Representation) format with weights compressed to INT8.
 
 To fine-tune your model with a custom dataset, you can use Geti™ to annotate data, perform fine-tuning, and export the resulting model.
 
