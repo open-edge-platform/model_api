@@ -38,6 +38,14 @@ def _get_human_license_name(name: str) -> str:
     return mapping.get(name, name)
 
 
+def _get_model_docs_page_name(url: str) -> str:
+    if "github" in url:
+        return "repository"
+    if "huggingface" in url:
+        return "card"
+    return "documentation"
+
+
 class BaseConverter(ABC):
     """Abstract base class for model converters.
 
@@ -348,6 +356,9 @@ class BaseConverter(ABC):
             model_license_name = _get_human_license_name(model_license)
             model_license_link = str(model_config.get("license_link", "")).strip()
             docs = str(model_config.get("docs", "")).strip()
+            model_docs_page_name = str(
+                model_config.get("model_docs_page_name", _get_model_docs_page_name(url=docs)),
+            ).strip()
 
             def template_placeholder(name: str) -> str:
                 return f"<<{name}>>"
@@ -388,6 +399,7 @@ class BaseConverter(ABC):
                 template_placeholder("model_short_name"): model_short_name,
                 template_placeholder("variant"): variant,
                 template_placeholder("docs"): docs,
+                template_placeholder("model_docs_page_name"): model_docs_page_name,
             }
 
             # Handle tags list → YAML formatting
@@ -563,7 +575,7 @@ class BaseConverter(ABC):
             Tuple of (images, labels); both empty lists when dataset is unavailable.
         """
         if not dataset_path or not dataset_path.exists():
-            self.logger.warning("Dataset path not provided or doesn't exist. Skipping quantization.")
+            self.logger.warning(f"Dataset path `{dataset_path=}` not provided or doesn't exist. Skipping quantization.")
             return [], []
 
         # Parse mean and scale values
