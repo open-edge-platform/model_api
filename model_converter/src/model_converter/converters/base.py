@@ -382,7 +382,7 @@ class BaseConverter(ABC):
 
             placeholders = {
                 template_placeholder("license"): model_license,
-                template_placeholder("license"): model_license_name,
+                template_placeholder("license_name"): model_license_name,
                 template_placeholder("license_link"): model_license_link,
                 template_placeholder("model_name"): model_short_name,
                 template_placeholder("model_short_name"): model_short_name,
