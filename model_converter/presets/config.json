@@ -732,7 +732,7 @@
       "model_type": "Classification",
       "quantization_model_type": "transformer",
       "license": "apache-2.0",
-      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
+      "license_link": "https://huggingface.co/datasets/choosealicense/licenses/blob/main/markdown/apache-2.0.md",
       "tags": ["image-classification", "vision"],
       "dataset_type": "imagenet-1k"
     },
@@ -832,7 +832,7 @@
       "model_type": "YOLOX",
       "tags": ["object-detection", "vision"],
       "license": "apache-2.0",
-      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
+      "license_link": "https://github.com/open-mmlab/mmdetection/blob/main/LICENSE",
       "dataset_type": "coco-detection"
     },
     {
@@ -846,7 +846,7 @@
       "model_type": "YOLOX",
       "tags": ["object-detection", "vision"],
       "license": "apache-2.0",
-      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
+      "license_link": "https://github.com/open-mmlab/mmdetection/blob/main/LICENSE",
       "dataset_type": "coco-detection"
     },
     {
@@ -860,7 +860,7 @@
       "model_type": "YOLOX",
       "tags": ["object-detection", "vision"],
       "license": "apache-2.0",
-      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
+      "license_link": "https://github.com/open-mmlab/mmdetection/blob/main/LICENSE",
       "dataset_type": "coco-detection"
     },
     {
@@ -874,7 +874,7 @@
       "model_type": "SSD",
       "tags": ["object-detection", "vision"],
       "license": "apache-2.0",
-      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
+      "license_link": "https://github.com/open-mmlab/mmdetection/blob/main/LICENSE",
       "dataset_type": "coco-detection"
     },
     {
@@ -888,7 +888,7 @@
       "model_type": "SSD",
       "tags": ["object-detection", "vision"],
       "license": "apache-2.0",
-      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
+      "license_link": "https://github.com/open-mmlab/mmdetection/blob/main/LICENSE",
       "dataset_type": "coco-detection"
     },
     {
@@ -915,7 +915,7 @@
       "getitune_task": "DETECTION",
       "model_type": "YOLOX",
       "license": "apache-2.0",
-      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
+      "license_link": "https://github.com/open-mmlab/mmdetection/blob/main/LICENSE",
       "tags": ["object-detection", "vision"],
       "dataset_type": "coco-detection"
     },
@@ -929,7 +929,7 @@
       "getitune_task": "DETECTION",
       "model_type": "SSD",
       "license": "apache-2.0",
-      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
+      "license_link": "https://github.com/Intellindust-AI-Lab/DEIM/blob/main/LICENSE",
       "tags": ["object-detection", "vision"],
       "dataset_type": "coco-detection"
     },
@@ -943,7 +943,7 @@
       "getitune_task": "DETECTION",
       "model_type": "SSD",
       "license": "apache-2.0",
-      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
+      "license_link": "https://github.com/Intellindust-AI-Lab/DEIM/blob/main/LICENSE",
       "tags": ["object-detection", "vision"],
       "dataset_type": "coco-detection"
     },
@@ -957,7 +957,7 @@
       "getitune_task": "DETECTION",
       "model_type": "SSD",
       "license": "apache-2.0",
-      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
+      "license_link": "https://github.com/Intellindust-AI-Lab/DEIM/blob/main/LICENSE",
       "tags": ["object-detection", "vision"],
       "dataset_type": "coco-detection"
     },
@@ -971,7 +971,7 @@
       "getitune_task": "DETECTION",
       "model_type": "SSD",
       "license": "apache-2.0",
-      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
+      "license_link": "https://github.com/Intellindust-AI-Lab/DEIM/blob/main/LICENSE",
       "tags": ["object-detection", "vision"],
       "dataset_type": "coco-detection"
     },
@@ -985,7 +985,7 @@
       "getitune_task": "DETECTION",
       "model_type": "SSD",
       "license": "apache-2.0",
-      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
+      "license_link": "https://github.com/Intellindust-AI-Lab/DEIM/blob/main/LICENSE",
       "tags": ["object-detection", "vision"],
       "dataset_type": "coco-detection"
     },
@@ -999,7 +999,7 @@
       "getitune_task": "DETECTION",
       "model_type": "SSD",
       "license": "apache-2.0",
-      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
+      "license_link": "https://github.com/Intellindust-AI-Lab/DEIM/blob/main/LICENSE",
       "tags": ["object-detection", "vision"],
       "dataset_type": "coco-detection"
     },
@@ -1027,7 +1027,7 @@
       "getitune_task": "DETECTION",
       "model_type": "SSD",
       "license": "apache-2.0",
-      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
+      "license_link": "https://roboflow.com/licensing",
       "tags": ["object-detection", "vision"],
       "dataset_type": "coco-detection"
     },
@@ -1041,7 +1041,7 @@
       "getitune_task": "DETECTION",
       "model_type": "SSD",
       "license": "apache-2.0",
-      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
+      "license_link": "https://roboflow.com/licensing",
       "tags": ["object-detection", "vision"],
       "dataset_type": "coco-detection"
     },
@@ -1055,7 +1055,7 @@
       "getitune_task": "DETECTION",
       "model_type": "SSD",
       "license": "apache-2.0",
-      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
+      "license_link": "https://roboflow.com/licensing",
       "tags": ["object-detection", "vision"],
       "dataset_type": "coco-detection"
     },
@@ -1069,7 +1069,7 @@
       "getitune_task": "DETECTION",
       "model_type": "SSD",
       "license": "apache-2.0",
-      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
+      "license_link": "https://roboflow.com/licensing",
       "tags": ["object-detection", "vision"],
       "dataset_type": "coco-detection"
     },
@@ -1084,7 +1084,7 @@
       "model_type": "MaskRCNN",
       "tags": ["image-segmentation", "instance-segmentation", "vision"],
       "license": "apache-2.0",
-      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
+      "license_link": "https://github.com/pytorch/vision/blob/main/LICENSE",
       "dataset_type": "coco-detection"
     },
     {
@@ -1098,7 +1098,7 @@
       "model_type": "MaskRCNN",
       "tags": ["image-segmentation", "instance-segmentation", "vision"],
       "license": "apache-2.0",
-      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
+      "license_link": "https://github.com/open-mmlab/mmdetection/blob/main/LICENSE",
       "dataset_type": "coco-detection"
     },
     {
@@ -1112,7 +1112,7 @@
       "model_type": "MaskRCNN",
       "quantization_model_type": "transformer",
       "license": "apache-2.0",
-      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
+      "license_link": "https://github.com/open-mmlab/mmdetection/blob/main/LICENSE",
       "tags": ["image-segmentation", "instance-segmentation", "vision"],
       "dataset_type": "coco-detection"
     },
@@ -1126,7 +1126,7 @@
       "getitune_task": "INSTANCE_SEGMENTATION",
       "model_type": "MaskRCNN",
       "license": "apache-2.0",
-      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
+      "license_link": "https://roboflow.com/licensing",
       "tags": ["image-segmentation", "instance-segmentation", "vision"],
       "dataset_type": "coco-detection"
     },
@@ -1140,7 +1140,7 @@
       "getitune_task": "INSTANCE_SEGMENTATION",
       "model_type": "MaskRCNN",
       "license": "apache-2.0",
-      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
+      "license_link": "https://roboflow.com/licensing",
       "tags": ["image-segmentation", "instance-segmentation", "vision"],
       "dataset_type": "coco-detection"
     },
@@ -1154,7 +1154,7 @@
       "getitune_task": "INSTANCE_SEGMENTATION",
       "model_type": "MaskRCNN",
       "license": "apache-2.0",
-      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
+      "license_link": "https://roboflow.com/licensing",
       "tags": ["image-segmentation", "instance-segmentation", "vision"],
       "dataset_type": "coco-detection"
     },
@@ -1168,7 +1168,7 @@
       "getitune_task": "INSTANCE_SEGMENTATION",
       "model_type": "MaskRCNN",
       "license": "apache-2.0",
-      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
+      "license_link": "https://roboflow.com/licensing",
       "tags": ["image-segmentation", "instance-segmentation", "vision"],
       "dataset_type": "coco-detection"
     },
@@ -1182,7 +1182,7 @@
       "getitune_task": "INSTANCE_SEGMENTATION",
       "model_type": "MaskRCNN",
       "license": "apache-2.0",
-      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
+      "license_link": "https://github.com/open-mmlab/mmdetection/blob/main/LICENSE",
       "tags": ["image-segmentation", "instance-segmentation", "vision"],
       "dataset_type": "coco-detection"
     },
@@ -1238,7 +1238,7 @@
       "getitune_task": "SEMANTIC_SEGMENTATION",
       "model_type": "Segmentation",
       "license": "apache-2.0",
-      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
+      "license_link": "https://huggingface.co/datasets/choosealicense/licenses/blob/main/markdown/apache-2.0.md",
       "tags": ["image-segmentation", "semantic-segmentation", "vision"],
       "dataset_type": "ade20k"
     },
