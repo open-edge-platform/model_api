@@ -59,7 +59,7 @@ For more examples and possible optimizations, refer to the [Model API Documentat
 
 ## Limitations
 
-Check the original [model card](https://huggingface.co/<<huggingface_repo>>) for limitations.
+Check the [original model card](https://huggingface.co/<<huggingface_repo>>) for limitations.
 
 ## Legal information
 

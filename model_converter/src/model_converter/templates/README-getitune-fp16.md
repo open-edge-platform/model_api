@@ -57,11 +57,11 @@ For more examples and possible optimizations, refer to the [Model API Documentat
 
 ## Limitations
 
-Check the original [model documentation](<<docs>>) for limitations.
+Check the [original model documentation](<<docs>>) for limitations.
 
 ## Legal information
 
-The original model is distributed under the [<<license_name>>](<<license_link>>) license. More details can be found in the original [model <<model_docs_page_name>>](<<docs>>).
+The original model is distributed under the [<<license_name>>](<<license_link>>) license. More details can be found in the [original model <<model_docs_page_name>>](<<docs>>).
 
 ## Disclaimer
 

@@ -65,7 +65,7 @@ For more examples and possible optimizations, refer to the [Model API Documentat
 
 ## Limitations
 
-Check the original [model implementation](https://github.com/pytorch/vision) for limitations.
+Check the [original model implementation](https://github.com/pytorch/vision) for limitations.
 
 ## Legal information
 
