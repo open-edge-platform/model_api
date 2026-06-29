@@ -72,8 +72,9 @@ class TestCopyReadme:
         ("license_id", "license_name"),
         [
             ("apache-2.0", "Apache-2.0"),
-            ("BSD", "BSD"),
             ("rAnDoM", "rAnDoM"),
+            ("agpl-3.0", "AGPL-3.0-only"),
+            ("bsd-3-clause", "BSD-3-Clause"),
         ],
     )
     def test_selects_correct_license_name(

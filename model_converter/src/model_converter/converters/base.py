@@ -32,7 +32,9 @@ if TYPE_CHECKING:
 
 def _get_human_license_name(name: str) -> str:
     mapping = {
+        "agpl-3.0": "AGPL-3.0-only",
         "apache-2.0": "Apache-2.0",
+        "bsd-3-clause": "BSD-3-Clause",
     }
 
     return mapping.get(name, name)
