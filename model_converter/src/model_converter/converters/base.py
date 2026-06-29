@@ -578,7 +578,7 @@ class BaseConverter(ABC):
             Tuple of (images, labels); both empty lists when dataset is unavailable.
         """
         if not dataset_path or not dataset_path.exists():
-            self.logger.warning(f"Dataset path `{dataset_path=}` not provided or doesn't exist. Skipping quantization.")
+            self.logger.warning("Dataset path not provided or doesn't exist. Skipping quantization.")
             return [], []
 
         # Parse mean and scale values
