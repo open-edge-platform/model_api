@@ -1083,7 +1083,7 @@
       "getitune_recipe": "maskrcnn_r50",
       "model_type": "MaskRCNN",
       "tags": ["image-segmentation", "instance-segmentation", "vision"],
-      "license": "apache-2.0",
+      "license": "bsd-3-clause",
       "license_link": "https://github.com/pytorch/vision/blob/main/LICENSE",
       "dataset_type": "coco-detection"
     },
