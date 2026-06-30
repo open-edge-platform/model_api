@@ -107,6 +107,7 @@ def test_keypoint_scene_creation(mock_image: Image, tmpdir: Path):
 # them to RGB before rendering/showing/saving. This avoids mode mismatches in
 # downstream PIL operations (e.g. PIL.Image.blend) that require matching modes.
 
+
 class TestGrayscaleImageSupport:
     """Tests to confirm grayscale image handling issues in Visualizer.
 

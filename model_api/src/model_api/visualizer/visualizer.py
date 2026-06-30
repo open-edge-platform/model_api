@@ -89,8 +89,9 @@ class Visualizer:
 
             # Handle 16-bit images by scaling to 8-bit
             if image.dtype == np.uint16:
-                image = (image / 256).astype(np.uint8)
-            elif image.dtype == np.float32 or image.dtype == np.float64:
+                # Avoid float intermediates for speed and memory efficiency
+                image = (image >> 8).astype(np.uint8)
+            elif np.issubdtype(image.dtype, np.floating):
                 # Assume float images are in [0, 1] range
                 image = (image * 255).clip(0, 255).astype(np.uint8)
 
