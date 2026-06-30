@@ -1024,6 +1024,9 @@
       "getitune_recipe": "deimv2_s",
       "getitune_task": "DETECTION",
       "model_type": "SSD",
+      "preprocessing_overrides": {
+        "confidence_threshold": "0.1"
+      },
       "quantization_model_type": "transformer",
       "license": "apache-2.0",
       "license_link": "https://github.com/Intellindust-AI-Lab/DEIM/blob/main/LICENSE",
