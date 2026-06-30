@@ -103,10 +103,9 @@ def test_keypoint_scene_creation(mock_image: Image, tmpdir: Path):
 # =============================================================================
 # Grayscale Image Support Tests
 # =============================================================================
-# These tests expose the root cause of grayscale image handling failures.
-# The issue is that Image.fromarray() preserves grayscale mode ('L'), but
-# downstream operations (PIL.Image.blend, HStack._stitch) expect RGB images.
-
+# These tests verify Visualizer correctly handles grayscale inputs by converting
+# them to RGB before rendering/showing/saving. This avoids mode mismatches in
+# downstream PIL operations (e.g. PIL.Image.blend) that require matching modes.
 
 class TestGrayscaleImageSupport:
     """Tests to confirm grayscale image handling issues in Visualizer.
@@ -154,8 +153,8 @@ class TestGrayscaleImageSupport:
     def test_render_with_grayscale_pil_image(self, grayscale_pil_image: Image.Image):
         """Test Visualizer.render() with grayscale PIL Image.
 
-        Expected failure: PIL.Image.blend() in Overlay.compute() will fail
-        because it requires both images to have the same mode.
+        Expected behavior: the visualizer should convert grayscale input to RGB before
+        any blending/stacking, so rendering should succeed and return an RGB image.
         """
         heatmap = np.ones((100, 100), dtype=np.uint8) * 255
 
@@ -179,8 +178,8 @@ class TestGrayscaleImageSupport:
     def test_render_with_grayscale_ndarray(self, grayscale_ndarray: np.ndarray):
         """Test Visualizer.render() with grayscale numpy array (2D).
 
-        Expected failure: Image.fromarray() will create 'L' mode image,
-        then PIL.Image.blend() will fail due to mode mismatch with RGB overlay.
+        Expected behavior: the visualizer converts grayscale input to RGB internally,
+        so rendering should succeed and return an RGB (H, W, 3) output.
         """
         heatmap = np.ones((100, 100), dtype=np.uint8) * 255
 
@@ -387,11 +386,11 @@ class TestGrayscaleOverlayBlending:
 
 
 class TestGrayscaleHStackLayout:
-    """Tests to confirm HStack._stitch() grayscale handling issues.
+    """Tests HStack._stitch() behavior with grayscale inputs.
 
-    Root cause: HStack._stitch() creates a new RGB image with PIL.Image.new("RGB", ...)
-    and pastes source images onto it. When source images are grayscale ('L' mode),
-    the paste operation may produce unexpected results or fail.
+    HStack._stitch() always creates an RGB canvas and pastes source images onto it.
+    This test verifies that pasting grayscale ('L') images results in an RGB image
+    with grayscale values replicated across channels.
     """
 
     def test_hstack_stitch_grayscale_images(self):
