@@ -65,11 +65,11 @@ For more examples and possible optimizations, refer to the [Model API Documentat
 
 ## Limitations
 
-Check the original [model implementation](https://github.com/pytorch/vision) for limitations.
+Check the [original model implementation](https://github.com/pytorch/vision) for limitations.
 
 ## Legal information
 
-The original model is distributed under the [<<license>>](<<license_link>>) license. More details can be found in [https://github.com/pytorch/vision](https://github.com/pytorch/vision).
+The original model is distributed under the [<<license_name>>](<<license_link>>) license. More details can be found in [https://github.com/pytorch/vision](https://github.com/pytorch/vision).
 
 ## Disclaimer
 

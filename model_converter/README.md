@@ -158,6 +158,7 @@ The configuration file is a JSON file with the following structure:
     {
       "model_short_name": "resnet50",
       "license": "bsd-3-clause",
+      "license_name": "bsd-3-clause",
       "license_link": "https://spdx.org/licenses/BSD-3-Clause.html",
       "model_class_name": "torchvision.models.resnet.resnet50",
       "model_full_name": "ResNet-50",

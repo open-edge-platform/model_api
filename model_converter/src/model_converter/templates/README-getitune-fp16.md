@@ -6,12 +6,12 @@ tags:
 
 # <<model_short_name>>-fp16-ov
 
-- Model creator: [Geti™](https://github.com/open-edge-platform/training_extensions)
+- Model creator: [Geti™](https://github.com/open-edge-platform/geti)
 - Original model: [<<model_full_name>>](<<docs>>)
 
 ## Description
 
-This is a [Geti™](https://github.com/open-edge-platform/training_extensions) version of [<<model_full_name>>](<<docs>>) model converted to the [OpenVINO™ IR](https://docs.openvino.ai/2026/documentation/openvino-ir-format.html) (Intermediate Representation) format with weights compressed to FP16.
+This is a [Geti™](https://github.com/open-edge-platform/geti) version of [<<model_full_name>>](<<docs>>) model converted to the [OpenVINO™ IR](https://docs.openvino.ai/2026/documentation/openvino-ir-format.html) (Intermediate Representation) format with weights compressed to FP16.
 
 To fine-tune your model with a custom dataset, you can use Geti™ to annotate data, perform fine-tuning, and export the resulting model.
 
@@ -57,11 +57,11 @@ For more examples and possible optimizations, refer to the [Model API Documentat
 
 ## Limitations
 
-Check the original [model documentation](<<docs>>) for limitations.
+Check the [original model documentation](<<docs>>) for limitations.
 
 ## Legal information
 
-The original model is distributed under the [<<license>>](<<license_link>>) license. More details can be found in [training_extensions](https://github.com/open-edge-platform/training_extensions).
+The original model is distributed under the [<<license_name>>](<<license_link>>) license. More details can be found in the [original model <<model_docs_page_name>>](<<docs>>).
 
 ## Disclaimer
 

@@ -33,8 +33,10 @@ class TestCopyReadme:
         (template_dir / "README-torchvision-fp16.md").write_text(
             "# <<model_short_name>>\n"
             "License: <<license>>\n"
+            "License name: <<license_name>>\n"
             "License link: <<license_link>>\n"
             "Docs: <<docs>>\n"
+            "Docs page name: <<model_docs_page_name>>\n"
             "Variant: <<variant>>\n"
             "Tags:\n"
             "<<tags_yaml>>",
@@ -46,7 +48,7 @@ class TestCopyReadme:
             {
                 "model_short_name": "test_model",
                 "model_library": "torchvision",
-                "license": "Apache-2.0",
+                "license": "apache-2.0",
                 "license_link": "https://apache.org/licenses/LICENSE-2.0",
                 "docs": "https://docs.example.com",
                 "tags": ["vision", "classification"],
@@ -57,12 +59,96 @@ class TestCopyReadme:
 
         content = (output_folder / "README.md").read_text()
         assert "# test_model" in content
-        assert "License: Apache-2.0" in content
+        assert "License: apache-2.0" in content
+        assert "License name: Apache-2.0" in content
         assert "License link: https://apache.org/licenses/LICENSE-2.0" in content
         assert "Docs: https://docs.example.com" in content
+        assert "Docs page name: documentation" in content
         assert "Variant: fp16" in content
         assert "  - vision" in content
         assert "  - classification" in content
+
+    @pytest.mark.parametrize(
+        ("license_id", "license_name"),
+        [
+            ("apache-2.0", "Apache-2.0"),
+            ("rAnDoM", "rAnDoM"),
+            ("agpl-3.0", "AGPL-3.0-only"),
+            ("bsd-3-clause", "BSD-3-Clause"),
+        ],
+    )
+    def test_selects_correct_license_name(
+        self,
+        converter,
+        template_dir,
+        tmp_path,
+        monkeypatch,
+        license_id,
+        license_name,
+    ):
+        """copy_readme fills placeholders from config and renders tags as YAML."""
+        _set_template_root(monkeypatch, template_dir)
+        (template_dir / "README-torchvision-fp16.md").write_text(
+            "License: <<license>>\nLicense name: <<license_name>>\n",
+        )
+        output_folder = tmp_path / "test_model-fp16-ov"
+        output_folder.mkdir()
+
+        converter.copy_readme(
+            {
+                "model_short_name": "test_model",
+                "model_library": "torchvision",
+                "license": license_id,
+                "license_link": "https://apache.org/licenses/LICENSE-2.0",
+                "docs": "https://docs.example.com",
+            },
+            output_folder,
+            variant="fp16",
+        )
+
+        content = (output_folder / "README.md").read_text()
+        assert f"License: {license_id}" in content
+        assert f"License name: {license_name}" in content
+
+    @pytest.mark.parametrize(
+        ("docs_url", "docs_page_name"),
+        [
+            ("https://docs.example.com", "documentation"),
+            ("https://huggingface.com/foo/bar", "card"),
+            ("https://github.com/foo/bar", "repository"),
+        ],
+    )
+    def test_selects_correct_docs_page_name(
+        self,
+        converter,
+        template_dir,
+        tmp_path,
+        monkeypatch,
+        docs_url,
+        docs_page_name,
+    ):
+        """copy_readme fills placeholders from config and renders tags as YAML."""
+        _set_template_root(monkeypatch, template_dir)
+        (template_dir / "README-torchvision-fp16.md").write_text(
+            "Docs page name: <<model_docs_page_name>>\n",
+        )
+        output_folder = tmp_path / "test_model-fp16-ov"
+        output_folder.mkdir()
+
+        converter.copy_readme(
+            {
+                "model_short_name": "test_model",
+                "model_library": "torchvision",
+                "license": "apache-2.0",
+                "license_link": "https://apache.org/licenses/LICENSE-2.0",
+                "docs": docs_url,
+            },
+            output_folder,
+            variant="fp16",
+        )
+
+        content = (output_folder / "README.md").read_text()
+        assert f"Docs page name: {docs_page_name}" in content
 
     @pytest.mark.parametrize(
         ("config", "expected"),

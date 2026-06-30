@@ -30,6 +30,25 @@ if TYPE_CHECKING:
     from model_converter.metrics import CocoDetectionMAP, Metric
 
 
+def _get_human_license_name(name: str) -> str:
+    mapping = {
+        "agpl-3.0": "AGPL-3.0-only",
+        "apache-2.0": "Apache-2.0",
+        "bsd-3-clause": "BSD-3-Clause",
+    }
+
+    return mapping.get(name, name)
+
+
+def _get_model_docs_page_name(url: str) -> str:
+    url = url.lower()
+    if "github" in url:
+        return "repository"
+    if "huggingface" in url:
+        return "card"
+    return "documentation"
+
+
 class BaseConverter(ABC):
     """Abstract base class for model converters.
 
@@ -337,8 +356,12 @@ class BaseConverter(ABC):
             model_short_name = str(model_config.get("model_short_name", "")).strip()
             model_library = str(model_config.get("model_library", "timm")).strip()
             model_license = str(model_config.get("license", "")).strip()
+            model_license_name = _get_human_license_name(model_license)
             model_license_link = str(model_config.get("license_link", "")).strip()
             docs = str(model_config.get("docs", "")).strip()
+            model_docs_page_name = str(
+                model_config.get("model_docs_page_name", _get_model_docs_page_name(url=docs)),
+            ).strip()
 
             def template_placeholder(name: str) -> str:
                 return f"<<{name}>>"
@@ -373,11 +396,13 @@ class BaseConverter(ABC):
 
             placeholders = {
                 template_placeholder("license"): model_license,
+                template_placeholder("license_name"): model_license_name,
                 template_placeholder("license_link"): model_license_link,
                 template_placeholder("model_name"): model_short_name,
                 template_placeholder("model_short_name"): model_short_name,
                 template_placeholder("variant"): variant,
                 template_placeholder("docs"): docs,
+                template_placeholder("model_docs_page_name"): model_docs_page_name,
             }
 
             # Handle tags list → YAML formatting

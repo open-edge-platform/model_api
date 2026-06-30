@@ -59,7 +59,7 @@ For more examples and possible optimizations, refer to the [Model API Documentat
 
 ## Limitations
 
-Check the original [model card](https://huggingface.co/Ultralytics/YOLO11) for limitations.
+Check the [original model card](https://huggingface.co/Ultralytics/YOLO11) for limitations.
 
 ## Legal information
 
