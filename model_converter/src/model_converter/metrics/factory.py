@@ -36,6 +36,12 @@ _COCO_DETECTION_TYPES = {
 }
 _SEMSEG_TYPES = {"Segmentation"}
 
+# Instance segmentation model types whose postprocessor applies ``labels += 1``
+# (shifting from 0-indexed to 1-indexed).  When these models use contiguous
+# COCO-80 class indices (i.e. ``category_ids_are_coco91`` is ``False``), the
+# COCO80→COCO91 remap must compensate for the +1 offset.
+_INSTANCE_SEG_TYPES = {"MaskRCNN", "DETRInstSeg"}
+
 _MULTILABEL_TASKS = {"MULTI_LABEL_CLS"}
 _MULTI_CLASS_TASKS = {"MULTI_CLASS_CLS"}
 _UNSUPPORTED_TASKS = {"ROTATED_DETECTION"}
@@ -52,6 +58,8 @@ def metric_for(
     *,
     annotation_file: "Path | None" = None,
     task: str | None = None,
+    model_library: str | None = None,
+    labels: str | None = None,
 ) -> "Metric | None":
     """Return a fresh metric instance for the given dataset/model combo, or ``None``.
 
@@ -63,6 +71,21 @@ def metric_for(
     ``model_type`` alone does not carry enough information — for example,
     ``Classification`` model_type with task ``MULTI_LABEL_CLS`` maps to
     multilabel mAP, not top-1 accuracy.
+
+    ``model_library`` selects the COCO category-id scheme: getitune models
+    using ``COCO_V1`` or ``COCO_92`` label sets report labels that are already
+    COCO-91 category IDs, so the metric is told to skip the COCO80->COCO91
+    remap for them.
+
+    ``labels`` is the label-set identifier from the model config (e.g.
+    ``"COCO_V1"``, ``"COCO_80"``). Models using ``COCO_V1`` or ``"COCO_92"``
+    output native COCO-91 category IDs regardless of ``model_type``.
+
+    Instance segmentation models (``MaskRCNN``, ``DETRInstSeg``) add +1 to
+    labels in their postprocessor.  When these models use contiguous COCO-80
+    class indices (i.e. not COCO_V1/COCO_92), the metric is given a
+    ``label_offset=1`` so the COCO80→COCO91 remap operates on the correct
+    0-indexed value.
     """
     if dataset_type is None or model_type is None:
         return None
@@ -80,7 +103,16 @@ def metric_for(
     if dataset_type == "coco-detection":
         if annotation_file is None or model_type not in _COCO_DETECTION_TYPES:
             return None
-        return CocoDetectionMAP(annotation_file=annotation_file, iou_type="bbox")
+        category_ids_are_coco91 = model_library == "getitune" and labels in ("COCO_V1", "COCO_92")
+        # Instance segmentation postprocessors apply ``labels += 1``; compensate
+        # when using the COCO80→COCO91 remap so it receives 0-indexed values.
+        label_offset = 1 if (model_type in _INSTANCE_SEG_TYPES and not category_ids_are_coco91) else 0
+        return CocoDetectionMAP(
+            annotation_file=annotation_file,
+            iou_type="bbox",
+            category_ids_are_coco91=category_ids_are_coco91,
+            label_offset=label_offset,
+        )
 
     if dataset_type == "ade20k":
         if model_type not in _SEMSEG_TYPES:

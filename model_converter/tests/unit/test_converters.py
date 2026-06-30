@@ -408,6 +408,49 @@ class TestPreprocessCalibrationImage:
         assert result is not None
         assert result.shape == (1, 3, 4, 4)
 
+    def test_intensity_scale_is_applied_before_mean_and_scale(self, converter, tmp_path):
+        """intensity_scale divides raw pixels (scale_to_unit ÷255) before normalization.
+
+        A white pixel (255) with intensity_scale=255 becomes 1.0, then
+        ``(1.0 - mean) / scale`` is applied — matching how Model API normalizes
+        getitune models whose mean/scale are stored in [0, 1] units.
+        """
+        img_path = tmp_path / "white.png"
+        img = np.array([[[255, 255, 255]]], dtype=np.uint8)
+        cv2.imwrite(str(img_path), img)
+
+        result = converter._preprocess_calibration_image(
+            img_path=img_path,
+            width=1,
+            height=1,
+            mean=np.array([0.485, 0.456, 0.406], dtype=np.float32),
+            scale=np.array([0.229, 0.224, 0.225], dtype=np.float32),
+            reverse_input_channels=False,
+            intensity_scale=255.0,
+        )
+
+        assert result is not None
+        expected = (1.0 - np.array([0.485, 0.456, 0.406])) / np.array([0.229, 0.224, 0.225])
+        np.testing.assert_allclose(result[0, :, 0, 0], expected, rtol=1e-5)
+
+    def test_intensity_scale_defaults_to_no_op(self, converter, tmp_path):
+        """Omitting intensity_scale leaves pixels in their raw range (pixel-unit mean/scale)."""
+        img_path = tmp_path / "gray.png"
+        img = np.array([[[200, 200, 200]]], dtype=np.uint8)
+        cv2.imwrite(str(img_path), img)
+
+        result = converter._preprocess_calibration_image(
+            img_path=img_path,
+            width=1,
+            height=1,
+            mean=np.array([0.0, 0.0, 0.0], dtype=np.float32),
+            scale=np.array([1.0, 1.0, 1.0], dtype=np.float32),
+            reverse_input_channels=False,
+        )
+
+        assert result is not None
+        np.testing.assert_allclose(result[0, :, 0, 0], np.array([200.0, 200.0, 200.0]))
+
 
 class TestCreateCalibrationDataset:
     """Tests for BaseConverter.create_calibration_dataset via TorchvisionConverter."""
@@ -1239,6 +1282,75 @@ class TestMeasureMetric:
 
         preds = metric.update.call_args.kwargs["predictions"]
         assert preds[0]["category_id"] == 13  # COCO80_TO_COCO91[11] = 13 (not 12)
+
+    def test_bbox_dispatch_uses_label_directly_when_coco91(
+        self,
+        converter,
+        tmp_path,
+        monkeypatch,
+    ):
+        """getitune Mask R-CNN: label is already a COCO-91 id, so no remap is applied."""
+        from model_converter.datasets import CalibrationSample
+        from model_converter.metrics import CocoDetectionMAP
+
+        img_path = tmp_path / "img.jpg"
+        cv2.imwrite(str(img_path), np.zeros((10, 10, 3), dtype=np.uint8))
+        wrapper = MagicMock(
+            return_value=SimpleNamespace(
+                bboxes=np.array([[0, 0, 5, 5]], dtype=np.int32),
+                labels=np.array([11], dtype=np.int32),  # would map to 13 under the COCO80 remap
+                scores=np.array([0.8], dtype=np.float32),
+            ),
+        )
+        self._install_fake_model_api(monkeypatch, wrapper)
+
+        ann = tmp_path / "ann.json"
+        ann.write_text('{"images":[],"annotations":[],"categories":[]}')
+        metric = CocoDetectionMAP(annotation_file=ann, iou_type="bbox", category_ids_are_coco91=True)
+        metric.update = MagicMock()
+        metric.compute = MagicMock(return_value=0.0)
+        metric.reset = MagicMock()
+        sample = CalibrationSample(image_path=img_path, label=0, image_id=1)
+
+        converter._measure_metric(tmp_path / "model.xml", [sample], metric)
+
+        preds = metric.update.call_args.kwargs["predictions"]
+        assert preds[0]["category_id"] == 11  # used verbatim, not remapped to 13
+
+    def test_bbox_dispatch_applies_label_offset_for_instance_seg(
+        self,
+        converter,
+        tmp_path,
+        monkeypatch,
+    ):
+        """COCO_81 MaskRCNN: labels are 1-indexed (after +=1); offset corrects remap."""
+        from model_converter.datasets import CalibrationSample
+        from model_converter.metrics import CocoDetectionMAP
+
+        img_path = tmp_path / "img.jpg"
+        cv2.imwrite(str(img_path), np.zeros((10, 10, 3), dtype=np.uint8))
+        wrapper = MagicMock(
+            return_value=SimpleNamespace(
+                bboxes=np.array([[0, 0, 5, 5]], dtype=np.int32),
+                labels=np.array([12], dtype=np.int32),  # 1-indexed label 12 = stop_sign (contiguous index 11)
+                scores=np.array([0.8], dtype=np.float32),
+            ),
+        )
+        self._install_fake_model_api(monkeypatch, wrapper)
+
+        ann = tmp_path / "ann.json"
+        ann.write_text('{"images":[],"annotations":[],"categories":[]}')
+        metric = CocoDetectionMAP(annotation_file=ann, iou_type="bbox", label_offset=1)
+        metric.update = MagicMock()
+        metric.compute = MagicMock(return_value=0.0)
+        metric.reset = MagicMock()
+        sample = CalibrationSample(image_path=img_path, label=0, image_id=1)
+
+        converter._measure_metric(tmp_path / "model.xml", [sample], metric)
+
+        preds = metric.update.call_args.kwargs["predictions"]
+        # label 12 - offset 1 = 11 → COCO80_TO_COCO91[11] = 13 (stop_sign)
+        assert preds[0]["category_id"] == 13
 
     def test_bbox_dispatch_skips_samples_without_image_id(
         self,
