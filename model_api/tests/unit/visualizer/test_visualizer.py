@@ -202,7 +202,8 @@ class TestGrayscaleImageSupport:
         assert rendered.shape[2] == 3, f"Expected 3 channels, got {rendered.shape[2]}"
 
     def test_render_with_grayscale_ndarray_explicit_channel(
-        self, grayscale_ndarray_explicit_channel: np.ndarray
+        self,
+        grayscale_ndarray_explicit_channel: np.ndarray,
     ):
         """Test Visualizer.render() with grayscale ndarray having explicit channel (H, W, 1).
 
@@ -225,7 +226,9 @@ class TestGrayscaleImageSupport:
         assert len(rendered.shape) == 3, f"Expected 3D array, got shape {rendered.shape}"
 
     def test_show_with_grayscale_pil_image(
-        self, grayscale_pil_image: Image.Image, monkeypatch
+        self,
+        grayscale_pil_image: Image.Image,
+        monkeypatch,
     ):
         """Test Visualizer.show() with grayscale PIL Image."""
         heatmap = np.ones((100, 100), dtype=np.uint8) * 255
@@ -268,7 +271,9 @@ class TestGrayscaleImageSupport:
         assert shown[0] == "RGB", f"Expected RGB mode for display, got {shown[0]}"
 
     def test_save_with_grayscale_pil_image(
-        self, grayscale_pil_image: Image.Image, tmpdir: Path
+        self,
+        grayscale_pil_image: Image.Image,
+        tmpdir: Path,
     ):
         """Test Visualizer.save() with grayscale PIL Image."""
         heatmap = np.ones((100, 100), dtype=np.uint8) * 255
@@ -400,7 +405,7 @@ class TestGrayscaleHStackLayout:
         gray1 = Image.new("L", (50, 100), color=64)
         gray2 = Image.new("L", (50, 100), color=192)
 
-        result = HStack._stitch(gray1, gray2)
+        result = HStack._stitch(gray1, gray2)  # noqa: SLF001
 
         assert isinstance(result, Image.Image)
         assert result.mode == "RGB", f"Expected RGB result, got {result.mode}"
@@ -410,11 +415,13 @@ class TestGrayscaleHStackLayout:
         result_array = np.array(result)
         # Left half should be (64, 64, 64) in RGB
         assert np.allclose(
-            result_array[50, 10, :], [64, 64, 64]
+            result_array[50, 10, :],
+            [64, 64, 64],
         ), f"Expected [64,64,64], got {result_array[50, 10, :]}"
         # Right half should be (192, 192, 192) in RGB
         assert np.allclose(
-            result_array[50, 60, :], [192, 192, 192]
+            result_array[50, 60, :],
+            [192, 192, 192],
         ), f"Expected [192,192,192], got {result_array[50, 60, :]}"
 
     def test_hstack_stitch_mixed_modes(self):
@@ -424,7 +431,7 @@ class TestGrayscaleHStackLayout:
         gray_image = Image.new("L", (50, 100), color=128)
         rgb_image = Image.new("RGB", (50, 100), color=(255, 0, 0))
 
-        result = HStack._stitch(gray_image, rgb_image)
+        result = HStack._stitch(gray_image, rgb_image)  # noqa: SLF001
 
         assert isinstance(result, Image.Image)
         assert result.mode == "RGB"
@@ -566,7 +573,7 @@ class Test16BitImageSupport:
         data = np.array([[0, 32768, 65535]], dtype=np.uint16)  # min, mid, max
 
         visualizer = Visualizer()
-        rgb = visualizer._to_rgb(data)
+        rgb = visualizer._to_rgb(data)  # noqa: SLF001
         rgb_array = np.array(rgb)
 
         # After scaling: 0->0, 32768->128, 65535->255
@@ -581,7 +588,7 @@ class Test16BitImageSupport:
         assert pil_16bit.mode == "I;16"
 
         visualizer = Visualizer()
-        rgb = visualizer._to_rgb(pil_16bit)
+        rgb = visualizer._to_rgb(pil_16bit)  # noqa: SLF001
         rgb_array = np.array(rgb)
 
         # After scaling: 0->0, 32768->128, 65535->255
