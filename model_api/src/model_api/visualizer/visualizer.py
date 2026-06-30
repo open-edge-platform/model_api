@@ -66,23 +66,45 @@ class Visualizer:
         longer_edge = max(image.width, image.height)
         return max(1.0, longer_edge / SCALE_BASELINE)
 
-    def show(self, image: Image.Image | np.ndarray, result: Result) -> None:
+    @staticmethod
+    def _to_rgb(image: np.ndarray | Image.Image) -> Image.Image:
+        """Convert an image to RGB PIL Image.
+
+        Handles grayscale images (both PIL mode 'L' and 2D numpy arrays) by converting
+        them to RGB. This ensures compatibility with PIL.Image.blend() which requires
+        both images to have the same mode.
+
+        Args:
+            image: Input image as numpy array or PIL Image.
+
+        Returns:
+            PIL Image in RGB mode.
+        """
         if isinstance(image, np.ndarray):
+            # Handle single-channel 3D arrays (H, W, 1) by squeezing to 2D
+            if image.ndim == 3 and image.shape[2] == 1:
+                image = image.squeeze(axis=2)
             image = Image.fromarray(image)
+
+        if image.mode != "RGB":
+            image = image.convert("RGB")
+
+        return image
+
+    def show(self, image: Image.Image | np.ndarray, result: Result) -> None:
+        image = self._to_rgb(image)
         scene = self._scene_from_result(image, result)
         return scene.show()
 
     def save(self, image: Image.Image | np.ndarray, result: Result, path: Path) -> None:
-        if isinstance(image, np.ndarray):
-            image = Image.fromarray(image)
+        image = self._to_rgb(image)
         scene = self._scene_from_result(image, result)
         scene.save(path)
 
     def render(self, image: Image.Image | np.ndarray, result: Result) -> Image.Image | np.ndarray:
         is_numpy = isinstance(image, np.ndarray)
 
-        if is_numpy:
-            image = Image.fromarray(image)
+        image = self._to_rgb(image)
 
         scene = self._scene_from_result(image, result)
         result_img: Image = scene.render()
