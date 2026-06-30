@@ -429,3 +429,162 @@ class TestGrayscaleHStackLayout:
         assert isinstance(result, Image.Image)
         assert result.mode == "RGB"
         assert result.size == (100, 100)
+
+
+class Test16BitImageSupport:
+    """Tests for 16-bit image handling in Visualizer.
+
+    16-bit images require special handling:
+    1. 16-bit grayscale arrays (uint16) need scaling to 8-bit before conversion
+    2. 16-bit RGB arrays fail with Image.fromarray() - need manual scaling
+    3. PIL 'I;16' mode images need proper scaling during RGB conversion
+    """
+
+    @pytest.fixture
+    def grayscale_16bit_ndarray(self) -> np.ndarray:
+        """Create a 16-bit grayscale numpy array."""
+        data = np.zeros((100, 100), dtype=np.uint16)
+        data[25:75, 25:75] = 32768  # Mid-value for 16-bit (should be ~128 in 8-bit)
+        return data
+
+    @pytest.fixture
+    def rgb_16bit_ndarray(self) -> np.ndarray:
+        """Create a 16-bit RGB numpy array."""
+        data = np.zeros((100, 100, 3), dtype=np.uint16)
+        data[25:75, 25:75, 0] = 32768  # Red channel at mid-value
+        return data
+
+    @pytest.fixture
+    def grayscale_16bit_pil(self) -> Image.Image:
+        """Create a 16-bit grayscale PIL Image (mode 'I;16')."""
+        data = np.zeros((100, 100), dtype=np.uint16)
+        data[25:75, 25:75] = 32768
+        return Image.fromarray(data)
+
+    @pytest.fixture
+    def float32_ndarray(self) -> np.ndarray:
+        """Create a float32 numpy array in [0, 1] range."""
+        data = np.zeros((100, 100, 3), dtype=np.float32)
+        data[25:75, 25:75, 0] = 0.5  # Red channel at mid-value
+        return data
+
+    def test_16bit_grayscale_pil_mode(self, grayscale_16bit_pil: Image.Image):
+        """Confirm 16-bit grayscale PIL image has mode 'I;16'."""
+        assert grayscale_16bit_pil.mode == "I;16"
+
+    def test_render_with_16bit_grayscale_ndarray(self, grayscale_16bit_ndarray: np.ndarray):
+        """Test Visualizer.render() with 16-bit grayscale numpy array.
+
+        The 16-bit values should be scaled to 8-bit (32768 -> ~128).
+        """
+        heatmap = np.ones((100, 100), dtype=np.uint8) * 255
+
+        anomaly_result = AnomalyResult(
+            anomaly_map=heatmap,
+            pred_boxes=None,
+            pred_label="Anomaly",
+            pred_mask=None,
+            pred_score=0.85,
+        )
+
+        visualizer = Visualizer()
+        rendered = visualizer.render(grayscale_16bit_ndarray, anomaly_result)
+
+        assert isinstance(rendered, np.ndarray)
+        assert rendered.dtype == np.uint8
+        assert len(rendered.shape) == 3
+        assert rendered.shape[2] == 3
+
+    def test_render_with_16bit_rgb_ndarray(self, rgb_16bit_ndarray: np.ndarray):
+        """Test Visualizer.render() with 16-bit RGB numpy array.
+
+        The 16-bit values should be scaled to 8-bit.
+        """
+        heatmap = np.ones((100, 100), dtype=np.uint8) * 255
+
+        anomaly_result = AnomalyResult(
+            anomaly_map=heatmap,
+            pred_boxes=None,
+            pred_label="Anomaly",
+            pred_mask=None,
+            pred_score=0.85,
+        )
+
+        visualizer = Visualizer()
+        rendered = visualizer.render(rgb_16bit_ndarray, anomaly_result)
+
+        assert isinstance(rendered, np.ndarray)
+        assert rendered.dtype == np.uint8
+        assert rendered.shape == (100, 100, 3)
+
+    def test_render_with_16bit_grayscale_pil(self, grayscale_16bit_pil: Image.Image):
+        """Test Visualizer.render() with 16-bit PIL Image (mode 'I;16').
+
+        The 16-bit values should be scaled properly during RGB conversion.
+        """
+        heatmap = np.ones((100, 100), dtype=np.uint8) * 255
+
+        anomaly_result = AnomalyResult(
+            anomaly_map=heatmap,
+            pred_boxes=None,
+            pred_label="Anomaly",
+            pred_mask=None,
+            pred_score=0.85,
+        )
+
+        visualizer = Visualizer()
+        rendered = visualizer.render(grayscale_16bit_pil, anomaly_result)
+
+        assert isinstance(rendered, Image.Image)
+        assert rendered.mode == "RGB"
+
+    def test_render_with_float32_ndarray(self, float32_ndarray: np.ndarray):
+        """Test Visualizer.render() with float32 numpy array in [0, 1] range.
+
+        Float values should be scaled to 8-bit (0.5 -> 127/128).
+        """
+        heatmap = np.ones((100, 100), dtype=np.uint8) * 255
+
+        anomaly_result = AnomalyResult(
+            anomaly_map=heatmap,
+            pred_boxes=None,
+            pred_label="Anomaly",
+            pred_mask=None,
+            pred_score=0.85,
+        )
+
+        visualizer = Visualizer()
+        rendered = visualizer.render(float32_ndarray, anomaly_result)
+
+        assert isinstance(rendered, np.ndarray)
+        assert rendered.dtype == np.uint8
+        assert rendered.shape == (100, 100, 3)
+
+    def test_16bit_scaling_preserves_relative_values(self):
+        """Verify 16-bit to 8-bit scaling preserves relative intensity values."""
+        # Create image with known values
+        data = np.array([[0, 32768, 65535]], dtype=np.uint16)  # min, mid, max
+
+        visualizer = Visualizer()
+        rgb = visualizer._to_rgb(data)
+        rgb_array = np.array(rgb)
+
+        # After scaling: 0->0, 32768->128, 65535->255
+        assert rgb_array[0, 0, 0] == 0, f"Expected 0, got {rgb_array[0, 0, 0]}"
+        assert rgb_array[0, 1, 0] == 128, f"Expected 128, got {rgb_array[0, 1, 0]}"
+        assert rgb_array[0, 2, 0] == 255, f"Expected 255, got {rgb_array[0, 2, 0]}"
+
+    def test_16bit_pil_scaling_preserves_relative_values(self):
+        """Verify 16-bit PIL image scaling preserves relative intensity values."""
+        data = np.array([[0, 32768, 65535]], dtype=np.uint16)
+        pil_16bit = Image.fromarray(data)
+        assert pil_16bit.mode == "I;16"
+
+        visualizer = Visualizer()
+        rgb = visualizer._to_rgb(pil_16bit)
+        rgb_array = np.array(rgb)
+
+        # After scaling: 0->0, 32768->128, 65535->255
+        assert rgb_array[0, 0, 0] == 0, f"Expected 0, got {rgb_array[0, 0, 0]}"
+        assert rgb_array[0, 1, 0] == 128, f"Expected 128, got {rgb_array[0, 1, 0]}"
+        assert rgb_array[0, 2, 0] == 255, f"Expected 255, got {rgb_array[0, 2, 0]}"

@@ -74,6 +74,8 @@ class Visualizer:
         them to RGB. This ensures compatibility with PIL.Image.blend() which requires
         both images to have the same mode.
 
+        Also handles 16-bit images by scaling to 8-bit range before conversion.
+
         Args:
             image: Input image as numpy array or PIL Image.
 
@@ -84,7 +86,20 @@ class Visualizer:
             # Handle single-channel 3D arrays (H, W, 1) by squeezing to 2D
             if image.ndim == 3 and image.shape[2] == 1:
                 image = image.squeeze(axis=2)
+
+            # Handle 16-bit images by scaling to 8-bit
+            if image.dtype == np.uint16:
+                image = (image / 256).astype(np.uint8)
+            elif image.dtype == np.float32 or image.dtype == np.float64:
+                # Assume float images are in [0, 1] range
+                image = (image * 255).clip(0, 255).astype(np.uint8)
+
             image = Image.fromarray(image)
+
+        # Handle 16-bit PIL modes (I;16, I;16L, I;16B) by scaling to 8-bit
+        if image.mode.startswith("I;16") or image.mode == "I":
+            # Scale 16-bit/32-bit to 8-bit grayscale, then convert to RGB
+            image = image.point(lambda x: x / 256).convert("L")
 
         if image.mode != "RGB":
             image = image.convert("RGB")
