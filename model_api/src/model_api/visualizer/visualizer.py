@@ -52,6 +52,26 @@ class Visualizer:
         self.auto_scale = auto_scale
 
     @staticmethod
+    def _to_pil(image: np.ndarray) -> Image.Image:
+        """Convert numpy array to PIL Image, handling 16-bit and grayscale images.
+
+        PIL doesn't support 16-bit RGB images, so we convert them to 8-bit.
+        Grayscale images are converted to RGB for compatibility with overlays.
+
+        Args:
+            image: Input numpy array (uint8 or uint16, grayscale or RGB).
+
+        Returns:
+            PIL Image in 8-bit RGB format.
+        """
+        if image.dtype == np.uint16:
+            image = (image / 256).astype(np.uint8)
+        pil_image = Image.fromarray(image)
+        if pil_image.mode != "RGB":
+            pil_image = pil_image.convert("RGB")
+        return pil_image
+
+    @staticmethod
     def compute_scale_factor(image: Image.Image) -> float:
         """Compute a scale factor based on the image's longer edge relative to 720p (1280px).
 
@@ -68,13 +88,13 @@ class Visualizer:
 
     def show(self, image: Image.Image | np.ndarray, result: Result) -> None:
         if isinstance(image, np.ndarray):
-            image = Image.fromarray(image)
+            image = self._to_pil(image)
         scene = self._scene_from_result(image, result)
         return scene.show()
 
     def save(self, image: Image.Image | np.ndarray, result: Result, path: Path) -> None:
         if isinstance(image, np.ndarray):
-            image = Image.fromarray(image)
+            image = self._to_pil(image)
         scene = self._scene_from_result(image, result)
         scene.save(path)
 
@@ -82,7 +102,7 @@ class Visualizer:
         is_numpy = isinstance(image, np.ndarray)
 
         if is_numpy:
-            image = Image.fromarray(image)
+            image = self._to_pil(image)
 
         scene = self._scene_from_result(image, result)
         result_img: Image = scene.render()
