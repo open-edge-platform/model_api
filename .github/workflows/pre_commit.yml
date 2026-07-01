@@ -57,7 +57,7 @@ jobs:
       - name: Run pre-commit checks
         run: uvx pre-commit run --all-files
 
-  accuracy-tests:
+  unit-functional-tests:
     strategy:
       fail-fast: false
       matrix:
@@ -85,57 +85,6 @@ jobs:
             download.pytorch.org:443
             files.pythonhosted.org:443
             github.com:443
-            pypi.org:443
-            raw.githubusercontent.com:443
-            releases.astral.sh:443
-            storage.geti.intel.com:443
-
-      - *checkout
-
-      - &matrix-setup-uv
-        name: Install uv
-        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
-        with:
-          enable-cache: false
-          python-version: ${{ matrix.python-version }}
-          version: "0.11.13"
-
-      - &install-dependencies
-        name: Install dependencies
-        run: uv --directory model_api sync --locked --group tests --extra-index-url https://download.pytorch.org/whl/cpu
-
-      - name: Prepare test data
-        run: uv --directory model_api run python tests/accuracy/download_models.py -d data -j tests/accuracy/public_scope.json -l
-
-      - name: Run Python Test
-        run: uv --directory model_api run pytest --data=./data tests/accuracy/test_accuracy.py
-
-  unit-functional-tests:
-    strategy:
-      fail-fast: false
-      matrix:
-        os:
-          - "ubuntu-24.04"
-          - "windows-2022"
-        python-version:
-          - "3.11"
-          - "3.12"
-          - "3.13"
-          - "3.14"
-    name: unit & functional tests (${{ matrix.os }}, Python ${{ matrix.python-version }})
-    runs-on: ${{ matrix.os }}
-    steps:
-      - name: Harden the runner
-        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
-        with:
-          disable-sudo: true
-          disable-telemetry: true
-          egress-policy: block
-          allowed-endpoints: >
-            dc.services.visualstudio.com:443
-            download.pytorch.org:443
-            files.pythonhosted.org:443
-            github.com:443
             incoming.telemetry.mozilla.org:443
             ocsp.digicert.com:443
             ocsp.sectigo.com:443
@@ -148,9 +97,16 @@ jobs:
 
       - *checkout
 
-      - *matrix-setup-uv
+      - &matrix-setup-uv
+        name: Install uv
+        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+        with:
+          enable-cache: false
+          python-version: ${{ matrix.python-version }}
+          version: "0.11.13"
 
-      - *install-dependencies
+      - name: Install dependencies
+        run: uv --directory model_api sync --locked --group tests --extra-index-url https://download.pytorch.org/whl/cpu
 
       - name: Run model_api unit tests
         run: uv --directory model_api run pytest tests/unit --cov
@@ -158,10 +114,9 @@ jobs:
       - name: Run model_converter unit tests
         run: uv --directory model_converter run --group tests pytest tests/unit --cov
 
-      - &prepare-test-data
-        name: Prepare test data
+      - name: Prepare test data
         run: |
-          uv --directory model_api run python tests/accuracy/download_models.py -d data -j tests/precommit/public_scope.json -l
+          uv --directory model_api run python tests/functional/download_models.py -d data -j tests/functional/public_scope.json -l
 
       - name: Run test
         run: |
@@ -213,7 +168,9 @@ jobs:
       - name: Install dependencies
         run: uv --directory model_api sync --locked --group tests --extra ovms --extra-index-url https://download.pytorch.org/whl/cpu
 
-      - *prepare-test-data
+      - name: Prepare test data
+        run: |
+          uv --directory model_api run python tests/functional/download_models.py -d data -j tests/functional/serving_scope.json -l
 
       - name: serving_api
         run: |
@@ -226,7 +183,6 @@ jobs:
   pre-commit-result:
     runs-on: ubuntu-latest
     needs:
-      - accuracy-tests
       - code_quality_checks
       - unit-functional-tests
       - serving_api-tests
