@@ -1433,13 +1433,13 @@
       "labels": "COCO_81",
       "model_full_name": "Mask R-CNN Swin-Tiny",
       "description": "Mask R-CNN with Swin-Tiny backbone for instance segmentation trained with getitune",
-      "docs": "https://github.com/open-edge-platform/training_extensions",
+      "docs": "https://github.com/open-mmlab/mmdetection/tree/main/configs/swin",
       "getitune_recipe": "maskrcnn_swint",
       "getitune_task": "INSTANCE_SEGMENTATION",
       "model_type": "MaskRCNN",
       "quantization_model_type": "transformer",
       "license": "apache-2.0",
-      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
+      "license_link": "https://github.com/open-mmlab/mmdetection/blob/main/LICENSE",
       "tags": ["image-segmentation", "instance-segmentation", "vision"],
       "dataset_type": "coco-detection"
     }
