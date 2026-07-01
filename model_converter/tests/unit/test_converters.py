@@ -150,6 +150,64 @@ class TestCopyReadme:
         content = (output_folder / "README.md").read_text()
         assert f"Docs page name: {docs_page_name}" in content
 
+    def test_renders_ignored_scope_note_for_int8_variant(self, converter, template_dir, tmp_path, monkeypatch):
+        """copy_readme documents mask-head precision protection when configured, for int8 variant only."""
+        _set_template_root(monkeypatch, template_dir)
+        (template_dir / "README-torchvision-int8.md").write_text(
+            "Note:\n<<quantization_ignored_scope_note>>\nEnd\n",
+        )
+        (template_dir / "README-torchvision-fp16.md").write_text(
+            "Note:\n<<quantization_ignored_scope_note>>\nEnd\n",
+        )
+        model_config = {
+            "model_short_name": "maskrcnn_r50",
+            "model_library": "torchvision",
+            "license": "bsd-3-clause",
+            "license_link": "https://example.com/license",
+            "docs": "https://docs.example.com",
+            "quantization_ignored_scope_patterns": [".*mask_predictor.*", ".*mask_head.*"],
+        }
+
+        int8_folder = tmp_path / "maskrcnn_r50-int8-ov"
+        int8_folder.mkdir()
+        converter.copy_readme(model_config, int8_folder, variant="int8")
+        int8_content = (int8_folder / "README.md").read_text()
+        assert "`.*mask_predictor.*`" in int8_content
+        assert "`.*mask_head.*`" in int8_content
+        assert "excluded from INT8 quantization" in int8_content
+
+        # The note only makes sense for the quantized (int8) variant.
+        fp16_folder = tmp_path / "maskrcnn_r50-fp16-ov"
+        fp16_folder.mkdir()
+        converter.copy_readme(model_config, fp16_folder, variant="fp16")
+        fp16_content = (fp16_folder / "README.md").read_text()
+        assert "mask_predictor" not in fp16_content
+
+    def test_omits_ignored_scope_note_when_not_configured(self, converter, template_dir, tmp_path, monkeypatch):
+        """copy_readme leaves the note blank when quantization_ignored_scope_patterns is absent."""
+        _set_template_root(monkeypatch, template_dir)
+        (template_dir / "README-torchvision-int8.md").write_text(
+            "Note:\n<<quantization_ignored_scope_note>>\nEnd\n",
+        )
+        output_folder = tmp_path / "test_model-int8-ov"
+        output_folder.mkdir()
+
+        converter.copy_readme(
+            {
+                "model_short_name": "test_model",
+                "model_library": "torchvision",
+                "license": "apache-2.0",
+                "license_link": "https://apache.org/licenses/LICENSE-2.0",
+                "docs": "https://docs.example.com",
+            },
+            output_folder,
+            variant="int8",
+        )
+
+        content = (output_folder / "README.md").read_text()
+        assert "mask_predictor" not in content
+        assert "excluded from INT8 quantization" not in content
+
     @pytest.mark.parametrize(
         ("config", "expected"),
         [
@@ -949,6 +1007,97 @@ class TestValidateTorchModel:
             )
 
         assert quantize.call_args.kwargs["model_type"] == "transformer"
+
+    def test_passes_ignored_scope_when_configured(
+        self,
+        converter,
+        sample_model_config,
+        template_dir,
+        tmp_path,
+        monkeypatch,
+    ):
+        """quantization_ignored_scope_patterns builds an nncf.IgnoredScope and forwards it."""
+        _set_template_root(monkeypatch, template_dir)
+        (template_dir / "README-torchvision-int8.md").write_text("# <<model_name>>")
+        fp16_dir = tmp_path / "test_model-fp16-ov"
+        fp16_dir.mkdir(parents=True)
+        model_path = fp16_dir / "test_model_fp32.xml"
+        model_path.write_text("<net/>")
+        calibration_data = [np.zeros((1, 3, 224, 224), dtype=np.float32)]
+
+        quantized_model = MagicMock()
+        quantized_model.get_rt_info.return_value = SimpleNamespace(value={"model_type": "MaskRCNN"})
+        core = SimpleNamespace(read_model=MagicMock(return_value="ov_model"))
+        fake_ov = ModuleType("openvino")
+        fake_ov.Core = MagicMock(return_value=core)
+        fake_ov.save_model = MagicMock(
+            side_effect=lambda _model, path, compress_to_fp16=True: Path(path).write_text("<int8/>") or None,
+        )
+        quantize = MagicMock(return_value=quantized_model)
+        ignored_scope_sentinel = SimpleNamespace(patterns=[".*mask_predictor.*", ".*mask_head.*"])
+        fake_nncf = ModuleType("nncf")
+        fake_nncf.Dataset = MagicMock(side_effect=lambda generator: list(generator))
+        fake_nncf.quantize = quantize
+        fake_nncf.QuantizationPreset = SimpleNamespace(PERFORMANCE="performance", MIXED="mixed")
+        fake_nncf.IgnoredScope = MagicMock(return_value=ignored_scope_sentinel)
+
+        model_config = sample_model_config | {
+            "quantization_ignored_scope_patterns": [".*mask_predictor.*", ".*mask_head.*"],
+        }
+
+        with patch.dict(sys.modules, {"openvino": fake_ov, "nncf": fake_nncf}):
+            converter.quantize_model(
+                model_path=model_path,
+                calibration_data=calibration_data,
+                model_config=model_config,
+                preset="mixed",
+            )
+
+        fake_nncf.IgnoredScope.assert_called_once_with(patterns=[".*mask_predictor.*", ".*mask_head.*"])
+        assert quantize.call_args.kwargs["ignored_scope"] is ignored_scope_sentinel
+
+    def test_omits_ignored_scope_when_not_configured(
+        self,
+        converter,
+        sample_model_config,
+        template_dir,
+        tmp_path,
+        monkeypatch,
+    ):
+        """Models without quantization_ignored_scope_patterns quantize the full graph (unchanged behavior)."""
+        _set_template_root(monkeypatch, template_dir)
+        (template_dir / "README-torchvision-int8.md").write_text("# <<model_name>>")
+        fp16_dir = tmp_path / "test_model-fp16-ov"
+        fp16_dir.mkdir(parents=True)
+        model_path = fp16_dir / "test_model_fp32.xml"
+        model_path.write_text("<net/>")
+        calibration_data = [np.zeros((1, 3, 224, 224), dtype=np.float32)]
+
+        quantized_model = MagicMock()
+        quantized_model.get_rt_info.return_value = SimpleNamespace(value={"model_type": "Classification"})
+        core = SimpleNamespace(read_model=MagicMock(return_value="ov_model"))
+        fake_ov = ModuleType("openvino")
+        fake_ov.Core = MagicMock(return_value=core)
+        fake_ov.save_model = MagicMock(
+            side_effect=lambda _model, path, compress_to_fp16=True: Path(path).write_text("<int8/>") or None,
+        )
+        quantize = MagicMock(return_value=quantized_model)
+        fake_nncf = ModuleType("nncf")
+        fake_nncf.Dataset = MagicMock(side_effect=lambda generator: list(generator))
+        fake_nncf.quantize = quantize
+        fake_nncf.QuantizationPreset = SimpleNamespace(PERFORMANCE="performance", MIXED="mixed")
+        fake_nncf.IgnoredScope = MagicMock()
+
+        with patch.dict(sys.modules, {"openvino": fake_ov, "nncf": fake_nncf}):
+            converter.quantize_model(
+                model_path=model_path,
+                calibration_data=calibration_data,
+                model_config=sample_model_config,
+                preset="mixed",
+            )
+
+        fake_nncf.IgnoredScope.assert_not_called()
+        assert "ignored_scope" not in quantize.call_args.kwargs
 
     def test_validates_fp32_and_int8_outputs_when_requested(
         self,

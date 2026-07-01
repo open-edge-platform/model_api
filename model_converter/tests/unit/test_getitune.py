@@ -1219,3 +1219,23 @@ class TestReadPreprocessingFromModel:
         assert scale_values == "1 1 1"
         assert reverse is True
         assert intensity_scale == pytest.approx(1.0)
+
+
+def test_export_presets_exclude_maskrcnn_efficientnet_b2b():
+    """Mask R-CNN EfficientNet-B2B is excluded because its pretrained checkpoint has 0 COCO TPs."""
+    presets_dir = Path(__file__).parents[2] / "presets"
+    preset_paths = [presets_dir / "config.json"]
+    preset_paths.extend(
+        path
+        for path in [
+            presets_dir / "config-export.json",
+            presets_dir / "config-export-new.json",
+        ]
+        if path.exists()
+    )
+
+    for preset_path in preset_paths:
+        config = json.loads(preset_path.read_text())
+        model_names = {model["model_short_name"] for model in config["models"]}
+
+        assert "maskrcnn_efficientnet_b2b" not in model_names, preset_path

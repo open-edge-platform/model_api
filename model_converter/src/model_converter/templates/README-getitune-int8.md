@@ -21,7 +21,7 @@ Weight compression was performed using nncf.quantize with the following paramete
 
 - **Quantization method**: Post-Training Quantization (PTQ)
 - **Precision**: INT8 for both weights and activations
-
+<<quantization_ignored_scope_note>>
 For more information on quantization, check the [OpenVINO model optimization guide](https://docs.openvino.ai/2026/openvino-workflow/model-optimization-guide/quantizing-models-post-training.html).
 
 ## Compatibility

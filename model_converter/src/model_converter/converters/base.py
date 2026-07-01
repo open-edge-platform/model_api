@@ -420,6 +420,20 @@ class BaseConverter(ABC):
             else:
                 placeholders[template_placeholder("tags_yaml")] = ""
 
+            # Note about layers excluded from INT8 quantization (kept at higher precision),
+            # e.g. the Mask R-CNN mask-prediction head, which is highly sensitive to
+            # quantization noise and can otherwise produce degenerate (empty) masks.
+            ignored_scope_patterns = model_config.get("quantization_ignored_scope_patterns")
+            if variant == "int8" and ignored_scope_patterns and isinstance(ignored_scope_patterns, list):
+                patterns_str = ", ".join(f"`{pattern}`" for pattern in ignored_scope_patterns)
+                placeholders[template_placeholder("quantization_ignored_scope_note")] = (
+                    f"- **Mixed precision**: layers matching {patterns_str} are excluded from "
+                    "INT8 quantization and kept at higher precision, since they are highly "
+                    "sensitive to quantization noise\n"
+                )
+            else:
+                placeholders[template_placeholder("quantization_ignored_scope_note")] = ""
+
             for key, value in model_config.items():
                 if value is None:
                     continue
@@ -974,7 +988,17 @@ class BaseConverter(ABC):
         Args:
             model_path: Path to the FP32 OpenVINO model (.xml)
             calibration_data: List of calibration images
-            model_config: Model configuration used for README rendering
+            model_config: Model configuration used for README rendering. May
+                include ``quantization_model_type: "transformer"`` to select
+                NNCF's transformer-aware quantization, and/or
+                ``quantization_ignored_scope_patterns: list[str]`` — regex
+                patterns (matched against OpenVINO node friendly names) for
+                layers to exclude from INT8 quantization (kept at higher
+                precision). Used e.g. for MaskRCNN-family models to protect
+                the mask-prediction head (``mask_predictor``/``mask_head``
+                layers), whose narrow output dynamic range is highly
+                sensitive to quantization noise and can otherwise collapse
+                below the mask binarization threshold, producing empty masks.
             preset: Quantization preset ('accuracy', 'performance', 'mixed')
             validation_data: Optional validation images for accuracy measurement
             validation_labels: Optional validation labels for accuracy measurement
@@ -1016,6 +1040,11 @@ class BaseConverter(ABC):
             model_type = model_config.get("quantization_model_type")
             if model_type and model_type.lower() == "transformer":
                 quantize_kwargs["model_type"] = nncf.ModelType.TRANSFORMER
+
+            ignored_scope_patterns = model_config.get("quantization_ignored_scope_patterns")
+            if ignored_scope_patterns:
+                self.logger.info(f"Excluding layers matching {ignored_scope_patterns} from INT8 quantization")
+                quantize_kwargs["ignored_scope"] = nncf.IgnoredScope(patterns=list(ignored_scope_patterns))
 
             quantized_model = nncf.quantize(
                 model,
