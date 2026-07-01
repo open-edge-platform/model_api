@@ -90,9 +90,7 @@ class TestPresetConfig:
         """SSD MobileNet-V2 keeps Model API metadata aligned with getitune export settings."""
         config = self._load_config()
 
-        model_config = next(
-            model for model in config["models"] if model["model_short_name"] == "ssd_mobilenet_v2"
-        )
+        model_config = next(model for model in config["models"] if model["model_short_name"] == "ssd_mobilenet_v2")
 
         assert model_config["labels"] == "COCO_80"
         assert model_config["preprocessing_overrides"] == {
