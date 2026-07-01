@@ -882,6 +882,13 @@
       "getitune_task": "DETECTION",
       "getitune_recipe": "ssd_mobilenetv2",
       "model_type": "SSD",
+      "preprocessing_overrides": {
+        "confidence_threshold": "0.02",
+        "resize_type": "standard",
+        "reverse_input_channels": "False",
+        "mean_values": "0.0 0.0 0.0",
+        "scale_values": "1.0 1.0 1.0"
+      },
       "tags": ["object-detection", "vision"],
       "license": "apache-2.0",
       "license_link": "https://github.com/open-mmlab/mmdetection/blob/main/LICENSE",
@@ -1156,13 +1163,17 @@
     {
       "model_short_name": "rfdetr_seg_large",
       "model_library": "getitune",
-      "labels": "COCO_92",
+      "labels": "COCO_V1",
       "model_full_name": "RF-DETR Segmentation Large",
       "description": "RF-DETR Large for instance segmentation trained with getitune",
       "docs": "https://github.com/roboflow/rf-detr",
       "getitune_recipe": "rfdetr_seg_large",
       "getitune_task": "INSTANCE_SEGMENTATION",
-      "model_type": "MaskRCNN",
+      "model_type": "DETRInstSeg",
+      "quantization_model_type": "transformer",
+      "model_info_overrides": {
+        "model_type": "DETRInstSeg"
+      },
       "preprocessing_overrides": {
         "mean_values": "0.0 0.0 0.0",
         "scale_values": "1.0 1.0 1.0"
@@ -1175,13 +1186,17 @@
     {
       "model_short_name": "rfdetr_seg_medium",
       "model_library": "getitune",
-      "labels": "COCO_92",
+      "labels": "COCO_V1",
       "model_full_name": "RF-DETR Segmentation Medium",
       "description": "RF-DETR Medium for instance segmentation trained with getitune",
       "docs": "https://github.com/roboflow/rf-detr",
       "getitune_recipe": "rfdetr_seg_medium",
       "getitune_task": "INSTANCE_SEGMENTATION",
-      "model_type": "MaskRCNN",
+      "model_type": "DETRInstSeg",
+      "quantization_model_type": "transformer",
+      "model_info_overrides": {
+        "model_type": "DETRInstSeg"
+      },
       "preprocessing_overrides": {
         "mean_values": "0.0 0.0 0.0",
         "scale_values": "1.0 1.0 1.0"
@@ -1194,13 +1209,17 @@
     {
       "model_short_name": "rfdetr_seg_small",
       "model_library": "getitune",
-      "labels": "COCO_92",
+      "labels": "COCO_V1",
       "model_full_name": "RF-DETR Segmentation Small",
       "description": "RF-DETR Small for instance segmentation trained with getitune",
       "docs": "https://github.com/roboflow/rf-detr",
       "getitune_recipe": "rfdetr_seg_small",
       "getitune_task": "INSTANCE_SEGMENTATION",
-      "model_type": "MaskRCNN",
+      "model_type": "DETRInstSeg",
+      "quantization_model_type": "transformer",
+      "model_info_overrides": {
+        "model_type": "DETRInstSeg"
+      },
       "preprocessing_overrides": {
         "mean_values": "0.0 0.0 0.0",
         "scale_values": "1.0 1.0 1.0"
@@ -1213,13 +1232,17 @@
     {
       "model_short_name": "rfdetr_seg_xlarge",
       "model_library": "getitune",
-      "labels": "COCO_92",
+      "labels": "COCO_V1",
       "model_full_name": "RF-DETR Segmentation X-Large",
       "description": "RF-DETR Extra-Large for instance segmentation trained with getitune",
       "docs": "https://github.com/roboflow/rf-detr",
       "getitune_recipe": "rfdetr_seg_xlarge",
       "getitune_task": "INSTANCE_SEGMENTATION",
-      "model_type": "MaskRCNN",
+      "model_type": "DETRInstSeg",
+      "quantization_model_type": "transformer",
+      "model_info_overrides": {
+        "model_type": "DETRInstSeg"
+      },
       "preprocessing_overrides": {
         "mean_values": "0.0 0.0 0.0",
         "scale_values": "1.0 1.0 1.0"

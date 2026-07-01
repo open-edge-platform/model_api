@@ -486,13 +486,6 @@ class BaseConverter(ABC):
             coco80 = [categories[cat_id].replace(" ", "_") for cat_id in COCO80_TO_COCO91]
             return " ".join(["__background__", *coco80])
 
-        if label_set == "COCO_92":
-            from torchvision.models.detection import MaskRCNN_ResNet50_FPN_Weights
-
-            categories = MaskRCNN_ResNet50_FPN_Weights.COCO_V1.meta["categories"]
-            coco_v1 = [label.replace(" ", "_") for label in categories]
-            return " ".join(["__background__", *coco_v1])
-
         return None
 
     def _collect_dataset_entries(
@@ -817,6 +810,8 @@ class BaseConverter(ABC):
                 return
             if metric.iou_type == "bbox":
                 self._feed_bbox_predictions(metric, result, sample)
+            elif metric.iou_type == "segm":
+                self._feed_segm_predictions(metric, result, sample)
             return
 
         if isinstance(metric, SemSegMIoU):
@@ -858,14 +853,14 @@ class BaseConverter(ABC):
         postprocessors (whose labels are 1-indexed, not 0-indexed).
         When ``category_ids_are_coco91`` is ``True``, ``label`` is already an
         original COCO 91-class category ID (e.g. getitune COCO_V1/COCO_92
-        models) and is used verbatim (``label_offset`` is ignored). The
+        models), after subtracting any wrapper compensation offset. The
         ``[x_min, y_min, x_max, y_max]`` box is converted to COCO ``[x, y, w, h]``
         format.
         """
         x_min, y_min, x_max, y_max = (float(v) for v in bbox_xyxy)
         n = int(label)
         if category_ids_are_coco91:
-            coco_cat_id = n
+            coco_cat_id = n - label_offset
         else:
             idx = n - label_offset
             coco_cat_id = COCO80_TO_COCO91[idx] if 0 <= idx < len(COCO80_TO_COCO91) else n + 1
@@ -900,6 +895,65 @@ class BaseConverter(ABC):
                 label_offset=label_offset,
             )
             for bbox, label, score in zip(bboxes, labels, scores)
+        ]
+        metric.update(predictions=preds)
+
+    @staticmethod
+    def _build_coco_segm_prediction(
+        image_id: Any,
+        label: Any,
+        bbox_xyxy: Any,
+        score: Any,
+        mask: Any,
+        *,
+        category_ids_are_coco91: bool = False,
+        label_offset: int = 0,
+    ) -> dict[str, Any]:
+        """Build one COCO-format instance-segmentation prediction dict."""
+        from pycocotools import mask as mask_utils
+
+        prediction = BaseConverter._build_coco_prediction(
+            image_id,
+            label,
+            bbox_xyxy,
+            score,
+            category_ids_are_coco91=category_ids_are_coco91,
+            label_offset=label_offset,
+        )
+        binary_mask = np.asarray(mask, dtype=np.uint8)
+        rle = mask_utils.encode(np.asfortranarray(binary_mask))
+        counts = rle.get("counts")
+        if isinstance(counts, bytes):
+            rle["counts"] = counts.decode("ascii")
+        prediction["segmentation"] = rle
+        return prediction
+
+    @staticmethod
+    def _feed_segm_predictions(
+        metric: "CocoDetectionMAP",
+        result: Any,
+        sample: "CalibrationSample",
+    ) -> None:
+        bboxes = getattr(result, "bboxes", None)
+        labels = getattr(result, "labels", None)
+        scores = getattr(result, "scores", None)
+        masks = getattr(result, "masks", None)
+        if bboxes is None or labels is None or scores is None or masks is None:
+            return
+        image_id = sample.image_id if sample.image_id is not None else 0
+        category_ids_are_coco91 = getattr(metric, "category_ids_are_coco91", False)
+        label_offset = getattr(metric, "label_offset", 0)
+        preds = [
+            BaseConverter._build_coco_segm_prediction(
+                image_id,
+                label,
+                bbox,
+                score,
+                mask,
+                category_ids_are_coco91=category_ids_are_coco91,
+                label_offset=label_offset,
+            )
+            for bbox, label, score, mask in zip(bboxes, labels, scores, masks)
         ]
         metric.update(predictions=preds)
 

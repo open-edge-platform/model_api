@@ -78,6 +78,53 @@ def getitune_converter(tmp_output_dir, tmp_cache_dir, training_extensions_dir, m
     )
 
 
+class TestPresetConfig:
+    """Tests for getitune preset configuration."""
+
+    @staticmethod
+    def _load_config() -> dict:
+        config_path = Path(__file__).resolve().parents[2] / "presets" / "config.json"
+        return json.loads(config_path.read_text())
+
+    def test_ssd_mobilenet_v2_has_export_matching_preprocessing_overrides(self):
+        """SSD MobileNet-V2 keeps Model API metadata aligned with getitune export settings."""
+        config = self._load_config()
+
+        model_config = next(
+            model for model in config["models"] if model["model_short_name"] == "ssd_mobilenet_v2"
+        )
+
+        assert model_config["labels"] == "COCO_80"
+        assert model_config["preprocessing_overrides"] == {
+            "confidence_threshold": "0.02",
+            "resize_type": "standard",
+            "reverse_input_channels": "False",
+            "mean_values": "0.0 0.0 0.0",
+            "scale_values": "1.0 1.0 1.0",
+        }
+
+    def test_rfdetr_segmentation_configs_use_detr_instance_segmentation_wrapper(self):
+        """RF-DETR segmentation presets must select full-image mask postprocessing."""
+        config = self._load_config()
+        expected_names = {
+            "rfdetr_seg_large",
+            "rfdetr_seg_medium",
+            "rfdetr_seg_small",
+            "rfdetr_seg_xlarge",
+        }
+
+        model_configs = {
+            model["model_short_name"]: model
+            for model in config["models"]
+            if model.get("model_short_name") in expected_names
+        }
+
+        assert set(model_configs) == expected_names
+        for model_config in model_configs.values():
+            assert model_config["model_type"] == "DETRInstSeg"
+            assert model_config["model_info_overrides"] == {"model_type": "DETRInstSeg"}
+
+
 class TestProcessModelConfig:
     """Tests for GetituneConverter.process_model_config."""
 
@@ -967,6 +1014,74 @@ class TestApplyPreprocessingOverrides:
             getitune_converter._apply_preprocessing_overrides(config, model_xml)
 
         assert "Could not apply preprocessing overrides to exported model" in caplog.text
+
+
+class TestApplyModelInfoOverrides:
+    """Tests for GetituneConverter._apply_model_info_overrides."""
+
+    def test_no_overrides_in_config_is_a_noop(self, getitune_converter, sample_getitune_config, tmp_path):
+        """Without a model_info_overrides config, no OpenVINO work is attempted."""
+        fake_ov = types.ModuleType("openvino")
+        core = MagicMock()
+        setattr(fake_ov, "Core", MagicMock(return_value=core))
+        with patch.dict("sys.modules", {"openvino": fake_ov}):
+            getitune_converter._apply_model_info_overrides(sample_getitune_config, tmp_path / "model.xml")
+        core.read_model.assert_not_called()
+
+    def test_rewrites_overrides_into_existing_models(self, getitune_converter, sample_getitune_config, tmp_path):
+        """Model-info override values are written to rt_info and the models are re-saved."""
+        overrides = {"model_type": "DETRInstSeg"}
+        config = {**sample_getitune_config, "model_info_overrides": overrides}
+        fp16_xml = tmp_path / "rfdetr_seg_small.xml"
+        fp32_xml = tmp_path / "rfdetr_seg_small_fp32.xml"
+        _write_openvino_model(fp16_xml)
+        _write_openvino_model(fp32_xml)
+        missing_xml = tmp_path / "missing.xml"
+
+        fake_ov = types.ModuleType("openvino")
+        core = MagicMock()
+        model = MagicMock()
+        core.read_model.return_value = model
+        setattr(fake_ov, "Core", MagicMock(return_value=core))
+
+        def fake_save_model(_model, path, compress_to_fp16):
+            assert path != fp16_xml
+            assert path != fp32_xml
+            _write_openvino_model(Path(path))
+
+        save_model = MagicMock(side_effect=fake_save_model)
+        setattr(fake_ov, "save_model", save_model)
+
+        with patch.dict("sys.modules", {"openvino": fake_ov}):
+            getitune_converter._apply_model_info_overrides(config, fp16_xml, fp32_xml, missing_xml)
+
+        model.set_rt_info.assert_called_with("DETRInstSeg", ["model_info", "model_type"])
+        assert save_model.call_count == 2
+        assert save_model.call_args_list[0].kwargs["compress_to_fp16"] is True
+        assert save_model.call_args_list[1].kwargs["compress_to_fp16"] is False
+        assert fp16_xml.exists()
+        assert fp32_xml.exists()
+        assert not (tmp_path / "rfdetr_seg_small_model_info_tmp.xml").exists()
+        assert not (tmp_path / "rfdetr_seg_small_fp32_model_info_tmp.xml").exists()
+
+    def test_handles_openvino_runtime_error(self, getitune_converter, sample_getitune_config, tmp_path, caplog):
+        """A failure while rewriting model-info overrides is logged and swallowed."""
+        config = {**sample_getitune_config, "model_info_overrides": {"model_type": "DETRInstSeg"}}
+        model_xml = tmp_path / "rfdetr_seg_small.xml"
+        _write_openvino_model(model_xml)
+
+        fake_ov = types.ModuleType("openvino")
+        core = MagicMock()
+        core.read_model.side_effect = RuntimeError("read failed")
+        setattr(fake_ov, "Core", MagicMock(return_value=core))
+
+        with (
+            patch.dict("sys.modules", {"openvino": fake_ov}),
+            caplog.at_level(logging.WARNING),
+        ):
+            getitune_converter._apply_model_info_overrides(config, model_xml)
+
+        assert "Could not apply model_info overrides to exported model" in caplog.text
 
 
 class TestReadPreprocessingFromModel:

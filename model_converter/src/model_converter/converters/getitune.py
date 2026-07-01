@@ -214,6 +214,7 @@ class GetituneConverter(BaseConverter):
 
         # Overwrite the exporter's placeholder labels with real class names.
         self._apply_config_labels(config, target_xml, fp32_xml)
+        self._apply_model_info_overrides(config, target_xml, fp32_xml)
         self._apply_preprocessing_overrides(config, target_xml, fp32_xml)
 
         # Extract and save model_info as config.json
@@ -315,6 +316,36 @@ class GetituneConverter(BaseConverter):
             self.logger.info(f"✓ Applied preprocessing overrides to exported model(s): {overrides}")
         except (ImportError, RuntimeError) as e:
             self.logger.warning(f"Could not apply preprocessing overrides to exported model: {e}")
+
+    def _apply_model_info_overrides(self, config: dict[str, Any], *model_paths: Path) -> None:
+        """Override arbitrary ``model_info`` rt_info fields with configured values.
+
+        Args:
+            config: Model configuration dictionary.
+            *model_paths: OpenVINO model XML files to update in place.
+        """
+        overrides = config.get("model_info_overrides")
+        if not overrides:
+            return
+
+        try:
+            import openvino as ov
+
+            core = ov.Core()
+            for model_path in model_paths:
+                if not model_path.exists():
+                    continue
+                model = core.read_model(model_path)
+                for key, value in overrides.items():
+                    model.set_rt_info(str(value), ["model_info", key])
+
+                tmp_xml = model_path.with_name(f"{model_path.stem}_model_info_tmp.xml")
+                ov.save_model(model, tmp_xml, compress_to_fp16=not model_path.stem.endswith("_fp32"))
+                tmp_xml.replace(model_path)
+                tmp_xml.with_suffix(".bin").replace(model_path.with_suffix(".bin"))
+            self.logger.info(f"✓ Applied model_info overrides to exported model(s): {overrides}")
+        except (ImportError, RuntimeError) as e:
+            self.logger.warning(f"Could not apply model_info overrides to exported model: {e}")
 
     # Maps the exported model's ``input_dtype`` to the divisor that maps its raw
     # integer range to [0, 1]. Mirrors Model API's intensity inference so the

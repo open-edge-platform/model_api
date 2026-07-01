@@ -1317,6 +1317,40 @@ class TestMeasureMetric:
         preds = metric.update.call_args.kwargs["predictions"]
         assert preds[0]["category_id"] == 11  # used verbatim, not remapped to 13
 
+    def test_bbox_dispatch_applies_label_offset_for_native_coco91(
+        self,
+        converter,
+        tmp_path,
+        monkeypatch,
+    ):
+        """RF-DETR instance seg labels are native COCO IDs after undoing Model API's +1 shift."""
+        from model_converter.datasets import CalibrationSample
+        from model_converter.metrics import CocoDetectionMAP
+
+        img_path = tmp_path / "img.jpg"
+        cv2.imwrite(str(img_path), np.zeros((10, 10, 3), dtype=np.uint8))
+        wrapper = MagicMock(
+            return_value=SimpleNamespace(
+                bboxes=np.array([[0, 0, 5, 5]], dtype=np.int32),
+                labels=np.array([14], dtype=np.int32),  # Model API shifted native category 13 to 14.
+                scores=np.array([0.8], dtype=np.float32),
+            ),
+        )
+        self._install_fake_model_api(monkeypatch, wrapper)
+
+        ann = tmp_path / "ann.json"
+        ann.write_text('{"images":[],"annotations":[],"categories":[]}')
+        metric = CocoDetectionMAP(annotation_file=ann, iou_type="bbox", category_ids_are_coco91=True, label_offset=1)
+        metric.update = MagicMock()
+        metric.compute = MagicMock(return_value=0.0)
+        metric.reset = MagicMock()
+        sample = CalibrationSample(image_path=img_path, label=0, image_id=1)
+
+        converter._measure_metric(tmp_path / "model.xml", [sample], metric)
+
+        preds = metric.update.call_args.kwargs["predictions"]
+        assert preds[0]["category_id"] == 13
+
     def test_bbox_dispatch_applies_label_offset_for_instance_seg(
         self,
         converter,
@@ -1351,6 +1385,57 @@ class TestMeasureMetric:
         preds = metric.update.call_args.kwargs["predictions"]
         # label 12 - offset 1 = 11 → COCO80_TO_COCO91[11] = 13 (stop_sign)
         assert preds[0]["category_id"] == 13
+
+    def test_segm_dispatch_serializes_masks_as_coco_rle(
+        self,
+        converter,
+        tmp_path,
+        monkeypatch,
+    ):
+        """Instance segmentation metrics receive COCO RLE mask predictions."""
+        from model_converter.datasets import CalibrationSample
+        from model_converter.metrics import CocoDetectionMAP
+
+        img_path = tmp_path / "img.jpg"
+        cv2.imwrite(str(img_path), np.zeros((10, 10, 3), dtype=np.uint8))
+        wrapper = MagicMock(
+            return_value=SimpleNamespace(
+                bboxes=np.array([[1, 2, 6, 8]], dtype=np.int32),
+                labels=np.array([4], dtype=np.int32),
+                scores=np.array([0.9], dtype=np.float32),
+                masks=np.array(
+                    [
+                        [
+                            [0, 1, 1, 0],
+                            [0, 1, 1, 0],
+                            [0, 0, 0, 0],
+                        ],
+                    ],
+                    dtype=np.uint8,
+                ),
+            ),
+        )
+        self._install_fake_model_api(monkeypatch, wrapper)
+
+        ann = tmp_path / "ann.json"
+        ann.write_text('{"images":[],"annotations":[],"categories":[]}')
+        metric = CocoDetectionMAP(annotation_file=ann, iou_type="segm")
+        metric.update = MagicMock()
+        metric.compute = MagicMock(return_value=0.44)
+        metric.reset = MagicMock()
+        sample = CalibrationSample(image_path=img_path, label=0, image_id=42)
+
+        value = converter._measure_metric(tmp_path / "model.xml", [sample], metric)
+
+        assert value == pytest.approx(0.44)
+        preds = metric.update.call_args.kwargs["predictions"]
+        assert len(preds) == 1
+        assert preds[0]["image_id"] == 42
+        assert preds[0]["category_id"] == 5
+        assert preds[0]["bbox"] == [1.0, 2.0, 5.0, 6.0]
+        assert preds[0]["score"] == pytest.approx(0.9)
+        assert preds[0]["segmentation"]["size"] == [3, 4]
+        assert isinstance(preds[0]["segmentation"]["counts"], str)
 
     def test_bbox_dispatch_skips_samples_without_image_id(
         self,

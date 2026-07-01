@@ -33,6 +33,7 @@ _COCO_DETECTION_TYPES = {
     "RotatedDetection",
     "DETR",
     "Detection",
+    "DETRInstSeg",
 }
 _SEMSEG_TYPES = {"Segmentation"}
 
@@ -40,7 +41,9 @@ _SEMSEG_TYPES = {"Segmentation"}
 # (shifting from 0-indexed to 1-indexed).  When these models use contiguous
 # COCO-80 class indices (i.e. ``category_ids_are_coco91`` is ``False``), the
 # COCO80→COCO91 remap must compensate for the +1 offset.
-_INSTANCE_SEG_TYPES = {"MaskRCNN", "DETRInstSeg"}
+# Note: DETRInstSeg does NOT apply the shift (``_labels_shift=0``), so it is
+# intentionally excluded from this set.
+_INSTANCE_SEG_TYPES = {"MaskRCNN"}
 
 _MULTILABEL_TASKS = {"MULTI_LABEL_CLS"}
 _MULTI_CLASS_TASKS = {"MULTI_CLASS_CLS"}
@@ -78,14 +81,13 @@ def metric_for(
     remap for them.
 
     ``labels`` is the label-set identifier from the model config (e.g.
-    ``"COCO_V1"``, ``"COCO_80"``). Models using ``COCO_V1`` or ``"COCO_92"``
-    output native COCO-91 category IDs regardless of ``model_type``.
+    ``"COCO_V1"``, ``"COCO_80"``). Models using ``COCO_V1`` output native
+    COCO-91 category IDs regardless of ``model_type``.
 
-    Instance segmentation models (``MaskRCNN``, ``DETRInstSeg``) add +1 to
-    labels in their postprocessor.  When these models use contiguous COCO-80
-    class indices (i.e. not COCO_V1/COCO_92), the metric is given a
-    ``label_offset=1`` so the COCO80→COCO91 remap operates on the correct
-    0-indexed value.
+    Instance segmentation models (``MaskRCNN``) add +1 to labels in their
+    postprocessor.  When these models use contiguous COCO-80 class indices
+    (i.e. not COCO_V1), the metric is given a ``label_offset=1`` so the
+    COCO80→COCO91 remap operates on the correct 0-indexed value.
     """
     if dataset_type is None or model_type is None:
         return None
@@ -103,13 +105,14 @@ def metric_for(
     if dataset_type == "coco-detection":
         if annotation_file is None or model_type not in _COCO_DETECTION_TYPES:
             return None
-        category_ids_are_coco91 = model_library == "getitune" and labels in ("COCO_V1", "COCO_92")
-        # Instance segmentation postprocessors apply ``labels += 1``; compensate
-        # when using the COCO80→COCO91 remap so it receives 0-indexed values.
+        category_ids_are_coco91 = model_library == "getitune" and labels == "COCO_V1"
+        # MaskRCNN postprocessors apply ``labels += 1``. For contiguous COCO-80
+        # labels, compensate before COCO80→COCO91 remap.
         label_offset = 1 if (model_type in _INSTANCE_SEG_TYPES and not category_ids_are_coco91) else 0
+        iou_type = "segm" if model_type == "DETRInstSeg" else "bbox"
         return CocoDetectionMAP(
             annotation_file=annotation_file,
-            iou_type="bbox",
+            iou_type=iou_type,
             category_ids_are_coco91=category_ids_are_coco91,
             label_offset=label_offset,
         )

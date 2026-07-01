@@ -130,21 +130,6 @@ class TestMetricFor:
         assert metric.category_ids_are_coco91 is True
         assert metric.label_offset == 0
 
-    def test_getitune_ssd_with_coco92_labels_uses_coco91(self, tmp_path):
-        """Models using COCO_92 labels also output native COCO-91 category IDs."""
-        ann = tmp_path / "ann.json"
-        ann.write_text('{"images":[],"annotations":[],"categories":[]}')
-        metric = metric_for(
-            dataset_type="coco-detection",
-            model_type="SSD",
-            annotation_file=ann,
-            model_library="getitune",
-            labels="COCO_92",
-        )
-        assert isinstance(metric, CocoDetectionMAP)
-        assert metric.category_ids_are_coco91 is True
-        assert metric.label_offset == 0
-
     def test_getitune_ssd_with_coco80_labels_keeps_remap(self, tmp_path):
         """Getitune SSD models with COCO_80 labels use contiguous 0-79 indices."""
         ann = tmp_path / "ann.json"
@@ -158,6 +143,41 @@ class TestMetricFor:
         )
         assert isinstance(metric, CocoDetectionMAP)
         assert metric.category_ids_are_coco91 is False
+
+    def test_detr_instance_segmentation_uses_coco_segm_map(self, tmp_path):
+        """RF-DETR segmentation must measure masks with COCO-segm iouType.
+
+        DETRInstanceSegmentation does not shift labels (unlike MaskRCNN), so no
+        label_offset is needed to compensate.
+        """
+        ann = tmp_path / "ann.json"
+        ann.write_text('{"images":[],"annotations":[],"categories":[]}')
+        metric = metric_for(
+            dataset_type="coco-detection",
+            model_type="DETRInstSeg",
+            annotation_file=ann,
+            model_library="getitune",
+            labels="COCO_V1",
+        )
+        assert isinstance(metric, CocoDetectionMAP)
+        assert metric.iou_type == "segm"
+        assert metric.category_ids_are_coco91 is True
+        assert metric.label_offset == 0
+
+    def test_getitune_maskrcnn_with_coco_v1_keeps_native_labels_unshifted(self, tmp_path):
+        """The RF-DETR COCO_92 correction must not affect existing Mask R-CNN configs."""
+        ann = tmp_path / "ann.json"
+        ann.write_text('{"images":[],"annotations":[],"categories":[]}')
+        metric = metric_for(
+            dataset_type="coco-detection",
+            model_type="MaskRCNN",
+            annotation_file=ann,
+            model_library="getitune",
+            labels="COCO_V1",
+        )
+        assert isinstance(metric, CocoDetectionMAP)
+        assert metric.category_ids_are_coco91 is True
+        assert metric.label_offset == 0
 
     def test_ade20k_returns_miou(self):
         metric = metric_for(dataset_type="ade20k", model_type="Segmentation")
