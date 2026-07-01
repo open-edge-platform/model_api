@@ -1137,6 +1137,7 @@
       "getitune_task": "INSTANCE_SEGMENTATION",
       "getitune_recipe": "maskrcnn_r50",
       "model_type": "MaskRCNN",
+      "quantization_ignored_scope_patterns": [".*mask_predictor.*", ".*mask_head.*"],
       "tags": ["image-segmentation", "instance-segmentation", "vision"],
       "license": "bsd-3-clause",
       "license_link": "https://github.com/pytorch/vision/blob/main/LICENSE",
@@ -1152,6 +1153,7 @@
       "getitune_task": "INSTANCE_SEGMENTATION",
       "getitune_recipe": "maskrcnn_efficientnetb2b",
       "model_type": "MaskRCNN",
+      "quantization_ignored_scope_patterns": [".*mask_predictor.*", ".*mask_head.*"],
       "preprocessing_overrides": {
         "scale_values": "0.229 0.224 0.225"
       },
@@ -1437,6 +1439,7 @@
       "getitune_recipe": "maskrcnn_swint",
       "getitune_task": "INSTANCE_SEGMENTATION",
       "model_type": "MaskRCNN",
+      "quantization_ignored_scope_patterns": [".*mask_predictor.*", ".*mask_head.*"],
       "quantization_model_type": "transformer",
       "license": "apache-2.0",
       "license_link": "https://github.com/open-mmlab/mmdetection/blob/main/LICENSE",
