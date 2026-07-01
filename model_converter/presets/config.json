@@ -1153,7 +1153,6 @@
       "getitune_task": "INSTANCE_SEGMENTATION",
       "getitune_recipe": "maskrcnn_efficientnetb2b",
       "model_type": "MaskRCNN",
-      "quantization_ignored_scope_patterns": [".*mask_predictor.*", ".*mask_head.*"],
       "preprocessing_overrides": {
         "scale_values": "0.229 0.224 0.225"
       },
