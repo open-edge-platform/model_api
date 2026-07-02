@@ -745,7 +745,7 @@ class TestQuantizeExportedModel:
             mean_values="0 0 0",
             scale_values="1 1 1",
             reverse_input_channels=True,
-            subset_size=300,
+            subset_size=500,
             return_labels=True,
             dataset_path=ANY,
             dataset_type="imagenet-1k",
