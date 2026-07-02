@@ -1103,12 +1103,17 @@ class BaseConverter(ABC):
                 quantize_kwargs["model_type"] = nncf.ModelType.TRANSFORMER
 
             ignored_scope_patterns = model_config.get("quantization_ignored_scope_patterns")
-            ignored_scope = self._build_quantization_ignored_scope(nncf, model, ignored_scope_patterns)
+            ignored_scope_pattern_list = (
+                [str(pattern) for pattern in ignored_scope_patterns]
+                if isinstance(ignored_scope_patterns, Sequence) and not isinstance(ignored_scope_patterns, str)
+                else []
+            )
+            ignored_scope = self._build_quantization_ignored_scope(nncf, model, ignored_scope_pattern_list)
             if ignored_scope is not None:
                 ignored_names = getattr(ignored_scope, "names", [])
                 self.logger.info(
                     "Excluding layers matching %s from INT8 quantization; resolved %d exact OpenVINO nodes",
-                    list(ignored_scope_patterns),
+                    ignored_scope_pattern_list,
                     len(ignored_names),
                 )
                 quantize_kwargs["ignored_scope"] = ignored_scope
