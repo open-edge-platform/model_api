@@ -70,7 +70,6 @@ Install only the subproject(s) you are working on. Each step is independent.
    ```bash
    uvx pre-commit run --all-files
    uv --directory model_api run pytest tests/unit
-   uv --directory model_api run python tests/functional/download_models.py -d data -j tests/precommit/public_scope.json -l
    uv --directory model_api run python tests/functional/download_models.py -d data -j tests/functional/public_scope.json -l
    uv --directory model_api run pytest --data=./data tests/functional
    uv --directory model_converter run model-converter examples/config.json --list
