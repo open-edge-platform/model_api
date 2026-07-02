@@ -1137,7 +1137,10 @@
       "getitune_task": "INSTANCE_SEGMENTATION",
       "getitune_recipe": "maskrcnn_r50",
       "model_type": "MaskRCNN",
-      "quantization_ignored_scope_patterns": [".*mask_predictor.*", ".*mask_head.*"],
+      "quantization_ignored_scope_patterns": [
+        ".*mask_predictor.*",
+        ".*mask_head.*"
+      ],
       "tags": ["image-segmentation", "instance-segmentation", "vision"],
       "license": "bsd-3-clause",
       "license_link": "https://github.com/pytorch/vision/blob/main/LICENSE",
