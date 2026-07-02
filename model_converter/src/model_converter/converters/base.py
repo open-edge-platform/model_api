@@ -7,8 +7,10 @@
 
 import json
 import logging
+import re
 import shutil
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -971,6 +973,65 @@ class BaseConverter(ABC):
         ]
         metric.update(predictions=preds)
 
+    @staticmethod
+    def _collect_ignored_scope_node_names(model: Any, patterns: list[str]) -> list[str]:
+        """Return OpenVINO node friendly names matching configured ignored-scope regexes."""
+        get_ops = getattr(model, "get_ops", None)
+        if not callable(get_ops):
+            return []
+
+        compiled_patterns = [re.compile(pattern) for pattern in patterns]
+        matched_names: set[str] = set()
+        consumer_names: set[str] = set()
+        for node in get_ops():
+            get_friendly_name = getattr(node, "get_friendly_name", None)
+            if not callable(get_friendly_name):
+                continue
+            friendly_name = str(get_friendly_name())
+            if any(pattern.search(friendly_name) for pattern in compiled_patterns):
+                matched_names.add(friendly_name)
+                consumer_names.update(BaseConverter._collect_quantized_consumer_names(node))
+
+        return sorted(matched_names | consumer_names)
+
+    @staticmethod
+    def _collect_quantized_consumer_names(node: Any) -> set[str]:
+        """Return immediate quantizable consumers of an ignored node."""
+        output = getattr(node, "output", None)
+        if not callable(output):
+            return set()
+
+        consumer_names: set[str] = set()
+        output_index = 0
+        while True:
+            try:
+                target_inputs = output(output_index).get_target_inputs()
+            except (IndexError, RuntimeError):
+                break
+            for target_input in target_inputs:
+                consumer = target_input.get_node()
+                get_type_name = getattr(consumer, "get_type_name", None)
+                get_friendly_name = getattr(consumer, "get_friendly_name", None)
+                if not callable(get_type_name) or not callable(get_friendly_name):
+                    continue
+                if get_type_name() in {"Convolution", "GroupConvolution", "ConvolutionBackpropData"}:
+                    consumer_names.add(str(get_friendly_name()))
+            output_index += 1
+        return consumer_names
+
+    @classmethod
+    def _build_quantization_ignored_scope(cls, nncf_module: Any, model: Any, patterns: Any) -> Any | None:
+        """Build an NNCF ignored scope from configured regexes and matching exact node names."""
+        if not isinstance(patterns, Sequence) or isinstance(patterns, str):
+            return None
+
+        pattern_list = [str(pattern) for pattern in patterns]
+        if not pattern_list:
+            return None
+
+        matched_names = cls._collect_ignored_scope_node_names(model, pattern_list)
+        return nncf_module.IgnoredScope(names=matched_names, patterns=pattern_list, validate=False)
+
     def quantize_model(
         self,
         model_path: Path,
@@ -1042,9 +1103,15 @@ class BaseConverter(ABC):
                 quantize_kwargs["model_type"] = nncf.ModelType.TRANSFORMER
 
             ignored_scope_patterns = model_config.get("quantization_ignored_scope_patterns")
-            if ignored_scope_patterns:
-                self.logger.info(f"Excluding layers matching {ignored_scope_patterns} from INT8 quantization")
-                quantize_kwargs["ignored_scope"] = nncf.IgnoredScope(patterns=list(ignored_scope_patterns))
+            ignored_scope = self._build_quantization_ignored_scope(nncf, model, ignored_scope_patterns)
+            if ignored_scope is not None:
+                ignored_names = getattr(ignored_scope, "names", [])
+                self.logger.info(
+                    "Excluding layers matching %s from INT8 quantization; resolved %d exact OpenVINO nodes",
+                    list(ignored_scope_patterns),
+                    len(ignored_names),
+                )
+                quantize_kwargs["ignored_scope"] = ignored_scope
 
             quantized_model = nncf.quantize(
                 model,

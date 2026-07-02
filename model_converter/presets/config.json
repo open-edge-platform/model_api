@@ -1138,8 +1138,9 @@
       "getitune_recipe": "maskrcnn_r50",
       "model_type": "MaskRCNN",
       "quantization_ignored_scope_patterns": [
-        ".*mask_predictor.*",
-        ".*mask_head.*"
+        ".*roi_heads\\.mask_roi_pool.*",
+        ".*roi_heads\\.mask_head.*",
+        ".*roi_heads\\.mask_predictor.*"
       ],
       "tags": ["image-segmentation", "instance-segmentation", "vision"],
       "license": "bsd-3-clause",

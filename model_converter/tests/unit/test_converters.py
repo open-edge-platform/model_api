@@ -24,6 +24,44 @@ def _set_template_root(monkeypatch: pytest.MonkeyPatch, template_dir: Path) -> N
     monkeypatch.setattr(base_module, "__file__", str(template_dir.parent / "converters" / "base.py"))
 
 
+class _FakeOVInput:
+    def __init__(self, node: "_FakeOVNode") -> None:
+        self._node = node
+
+    def get_node(self) -> "_FakeOVNode":
+        return self._node
+
+
+class _FakeOVOutput:
+    def __init__(self) -> None:
+        self._target_inputs: set[_FakeOVInput] = set()
+
+    def connect_to(self, node: "_FakeOVNode") -> None:
+        self._target_inputs.add(_FakeOVInput(node))
+
+    def get_target_inputs(self) -> set[_FakeOVInput]:
+        return self._target_inputs
+
+
+class _FakeOVNode:
+    def __init__(self, friendly_name: str, type_name: str = "Relu") -> None:
+        self._friendly_name = friendly_name
+        self._type_name = type_name
+        self._outputs = [_FakeOVOutput()]
+
+    def get_friendly_name(self) -> str:
+        return self._friendly_name
+
+    def get_type_name(self) -> str:
+        return self._type_name
+
+    def output(self, index: int) -> _FakeOVOutput:
+        return self._outputs[index]
+
+    def connect_to(self, node: "_FakeOVNode") -> None:
+        self._outputs[0].connect_to(node)
+
+
 class TestCopyReadme:
     """Tests for BaseConverter.copy_readme via TorchvisionConverter."""
 
@@ -1027,7 +1065,15 @@ class TestValidateTorchModel:
 
         quantized_model = MagicMock()
         quantized_model.get_rt_info.return_value = SimpleNamespace(value={"model_type": "MaskRCNN"})
-        core = SimpleNamespace(read_model=MagicMock(return_value="ov_model"))
+        ov_model = SimpleNamespace(
+            get_ops=lambda: [
+                _FakeOVNode("__module.model.roi_heads.mask_head.0.2/aten::relu_/Relu"),
+                _FakeOVNode(
+                    "__module.model.roi_heads.mask_predictor.mask_fcn_logits/aten::_convolution/Convolution",
+                ),
+            ],
+        )
+        core = SimpleNamespace(read_model=MagicMock(return_value=ov_model))
         fake_ov = ModuleType("openvino")
         fake_ov.Core = MagicMock(return_value=core)
         fake_ov.save_model = MagicMock(
@@ -1053,8 +1099,69 @@ class TestValidateTorchModel:
                 preset="mixed",
             )
 
-        fake_nncf.IgnoredScope.assert_called_once_with(patterns=[".*mask_predictor.*", ".*mask_head.*"])
+        fake_nncf.IgnoredScope.assert_called_once_with(
+            names=[
+                "__module.model.roi_heads.mask_head.0.2/aten::relu_/Relu",
+                "__module.model.roi_heads.mask_predictor.mask_fcn_logits/aten::_convolution/Convolution",
+            ],
+            patterns=[".*mask_predictor.*", ".*mask_head.*"],
+            validate=False,
+        )
         assert quantize.call_args.kwargs["ignored_scope"] is ignored_scope_sentinel
+
+    def test_builds_ignored_scope_with_matching_openvino_node_names(self, converter):
+        """Ignored-scope regexes are also resolved to exact OpenVINO node names for NNCF."""
+        model = SimpleNamespace(
+            get_ops=lambda: [
+                _FakeOVNode("__module.model.roi_heads.mask_head.0.2/aten::relu_/Relu"),
+                _FakeOVNode(
+                    "__module.model.roi_heads.mask_predictor.mask_fcn_logits/aten::_convolution/Convolution",
+                ),
+                _FakeOVNode("__module.model.roi_heads.box_head.fc6/aten::linear/MatMul"),
+            ],
+        )
+        ignored_scope_sentinel = SimpleNamespace()
+        fake_nncf = ModuleType("nncf")
+        fake_nncf.IgnoredScope = MagicMock(return_value=ignored_scope_sentinel)
+
+        result = converter._build_quantization_ignored_scope(
+            fake_nncf,
+            model,
+            [".*mask_head.*", ".*mask_predictor.*"],
+        )
+
+        assert result is ignored_scope_sentinel
+        fake_nncf.IgnoredScope.assert_called_once_with(
+            names=[
+                "__module.model.roi_heads.mask_head.0.2/aten::relu_/Relu",
+                "__module.model.roi_heads.mask_predictor.mask_fcn_logits/aten::_convolution/Convolution",
+            ],
+            patterns=[".*mask_head.*", ".*mask_predictor.*"],
+            validate=False,
+        )
+
+    def test_builds_ignored_scope_with_generic_quantized_mask_consumers(self, converter):
+        """Mask nodes can feed generic-name convolutions that also need ignored to avoid output FQs."""
+        mask_relu = _FakeOVNode("__module.model.roi_heads.mask_head.0.2/aten::relu_/Relu")
+        generic_mask_conv = _FakeOVNode("Multiply_31017", type_name="Convolution")
+        unrelated_conv = _FakeOVNode("Multiply_99999", type_name="Convolution")
+        mask_relu.connect_to(generic_mask_conv)
+        model = SimpleNamespace(get_ops=lambda: [mask_relu, generic_mask_conv, unrelated_conv])
+        ignored_scope_sentinel = SimpleNamespace()
+        fake_nncf = ModuleType("nncf")
+        fake_nncf.IgnoredScope = MagicMock(return_value=ignored_scope_sentinel)
+
+        result = converter._build_quantization_ignored_scope(fake_nncf, model, [".*roi_heads\\.mask_head.*"])
+
+        assert result is ignored_scope_sentinel
+        fake_nncf.IgnoredScope.assert_called_once_with(
+            names=[
+                "Multiply_31017",
+                "__module.model.roi_heads.mask_head.0.2/aten::relu_/Relu",
+            ],
+            patterns=[".*roi_heads\\.mask_head.*"],
+            validate=False,
+        )
 
     def test_omits_ignored_scope_when_not_configured(
         self,
