@@ -1438,7 +1438,6 @@
       "getitune_recipe": "maskrcnn_swint",
       "getitune_task": "INSTANCE_SEGMENTATION",
       "model_type": "MaskRCNN",
-      "quantization_ignored_scope_patterns": [".*mask_predictor.*", ".*mask_head.*"],
       "quantization_model_type": "transformer",
       "license": "apache-2.0",
       "license_link": "https://github.com/open-mmlab/mmdetection/blob/main/LICENSE",
