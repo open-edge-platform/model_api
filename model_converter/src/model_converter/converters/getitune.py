@@ -9,7 +9,7 @@ import shutil
 import subprocess  # nosec B404 — fixed-argv invocation of `uv run`, no shell, no untrusted input
 import tempfile
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from model_converter.converters.base import BaseConverter
 from model_converter.reporting import AccuracyResults
@@ -214,6 +214,8 @@ class GetituneConverter(BaseConverter):
 
         # Overwrite the exporter's placeholder labels with real class names.
         self._apply_config_labels(config, target_xml, fp32_xml)
+        self._apply_model_info_overrides(config, target_xml, fp32_xml)
+        self._apply_preprocessing_overrides(config, target_xml, fp32_xml)
 
         # Extract and save model_info as config.json
         try:
@@ -285,11 +287,77 @@ class GetituneConverter(BaseConverter):
         except (ImportError, RuntimeError) as e:
             self.logger.warning(f"Could not apply labels to exported model: {e}")
 
+    def _apply_preprocessing_overrides(self, config: dict[str, Any], *model_paths: Path) -> None:
+        """Override ``model_info`` preprocessing rt_info with configured values.
+
+        Args:
+            config: Model configuration dictionary.
+            *model_paths: OpenVINO model XML files to update in place.
+        """
+        overrides = config.get("preprocessing_overrides")
+        if not overrides:
+            return
+
+        try:
+            import openvino as ov
+
+            core = ov.Core()
+            for model_path in model_paths:
+                if not model_path.exists():
+                    continue
+                model = core.read_model(model_path)
+                for key, value in overrides.items():
+                    model.set_rt_info(str(value), ["model_info", key])
+
+                tmp_xml = model_path.with_name(f"{model_path.stem}_preproc_tmp.xml")
+                ov.save_model(model, tmp_xml, compress_to_fp16=not model_path.stem.endswith("_fp32"))
+                tmp_xml.replace(model_path)
+                tmp_xml.with_suffix(".bin").replace(model_path.with_suffix(".bin"))
+            self.logger.info(f"✓ Applied preprocessing overrides to exported model(s): {overrides}")
+        except (ImportError, RuntimeError) as e:
+            self.logger.warning(f"Could not apply preprocessing overrides to exported model: {e}")
+
+    def _apply_model_info_overrides(self, config: dict[str, Any], *model_paths: Path) -> None:
+        """Override arbitrary ``model_info`` rt_info fields with configured values.
+
+        Args:
+            config: Model configuration dictionary.
+            *model_paths: OpenVINO model XML files to update in place.
+        """
+        overrides = config.get("model_info_overrides")
+        if not overrides:
+            return
+
+        try:
+            import openvino as ov
+
+            core = ov.Core()
+            for model_path in model_paths:
+                if not model_path.exists():
+                    continue
+                model = core.read_model(model_path)
+                for key, value in overrides.items():
+                    model.set_rt_info(str(value), ["model_info", key])
+
+                tmp_xml = model_path.with_name(f"{model_path.stem}_model_info_tmp.xml")
+                ov.save_model(model, tmp_xml, compress_to_fp16=not model_path.stem.endswith("_fp32"))
+                tmp_xml.replace(model_path)
+                tmp_xml.with_suffix(".bin").replace(model_path.with_suffix(".bin"))
+            self.logger.info(f"✓ Applied model_info overrides to exported model(s): {overrides}")
+        except (ImportError, RuntimeError) as e:
+            self.logger.warning(f"Could not apply model_info overrides to exported model: {e}")
+
+    # Maps the exported model's ``input_dtype`` to the divisor that maps its raw
+    # integer range to [0, 1]. Mirrors Model API's intensity inference so the
+    # converter normalizes calibration/validation tensors the same way the model
+    # does at inference time.
+    _DTYPE_MAX_VALUE: ClassVar[dict[str, float]] = {"u8": 255.0, "u16": 65535.0, "i16": 32767.0, "f32": 1.0}
+
     @staticmethod
     def _read_preprocessing_from_model(
         ov: Any,
         model_path: Path,
-    ) -> tuple[list[int], str, str, bool]:
+    ) -> tuple[list[int], str, str, bool, float]:
         """Read preprocessing parameters from the model's rt_info metadata.
 
         Args:
@@ -297,7 +365,10 @@ class GetituneConverter(BaseConverter):
             model_path: Path to the OpenVINO model XML file
 
         Returns:
-            Tuple of (input_shape, mean_values, scale_values, reverse_input_channels)
+            Tuple of (input_shape, mean_values, scale_values, reverse_input_channels,
+            intensity_scale). ``intensity_scale`` is the divisor applied to raw
+            pixels before mean/scale (e.g. ``255`` for a ``scale_to_unit`` ``u8``
+            model) and ``1.0`` when the model performs no intensity scaling.
         """
         core = ov.Core()
         model = core.read_model(model_path)
@@ -316,7 +387,19 @@ class GetituneConverter(BaseConverter):
         scale_values = _get_rt_str("scale_values", "1 1 1")
         reverse_input_channels = _get_rt_str("reverse_input_channels", "True").lower() in ("true", "1", "yes")
 
-        return input_shape, mean_values, scale_values, reverse_input_channels
+        # Reproduce the model's intensity step. getitune models normalize with a
+        # ``scale_to_unit`` step (÷255 for u8) before applying [0, 1]-range
+        # mean/scale; without it the calibration/validation tensors are ~255x too
+        # large and accuracy collapses to ~0%.
+        intensity_scale = 1.0
+        if _get_rt_str("intensity_mode", "") == "scale_to_unit":
+            max_value = _get_rt_str("intensity_max_value", "")
+            if max_value:
+                intensity_scale = float(max_value)
+            else:
+                intensity_scale = GetituneConverter._DTYPE_MAX_VALUE.get(_get_rt_str("input_dtype", ""), 1.0)
+
+        return input_shape, mean_values, scale_values, reverse_input_channels, intensity_scale
 
     def _quantize_exported_model(self, config: dict[str, Any]) -> AccuracyResults:
         """Quantize the exported FP16 model to INT8.
@@ -344,7 +427,13 @@ class GetituneConverter(BaseConverter):
             fp32_model_path = self.output_dir / f"{model_short_name}-fp16-ov" / f"{model_short_name}.xml"
 
         # Extract preprocessing parameters from model rt_info
-        input_shape, mean_values, scale_values, reverse_input_channels = self._read_preprocessing_from_model(
+        (
+            input_shape,
+            mean_values,
+            scale_values,
+            reverse_input_channels,
+            intensity_scale,
+        ) = self._read_preprocessing_from_model(
             ov,
             fp32_model_path,
         )
@@ -369,6 +458,7 @@ class GetituneConverter(BaseConverter):
             return_labels=is_top1,
             dataset_path=dataset_path,
             dataset_type=config.get("dataset_type"),
+            intensity_scale=intensity_scale,
         )
 
         validation_samples = self._collect_metric_validation_samples(

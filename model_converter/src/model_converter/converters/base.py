@@ -281,7 +281,14 @@ class BaseConverter(ABC):
         annotation_file: Path | None = None
         if dataset_path is not None and dataset_type in _COCO_ANNOTATION_FILES:
             annotation_file = dataset_path / "annotations" / _COCO_ANNOTATION_FILES[dataset_type]
-        return metric_for(dataset_type, model_type, annotation_file=annotation_file, task=task)
+        return metric_for(
+            dataset_type,
+            model_type,
+            annotation_file=annotation_file,
+            task=task,
+            model_library=config.get("model_library"),
+            labels=config.get("labels"),
+        )
 
     def _collect_validation_samples(
         self,
@@ -413,6 +420,20 @@ class BaseConverter(ABC):
             else:
                 placeholders[template_placeholder("tags_yaml")] = ""
 
+            # Note about layers excluded from INT8 quantization (kept at higher precision),
+            # e.g. the Mask R-CNN mask-prediction head, which is highly sensitive to
+            # quantization noise and can otherwise produce degenerate (empty) masks.
+            ignored_scope_patterns = model_config.get("quantization_ignored_scope_patterns")
+            if variant == "int8" and ignored_scope_patterns and isinstance(ignored_scope_patterns, list):
+                patterns_str = ", ".join(f"`{pattern}`" for pattern in ignored_scope_patterns)
+                placeholders[template_placeholder("quantization_ignored_scope_note")] = (
+                    f"- **Mixed precision**: layers matching {patterns_str} are excluded from "
+                    "INT8 quantization and kept at higher precision, since they are highly "
+                    "sensitive to quantization noise\n"
+                )
+            else:
+                placeholders[template_placeholder("quantization_ignored_scope_note")] = ""
+
             for key, value in model_config.items():
                 if value is None:
                     continue
@@ -469,6 +490,15 @@ class BaseConverter(ABC):
             categories = MaskRCNN_ResNet50_FPN_Weights.COCO_V1.meta["categories"]
             categories = [categories[cat_id].replace(" ", "_") for cat_id in COCO80_TO_COCO91]
             return " ".join(categories)
+
+        if label_set == "COCO_81":
+            from torchvision.models.detection import MaskRCNN_ResNet50_FPN_Weights
+
+            from model_converter.metrics.coco_detection import COCO80_TO_COCO91
+
+            categories = MaskRCNN_ResNet50_FPN_Weights.COCO_V1.meta["categories"]
+            coco80 = [categories[cat_id].replace(" ", "_") for cat_id in COCO80_TO_COCO91]
+            return " ".join(["__background__", *coco80])
 
         return None
 
@@ -528,8 +558,18 @@ class BaseConverter(ABC):
         scale: np.ndarray,
         reverse_input_channels: bool,
         resize_type: str = "standard",
+        intensity_scale: float = 1.0,
     ) -> np.ndarray | None:
-        """Load and preprocess a single calibration image."""
+        """Load and preprocess a single calibration image.
+
+        ``intensity_scale`` divides the raw pixel values before the
+        ``(img - mean) / scale`` normalization. It reproduces the model's
+        ``scale_to_unit`` intensity step (e.g. ÷255 for ``u8`` inputs) so that
+        models whose mean/scale are stored in ``[0, 1]`` units (such as the
+        getitune classification models) receive correctly normalized tensors.
+        It defaults to ``1.0`` (no-op) for models whose mean/scale are already
+        expressed in raw pixel units.
+        """
         img = cv2.imread(str(img_path))
         if img is None:
             return None
@@ -540,7 +580,7 @@ class BaseConverter(ABC):
         if reverse_input_channels:
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-        img = (img - mean) / scale
+        img = (img / intensity_scale - mean) / scale
         img = img.transpose(2, 0, 1)
         return np.expand_dims(img, axis=0)
 
@@ -555,6 +595,7 @@ class BaseConverter(ABC):
         resize_type: str = "standard",
         dataset_path: Path | None = None,
         dataset_type: str | None = None,
+        intensity_scale: float = 1.0,
     ) -> tuple[list[np.ndarray], list[int]]:
         """Create calibration dataset from sample validation images.
 
@@ -573,6 +614,10 @@ class BaseConverter(ABC):
             dataset_type: Optional dataset_type identifier (e.g. ``"coco-detection"``)
                 used to dispatch path enumeration to the matching reader. Defaults
                 to ``None`` for backward-compatible class-folder behaviour.
+            intensity_scale: Divisor applied to raw pixels before mean/scale
+                normalization, reproducing the model's ``scale_to_unit``
+                intensity step (e.g. ``255`` for ``u8`` inputs). Defaults to
+                ``1.0`` (no-op) for pixel-unit mean/scale models.
 
         Returns:
             Tuple of (images, labels); both empty lists when dataset is unavailable.
@@ -614,6 +659,7 @@ class BaseConverter(ABC):
                         scale=scale,
                         reverse_input_channels=reverse_input_channels,
                         resize_type=resize_type,
+                        intensity_scale=intensity_scale,
                     )
                     if img is None:
                         continue
@@ -641,6 +687,7 @@ class BaseConverter(ABC):
                     scale=scale,
                     reverse_input_channels=reverse_input_channels,
                     resize_type=resize_type,
+                    intensity_scale=intensity_scale,
                 )
                 if img is None:
                     continue
@@ -777,6 +824,8 @@ class BaseConverter(ABC):
                 return
             if metric.iou_type == "bbox":
                 self._feed_bbox_predictions(metric, result, sample)
+            elif metric.iou_type == "segm":
+                self._feed_segm_predictions(metric, result, sample)
             return
 
         if isinstance(metric, SemSegMIoU):
@@ -804,17 +853,31 @@ class BaseConverter(ABC):
         label: Any,
         bbox_xyxy: Any,
         score: Any,
+        *,
+        category_ids_are_coco91: bool = False,
+        label_offset: int = 0,
     ) -> dict[str, Any]:
-        """Build one COCO-format prediction dict from an xyxy box and 80-class label.
+        """Build one COCO-format prediction dict from an xyxy box and class label.
 
-        The 0-79 ``label`` index is mapped to the original COCO 91-class category
-        ID via :data:`COCO80_TO_COCO91`; out-of-range indices fall back to
-        ``label + 1``. The ``[x_min, y_min, x_max, y_max]`` box is converted to
-        COCO ``[x, y, w, h]`` format.
+        When ``category_ids_are_coco91`` is ``False`` (default), the
+        ``label`` index is mapped to the original COCO 91-class category ID via
+        :data:`COCO80_TO_COCO91`; out-of-range indices fall back to ``label + 1``.
+        ``label_offset`` is subtracted from the label before remapping, to
+        compensate for the ``labels += 1`` applied by instance segmentation
+        postprocessors (whose labels are 1-indexed, not 0-indexed).
+        When ``category_ids_are_coco91`` is ``True``, ``label`` is already an
+        original COCO 91-class category ID (e.g. getitune COCO_V1/COCO_92
+        models), after subtracting any wrapper compensation offset. The
+        ``[x_min, y_min, x_max, y_max]`` box is converted to COCO ``[x, y, w, h]``
+        format.
         """
         x_min, y_min, x_max, y_max = (float(v) for v in bbox_xyxy)
         n = int(label)
-        coco_cat_id = COCO80_TO_COCO91[n] if n < len(COCO80_TO_COCO91) else n + 1
+        if category_ids_are_coco91:
+            coco_cat_id = n - label_offset
+        else:
+            idx = n - label_offset
+            coco_cat_id = COCO80_TO_COCO91[idx] if 0 <= idx < len(COCO80_TO_COCO91) else n + 1
         return {
             "image_id": int(image_id),
             "category_id": coco_cat_id,
@@ -834,9 +897,77 @@ class BaseConverter(ABC):
         if bboxes is None or labels is None or scores is None:
             return
         image_id = sample.image_id if sample.image_id is not None else 0
+        category_ids_are_coco91 = getattr(metric, "category_ids_are_coco91", False)
+        label_offset = getattr(metric, "label_offset", 0)
         preds = [
-            BaseConverter._build_coco_prediction(image_id, label, bbox, score)
+            BaseConverter._build_coco_prediction(
+                image_id,
+                label,
+                bbox,
+                score,
+                category_ids_are_coco91=category_ids_are_coco91,
+                label_offset=label_offset,
+            )
             for bbox, label, score in zip(bboxes, labels, scores)
+        ]
+        metric.update(predictions=preds)
+
+    @staticmethod
+    def _build_coco_segm_prediction(
+        image_id: Any,
+        label: Any,
+        bbox_xyxy: Any,
+        score: Any,
+        mask: Any,
+        *,
+        category_ids_are_coco91: bool = False,
+        label_offset: int = 0,
+    ) -> dict[str, Any]:
+        """Build one COCO-format instance-segmentation prediction dict."""
+        from pycocotools import mask as mask_utils
+
+        prediction = BaseConverter._build_coco_prediction(
+            image_id,
+            label,
+            bbox_xyxy,
+            score,
+            category_ids_are_coco91=category_ids_are_coco91,
+            label_offset=label_offset,
+        )
+        binary_mask = np.asarray(mask, dtype=np.uint8)
+        rle = mask_utils.encode(np.asfortranarray(binary_mask))
+        counts = rle.get("counts")
+        if isinstance(counts, bytes):
+            rle["counts"] = counts.decode("ascii")
+        prediction["segmentation"] = rle
+        return prediction
+
+    @staticmethod
+    def _feed_segm_predictions(
+        metric: "CocoDetectionMAP",
+        result: Any,
+        sample: "CalibrationSample",
+    ) -> None:
+        bboxes = getattr(result, "bboxes", None)
+        labels = getattr(result, "labels", None)
+        scores = getattr(result, "scores", None)
+        masks = getattr(result, "masks", None)
+        if bboxes is None or labels is None or scores is None or masks is None:
+            return
+        image_id = sample.image_id if sample.image_id is not None else 0
+        category_ids_are_coco91 = getattr(metric, "category_ids_are_coco91", False)
+        label_offset = getattr(metric, "label_offset", 0)
+        preds = [
+            BaseConverter._build_coco_segm_prediction(
+                image_id,
+                label,
+                bbox,
+                score,
+                mask,
+                category_ids_are_coco91=category_ids_are_coco91,
+                label_offset=label_offset,
+            )
+            for bbox, label, score, mask in zip(bboxes, labels, scores, masks)
         ]
         metric.update(predictions=preds)
 
@@ -857,7 +988,17 @@ class BaseConverter(ABC):
         Args:
             model_path: Path to the FP32 OpenVINO model (.xml)
             calibration_data: List of calibration images
-            model_config: Model configuration used for README rendering
+            model_config: Model configuration used for README rendering. May
+                include ``quantization_model_type: "transformer"`` to select
+                NNCF's transformer-aware quantization, and/or
+                ``quantization_ignored_scope_patterns: list[str]`` — regex
+                patterns (matched against OpenVINO node friendly names) for
+                layers to exclude from INT8 quantization (kept at higher
+                precision). Used e.g. for MaskRCNN-family models to protect
+                the mask-prediction head (``mask_predictor``/``mask_head``
+                layers), whose narrow output dynamic range is highly
+                sensitive to quantization noise and can otherwise collapse
+                below the mask binarization threshold, producing empty masks.
             preset: Quantization preset ('accuracy', 'performance', 'mixed')
             validation_data: Optional validation images for accuracy measurement
             validation_labels: Optional validation labels for accuracy measurement
@@ -899,6 +1040,11 @@ class BaseConverter(ABC):
             model_type = model_config.get("quantization_model_type")
             if model_type and model_type.lower() == "transformer":
                 quantize_kwargs["model_type"] = nncf.ModelType.TRANSFORMER
+
+            ignored_scope_patterns = model_config.get("quantization_ignored_scope_patterns")
+            if ignored_scope_patterns:
+                self.logger.info(f"Excluding layers matching {ignored_scope_patterns} from INT8 quantization")
+                quantize_kwargs["ignored_scope"] = nncf.IgnoredScope(patterns=list(ignored_scope_patterns))
 
             quantized_model = nncf.quantize(
                 model,

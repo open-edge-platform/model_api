@@ -75,6 +75,30 @@ class TestCocoDetectionMAP:
         metric.update(predictions=None)
         assert metric.compute() == pytest.approx(0.0)
 
+    def test_category_ids_are_coco91_defaults_false(self):
+        metric = CocoDetectionMAP(annotation_file=Path("/nonexistent"), iou_type="bbox")
+        assert metric.category_ids_are_coco91 is False
+
+    def test_category_ids_are_coco91_can_be_enabled(self):
+        metric = CocoDetectionMAP(
+            annotation_file=Path("/nonexistent"),
+            iou_type="bbox",
+            category_ids_are_coco91=True,
+        )
+        assert metric.category_ids_are_coco91 is True
+
+    def test_label_offset_defaults_zero(self):
+        metric = CocoDetectionMAP(annotation_file=Path("/nonexistent"), iou_type="bbox")
+        assert metric.label_offset == 0
+
+    def test_label_offset_can_be_set(self):
+        metric = CocoDetectionMAP(
+            annotation_file=Path("/nonexistent"),
+            iou_type="bbox",
+            label_offset=1,
+        )
+        assert metric.label_offset == 1
+
 
 class TestCoco80ToCoco91:
     def test_length_is_80(self):

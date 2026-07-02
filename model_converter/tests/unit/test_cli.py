@@ -167,6 +167,22 @@ class TestGetLabels:
         assert result == expected
         assert len(result.split()) == 80
 
+    def test_coco_81(self, converter):
+        """get_labels returns __background__ plus the 80 COCO classes for COCO_81."""
+        from model_converter.metrics.coco_detection import COCO80_TO_COCO91
+
+        categories = [f"cat {i}" for i in range(91)]
+        mock_weights = MagicMock()
+        mock_weights.COCO_V1.meta = {"categories": categories}
+
+        with patch("torchvision.models.detection.MaskRCNN_ResNet50_FPN_Weights", mock_weights):
+            result = converter.get_labels("COCO_81")
+
+        labels = result.split()
+        assert labels[0] == "__background__"
+        assert labels[1:] == [f"cat_{cat_id}" for cat_id in COCO80_TO_COCO91]
+        assert len(labels) == 81
+
     def test_unknown_label_set(self, converter):
         """get_labels returns None for unknown label sets."""
         assert converter.get_labels("NONEXISTENT_LABELS") is None

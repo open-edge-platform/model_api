@@ -731,6 +731,12 @@
       "getitune_task": "MULTI_CLASS_CLS",
       "model_type": "Classification",
       "quantization_model_type": "transformer",
+      "preprocessing_overrides": {
+        "mean_values": "0.5 0.5 0.5",
+        "scale_values": "0.5 0.5 0.5",
+        "resize_type": "crop",
+        "interpolation_mode": "CUBIC"
+      },
       "license": "apache-2.0",
       "license_link": "https://huggingface.co/datasets/choosealicense/licenses/blob/main/markdown/apache-2.0.md",
       "tags": ["image-classification", "vision"],
@@ -824,6 +830,7 @@
     {
       "model_short_name": "yolox_s",
       "model_library": "getitune",
+      "labels": "COCO_80",
       "model_full_name": "YOLOX-S",
       "description": "YOLOX-S single-stage object detection model trained with getitune",
       "docs": "https://github.com/open-mmlab/mmdetection/tree/main/configs/yolox",
@@ -838,6 +845,7 @@
     {
       "model_short_name": "yolox_l",
       "model_library": "getitune",
+      "labels": "COCO_80",
       "model_full_name": "YOLOX-L",
       "description": "YOLOX-L single-stage object detection model trained with getitune",
       "docs": "https://github.com/open-mmlab/mmdetection/tree/main/configs/yolox",
@@ -852,6 +860,7 @@
     {
       "model_short_name": "yolox_x",
       "model_library": "getitune",
+      "labels": "COCO_80",
       "model_full_name": "YOLOX-X",
       "description": "YOLOX-X single-stage object detection model trained with getitune",
       "docs": "https://github.com/open-mmlab/mmdetection/tree/main/configs/yolox",
@@ -866,12 +875,20 @@
     {
       "model_short_name": "ssd_mobilenet_v2",
       "model_library": "getitune",
+      "labels": "COCO_80",
       "model_full_name": "SSD MobileNet-V2",
       "description": "SSD with MobileNet-V2 backbone for object detection trained with getitune",
       "docs": "https://github.com/open-mmlab/mmdetection/tree/main/configs/ssd",
       "getitune_task": "DETECTION",
       "getitune_recipe": "ssd_mobilenetv2",
       "model_type": "SSD",
+      "preprocessing_overrides": {
+        "confidence_threshold": "0.02",
+        "resize_type": "standard",
+        "reverse_input_channels": "False",
+        "mean_values": "0.0 0.0 0.0",
+        "scale_values": "1.0 1.0 1.0"
+      },
       "tags": ["object-detection", "vision"],
       "license": "apache-2.0",
       "license_link": "https://github.com/open-mmlab/mmdetection/blob/main/LICENSE",
@@ -880,12 +897,18 @@
     {
       "model_short_name": "atss_mobilenet_v2",
       "model_library": "getitune",
+      "labels": "COCO_80",
       "model_full_name": "ATSS MobileNet-V2",
       "description": "ATSS with MobileNet-V2 backbone for object detection trained with getitune",
       "docs": "https://github.com/open-mmlab/mmdetection/tree/main/configs/atss",
       "getitune_task": "DETECTION",
       "getitune_recipe": "atss_mobilenetv2",
       "model_type": "SSD",
+      "preprocessing_overrides": {
+        "reverse_input_channels": "True",
+        "resize_type": "fit_to_window",
+        "confidence_threshold": "0.1"
+      },
       "tags": ["object-detection", "vision"],
       "license": "apache-2.0",
       "license_link": "https://github.com/open-mmlab/mmdetection/blob/main/LICENSE",
@@ -894,6 +917,7 @@
     {
       "model_short_name": "atss_r50_fpn",
       "model_library": "getitune",
+      "labels": "COCO_80",
       "model_full_name": "ATSS ResNet-50 FPN",
       "description": "ATSS with ResNet-50 FPN backbone for object detection trained with getitune",
       "docs": "https://github.com/open-edge-platform/training_extensions",
@@ -908,6 +932,7 @@
     {
       "model_short_name": "yolox_tiny",
       "model_library": "getitune",
+      "labels": "COCO_80",
       "model_full_name": "YOLOX-Tiny",
       "description": "YOLOX-Tiny single-stage object detection model trained with getitune",
       "docs": "https://github.com/open-mmlab/mmdetection/tree/main/configs/yolox",
@@ -922,6 +947,7 @@
     {
       "model_short_name": "deim_dfine_l",
       "model_library": "getitune",
+      "labels": "COCO_80",
       "model_full_name": "DEIM D-FINE-L",
       "description": "DEIM D-FINE Large transformer-based object detection model trained with getitune",
       "docs": "https://github.com/Intellindust-AI-Lab/DEIM",
@@ -936,6 +962,7 @@
     {
       "model_short_name": "deim_dfine_m",
       "model_library": "getitune",
+      "labels": "COCO_80",
       "model_full_name": "DEIM D-FINE-M",
       "description": "DEIM D-FINE Medium transformer-based object detection model trained with getitune",
       "docs": "https://github.com/Intellindust-AI-Lab/DEIM",
@@ -950,6 +977,7 @@
     {
       "model_short_name": "deim_dfine_x",
       "model_library": "getitune",
+      "labels": "COCO_80",
       "model_full_name": "DEIM D-FINE-X",
       "description": "DEIM D-FINE Extra-Large transformer-based object detection model trained with getitune",
       "docs": "https://github.com/Intellindust-AI-Lab/DEIM",
@@ -964,12 +992,14 @@
     {
       "model_short_name": "deimv2_l",
       "model_library": "getitune",
+      "labels": "COCO_80",
       "model_full_name": "DEIMv2-L",
       "description": "DEIMv2 Large transformer-based object detection model trained with getitune",
       "docs": "https://github.com/Intellindust-AI-Lab/DEIMv2",
       "getitune_recipe": "deimv2_l",
       "getitune_task": "DETECTION",
       "model_type": "SSD",
+      "quantization_model_type": "transformer",
       "license": "apache-2.0",
       "license_link": "https://github.com/Intellindust-AI-Lab/DEIM/blob/main/LICENSE",
       "tags": ["object-detection", "vision"],
@@ -978,12 +1008,14 @@
     {
       "model_short_name": "deimv2_m",
       "model_library": "getitune",
+      "labels": "COCO_80",
       "model_full_name": "DEIMv2-M",
       "description": "DEIMv2 Medium transformer-based object detection model trained with getitune",
       "docs": "https://github.com/Intellindust-AI-Lab/DEIMv2",
       "getitune_recipe": "deimv2_m",
       "getitune_task": "DETECTION",
       "model_type": "SSD",
+      "quantization_model_type": "transformer",
       "license": "apache-2.0",
       "license_link": "https://github.com/Intellindust-AI-Lab/DEIM/blob/main/LICENSE",
       "tags": ["object-detection", "vision"],
@@ -992,12 +1024,17 @@
     {
       "model_short_name": "deimv2_s",
       "model_library": "getitune",
+      "labels": "COCO_80",
       "model_full_name": "DEIMv2-S",
       "description": "DEIMv2 Small transformer-based object detection model trained with getitune",
       "docs": "https://github.com/Intellindust-AI-Lab/DEIMv2",
       "getitune_recipe": "deimv2_s",
       "getitune_task": "DETECTION",
       "model_type": "SSD",
+      "preprocessing_overrides": {
+        "confidence_threshold": "0.1"
+      },
+      "quantization_model_type": "transformer",
       "license": "apache-2.0",
       "license_link": "https://github.com/Intellindust-AI-Lab/DEIM/blob/main/LICENSE",
       "tags": ["object-detection", "vision"],
@@ -1006,6 +1043,7 @@
     {
       "model_short_name": "dfine_x",
       "model_library": "getitune",
+      "labels": "COCO_80",
       "model_full_name": "D-FINE-X",
       "description": "D-FINE Extra-Large transformer-based object detection model trained with getitune",
       "docs": "https://github.com/open-edge-platform/training_extensions",
@@ -1020,12 +1058,17 @@
     {
       "model_short_name": "rfdetr_large",
       "model_library": "getitune",
+      "labels": "COCO_V1",
       "model_full_name": "RF-DETR Large",
       "description": "RF-DETR Large transformer-based object detection model trained with getitune",
       "docs": "https://github.com/roboflow/rf-detr",
       "getitune_recipe": "rfdetr_large",
       "getitune_task": "DETECTION",
       "model_type": "SSD",
+      "preprocessing_overrides": {
+        "mean_values": "0.0 0.0 0.0",
+        "scale_values": "1.0 1.0 1.0"
+      },
       "license": "apache-2.0",
       "license_link": "https://roboflow.com/licensing",
       "tags": ["object-detection", "vision"],
@@ -1034,12 +1077,17 @@
     {
       "model_short_name": "rfdetr_medium",
       "model_library": "getitune",
+      "labels": "COCO_V1",
       "model_full_name": "RF-DETR Medium",
       "description": "RF-DETR Medium transformer-based object detection model trained with getitune",
       "docs": "https://github.com/roboflow/rf-detr",
       "getitune_recipe": "rfdetr_medium",
       "getitune_task": "DETECTION",
       "model_type": "SSD",
+      "preprocessing_overrides": {
+        "mean_values": "0.0 0.0 0.0",
+        "scale_values": "1.0 1.0 1.0"
+      },
       "license": "apache-2.0",
       "license_link": "https://roboflow.com/licensing",
       "tags": ["object-detection", "vision"],
@@ -1048,12 +1096,17 @@
     {
       "model_short_name": "rfdetr_small",
       "model_library": "getitune",
+      "labels": "COCO_V1",
       "model_full_name": "RF-DETR Small",
       "description": "RF-DETR Small transformer-based object detection model trained with getitune",
       "docs": "https://github.com/roboflow/rf-detr",
       "getitune_recipe": "rfdetr_small",
       "getitune_task": "DETECTION",
       "model_type": "SSD",
+      "preprocessing_overrides": {
+        "mean_values": "0.0 0.0 0.0",
+        "scale_values": "1.0 1.0 1.0"
+      },
       "license": "apache-2.0",
       "license_link": "https://roboflow.com/licensing",
       "tags": ["object-detection", "vision"],
@@ -1062,6 +1115,7 @@
     {
       "model_short_name": "rtdetr_50",
       "model_library": "getitune",
+      "labels": "COCO_80",
       "model_full_name": "RT-DETR ResNet-50",
       "description": "RT-DETR with ResNet-50 backbone for real-time object detection trained with getitune",
       "docs": "https://github.com/roboflow/rf-detr",
@@ -1076,12 +1130,17 @@
     {
       "model_short_name": "maskrcnn_r50",
       "model_library": "getitune",
+      "labels": "COCO_V1",
       "model_full_name": "Mask R-CNN ResNet-50",
       "description": "Mask R-CNN with ResNet-50 for instance segmentation trained with getitune",
       "docs": "https://docs.pytorch.org/vision/main/models/generated/torchvision.models.detection.maskrcnn_resnet50_fpn.html",
       "getitune_task": "INSTANCE_SEGMENTATION",
       "getitune_recipe": "maskrcnn_r50",
       "model_type": "MaskRCNN",
+      "quantization_ignored_scope_patterns": [
+        ".*mask_predictor.*",
+        ".*mask_head.*"
+      ],
       "tags": ["image-segmentation", "instance-segmentation", "vision"],
       "license": "bsd-3-clause",
       "license_link": "https://github.com/pytorch/vision/blob/main/LICENSE",
@@ -1090,41 +1149,39 @@
     {
       "model_short_name": "maskrcnn_efficientnet_b2b",
       "model_library": "getitune",
+      "labels": "COCO_81",
       "model_full_name": "Mask R-CNN EfficientNet-B2B",
       "description": "Mask R-CNN with EfficientNet-B2B backbone for instance segmentation trained with getitune",
       "docs": "https://github.com/open-mmlab/mmdetection/tree/main/configs/efficientnet",
       "getitune_task": "INSTANCE_SEGMENTATION",
       "getitune_recipe": "maskrcnn_efficientnetb2b",
       "model_type": "MaskRCNN",
+      "preprocessing_overrides": {
+        "scale_values": "0.229 0.224 0.225"
+      },
       "tags": ["image-segmentation", "instance-segmentation", "vision"],
       "license": "apache-2.0",
       "license_link": "https://github.com/open-mmlab/mmdetection/blob/main/LICENSE",
-      "dataset_type": "coco-detection"
-    },
-    {
-      "model_short_name": "maskrcnn_swint",
-      "model_library": "getitune",
-      "model_full_name": "Mask R-CNN Swin-Tiny",
-      "description": "Mask R-CNN with Swin-Tiny backbone for instance segmentation trained with getitune",
-      "docs": "https://github.com/open-mmlab/mmdetection/tree/main/configs/swin",
-      "getitune_recipe": "maskrcnn_swint",
-      "getitune_task": "INSTANCE_SEGMENTATION",
-      "model_type": "MaskRCNN",
-      "quantization_model_type": "transformer",
-      "license": "apache-2.0",
-      "license_link": "https://github.com/open-mmlab/mmdetection/blob/main/LICENSE",
-      "tags": ["image-segmentation", "instance-segmentation", "vision"],
       "dataset_type": "coco-detection"
     },
     {
       "model_short_name": "rfdetr_seg_large",
       "model_library": "getitune",
+      "labels": "COCO_V1",
       "model_full_name": "RF-DETR Segmentation Large",
       "description": "RF-DETR Large for instance segmentation trained with getitune",
       "docs": "https://github.com/roboflow/rf-detr",
       "getitune_recipe": "rfdetr_seg_large",
       "getitune_task": "INSTANCE_SEGMENTATION",
-      "model_type": "MaskRCNN",
+      "model_type": "DETRInstSeg",
+      "quantization_model_type": "transformer",
+      "model_info_overrides": {
+        "model_type": "DETRInstSeg"
+      },
+      "preprocessing_overrides": {
+        "mean_values": "0.0 0.0 0.0",
+        "scale_values": "1.0 1.0 1.0"
+      },
       "license": "apache-2.0",
       "license_link": "https://roboflow.com/licensing",
       "tags": ["image-segmentation", "instance-segmentation", "vision"],
@@ -1133,12 +1190,21 @@
     {
       "model_short_name": "rfdetr_seg_medium",
       "model_library": "getitune",
+      "labels": "COCO_V1",
       "model_full_name": "RF-DETR Segmentation Medium",
       "description": "RF-DETR Medium for instance segmentation trained with getitune",
       "docs": "https://github.com/roboflow/rf-detr",
       "getitune_recipe": "rfdetr_seg_medium",
       "getitune_task": "INSTANCE_SEGMENTATION",
-      "model_type": "MaskRCNN",
+      "model_type": "DETRInstSeg",
+      "quantization_model_type": "transformer",
+      "model_info_overrides": {
+        "model_type": "DETRInstSeg"
+      },
+      "preprocessing_overrides": {
+        "mean_values": "0.0 0.0 0.0",
+        "scale_values": "1.0 1.0 1.0"
+      },
       "license": "apache-2.0",
       "license_link": "https://roboflow.com/licensing",
       "tags": ["image-segmentation", "instance-segmentation", "vision"],
@@ -1147,12 +1213,21 @@
     {
       "model_short_name": "rfdetr_seg_small",
       "model_library": "getitune",
+      "labels": "COCO_V1",
       "model_full_name": "RF-DETR Segmentation Small",
       "description": "RF-DETR Small for instance segmentation trained with getitune",
       "docs": "https://github.com/roboflow/rf-detr",
       "getitune_recipe": "rfdetr_seg_small",
       "getitune_task": "INSTANCE_SEGMENTATION",
-      "model_type": "MaskRCNN",
+      "model_type": "DETRInstSeg",
+      "quantization_model_type": "transformer",
+      "model_info_overrides": {
+        "model_type": "DETRInstSeg"
+      },
+      "preprocessing_overrides": {
+        "mean_values": "0.0 0.0 0.0",
+        "scale_values": "1.0 1.0 1.0"
+      },
       "license": "apache-2.0",
       "license_link": "https://roboflow.com/licensing",
       "tags": ["image-segmentation", "instance-segmentation", "vision"],
@@ -1161,12 +1236,21 @@
     {
       "model_short_name": "rfdetr_seg_xlarge",
       "model_library": "getitune",
+      "labels": "COCO_V1",
       "model_full_name": "RF-DETR Segmentation X-Large",
       "description": "RF-DETR Extra-Large for instance segmentation trained with getitune",
       "docs": "https://github.com/roboflow/rf-detr",
       "getitune_recipe": "rfdetr_seg_xlarge",
       "getitune_task": "INSTANCE_SEGMENTATION",
-      "model_type": "MaskRCNN",
+      "model_type": "DETRInstSeg",
+      "quantization_model_type": "transformer",
+      "model_info_overrides": {
+        "model_type": "DETRInstSeg"
+      },
+      "preprocessing_overrides": {
+        "mean_values": "0.0 0.0 0.0",
+        "scale_values": "1.0 1.0 1.0"
+      },
       "license": "apache-2.0",
       "license_link": "https://roboflow.com/licensing",
       "tags": ["image-segmentation", "instance-segmentation", "vision"],
@@ -1175,6 +1259,7 @@
     {
       "model_short_name": "rtmdet_inst_tiny",
       "model_library": "getitune",
+      "labels": "COCO_81",
       "model_full_name": "RTMDet Instance Tiny",
       "description": "RTMDet Tiny for instance segmentation trained with getitune",
       "docs": "https://github.com/open-mmlab/mmdetection/tree/main/configs/rtmdet",
@@ -1259,6 +1344,7 @@
     {
       "model_short_name": "maskrcnn_r50_rotated",
       "model_library": "getitune",
+      "labels": "COCO_V1",
       "model_full_name": "Mask R-CNN ResNet-50 Rotated Detection",
       "description": "Mask R-CNN with ResNet-50 for rotated object detection trained with getitune",
       "docs": "https://github.com/open-edge-platform/training_extensions",
@@ -1273,6 +1359,7 @@
     {
       "model_short_name": "maskrcnn_efficientnetb2b_rotated",
       "model_library": "getitune",
+      "labels": "COCO_81",
       "model_full_name": "Mask R-CNN EfficientNet-B2B Rotated Detection",
       "description": "Mask R-CNN with EfficientNet-B2B backbone for rotated object detection trained with getitune",
       "docs": "https://github.com/open-edge-platform/training_extensions",
@@ -1342,6 +1429,22 @@
       "model_type": "YOLO11",
       "license": "agpl-3.0",
       "license_link": "https://spdx.org/licenses/AGPL-3.0-only.html",
+      "dataset_type": "coco-detection"
+    },
+    {
+      "model_short_name": "maskrcnn_swint",
+      "model_library": "getitune",
+      "labels": "COCO_81",
+      "model_full_name": "Mask R-CNN Swin-Tiny",
+      "description": "Mask R-CNN with Swin-Tiny backbone for instance segmentation trained with getitune",
+      "docs": "https://github.com/open-mmlab/mmdetection/tree/main/configs/swin",
+      "getitune_recipe": "maskrcnn_swint",
+      "getitune_task": "INSTANCE_SEGMENTATION",
+      "model_type": "MaskRCNN",
+      "quantization_model_type": "transformer",
+      "license": "apache-2.0",
+      "license_link": "https://github.com/open-mmlab/mmdetection/blob/main/LICENSE",
+      "tags": ["image-segmentation", "instance-segmentation", "vision"],
       "dataset_type": "coco-detection"
     }
   ]
