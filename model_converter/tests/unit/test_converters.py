@@ -1163,6 +1163,47 @@ class TestValidateTorchModel:
             validate=False,
         )
 
+    def test_collects_no_ignored_scope_nodes_when_model_has_no_get_ops(self, converter):
+        """Ignored-scope collection tolerates objects that are not OpenVINO models."""
+        model = SimpleNamespace()
+
+        assert converter._collect_ignored_scope_node_names(model, [".*mask_head.*"]) == []
+
+    def test_collects_ignored_scope_nodes_ignores_nodes_without_friendly_name(self, converter):
+        """Ignored-scope collection skips malformed nodes without failing."""
+        model = SimpleNamespace(
+            get_ops=lambda: [
+                SimpleNamespace(),
+                _FakeOVNode("__module.model.roi_heads.mask_head.0.2/aten::relu_/Relu"),
+            ],
+        )
+
+        assert converter._collect_ignored_scope_node_names(model, [".*mask_head.*"]) == [
+            "__module.model.roi_heads.mask_head.0.2/aten::relu_/Relu",
+        ]
+
+    def test_collects_no_quantized_consumers_when_node_has_no_output(self, converter):
+        """Consumer collection tolerates nodes without OpenVINO output accessors."""
+        assert converter._collect_quantized_consumer_names(SimpleNamespace()) == set()
+
+    def test_collects_quantized_consumers_skips_consumers_without_required_accessors(self, converter):
+        """Consumer collection skips malformed consumers and keeps quantizable ones."""
+        mask_relu = _FakeOVNode("__module.model.roi_heads.mask_head.0.2/aten::relu_/Relu")
+        generic_mask_conv = _FakeOVNode("Multiply_31017", type_name="Convolution")
+        mask_relu.connect_to(SimpleNamespace())
+        mask_relu.connect_to(generic_mask_conv)
+
+        assert converter._collect_quantized_consumer_names(mask_relu) == {"Multiply_31017"}
+
+    def test_omits_ignored_scope_for_invalid_patterns(self, converter):
+        """Ignored-scope builder ignores non-sequence and string patterns."""
+        fake_nncf = ModuleType("nncf")
+        fake_nncf.IgnoredScope = MagicMock()
+
+        assert converter._build_quantization_ignored_scope(fake_nncf, SimpleNamespace(), None) is None
+        assert converter._build_quantization_ignored_scope(fake_nncf, SimpleNamespace(), ".*mask_head.*") is None
+        fake_nncf.IgnoredScope.assert_not_called()
+
     def test_omits_ignored_scope_when_not_configured(
         self,
         converter,
