@@ -120,7 +120,7 @@ jobs:
 
       - name: Run test
         run: |
-          uv --directory model_api run pytest --data=./data tests/functional
+          uv --directory model_api run pytest --data=./data tests/functional -sx
 
   serving_api-tests:
     strategy:
