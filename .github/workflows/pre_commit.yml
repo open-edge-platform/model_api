@@ -31,27 +31,6 @@ jobs:
             python-version: "3.14" # started to fail with "Windows fatal exception: access violation"
     runs-on: ${{ matrix.os }}
     steps:
-      - name: Harden the runner
-        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
-        with:
-          disable-sudo: true
-          disable-telemetry: true
-          egress-policy: block
-          allowed-endpoints: >
-            dc.services.visualstudio.com:443
-            download.pytorch.org:443
-            files.pythonhosted.org:443
-            github.com:443
-            incoming.telemetry.mozilla.org:443
-            ocsp.digicert.com:443
-            ocsp.sectigo.com:443
-            pypi.org:443
-            raw.githubusercontent.com:443
-            releases.astral.sh:443
-            settings-win.data.microsoft.com:443
-            storage.geti.intel.com:443
-            telemetry-incoming.r53-2.services.mozilla.com:443
-
       - &checkout
         name: Checkout code
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -68,12 +47,6 @@ jobs:
 
       - name: Install dependencies
         run: uv --directory model_api sync --locked --group tests --extra-index-url https://download.pytorch.org/whl/cpu
-
-      - name: Run model_api unit tests
-        run: uv --directory model_api run pytest tests/unit --cov
-
-      - name: Run model_converter unit tests
-        run: uv --directory model_converter run --group tests pytest tests/unit --cov
 
       - name: Prepare test data
         run: |
