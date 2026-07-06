@@ -117,12 +117,21 @@ class CocoDetectionMAP(Metric):
 
     name = "mAP"
 
-    def __init__(self, annotation_file: Path, iou_type: str = "bbox") -> None:
+    def __init__(
+        self,
+        annotation_file: Path,
+        iou_type: str = "bbox",
+        *,
+        category_ids_are_coco91: bool = False,
+        label_offset: int = 0,
+    ) -> None:
         if iou_type not in _VALID_IOU_TYPES:
             error_msg = f"Unsupported iou_type {iou_type!r}; expected one of {sorted(_VALID_IOU_TYPES)}"
             raise ValueError(error_msg)
         self.annotation_file = Path(annotation_file)
         self.iou_type = iou_type
+        self.category_ids_are_coco91 = category_ids_are_coco91
+        self.label_offset = label_offset
         self._predictions: list[dict[str, Any]] = []
 
     def update(self, predictions: list[dict[str, Any]] | None = None, ground_truth: Any = None) -> None:

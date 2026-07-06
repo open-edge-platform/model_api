@@ -24,6 +24,44 @@ def _set_template_root(monkeypatch: pytest.MonkeyPatch, template_dir: Path) -> N
     monkeypatch.setattr(base_module, "__file__", str(template_dir.parent / "converters" / "base.py"))
 
 
+class _FakeOVInput:
+    def __init__(self, node: "_FakeOVNode") -> None:
+        self._node = node
+
+    def get_node(self) -> "_FakeOVNode":
+        return self._node
+
+
+class _FakeOVOutput:
+    def __init__(self) -> None:
+        self._target_inputs: set[_FakeOVInput] = set()
+
+    def connect_to(self, node: "_FakeOVNode") -> None:
+        self._target_inputs.add(_FakeOVInput(node))
+
+    def get_target_inputs(self) -> set[_FakeOVInput]:
+        return self._target_inputs
+
+
+class _FakeOVNode:
+    def __init__(self, friendly_name: str, type_name: str = "Relu") -> None:
+        self._friendly_name = friendly_name
+        self._type_name = type_name
+        self._outputs = [_FakeOVOutput()]
+
+    def get_friendly_name(self) -> str:
+        return self._friendly_name
+
+    def get_type_name(self) -> str:
+        return self._type_name
+
+    def output(self, index: int) -> _FakeOVOutput:
+        return self._outputs[index]
+
+    def connect_to(self, node: "_FakeOVNode") -> None:
+        self._outputs[0].connect_to(node)
+
+
 class TestCopyReadme:
     """Tests for BaseConverter.copy_readme via TorchvisionConverter."""
 
@@ -149,6 +187,64 @@ class TestCopyReadme:
 
         content = (output_folder / "README.md").read_text()
         assert f"Docs page name: {docs_page_name}" in content
+
+    def test_renders_ignored_scope_note_for_int8_variant(self, converter, template_dir, tmp_path, monkeypatch):
+        """copy_readme documents mask-head precision protection when configured, for int8 variant only."""
+        _set_template_root(monkeypatch, template_dir)
+        (template_dir / "README-torchvision-int8.md").write_text(
+            "Note:\n<<quantization_ignored_scope_note>>\nEnd\n",
+        )
+        (template_dir / "README-torchvision-fp16.md").write_text(
+            "Note:\n<<quantization_ignored_scope_note>>\nEnd\n",
+        )
+        model_config = {
+            "model_short_name": "maskrcnn_r50",
+            "model_library": "torchvision",
+            "license": "bsd-3-clause",
+            "license_link": "https://example.com/license",
+            "docs": "https://docs.example.com",
+            "quantization_ignored_scope_patterns": [".*mask_predictor.*", ".*mask_head.*"],
+        }
+
+        int8_folder = tmp_path / "maskrcnn_r50-int8-ov"
+        int8_folder.mkdir()
+        converter.copy_readme(model_config, int8_folder, variant="int8")
+        int8_content = (int8_folder / "README.md").read_text()
+        assert "`.*mask_predictor.*`" in int8_content
+        assert "`.*mask_head.*`" in int8_content
+        assert "excluded from INT8 quantization" in int8_content
+
+        # The note only makes sense for the quantized (int8) variant.
+        fp16_folder = tmp_path / "maskrcnn_r50-fp16-ov"
+        fp16_folder.mkdir()
+        converter.copy_readme(model_config, fp16_folder, variant="fp16")
+        fp16_content = (fp16_folder / "README.md").read_text()
+        assert "mask_predictor" not in fp16_content
+
+    def test_omits_ignored_scope_note_when_not_configured(self, converter, template_dir, tmp_path, monkeypatch):
+        """copy_readme leaves the note blank when quantization_ignored_scope_patterns is absent."""
+        _set_template_root(monkeypatch, template_dir)
+        (template_dir / "README-torchvision-int8.md").write_text(
+            "Note:\n<<quantization_ignored_scope_note>>\nEnd\n",
+        )
+        output_folder = tmp_path / "test_model-int8-ov"
+        output_folder.mkdir()
+
+        converter.copy_readme(
+            {
+                "model_short_name": "test_model",
+                "model_library": "torchvision",
+                "license": "apache-2.0",
+                "license_link": "https://apache.org/licenses/LICENSE-2.0",
+                "docs": "https://docs.example.com",
+            },
+            output_folder,
+            variant="int8",
+        )
+
+        content = (output_folder / "README.md").read_text()
+        assert "mask_predictor" not in content
+        assert "excluded from INT8 quantization" not in content
 
     @pytest.mark.parametrize(
         ("config", "expected"),
@@ -407,6 +503,49 @@ class TestPreprocessCalibrationImage:
 
         assert result is not None
         assert result.shape == (1, 3, 4, 4)
+
+    def test_intensity_scale_is_applied_before_mean_and_scale(self, converter, tmp_path):
+        """intensity_scale divides raw pixels (scale_to_unit ÷255) before normalization.
+
+        A white pixel (255) with intensity_scale=255 becomes 1.0, then
+        ``(1.0 - mean) / scale`` is applied — matching how Model API normalizes
+        getitune models whose mean/scale are stored in [0, 1] units.
+        """
+        img_path = tmp_path / "white.png"
+        img = np.array([[[255, 255, 255]]], dtype=np.uint8)
+        cv2.imwrite(str(img_path), img)
+
+        result = converter._preprocess_calibration_image(
+            img_path=img_path,
+            width=1,
+            height=1,
+            mean=np.array([0.485, 0.456, 0.406], dtype=np.float32),
+            scale=np.array([0.229, 0.224, 0.225], dtype=np.float32),
+            reverse_input_channels=False,
+            intensity_scale=255.0,
+        )
+
+        assert result is not None
+        expected = (1.0 - np.array([0.485, 0.456, 0.406])) / np.array([0.229, 0.224, 0.225])
+        np.testing.assert_allclose(result[0, :, 0, 0], expected, rtol=1e-5)
+
+    def test_intensity_scale_defaults_to_no_op(self, converter, tmp_path):
+        """Omitting intensity_scale leaves pixels in their raw range (pixel-unit mean/scale)."""
+        img_path = tmp_path / "gray.png"
+        img = np.array([[[200, 200, 200]]], dtype=np.uint8)
+        cv2.imwrite(str(img_path), img)
+
+        result = converter._preprocess_calibration_image(
+            img_path=img_path,
+            width=1,
+            height=1,
+            mean=np.array([0.0, 0.0, 0.0], dtype=np.float32),
+            scale=np.array([1.0, 1.0, 1.0], dtype=np.float32),
+            reverse_input_channels=False,
+        )
+
+        assert result is not None
+        np.testing.assert_allclose(result[0, :, 0, 0], np.array([200.0, 200.0, 200.0]))
 
 
 class TestCreateCalibrationDataset:
@@ -907,6 +1046,207 @@ class TestValidateTorchModel:
 
         assert quantize.call_args.kwargs["model_type"] == "transformer"
 
+    def test_passes_ignored_scope_when_configured(
+        self,
+        converter,
+        sample_model_config,
+        template_dir,
+        tmp_path,
+        monkeypatch,
+    ):
+        """quantization_ignored_scope_patterns builds an nncf.IgnoredScope and forwards it."""
+        _set_template_root(monkeypatch, template_dir)
+        (template_dir / "README-torchvision-int8.md").write_text("# <<model_name>>")
+        fp16_dir = tmp_path / "test_model-fp16-ov"
+        fp16_dir.mkdir(parents=True)
+        model_path = fp16_dir / "test_model_fp32.xml"
+        model_path.write_text("<net/>")
+        calibration_data = [np.zeros((1, 3, 224, 224), dtype=np.float32)]
+
+        quantized_model = MagicMock()
+        quantized_model.get_rt_info.return_value = SimpleNamespace(value={"model_type": "MaskRCNN"})
+        ov_model = SimpleNamespace(
+            get_ops=lambda: [
+                _FakeOVNode("__module.model.roi_heads.mask_head.0.2/aten::relu_/Relu"),
+                _FakeOVNode(
+                    "__module.model.roi_heads.mask_predictor.mask_fcn_logits/aten::_convolution/Convolution",
+                ),
+            ],
+        )
+        core = SimpleNamespace(read_model=MagicMock(return_value=ov_model))
+        fake_ov = ModuleType("openvino")
+        fake_ov.Core = MagicMock(return_value=core)
+        fake_ov.save_model = MagicMock(
+            side_effect=lambda _model, path, compress_to_fp16=True: Path(path).write_text("<int8/>") or None,
+        )
+        quantize = MagicMock(return_value=quantized_model)
+        ignored_scope_sentinel = SimpleNamespace(patterns=[".*mask_predictor.*", ".*mask_head.*"])
+        fake_nncf = ModuleType("nncf")
+        fake_nncf.Dataset = MagicMock(side_effect=lambda generator: list(generator))
+        fake_nncf.quantize = quantize
+        fake_nncf.QuantizationPreset = SimpleNamespace(PERFORMANCE="performance", MIXED="mixed")
+        fake_nncf.IgnoredScope = MagicMock(return_value=ignored_scope_sentinel)
+
+        model_config = sample_model_config | {
+            "quantization_ignored_scope_patterns": [".*mask_predictor.*", ".*mask_head.*"],
+        }
+
+        with patch.dict(sys.modules, {"openvino": fake_ov, "nncf": fake_nncf}):
+            converter.quantize_model(
+                model_path=model_path,
+                calibration_data=calibration_data,
+                model_config=model_config,
+                preset="mixed",
+            )
+
+        fake_nncf.IgnoredScope.assert_called_once_with(
+            names=[
+                "__module.model.roi_heads.mask_head.0.2/aten::relu_/Relu",
+                "__module.model.roi_heads.mask_predictor.mask_fcn_logits/aten::_convolution/Convolution",
+            ],
+            patterns=[".*mask_predictor.*", ".*mask_head.*"],
+            validate=False,
+        )
+        assert quantize.call_args.kwargs["ignored_scope"] is ignored_scope_sentinel
+
+    def test_builds_ignored_scope_with_matching_openvino_node_names(self, converter):
+        """Ignored-scope regexes are also resolved to exact OpenVINO node names for NNCF."""
+        model = SimpleNamespace(
+            get_ops=lambda: [
+                _FakeOVNode("__module.model.roi_heads.mask_head.0.2/aten::relu_/Relu"),
+                _FakeOVNode(
+                    "__module.model.roi_heads.mask_predictor.mask_fcn_logits/aten::_convolution/Convolution",
+                ),
+                _FakeOVNode("__module.model.roi_heads.box_head.fc6/aten::linear/MatMul"),
+            ],
+        )
+        ignored_scope_sentinel = SimpleNamespace()
+        fake_nncf = ModuleType("nncf")
+        fake_nncf.IgnoredScope = MagicMock(return_value=ignored_scope_sentinel)
+
+        result = converter._build_quantization_ignored_scope(
+            fake_nncf,
+            model,
+            [".*mask_head.*", ".*mask_predictor.*"],
+        )
+
+        assert result is ignored_scope_sentinel
+        fake_nncf.IgnoredScope.assert_called_once_with(
+            names=[
+                "__module.model.roi_heads.mask_head.0.2/aten::relu_/Relu",
+                "__module.model.roi_heads.mask_predictor.mask_fcn_logits/aten::_convolution/Convolution",
+            ],
+            patterns=[".*mask_head.*", ".*mask_predictor.*"],
+            validate=False,
+        )
+
+    def test_builds_ignored_scope_with_generic_quantized_mask_consumers(self, converter):
+        """Mask nodes can feed generic-name convolutions that also need ignored to avoid output FQs."""
+        mask_relu = _FakeOVNode("__module.model.roi_heads.mask_head.0.2/aten::relu_/Relu")
+        generic_mask_conv = _FakeOVNode("Multiply_31017", type_name="Convolution")
+        unrelated_conv = _FakeOVNode("Multiply_99999", type_name="Convolution")
+        mask_relu.connect_to(generic_mask_conv)
+        model = SimpleNamespace(get_ops=lambda: [mask_relu, generic_mask_conv, unrelated_conv])
+        ignored_scope_sentinel = SimpleNamespace()
+        fake_nncf = ModuleType("nncf")
+        fake_nncf.IgnoredScope = MagicMock(return_value=ignored_scope_sentinel)
+
+        result = converter._build_quantization_ignored_scope(fake_nncf, model, [".*roi_heads\\.mask_head.*"])
+
+        assert result is ignored_scope_sentinel
+        fake_nncf.IgnoredScope.assert_called_once_with(
+            names=[
+                "Multiply_31017",
+                "__module.model.roi_heads.mask_head.0.2/aten::relu_/Relu",
+            ],
+            patterns=[".*roi_heads\\.mask_head.*"],
+            validate=False,
+        )
+
+    def test_collects_no_ignored_scope_nodes_when_model_has_no_get_ops(self, converter):
+        """Ignored-scope collection tolerates objects that are not OpenVINO models."""
+        model = SimpleNamespace()
+
+        assert converter._collect_ignored_scope_node_names(model, [".*mask_head.*"]) == []
+
+    def test_collects_ignored_scope_nodes_ignores_nodes_without_friendly_name(self, converter):
+        """Ignored-scope collection skips malformed nodes without failing."""
+        model = SimpleNamespace(
+            get_ops=lambda: [
+                SimpleNamespace(),
+                _FakeOVNode("__module.model.roi_heads.mask_head.0.2/aten::relu_/Relu"),
+            ],
+        )
+
+        assert converter._collect_ignored_scope_node_names(model, [".*mask_head.*"]) == [
+            "__module.model.roi_heads.mask_head.0.2/aten::relu_/Relu",
+        ]
+
+    def test_collects_no_quantized_consumers_when_node_has_no_output(self, converter):
+        """Consumer collection tolerates nodes without OpenVINO output accessors."""
+        assert converter._collect_quantized_consumer_names(SimpleNamespace()) == set()
+
+    def test_collects_quantized_consumers_skips_consumers_without_required_accessors(self, converter):
+        """Consumer collection skips malformed consumers and keeps quantizable ones."""
+        mask_relu = _FakeOVNode("__module.model.roi_heads.mask_head.0.2/aten::relu_/Relu")
+        generic_mask_conv = _FakeOVNode("Multiply_31017", type_name="Convolution")
+        mask_relu.connect_to(SimpleNamespace())
+        mask_relu.connect_to(generic_mask_conv)
+
+        assert converter._collect_quantized_consumer_names(mask_relu) == {"Multiply_31017"}
+
+    def test_omits_ignored_scope_for_invalid_patterns(self, converter):
+        """Ignored-scope builder ignores non-sequence and string patterns."""
+        fake_nncf = ModuleType("nncf")
+        fake_nncf.IgnoredScope = MagicMock()
+
+        assert converter._build_quantization_ignored_scope(fake_nncf, SimpleNamespace(), None) is None
+        assert converter._build_quantization_ignored_scope(fake_nncf, SimpleNamespace(), ".*mask_head.*") is None
+        fake_nncf.IgnoredScope.assert_not_called()
+
+    def test_omits_ignored_scope_when_not_configured(
+        self,
+        converter,
+        sample_model_config,
+        template_dir,
+        tmp_path,
+        monkeypatch,
+    ):
+        """Models without quantization_ignored_scope_patterns quantize the full graph (unchanged behavior)."""
+        _set_template_root(monkeypatch, template_dir)
+        (template_dir / "README-torchvision-int8.md").write_text("# <<model_name>>")
+        fp16_dir = tmp_path / "test_model-fp16-ov"
+        fp16_dir.mkdir(parents=True)
+        model_path = fp16_dir / "test_model_fp32.xml"
+        model_path.write_text("<net/>")
+        calibration_data = [np.zeros((1, 3, 224, 224), dtype=np.float32)]
+
+        quantized_model = MagicMock()
+        quantized_model.get_rt_info.return_value = SimpleNamespace(value={"model_type": "Classification"})
+        core = SimpleNamespace(read_model=MagicMock(return_value="ov_model"))
+        fake_ov = ModuleType("openvino")
+        fake_ov.Core = MagicMock(return_value=core)
+        fake_ov.save_model = MagicMock(
+            side_effect=lambda _model, path, compress_to_fp16=True: Path(path).write_text("<int8/>") or None,
+        )
+        quantize = MagicMock(return_value=quantized_model)
+        fake_nncf = ModuleType("nncf")
+        fake_nncf.Dataset = MagicMock(side_effect=lambda generator: list(generator))
+        fake_nncf.quantize = quantize
+        fake_nncf.QuantizationPreset = SimpleNamespace(PERFORMANCE="performance", MIXED="mixed")
+        fake_nncf.IgnoredScope = MagicMock()
+
+        with patch.dict(sys.modules, {"openvino": fake_ov, "nncf": fake_nncf}):
+            converter.quantize_model(
+                model_path=model_path,
+                calibration_data=calibration_data,
+                model_config=sample_model_config,
+                preset="mixed",
+            )
+
+        fake_nncf.IgnoredScope.assert_not_called()
+        assert "ignored_scope" not in quantize.call_args.kwargs
+
     def test_validates_fp32_and_int8_outputs_when_requested(
         self,
         converter,
@@ -1239,6 +1579,160 @@ class TestMeasureMetric:
 
         preds = metric.update.call_args.kwargs["predictions"]
         assert preds[0]["category_id"] == 13  # COCO80_TO_COCO91[11] = 13 (not 12)
+
+    def test_bbox_dispatch_uses_label_directly_when_coco91(
+        self,
+        converter,
+        tmp_path,
+        monkeypatch,
+    ):
+        """getitune Mask R-CNN: label is already a COCO-91 id, so no remap is applied."""
+        from model_converter.datasets import CalibrationSample
+        from model_converter.metrics import CocoDetectionMAP
+
+        img_path = tmp_path / "img.jpg"
+        cv2.imwrite(str(img_path), np.zeros((10, 10, 3), dtype=np.uint8))
+        wrapper = MagicMock(
+            return_value=SimpleNamespace(
+                bboxes=np.array([[0, 0, 5, 5]], dtype=np.int32),
+                labels=np.array([11], dtype=np.int32),  # would map to 13 under the COCO80 remap
+                scores=np.array([0.8], dtype=np.float32),
+            ),
+        )
+        self._install_fake_model_api(monkeypatch, wrapper)
+
+        ann = tmp_path / "ann.json"
+        ann.write_text('{"images":[],"annotations":[],"categories":[]}')
+        metric = CocoDetectionMAP(annotation_file=ann, iou_type="bbox", category_ids_are_coco91=True)
+        metric.update = MagicMock()
+        metric.compute = MagicMock(return_value=0.0)
+        metric.reset = MagicMock()
+        sample = CalibrationSample(image_path=img_path, label=0, image_id=1)
+
+        converter._measure_metric(tmp_path / "model.xml", [sample], metric)
+
+        preds = metric.update.call_args.kwargs["predictions"]
+        assert preds[0]["category_id"] == 11  # used verbatim, not remapped to 13
+
+    def test_bbox_dispatch_applies_label_offset_for_native_coco91(
+        self,
+        converter,
+        tmp_path,
+        monkeypatch,
+    ):
+        """RF-DETR instance seg labels are native COCO IDs after undoing Model API's +1 shift."""
+        from model_converter.datasets import CalibrationSample
+        from model_converter.metrics import CocoDetectionMAP
+
+        img_path = tmp_path / "img.jpg"
+        cv2.imwrite(str(img_path), np.zeros((10, 10, 3), dtype=np.uint8))
+        wrapper = MagicMock(
+            return_value=SimpleNamespace(
+                bboxes=np.array([[0, 0, 5, 5]], dtype=np.int32),
+                labels=np.array([14], dtype=np.int32),  # Model API shifted native category 13 to 14.
+                scores=np.array([0.8], dtype=np.float32),
+            ),
+        )
+        self._install_fake_model_api(monkeypatch, wrapper)
+
+        ann = tmp_path / "ann.json"
+        ann.write_text('{"images":[],"annotations":[],"categories":[]}')
+        metric = CocoDetectionMAP(annotation_file=ann, iou_type="bbox", category_ids_are_coco91=True, label_offset=1)
+        metric.update = MagicMock()
+        metric.compute = MagicMock(return_value=0.0)
+        metric.reset = MagicMock()
+        sample = CalibrationSample(image_path=img_path, label=0, image_id=1)
+
+        converter._measure_metric(tmp_path / "model.xml", [sample], metric)
+
+        preds = metric.update.call_args.kwargs["predictions"]
+        assert preds[0]["category_id"] == 13
+
+    def test_bbox_dispatch_applies_label_offset_for_instance_seg(
+        self,
+        converter,
+        tmp_path,
+        monkeypatch,
+    ):
+        """COCO_81 MaskRCNN: labels are 1-indexed (after +=1); offset corrects remap."""
+        from model_converter.datasets import CalibrationSample
+        from model_converter.metrics import CocoDetectionMAP
+
+        img_path = tmp_path / "img.jpg"
+        cv2.imwrite(str(img_path), np.zeros((10, 10, 3), dtype=np.uint8))
+        wrapper = MagicMock(
+            return_value=SimpleNamespace(
+                bboxes=np.array([[0, 0, 5, 5]], dtype=np.int32),
+                labels=np.array([12], dtype=np.int32),  # 1-indexed label 12 = stop_sign (contiguous index 11)
+                scores=np.array([0.8], dtype=np.float32),
+            ),
+        )
+        self._install_fake_model_api(monkeypatch, wrapper)
+
+        ann = tmp_path / "ann.json"
+        ann.write_text('{"images":[],"annotations":[],"categories":[]}')
+        metric = CocoDetectionMAP(annotation_file=ann, iou_type="bbox", label_offset=1)
+        metric.update = MagicMock()
+        metric.compute = MagicMock(return_value=0.0)
+        metric.reset = MagicMock()
+        sample = CalibrationSample(image_path=img_path, label=0, image_id=1)
+
+        converter._measure_metric(tmp_path / "model.xml", [sample], metric)
+
+        preds = metric.update.call_args.kwargs["predictions"]
+        # label 12 - offset 1 = 11 → COCO80_TO_COCO91[11] = 13 (stop_sign)
+        assert preds[0]["category_id"] == 13
+
+    def test_segm_dispatch_serializes_masks_as_coco_rle(
+        self,
+        converter,
+        tmp_path,
+        monkeypatch,
+    ):
+        """Instance segmentation metrics receive COCO RLE mask predictions."""
+        from model_converter.datasets import CalibrationSample
+        from model_converter.metrics import CocoDetectionMAP
+
+        img_path = tmp_path / "img.jpg"
+        cv2.imwrite(str(img_path), np.zeros((10, 10, 3), dtype=np.uint8))
+        wrapper = MagicMock(
+            return_value=SimpleNamespace(
+                bboxes=np.array([[1, 2, 6, 8]], dtype=np.int32),
+                labels=np.array([4], dtype=np.int32),
+                scores=np.array([0.9], dtype=np.float32),
+                masks=np.array(
+                    [
+                        [
+                            [0, 1, 1, 0],
+                            [0, 1, 1, 0],
+                            [0, 0, 0, 0],
+                        ],
+                    ],
+                    dtype=np.uint8,
+                ),
+            ),
+        )
+        self._install_fake_model_api(monkeypatch, wrapper)
+
+        ann = tmp_path / "ann.json"
+        ann.write_text('{"images":[],"annotations":[],"categories":[]}')
+        metric = CocoDetectionMAP(annotation_file=ann, iou_type="segm")
+        metric.update = MagicMock()
+        metric.compute = MagicMock(return_value=0.44)
+        metric.reset = MagicMock()
+        sample = CalibrationSample(image_path=img_path, label=0, image_id=42)
+
+        value = converter._measure_metric(tmp_path / "model.xml", [sample], metric)
+
+        assert value == pytest.approx(0.44)
+        preds = metric.update.call_args.kwargs["predictions"]
+        assert len(preds) == 1
+        assert preds[0]["image_id"] == 42
+        assert preds[0]["category_id"] == 5
+        assert preds[0]["bbox"] == [1.0, 2.0, 5.0, 6.0]
+        assert preds[0]["score"] == pytest.approx(0.9)
+        assert preds[0]["segmentation"]["size"] == [3, 4]
+        assert isinstance(preds[0]["segmentation"]["counts"], str)
 
     def test_bbox_dispatch_skips_samples_without_image_id(
         self,
