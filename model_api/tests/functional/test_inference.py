@@ -5,6 +5,8 @@
 import ast
 import json
 import operator
+import platform
+import subprocess
 from pathlib import Path
 
 import cv2
@@ -85,6 +87,8 @@ def create_models(
     configuration=None,
     dump: bool = False,
 ):
+    print(get_processor_name())
+
     if model_path.endswith(".onnx") and force_onnx_adapter:
         wrapper_type = model_type.get_model_class(
             load_parameters_from_onnx(onnx.load(model_path))["model_info"]["model_type"],
@@ -592,3 +596,13 @@ def store_outputs(name, image, device, result, results_dir: str) -> None:
         visualizer.save(image, result, path)
     except (TypeError, ValueError) as e:
         print(f"Cannot save the output visualization for {name}. Error: {e}")
+
+
+def get_processor_name():
+    if platform.system() == "Windows":
+        return platform.processor()
+    if platform.system() == "Linux":
+        command = "cat /proc/cpuinfo"
+        return subprocess.check_output(command, shell=True).decode().strip()  # noqa: S602
+
+    return ""
