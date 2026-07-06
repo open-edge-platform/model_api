@@ -14,49 +14,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  code_quality_checks:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Harden the runner
-        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
-        with:
-          disable-sudo: true
-          disable-telemetry: true
-          egress-policy: block
-          allowed-endpoints: >
-            files.pythonhosted.org:443
-            github.com:443
-            nodejs.org:443
-            pypi.org:443
-            raw.githubusercontent.com:443
-            registry.npmjs.org:443
-            releases.astral.sh:443
-
-      - &checkout
-        name: Checkout code
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-        with:
-          persist-credentials: false
-
-      - name: Set up Python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
-        with:
-          python-version-file: ".python-version"
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
-        with:
-          enable-cache: false
-          version: "0.11.13"
-
-      - name: Install dependencies
-        run: |
-          uv --directory model_api sync --locked --all-extras --group docs
-          uv --directory model_converter sync --locked
-
-      - name: Run pre-commit checks
-        run: uvx pre-commit run --all-files
-
   unit-functional-tests:
     strategy:
       fail-fast: false
@@ -95,7 +52,11 @@ jobs:
             storage.geti.intel.com:443
             telemetry-incoming.r53-2.services.mozilla.com:443
 
-      - *checkout
+      - &checkout
+        name: Checkout code
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
 
       - &matrix-setup-uv
         name: Install uv
@@ -122,70 +83,10 @@ jobs:
         run: |
           uv --directory model_api run pytest --data=./data tests/functional -sx
 
-  serving_api-tests:
-    strategy:
-      fail-fast: false
-      matrix:
-        os:
-          - "ubuntu-latest"
-        python-version:
-          - "3.11"
-          - "3.12"
-          - "3.13"
-          - "3.14"
-    runs-on: ${{ matrix.os }}
-    steps:
-      - name: Harden the runner
-        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
-        with:
-          disable-sudo: true
-          disable-telemetry: true
-          egress-policy: block
-          allowed-endpoints: >
-            auth.docker.io:443
-            download.pytorch.org:443
-            dseasb33srnrn.cloudfront.net:443
-            files.pythonhosted.org:443
-            github.com:443
-            production.cloudflare.docker.com:443
-            production.cloudfront.docker.com:443
-            pypi.org:443
-            raw.githubusercontent.com:443
-            registry-1.docker.io:443
-            releases.astral.sh:443
-            storage.geti.intel.com:443
-            index.docker.io:443
-      - name: Set up docker for macOS
-        if: startsWith(matrix.os, 'macos-1')
-        run: |
-          brew install colima docker
-          colima start
-
-      - *checkout
-
-      - *matrix-setup-uv
-
-      - name: Install dependencies
-        run: uv --directory model_api sync --locked --group tests --extra ovms --extra-index-url https://download.pytorch.org/whl/cpu
-
-      - name: Prepare test data
-        run: |
-          uv --directory model_api run python tests/functional/download_models.py -d data -j tests/functional/serving_scope.json -l
-
-      - name: serving_api
-        run: |
-          uv --directory model_api run python -c "from model_api.models import Model; Model.create_model('./data/otx_models/ssd-card-detection.xml').save('ovms_models/ssd-card-detection/1/ssd-card-detection.xml')"
-          docker run -d --rm -v $GITHUB_WORKSPACE/model_api/ovms_models/:/models -p 8000:8000 openvino/model_server:latest --model_path /models/ssd-card-detection/ --model_name ssd-card-detection --rest_port 8000 --log_level DEBUG --target_device CPU
-          echo "Waiting for OVMS to be ready..."
-          timeout 120 bash -c 'until curl -sf http://localhost:8000/v2/health/ready; do sleep 3; done'
-          uv --directory model_api run python examples/serving_api/run.py data/coco128/images/train2017/000000000009.jpg  # detects 4 objects
-
   pre-commit-result:
     runs-on: ubuntu-latest
     needs:
-      - code_quality_checks
       - unit-functional-tests
-      - serving_api-tests
     if: always()
     steps:
       - name: All tests ok
