@@ -462,6 +462,8 @@
 <p>Instance segmentation model for DETR-family architectures (e.g. RF-DETR-Seg).</p>
 <p>Uses full-image mask postprocessing: resizes the mask (e.g. 96x96 covering the
 entire image) to the original image dimensions and applies a threshold.</p>
+<p>Unlike MaskRCNN, this model outputs native COCO-91 category IDs directly, so
+no labels += 1 shift is applied (<code class="docutils literal notranslate"><span class="pre">_labels_shift</span> <span class="pre">=</span> <span class="pre">0</span></code>).</p>
 <p>Image model constructor</p>
 <p>It extends the <cite>Model</cite> constructor.</p>
 <dl class="field-list simple">
