@@ -87,7 +87,7 @@ def create_models(
     configuration=None,
     dump: bool = False,
 ):
-    print(get_processor_name())
+    print(f"Running tests on platform\n\n{get_processor_name()}\n\n")
 
     if model_path.endswith(".onnx") and force_onnx_adapter:
         wrapper_type = model_type.get_model_class(
