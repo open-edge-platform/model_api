@@ -148,7 +148,7 @@ def model_data_file(pytestconfig):
 
 
 @pytest.fixture(scope="session")
-def only_model_class(pytestconfig):
+def only_model_class(pytestconfig) -> Type[Model] | None:
     model_type = pytestconfig.getoption("only_model_type")
     if not model_type:
         return None
