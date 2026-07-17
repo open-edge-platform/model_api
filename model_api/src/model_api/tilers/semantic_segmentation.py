@@ -69,18 +69,22 @@ class SemanticSegmentationTiler(Tiler):
             saliency_map=np.array([]),
         )
 
-    def __call__(self, inputs):
-        @contextmanager
-        def setup_segm_model():
-            return_soft_prediction_state = None
-            if isinstance(self.model, SegmentationModel):
-                return_soft_prediction_state = self.model.params.return_soft_prediction
-                self.model._return_soft_prediction = True  # noqa: SLF001
-            try:
-                yield
-            finally:
-                if isinstance(self.model, SegmentationModel):
-                    self.model._return_soft_prediction = return_soft_prediction_state  # noqa: SLF001
+    @contextmanager
+    def _setup_model(self):
+        """Enable soft predictions on the underlying model while tiling.
 
-        with setup_segm_model():
-            return super().__call__(inputs)
+        Overlapping tiles are merged by accumulating per-class soft logits
+        (:meth:`_merge_results`), so the underlying segmentation model must return
+        soft predictions for both the full-image (:meth:`__call__`) and pre-tiled
+        (:meth:`predict_tiles`) inference paths.
+        """
+        return_soft_prediction_state = None
+        if isinstance(self.model, SegmentationModel):
+            return_soft_prediction_state = self.model.params.return_soft_prediction
+            self.model._return_soft_prediction = True  # noqa: SLF001
+        try:
+            yield
+        finally:
+            if isinstance(self.model, SegmentationModel):
+                self.model._return_soft_prediction = return_soft_prediction_state  # noqa: SLF001
+
