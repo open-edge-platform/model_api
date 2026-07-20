@@ -87,4 +87,3 @@ class SemanticSegmentationTiler(Tiler):
         finally:
             if isinstance(self.model, SegmentationModel):
                 self.model._return_soft_prediction = return_soft_prediction_state  # noqa: SLF001
-

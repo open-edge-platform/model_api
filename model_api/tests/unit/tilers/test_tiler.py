@@ -317,5 +317,3 @@ class TestTilerSetupModel:
         )
         tiler(np.zeros((100, 100, 3), dtype=np.uint8))
         assert tiler.setup_called == 1
-
-

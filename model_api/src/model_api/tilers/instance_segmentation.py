@@ -208,4 +208,3 @@ class InstanceSegmentationTiler(DetectionTiler):
         finally:
             if isinstance(self.model, InstanceSegmentationModel):
                 self.model._postprocess_semantic_masks = postprocess_state  # noqa: SLF001
-

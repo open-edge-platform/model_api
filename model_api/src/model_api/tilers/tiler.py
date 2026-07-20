@@ -173,8 +173,7 @@ class Tiler(abc.ABC):
         with self._setup_model():
             if self.execution_mode == "sync":
                 tile_results = [
-                    self._postprocess_tile(self.model(tile), coord)
-                    for tile, coord in zip(tiles, tile_coords)
+                    self._postprocess_tile(self.model(tile), coord) for tile, coord in zip(tiles, tile_coords)
                 ]
             else:
                 for i, tile in enumerate(tiles):
@@ -197,7 +196,6 @@ class Tiler(abc.ABC):
         applied consistently by both :meth:`__call__` and :meth:`predict_tiles`.
         """
         yield
-
 
     def _tile(self, image):
         """Tiles an input image to overlapping or non-overlapping patches.
