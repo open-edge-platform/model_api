@@ -397,7 +397,7 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="model_api.tilers.tiler.Tiler">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">model_api.tilers.tiler.</span></span><span class="sig-name descname"><span class="pre">Tiler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configuration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">execution_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'async'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.tilers.tiler.Tiler" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">ResultT</span></code>]</p>
 <p>Base constructor for creating a tiling pipeline</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -432,8 +432,11 @@ tiler (<cite>tile_size</cite>, <cite>tiles_overlap</cite> etc.) which are set as
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>inputs</strong> – raw input data, the data type is defined by underlying model wrapper</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><ul class="simple">
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code>(<code class="docutils literal notranslate"><span class="pre">ResultT</span></code>, bound= <code class="xref py py-class docutils literal notranslate"><span class="pre">Result</span></code>)</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><ul class="simple">
 <li><p>postprocessed data in the format defined by underlying model wrapper</p></li>
 </ul>
 </p>
@@ -445,6 +448,41 @@ tiler (<cite>tile_size</cite>, <cite>tiles_overlap</cite> etc.) which are set as
 <dt class="sig sig-object py" id="model_api.tilers.tiler.Tiler.get_model">
 <span class="sig-name descname"><span class="pre">get_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#model_api.tilers.tiler.Tiler.get_model" title="Link to this definition">#</a></dt>
 <dd><p>Getter for underlying model</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_api.tilers.tiler.Tiler.predict_tiles">
+<span class="sig-name descname"><span class="pre">predict_tiles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tiles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tile_coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.tilers.tiler.Tiler.predict_tiles" title="Link to this definition">#</a></dt>
+<dd><p>Run tiled inference on externally provided (already cropped) tiles and merge.</p>
+<p>This mirrors <a class="reference internal" href="#model_api.tilers.tiler.Tiler.__call__" title="model_api.tilers.tiler.Tiler.__call__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__call__()</span></code></a> but skips the internal tiling stage
+(<code class="docutils literal notranslate"><span class="pre">_tile</span></code> / <code class="docutils literal notranslate"><span class="pre">_filter_tiles</span></code> / <code class="docutils literal notranslate"><span class="pre">_crop_tile</span></code>): the caller supplies the tile
+crops together with their absolute coordinates in the full image. This supports
+pipelines that perform tiling upstream (e.g. inside a data loader) while still
+reusing the tiler’s per-task <code class="docutils literal notranslate"><span class="pre">_postprocess_tile</span></code> and <code class="docutils literal notranslate"><span class="pre">_merge_results</span></code> logic.</p>
+<p>The underlying model runs once per provided tile, so callers must not pass tiles
+through a model that itself tiles internally (that would tile each tile a second
+time).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tiles</strong> – sequence of pre-cropped tile images, each in the layout expected by
+the underlying model wrapper (typically <code class="docutils literal notranslate"><span class="pre">(H,</span> <span class="pre">W,</span> <span class="pre">C)</span></code> arrays).</p></li>
+<li><p><strong>tile_coords</strong> – sequence of <code class="docutils literal notranslate"><span class="pre">[x1,</span> <span class="pre">y1,</span> <span class="pre">x2,</span> <span class="pre">y2]</span></code> absolute tile coordinates in the
+full image, aligned with <code class="docutils literal notranslate"><span class="pre">tiles</span></code>.</p></li>
+<li><p><strong>shape</strong> – full-resolution image shape (<code class="docutils literal notranslate"><span class="pre">(H,</span> <span class="pre">W,</span> <span class="pre">C)</span></code> or <code class="docutils literal notranslate"><span class="pre">(H,</span> <span class="pre">W)</span></code>) used to place
+and merge the per-tile predictions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code>(<code class="docutils literal notranslate"><span class="pre">ResultT</span></code>, bound= <code class="xref py py-class docutils literal notranslate"><span class="pre">Result</span></code>)</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Merged prediction in the format produced by <code class="docutils literal notranslate"><span class="pre">_merge_results</span></code>.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – if <code class="docutils literal notranslate"><span class="pre">tiles</span></code> and <code class="docutils literal notranslate"><span class="pre">tile_coords</span></code> have different lengths.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py attribute">
@@ -561,6 +599,7 @@ results from all tiles.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.tilers.tiler.Tiler.parameters"><code class="docutils literal notranslate"><span class="pre">Tiler.parameters()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.tilers.tiler.Tiler.__call__"><code class="docutils literal notranslate"><span class="pre">Tiler.__call__()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.tilers.tiler.Tiler.get_model"><code class="docutils literal notranslate"><span class="pre">Tiler.get_model()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.tilers.tiler.Tiler.predict_tiles"><code class="docutils literal notranslate"><span class="pre">Tiler.predict_tiles()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.tilers.tiler.Tiler.EXECUTION_MODES"><code class="docutils literal notranslate"><span class="pre">Tiler.EXECUTION_MODES</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.tilers.tiler.Tiler.model"><code class="docutils literal notranslate"><span class="pre">Tiler.model</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.tilers.tiler.Tiler.model_loaded"><code class="docutils literal notranslate"><span class="pre">Tiler.model_loaded</span></code></a></li>

@@ -397,7 +397,7 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="model_api.tilers.semantic_segmentation.SemanticSegmentationTiler">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">model_api.tilers.semantic_segmentation.</span></span><span class="sig-name descname"><span class="pre">SemanticSegmentationTiler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configuration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">execution_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'async'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.tilers.semantic_segmentation.SemanticSegmentationTiler" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="tiler.html#model_api.tilers.tiler.Tiler" title="model_api.tilers.tiler.Tiler"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tiler</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="tiler.html#model_api.tilers.tiler.Tiler" title="model_api.tilers.tiler.Tiler"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tiler</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">ImageResultWithSoftPrediction</span></code>]</p>
 <p>Tiler for segmentation models.</p>
 <p>Base constructor for creating a tiling pipeline</p>
 <dl class="field-list simple">
@@ -410,23 +410,6 @@ tiler (<cite>tile_size</cite>, <cite>tiles_overlap</cite> etc.) which are set as
 </ul>
 </dd>
 </dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="model_api.tilers.semantic_segmentation.SemanticSegmentationTiler.__call__">
-<span class="sig-name descname"><span class="pre">__call__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_api.tilers.semantic_segmentation.SemanticSegmentationTiler.__call__" title="Link to this definition">#</a></dt>
-<dd><p>Applies full pipeline of tiling inference in one call.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>inputs</strong> – raw input data, the data type is defined by underlying model wrapper</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><ul class="simple">
-<li><p>postprocessed data in the format defined by underlying model wrapper</p></li>
-</ul>
-</p>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 </section>
@@ -478,10 +461,7 @@ tiler (<cite>tile_size</cite>, <cite>tiles_overlap</cite> etc.) which are set as
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.tilers.semantic_segmentation.SemanticSegmentationTiler"><code class="docutils literal notranslate"><span class="pre">SemanticSegmentationTiler</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.tilers.semantic_segmentation.SemanticSegmentationTiler.__call__"><code class="docutils literal notranslate"><span class="pre">SemanticSegmentationTiler.__call__()</span></code></a></li>
-</ul>
-</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model_api.tilers.semantic_segmentation.SemanticSegmentationTiler"><code class="docutils literal notranslate"><span class="pre">SemanticSegmentationTiler</span></code></a></li>
 </ul>
   </nav></div>
 
