@@ -14,7 +14,7 @@ from model_api.models import ImageResultWithSoftPrediction, SegmentationModel
 from .tiler import Tiler
 
 
-class SemanticSegmentationTiler(Tiler):
+class SemanticSegmentationTiler(Tiler[ImageResultWithSoftPrediction]):
     """Tiler for segmentation models."""
 
     def _postprocess_tile(

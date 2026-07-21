@@ -7,12 +7,16 @@ import abc
 import logging as log
 from contextlib import contextmanager
 from itertools import product
+from typing import Generic, TypeVar
 
 from model_api.models.parameters import ParameterRegistry
+from model_api.models.result import Result
 from model_api.pipelines import AsyncPipeline
 
+ResultT = TypeVar("ResultT", bound=Result)
 
-class Tiler(abc.ABC):
+
+class Tiler(abc.ABC, Generic[ResultT]):
     EXECUTION_MODES = ("async", "sync")
     """
     An abstract tiler
@@ -120,7 +124,7 @@ class Tiler(abc.ABC):
                     f'The parameter "{name}" not found in tiler, will be omitted',
                 )
 
-    def __call__(self, inputs):
+    def __call__(self, inputs) -> ResultT:
         """Applies full pipeline of tiling inference in one call.
 
         Args:
@@ -137,7 +141,7 @@ class Tiler(abc.ABC):
                 return self._predict_sync(inputs, tile_coords)
             return self._predict_async(inputs, tile_coords)
 
-    def predict_tiles(self, tiles, tile_coords, shape):
+    def predict_tiles(self, tiles, tile_coords, shape) -> ResultT:
         """Run tiled inference on externally provided (already cropped) tiles and merge.
 
         This mirrors :meth:`__call__` but skips the internal tiling stage
@@ -235,7 +239,7 @@ class Tiler(abc.ABC):
         """
         return tile_coords
 
-    def _predict_sync(self, image, tile_coords):
+    def _predict_sync(self, image, tile_coords) -> ResultT:
         """Makes prediction by splitting the input image into tiles in synchronous mode.
 
         Args:
@@ -254,7 +258,7 @@ class Tiler(abc.ABC):
 
         return self._merge_results(tile_results, image.shape)
 
-    def _predict_async(self, image, tile_coords):
+    def _predict_async(self, image, tile_coords) -> ResultT:
         """Makes prediction by splitting the input image into tiles in asynchronous mode.
 
         Args:
@@ -290,7 +294,7 @@ class Tiler(abc.ABC):
         """
 
     @abc.abstractmethod
-    def _merge_results(self, results, shape):
+    def _merge_results(self, results, shape) -> ResultT:
         """Merge results from all tiles.
 
         Args:

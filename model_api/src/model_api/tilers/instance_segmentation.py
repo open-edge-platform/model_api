@@ -15,7 +15,7 @@ from model_api.models.utils import multiclass_nms
 from .detection import DetectionTiler
 
 
-class InstanceSegmentationTiler(DetectionTiler):
+class InstanceSegmentationTiler(DetectionTiler[InstanceSegmentationResult]):
     """Tiler for object instance segmentation models.
     This tiler expects model to output a list of `SegmentedObject` objects.
 
