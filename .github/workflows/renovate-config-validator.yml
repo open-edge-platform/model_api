@@ -30,7 +30,7 @@ jobs:
       contents: read
     steps:
       - name: Harden the runner
-        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           disable-sudo: true
           disable-telemetry: true
@@ -45,14 +45,14 @@ jobs:
             releases.astral.sh:443
 
       - name: Checkout code
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
       - name: Validate configuration
         run: |
           # renovate: datasource=docker
-          export RENOVATE_IMAGE=ghcr.io/renovatebot/renovate:43.212.4@sha256:7ddbf899a371dec16a37c22e233a6b981c4d3fbfe3075dcf22a4f1ba22fe55a9
+          export RENOVATE_IMAGE=ghcr.io/renovatebot/renovate:43.285.3@sha256:a1059bb5311c57f518c538665484d2a64517d8a0b23208b53d8cfdc477dab7d5
           docker run --rm --entrypoint "renovate-config-validator" \
           -v "${{ github.workspace }}/.github/renovate.json5":"/renovate.json5" \
           ${RENOVATE_IMAGE} "/renovate.json5"
