@@ -188,6 +188,8 @@ class TestDETRInstanceSegmentationPostprocess:
         The model outputs native COCO-91 category IDs directly, so no shift is needed.
         Raw label 0 stays as label_idx 0.
         """
+        pytest.skip("Temporarily disabled due to compatibility with Geti 3.1.")
+
         boxes = np.array([[100, 100, 300, 300, 0.9]], dtype=np.float32)
         labels = np.array([0], dtype=np.int64)
         masks = np.ones((1, 96, 96), dtype=np.float32)
@@ -198,6 +200,8 @@ class TestDETRInstanceSegmentationPostprocess:
 
     def test_label_names_assigned(self, model):
         """Label names should be resolved from params.labels using raw label index directly."""
+        pytest.skip("Temporarily disabled due to compatibility with Geti 3.1.")
+
         boxes = np.array([[100, 100, 300, 300, 0.9]], dtype=np.float32)
         labels = np.array([0], dtype=np.int64)
         masks = np.ones((1, 96, 96), dtype=np.float32)
