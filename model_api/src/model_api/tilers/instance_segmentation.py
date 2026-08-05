@@ -30,6 +30,7 @@ class InstanceSegmentationTiler(DetectionTiler[InstanceSegmentationResult]):
         configuration: dict = {},
         execution_mode="async",
         tile_classifier_model=None,
+        merge_saliency_maps: bool = True,
     ):
         """Constructor for creating a semantic segmentation tiling pipeline
 
@@ -39,8 +40,11 @@ class InstanceSegmentationTiler(DetectionTiler[InstanceSegmentationResult]):
             tiler (`tile_size`, `tiles_overlap` etc.) which are set as data attributes.
             execution_mode: Controls inference mode of the tiler (`async` or `sync`).
             tile_classifier_model: an `ImageModel`, which has "tile_prob" output.
+            merge_saliency_maps: Whether to merge per-tile saliency maps into the
+              final result. Set to `False` to skip that work when saliency maps are
+              not needed by the caller. Defaults to `True`.
         """
-        super().__init__(model, configuration, execution_mode)
+        super().__init__(model, configuration, execution_mode, merge_saliency_maps)
         self.tile_classifier_model = tile_classifier_model
 
     def _filter_tiles(self, image, tile_coords, confidence_threshold=0.35):
@@ -120,7 +124,11 @@ class InstanceSegmentationTiler(DetectionTiler[InstanceSegmentationResult]):
         masks = [masks[keep_idx] for keep_idx in keep_idxs]
 
         merged_vector = np.mean(feature_vectors, axis=0) if feature_vectors else np.ndarray(0)
-        saliency_map = self._merge_saliency_maps(saliency_maps, shape, tiles_coords) if saliency_maps else []
+        saliency_map = (
+            self._merge_saliency_maps(saliency_maps, shape, tiles_coords)
+            if saliency_maps and self.merge_saliency_maps
+            else []
+        )
 
         labels, scores, bboxes = np.hsplit(detections_array, [1, 2])
         labels = labels.astype(np.int32)

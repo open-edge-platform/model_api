@@ -38,6 +38,7 @@ class TestTilerInit:
         assert tiler.tile_size == 400
         assert tiler.tiles_overlap == 0.5
         assert tiler.tile_with_full_img is True
+        assert tiler.merge_saliency_maps is True
 
     def test_init_sync_mode(self):
         model = _make_model()
@@ -59,6 +60,20 @@ class TestTilerInit:
         model = _make_model()
         tiler = ConcreteTiler(model)
         assert tiler.get_model() is model
+
+    def test_init_merge_saliency_maps_false(self):
+        """merge_saliency_maps can be disabled at construction time."""
+        model = _make_model()
+        tiler = ConcreteTiler(model, merge_saliency_maps=False)
+        assert tiler.merge_saliency_maps is False
+
+    def test_merge_saliency_maps_mutable_after_construction(self):
+        """merge_saliency_maps is a plain mutable attribute, toggleable per call."""
+        model = _make_model()
+        tiler = ConcreteTiler(model)
+        assert tiler.merge_saliency_maps is True
+        tiler.merge_saliency_maps = False
+        assert tiler.merge_saliency_maps is False
 
 
 class TestTilerParameters:

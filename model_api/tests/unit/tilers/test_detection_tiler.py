@@ -39,6 +39,12 @@ class TestDetectionTilerInit:
         tiler = DetectionTiler(model, execution_mode="sync")
         assert tiler.max_pred_number == 100
         assert tiler.iou_threshold == 0.45
+        assert tiler.merge_saliency_maps is True
+
+    def test_init_merge_saliency_maps_false(self):
+        model = _make_model()
+        tiler = DetectionTiler(model, execution_mode="sync", merge_saliency_maps=False)
+        assert tiler.merge_saliency_maps is False
 
     def test_parameters_includes_detection_params(self):
         params = DetectionTiler.parameters()

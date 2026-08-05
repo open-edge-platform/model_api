@@ -33,9 +33,24 @@ class Tiler(abc.ABC, Generic[ResultT]):
         model_loaded (bool): a flag whether the model is loaded to device
         async_pipeline (AsyncPipeline): a pipeline for asynchronous execution mode
         execution_mode: Controls inference mode of the tiler (`async` or `sync`).
+        merge_saliency_maps (bool): Whether per-tile saliency maps (and, where
+            applicable, feature vectors) should be merged into the final result.
+            Subclasses that produce saliency maps (e.g. `DetectionTiler`) merge
+            them with a per-class, and in some cases per-pixel, operation whose
+            cost scales with the number of tiles. When the caller does not need
+            saliency maps (for example when only computing accuracy metrics
+            rather than an explanation), set this to `False` -- either at
+            construction time or at any point afterwards, since it is a plain
+            mutable attribute -- to skip that work entirely.
     """
 
-    def __init__(self, model, configuration: dict = {}, execution_mode: str = "async"):
+    def __init__(
+        self,
+        model,
+        configuration: dict = {},
+        execution_mode: str = "async",
+        merge_saliency_maps: bool = True,
+    ):
         """Base constructor for creating a tiling pipeline
 
         Args:
@@ -43,6 +58,9 @@ class Tiler(abc.ABC, Generic[ResultT]):
             configuration: it contains values for parameters accepted by specific
               tiler (`tile_size`, `tiles_overlap` etc.) which are set as data attributes.
             execution_mode: Controls inference mode of the tiler (`async` or `sync`).
+            merge_saliency_maps: Whether to merge per-tile saliency maps (and feature
+              vectors, where applicable) into the final result. Ignored by tilers that
+              do not produce saliency maps. Defaults to `True`.
         """
         self.logger = log.getLogger()
         self.model = model
@@ -54,6 +72,7 @@ class Tiler(abc.ABC, Generic[ResultT]):
             msg = f"Wrong execution mode. The following modes are supported {Tiler.EXECUTION_MODES}"
             raise ValueError(msg)
         self.execution_mode = execution_mode
+        self.merge_saliency_maps = merge_saliency_maps
 
     def get_model(self):
         """Getter for underlying model"""

@@ -23,10 +23,19 @@ class DetectionTiler(Tiler[DetResultT]):
     """Tiler for object detection models.
     This tiler expects model to output a lsit of `Detection` objects
     or one `DetectionResult` object.
+
+    Note:
+        Merging per-tile saliency maps (see `_merge_saliency_maps`) is a
+        per-class, pixel-by-pixel operation whose cost scales with
+        `num_tiles * num_classes * H * W`. For large images tiled with the
+        default configuration (hundreds of tiles), this can take from minutes
+        to hours. If the caller does not need saliency maps, construct this
+        tiler with `merge_saliency_maps=False` (or set the attribute at any
+        time before calling) to skip that work entirely.
     """
 
-    def __init__(self, model, configuration: dict = {}, execution_mode="async"):
-        super().__init__(model, configuration, execution_mode)
+    def __init__(self, model, configuration: dict = {}, execution_mode="async", merge_saliency_maps: bool = True):
+        super().__init__(model, configuration, execution_mode, merge_saliency_maps)
 
     @classmethod
     def parameters(cls):
@@ -104,7 +113,11 @@ class DetectionTiler(Tiler[DetResultT]):
             detections_array = detections_array[keep]
 
         merged_vector = np.mean(feature_vectors, axis=0) if feature_vectors else np.ndarray(0)
-        saliency_map = self._merge_saliency_maps(saliency_maps, shape, tiles_coords) if saliency_maps else np.ndarray(0)
+        saliency_map = (
+            self._merge_saliency_maps(saliency_maps, shape, tiles_coords)
+            if saliency_maps and self.merge_saliency_maps
+            else np.ndarray(0)
+        )
         label_names = [self.model.get_label_name(int(label_idx)) for label_idx in detections_array[:, 0]]
 
         return cast(

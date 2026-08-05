@@ -39,12 +39,18 @@ class TestInstanceSegmentationTilerInit:
         model = _make_model()
         tiler = InstanceSegmentationTiler(model, execution_mode="sync")
         assert tiler.tile_classifier_model is None
+        assert tiler.merge_saliency_maps is True
 
     def test_init_with_classifier(self):
         model = _make_model()
         classifier = MagicMock()
         tiler = InstanceSegmentationTiler(model, execution_mode="sync", tile_classifier_model=classifier)
         assert tiler.tile_classifier_model is classifier
+
+    def test_init_merge_saliency_maps_false(self):
+        model = _make_model()
+        tiler = InstanceSegmentationTiler(model, execution_mode="sync", merge_saliency_maps=False)
+        assert tiler.merge_saliency_maps is False
 
 
 class TestInstanceSegmentationTilerFilterTiles:
@@ -121,6 +127,30 @@ class TestInstanceSegmentationTilerMergeResults:
         ]
         merged = tiler._merge_results(results, (100, 100, 3))  # noqa: SLF001
         assert isinstance(merged, InstanceSegmentationResult)
+
+    @patch("model_api.tilers.instance_segmentation.multiclass_nms")
+    @patch("model_api.tilers.instance_segmentation._segm_postprocess")
+    def test_merge_results_skips_saliency_merge_when_disabled(self, mock_segm, mock_nms):
+        """merge_saliency_maps=False must skip the saliency merge entirely."""
+        model = _make_model()
+        tiler = InstanceSegmentationTiler(model, execution_mode="sync", merge_saliency_maps=False)
+        mock_nms.return_value = np.array([0])
+        mock_segm.return_value = np.ones((100, 100), dtype=np.uint8)
+
+        results = [
+            {
+                "bboxes": np.array([[0, 0.9, 10, 20, 50, 60]], dtype=np.float32),
+                "features": np.array([1.0]),
+                "saliency_map": [np.ones((10, 10), dtype=np.float32)],
+                "coords": [0, 0, 100, 100],
+                "masks": [np.ones((40, 40), dtype=np.uint8)],
+            },
+        ]
+        with patch.object(tiler, "_merge_saliency_maps") as mock_merge_saliency:
+            merged = tiler._merge_results(results, (100, 100, 3))  # noqa: SLF001
+        mock_merge_saliency.assert_not_called()
+        assert isinstance(merged, InstanceSegmentationResult)
+        assert merged.saliency_map == []
 
 
 class TestInstanceSegmentationTilerMergeSaliencyMaps:
