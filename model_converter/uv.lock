@@ -1327,7 +1327,7 @@ wheels = [
 
 [[package]]
 name = "openvino-model-api"
-version = "0.4.5"
+version = "0.4.6"
 source = { editable = "../model_api" }
 dependencies = [
     { name = "numpy" },
