@@ -11,6 +11,7 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
+
 from model_api.models import ZSLVisualPromptingResult
 from model_api.models.visual_prompting import (
     Prompt,

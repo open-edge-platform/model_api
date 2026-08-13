@@ -7,6 +7,7 @@
 import sys
 
 import cv2
+
 from model_api.models import Model
 
 

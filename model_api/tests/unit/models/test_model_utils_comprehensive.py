@@ -5,6 +5,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+
 from model_api.models.result import DetectionResult, InstanceSegmentationResult
 from model_api.models.result.segmentation import Contour
 from model_api.models.utils import (

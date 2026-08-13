@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import pytest
+
 from model_api.models.types import (
     BaseValue,
     BooleanValue,

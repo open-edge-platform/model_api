@@ -8,6 +8,7 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
+
 from model_api.models.instance_segmentation import (
     DETRInstanceSegmentation,
     InstanceSegmentationModel,

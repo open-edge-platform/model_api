@@ -4,6 +4,7 @@
 from unittest.mock import MagicMock, patch
 
 import numpy as np
+
 from model_api.models import ImageResultWithSoftPrediction
 from model_api.tilers.semantic_segmentation import SemanticSegmentationTiler
 

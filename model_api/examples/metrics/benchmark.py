@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 
 import cv2
+
 from model_api.models import Model
 
 logging.basicConfig(
@@ -50,8 +51,9 @@ def analyze_model_performance(  # noqa: C901
     import time
 
     import numpy as np
-    from model_api.adapters.openvino_adapter import OpenvinoAdapter, get_user_config
     from openvino import Core
+
+    from model_api.adapters.openvino_adapter import OpenvinoAdapter, get_user_config
 
     # Build plugin config
     core = Core()

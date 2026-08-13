@@ -8,6 +8,8 @@ from __future__ import annotations
 import numpy as np
 import openvino as ov
 import pytest
+from openvino.preprocess import PrePostProcessor
+
 from model_api.adapters.utils import (
     Layout,
     crop_resize,
@@ -20,7 +22,6 @@ from model_api.adapters.utils import (
     resize_image_with_aspect,
     window_preprocess,
 )
-from openvino.preprocess import PrePostProcessor
 
 rng = np.random.default_rng(0)
 

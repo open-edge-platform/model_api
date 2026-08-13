@@ -6,6 +6,7 @@
 from pathlib import Path
 
 import onnx
+
 from model_api.adapters import ONNXRuntimeAdapter
 from model_api.adapters.utils import load_parameters_from_onnx
 from model_api.models import Model

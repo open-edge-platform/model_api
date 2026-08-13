@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import numpy as np
+
 from model_api.models.utils import calculate_nms, multiclass_nms, nms
 
 

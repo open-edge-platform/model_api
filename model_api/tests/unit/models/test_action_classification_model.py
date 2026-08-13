@@ -13,6 +13,7 @@ from unittest.mock import MagicMock
 
 import numpy as np
 import pytest
+
 from model_api.adapters.inference_adapter import InferenceAdapter
 from model_api.models.action_classification import ActionClassificationModel
 from model_api.models.model import WrapperError

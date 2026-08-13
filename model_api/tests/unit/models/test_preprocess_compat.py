@@ -10,6 +10,7 @@ from unittest.mock import MagicMock
 
 import numpy as np
 import pytest
+
 from model_api.models.image_model import ImageModel
 from model_api.models.ssd import SSD
 

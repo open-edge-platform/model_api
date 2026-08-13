@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 from unittest.mock import MagicMock
 
 import numpy as np
+
 from model_api.adapters.inference_adapter import InferenceAdapter
 
 rng = np.random.default_rng(0)

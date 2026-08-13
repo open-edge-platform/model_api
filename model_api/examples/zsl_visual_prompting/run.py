@@ -10,6 +10,7 @@ from itertools import starmap
 
 import cv2
 import numpy as np
+
 from model_api.models import Model, Prompt, SAMLearnableVisualPrompter
 
 
