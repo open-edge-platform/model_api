@@ -5,7 +5,6 @@ from types import SimpleNamespace
 
 import numpy as np
 import pytest
-
 from model_api.adapters.utils import (
     InputTransform,
     Layout,

@@ -7,10 +7,9 @@ import argparse
 from argparse import Namespace
 
 import numpy as np
-from PIL import Image
-
 from model_api.models import Model
 from model_api.visualizer import Visualizer
+from PIL import Image
 
 
 def main(args: Namespace):

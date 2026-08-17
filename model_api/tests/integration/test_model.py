@@ -6,7 +6,6 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-
 from model_api.models.model import Model
 
 rng = np.random.default_rng(seed=42)

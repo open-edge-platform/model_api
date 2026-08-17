@@ -3,11 +3,10 @@
 
 import numpy as np
 import pytest
-from PIL import Image
-
 from model_api.visualizer.primitive import BoundingBox, Label, Overlay, Polygon
 from model_api.visualizer.primitive.keypoints import Keypoint
 from model_api.visualizer.scene.scene import Scene
+from PIL import Image
 
 
 class ConcreteScene(Scene):

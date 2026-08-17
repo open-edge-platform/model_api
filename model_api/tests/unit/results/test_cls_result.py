@@ -4,7 +4,6 @@
 #
 
 import numpy as np
-
 from model_api.models.result import ClassificationResult, Label
 
 

@@ -7,8 +7,6 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from PIL import Image
-
 from model_api.models.result import (
     AnomalyResult,
     ClassificationResult,
@@ -18,6 +16,7 @@ from model_api.models.result import (
 )
 from model_api.models.result.classification import Label
 from model_api.visualizer import Visualizer
+from PIL import Image
 
 
 def test_anomaly_scene(mock_image: Image, tmpdir: Path):

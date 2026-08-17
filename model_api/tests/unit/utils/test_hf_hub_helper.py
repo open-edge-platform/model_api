@@ -4,7 +4,6 @@
 from pathlib import Path
 
 import pytest
-
 from model_api.utils.hf_hub_helper import find_model_file
 
 

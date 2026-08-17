@@ -4,7 +4,6 @@
 from unittest.mock import MagicMock, patch
 
 import numpy as np
-
 from model_api.models import InstanceSegmentationResult
 from model_api.tilers.instance_segmentation import InstanceSegmentationTiler
 

@@ -4,7 +4,6 @@
 from unittest.mock import MagicMock
 
 import pytest
-
 from model_api.pipelines import AsyncPipeline
 from model_api.pipelines.async_pipeline import AsyncPipeline as DirectImport
 
