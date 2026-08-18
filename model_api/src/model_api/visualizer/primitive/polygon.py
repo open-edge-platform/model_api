@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 import cv2
 from PIL import Image, ImageColor, ImageDraw
 
-from model_api.visualizer.defaults import DEFAULT_OPACITY, DEFAULT_OUTLINE_WIDTH
+from model_api.visualizer.defaults import DEFAULT_OPACITY, DEFAULT_OUTLINE_WIDTH, DEFAULT_SHAPE_COLOR
 
 from .primitive import Primitive
 
@@ -42,7 +42,7 @@ class Polygon(Primitive):
         self,
         points: list[tuple[int, int]] | None = None,
         mask: np.ndarray | None = None,
-        color: str | tuple[int, int, int] = "blue",
+        color: str | tuple[int, int, int] = DEFAULT_SHAPE_COLOR,
         opacity: float = DEFAULT_OPACITY,
         outline_width: int = DEFAULT_OUTLINE_WIDTH,
     ) -> None:
