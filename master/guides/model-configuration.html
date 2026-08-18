@@ -395,6 +395,25 @@
   <section id="model-configuration">
 <h1>Model configuration<a class="headerlink" href="#model-configuration" title="Link to this heading">#</a></h1>
 <p>Model’s static method <code class="docutils literal notranslate"><span class="pre">create_model()</span></code> has two overloads. One constructs the model from a string (a path or a model name) and the other takes an already constructed <code class="docutils literal notranslate"><span class="pre">InferenceAdapter</span></code>. The first overload configures a created model with values taken from <code class="docutils literal notranslate"><span class="pre">configuration</span></code> dict function argument and from model’s intermediate representation (IR) stored in <code class="docutils literal notranslate"><span class="pre">.xml</span></code> in <code class="docutils literal notranslate"><span class="pre">model_info</span></code> section of <code class="docutils literal notranslate"><span class="pre">rt_info</span></code>. Values provided in <code class="docutils literal notranslate"><span class="pre">configuration</span></code> have priority over values in IR <code class="docutils literal notranslate"><span class="pre">rt_info</span></code>. If no value is specified in <code class="docutils literal notranslate"><span class="pre">configuration</span></code> nor in <code class="docutils literal notranslate"><span class="pre">rt_info</span></code> the default value for a model wrapper is used. For Python configuration values are accessible as model wrapper member fields.</p>
+<section id="runtime-parameter-modification">
+<h2>Runtime parameter modification<a class="headerlink" href="#runtime-parameter-modification" title="Link to this heading">#</a></h2>
+<p>Parameters can be read and modified after model creation using <code class="docutils literal notranslate"><span class="pre">get_param()</span></code> and <code class="docutils literal notranslate"><span class="pre">set_param()</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">model_api.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">Model</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span><span class="s2">&quot;model.xml&quot;</span><span class="p">)</span>
+
+<span class="c1"># Read current value</span>
+<span class="n">current_threshold</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="s2">&quot;confidence_threshold&quot;</span><span class="p">)</span>
+
+<span class="c1"># Modify parameter with validation</span>
+<span class="n">model</span><span class="o">.</span><span class="n">set_param</span><span class="p">(</span><span class="s2">&quot;confidence_threshold&quot;</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">)</span>
+
+<span class="c1"># Parameters are also accessible via the params descriptor</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">confidence_threshold</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">set_param()</span></code> validates the value against the parameter definition and raises <code class="docutils literal notranslate"><span class="pre">WrapperError</span></code> if validation fails. Unknown parameter names are logged as warnings and ignored.</p>
+</section>
 <section id="list-of-values">
 <h2>List of values<a class="headerlink" href="#list-of-values" title="Link to this heading">#</a></h2>
 <p>The list features only model wrappers which introduce new configuration values in their hierarchy.</p>
@@ -582,6 +601,7 @@
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#runtime-parameter-modification">Runtime parameter modification</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#list-of-values">List of values</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#imagemodel-and-its-subclasses"><code class="docutils literal notranslate"><span class="pre">ImageModel</span></code> and its subclasses</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#anomalydetection"><code class="docutils literal notranslate"><span class="pre">AnomalyDetection</span></code></a></li>
