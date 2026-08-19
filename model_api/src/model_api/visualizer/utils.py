@@ -51,6 +51,23 @@ def _is_valid_rgb_tuple(color: tuple) -> bool:
     return len(color) == 3 and all(isinstance(channel, int) and 0 <= channel <= 255 for channel in color)
 
 
+def to_rgb(color: Color) -> tuple[int, int, int]:
+    """Normalize a colour to an ``(R, G, B)`` tuple.
+
+    ``PIL.ImageColor.getrgb`` only accepts strings, so tuples are returned unchanged.
+
+    Args:
+        color: Colour string accepted by PIL (e.g. ``"#RRGGBB"`` or ``"red"``) or an
+            ``(R, G, B)`` tuple of integers in the 0-255 range.
+
+    Returns:
+        The colour as an ``(R, G, B)`` tuple.
+    """
+    if isinstance(color, str):
+        return ImageColor.getrgb(color)
+    return color
+
+
 def validate_label_colors(label_colors: Union[Mapping[str, Color], None]) -> dict[str, Color]:
     """Validate a mapping of label name to colour.
 
@@ -72,7 +89,7 @@ def validate_label_colors(label_colors: Union[Mapping[str, Color], None]) -> dic
     for label, color in label_colors.items():
         if isinstance(color, str):
             try:
-                ImageColor.getrgb(color)
+                to_rgb(color)
             except ValueError as error:
                 msg = f"Invalid color {color!r} for label {label!r}."
                 raise ValueError(msg) from error

@@ -13,11 +13,12 @@ from model_api.models.result import (
 )
 from model_api.models.result.classification import Label
 from model_api.visualizer import Visualizer
+from model_api.visualizer.primitive import Polygon
 from model_api.visualizer.scene.anomaly import AnomalyScene
 from model_api.visualizer.scene.classification import ClassificationScene
 from model_api.visualizer.scene.detection import DetectionScene
 from model_api.visualizer.scene.segmentation.instance_segmentation import InstanceSegmentationScene
-from model_api.visualizer.utils import COLOR_PALETTE, get_label_color_mapping, validate_label_colors
+from model_api.visualizer.utils import COLOR_PALETTE, get_label_color_mapping, to_rgb, validate_label_colors
 from PIL import Image
 
 
@@ -288,6 +289,82 @@ class TestAnomalySceneColors:
         assert scene.bounding_box is not None
         assert scene.label == []
         assert scene.bounding_box[0].color == "blue"
+
+
+class TestRgbTupleColors:
+    """Tuple colours must render as well as string colours.
+
+    Regression test: Polygon used PIL's ImageColor.getrgb(), which only accepts
+    strings, so RGB tuples raised "'tuple' object has no attribute 'lower'" for any
+    result that draws polygons (e.g. MaskRCNN instance segmentation).
+    """
+
+    def test_polygon_primitive_accepts_rgb_tuple(self, mock_image: Image):
+        mask = np.zeros((100, 100), dtype=np.uint8)
+        mask[10:90, 10:90] = 1
+        polygon = Polygon(mask=mask, color=(18, 52, 86))
+        assert isinstance(polygon.compute(mock_image.copy()), Image.Image)
+
+    def test_polygon_primitive_tuple_matches_hex(self, mock_image: Image):
+        mask = np.zeros((100, 100), dtype=np.uint8)
+        mask[10:90, 10:90] = 1
+        from_tuple = Polygon(mask=mask, color=(18, 52, 86)).compute(mock_image.copy())
+        from_hex = Polygon(mask=mask, color="#123456").compute(mock_image.copy())
+        assert from_tuple.tobytes() == from_hex.tobytes()
+
+    def test_instance_segmentation_renders_with_rgb_tuple(
+        self,
+        mock_image: Image,
+        instance_segmentation_result: InstanceSegmentationResult,
+    ):
+        visualizer = Visualizer(label_colors={"car": (18, 52, 86)})
+        assert isinstance(visualizer.render(mock_image, instance_segmentation_result), Image.Image)
+
+    def test_anomaly_renders_with_rgb_tuple(self, mock_image: Image, anomaly_result: AnomalyResult):
+        visualizer = Visualizer(label_colors={"Anomaly": (18, 52, 86)})
+        assert isinstance(visualizer.render(mock_image, anomaly_result), Image.Image)
+
+    def test_detection_renders_with_rgb_tuple(self, mock_image: Image, detection_result: DetectionResult):
+        visualizer = Visualizer(label_colors={"car": (18, 52, 86)})
+        assert isinstance(visualizer.render(mock_image, detection_result), Image.Image)
+
+    def test_classification_renders_with_rgb_tuple(
+        self,
+        mock_image: Image,
+        classification_result: ClassificationResult,
+    ):
+        visualizer = Visualizer(label_colors={"cat": (18, 52, 86)})
+        assert isinstance(visualizer.render(mock_image, classification_result), Image.Image)
+
+    def test_tuple_and_hex_render_identically(
+        self,
+        mock_image: Image,
+        instance_segmentation_result: InstanceSegmentationResult,
+    ):
+        from_tuple = Visualizer(label_colors={"car": (18, 52, 86)}).render(
+            mock_image.copy(),
+            instance_segmentation_result,
+        )
+        from_hex = Visualizer(label_colors={"car": "#123456"}).render(
+            mock_image.copy(),
+            instance_segmentation_result,
+        )
+        assert from_tuple.tobytes() == from_hex.tobytes()
+
+
+class TestToRgb:
+    """Tests for to_rgb()."""
+
+    @pytest.mark.parametrize(
+        ("color", "expected"),
+        [
+            ("#123456", (18, 52, 86)),
+            ("red", (255, 0, 0)),
+            ((18, 52, 86), (18, 52, 86)),
+        ],
+    )
+    def test_normalizes_colors(self, color, expected):
+        assert to_rgb(color) == expected
 
 
 class TestRenderedOutput:
