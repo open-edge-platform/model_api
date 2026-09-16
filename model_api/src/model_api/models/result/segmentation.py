@@ -212,9 +212,9 @@ class ImageResultWithSoftPrediction(Result):
             ranges=[0, 255],
         )
         hist = {}
-        for i, count in enumerate(outHist):
+        for i, count in enumerate(outHist.flatten()):
             if count > 0:
-                hist[str(i)] = count[0].item() / self.resultImage.size
+                hist[str(i)] = count.item() / self.resultImage.size
 
         return hist
 
