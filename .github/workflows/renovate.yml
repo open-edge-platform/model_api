@@ -58,7 +58,7 @@ jobs:
 
     steps:
       - name: Harden the runner (audit all outbound calls)
-        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
+        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
         with:
           disable-sudo: true
           disable-telemetry: true
@@ -94,10 +94,10 @@ jobs:
           private-key: ${{ secrets.RENOVATE_APP_PEM }}
 
       - name: Self-hosted Renovate
-        uses: renovatebot/github-action@e09d604f8f803bb527bd8321ed5be06c460b8682 # v46.2.2
+        uses: renovatebot/github-action@230ce922b08968d0a4f6f70f295601daff09ef1d # v46.3.7
         with:
           # renovate: datasource=github-releases depName=renovatebot/renovate
-          renovate-version: 44.17.1
+          renovate-version: 44.149.1
           configurationFile: .github/renovate.json5
           token: "${{ steps.get-github-app-token.outputs.token }}"
         env:
