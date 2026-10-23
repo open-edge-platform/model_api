@@ -115,7 +115,7 @@ class GetituneConverter(BaseConverter):
         return None
 
     # Maps the backbone class name to (handler, needs_model_name).
-    _HEAD_SOURCES = {
+    _HEAD_SOURCES: ClassVar[dict[str, Any]] = {
         "EfficientNetFeatureExtractor": _head_weights_pytorchcv_efficientnet,
         "TorchvisionBackbone": _head_weights_torchvision,
         "TimmBackbone": _head_weights_timm,
@@ -286,7 +286,8 @@ class GetituneConverter(BaseConverter):
 
         try:
             source = handler(model_name)
-        except Exception as exc:  # best effort: failures are surfaced in the export summary
+        except Exception as exc:  # ruff: ignore[blind-except]
+            # best effort: failures are surfaced in the export summary
             return "failed", f"error fetching pre-trained head: {exc}"
 
         if source is None:
@@ -631,10 +632,7 @@ class GetituneConverter(BaseConverter):
         # dimension to a concrete size (batch -> 1) so downstream calibration can
         # build fixed-size tensors.
         partial_shape = model.input(0).partial_shape
-        input_shape = [
-            dim.get_length() if dim.is_static else 1
-            for dim in partial_shape
-        ]
+        input_shape = [dim.get_length() if dim.is_static else 1 for dim in partial_shape]
 
         # Read preprocessing params from model_info rt_info
         def _get_rt_str(key: str, default: str) -> str:
