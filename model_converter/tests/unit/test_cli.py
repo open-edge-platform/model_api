@@ -15,7 +15,6 @@ import pytest
 import torch
 import torch.nn as nn
 from model_converter.cli import ModelConverter, list_models, main
-from model_converter.converters.getitune import GetituneConverter
 from model_converter.converters.timm import TimmConverter
 from model_converter.converters.torchvision import TorchvisionConverter
 from model_converter.reporting import AccuracyResults
@@ -73,20 +72,6 @@ class TestModelConverterDispatch:
 
         assert isinstance(first, TorchvisionConverter)
         assert first is second
-
-    def test_get_converter_passes_training_extensions_dir(self, tmp_path):
-        """_get_converter wires training_extensions_dir for getitune."""
-        training_extensions_dir = tmp_path / "training_extensions"
-        converter = ModelConverter(
-            output_dir=tmp_path / "out",
-            cache_dir=tmp_path / "cache",
-            training_extensions_dir=training_extensions_dir,
-        )
-
-        getitune_converter = converter._get_converter("getitune")
-
-        assert isinstance(getitune_converter, GetituneConverter)
-        assert getitune_converter.training_extensions_dir == training_extensions_dir
 
     def test_get_converter_rejects_unknown_library(self, facade_converter):
         """_get_converter raises for unsupported libraries."""
