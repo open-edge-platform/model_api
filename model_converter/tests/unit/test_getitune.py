@@ -5,6 +5,7 @@
 
 """Tests for GetituneConverter."""
 
+import contextlib
 import json
 import logging
 import types
@@ -33,6 +34,24 @@ def _make_openvino_module(model_info: dict[str, str] | None = None) -> types.Mod
     core.read_model.return_value = model
     setattr(ov_module, "Core", MagicMock(return_value=core))
     return ov_module
+
+
+def _make_partial_shape(dims: list[int | None]) -> MagicMock:
+    """Build a fake OpenVINO partial shape.
+
+    Each ``int`` entry is a static dimension (``is_static`` True, ``get_length``
+    returns it); ``None`` models a dynamic dimension (e.g. a dynamic batch).
+    """
+
+    def _make_dim(value: int | None) -> MagicMock:
+        dim = MagicMock()
+        dim.is_static = value is not None
+        dim.get_length.return_value = value
+        return dim
+
+    partial_shape = MagicMock()
+    partial_shape.__iter__.return_value = iter([_make_dim(v) for v in dims])
+    return partial_shape
 
 
 @pytest.fixture
@@ -267,6 +286,193 @@ class TestProcessModelConfig:
 
 class TestRunExport:
     """Tests for GetituneConverter._run_export."""
+
+    MODULE = "model_converter.converters.getitune"
+
+    @staticmethod
+    @contextlib.contextmanager
+    def _patch_export_pipeline(
+        tmp_path,
+        *,
+        recipe_paths=("/recipes/dino_v2.yaml",),
+        resolved_config=None,
+        label_info=1000,
+        input_size=(224, 224),
+        recover=("recovered", "loaded pre-trained head"),
+    ):
+        """Patch all static helpers used by ``_run_export`` and yield the mocks.
+
+        Every collaborating static method is replaced so the test exercises only
+        the orchestration logic inside ``_run_export``.
+        """
+        exported = tmp_path / "exported_model.xml"
+        model = MagicMock(name="model")
+        module = TestRunExport.MODULE
+        with contextlib.ExitStack() as stack:
+            stack.enter_context(patch(f"{module}.tempfile.mkdtemp", return_value=str(tmp_path)))
+            stack.enter_context(
+                patch.object(GetituneConverter, "_get_recipe_paths", return_value=list(recipe_paths)),
+            )
+            stack.enter_context(
+                patch.object(
+                    GetituneConverter,
+                    "_load_recipe_config",
+                    return_value=resolved_config if resolved_config is not None else {"resolved": True},
+                ),
+            )
+            stack.enter_context(
+                patch.object(GetituneConverter, "_get_label_info_from_config", return_value=label_info),
+            )
+            stack.enter_context(
+                patch.object(GetituneConverter, "_get_input_size_from_config", return_value=input_size),
+            )
+            mocks = types.SimpleNamespace(
+                model=model,
+                exported=exported,
+                create=stack.enter_context(
+                    patch.object(GetituneConverter, "_create_model_from_config", return_value=model),
+                ),
+                recover=stack.enter_context(
+                    patch.object(GetituneConverter, "_recover_pretrained_head", return_value=recover),
+                ),
+                export=stack.enter_context(
+                    patch.object(GetituneConverter, "_export_model", return_value=exported),
+                ),
+            )
+            yield mocks
+
+    def test_run_export_raises_when_task_is_missing(self, getitune_converter, sample_getitune_config):
+        """_run_export rejects a config without getitune_task."""
+        config = dict(sample_getitune_config)
+        config.pop("getitune_task")
+
+        with pytest.raises(ValueError, match="must define 'getitune_task'"):
+            getitune_converter._run_export(config)
+
+    def test_run_export_raises_when_recipe_is_missing(self, getitune_converter, sample_getitune_config):
+        """_run_export rejects a config without getitune_recipe."""
+        config = dict(sample_getitune_config)
+        config.pop("getitune_recipe")
+
+        with pytest.raises(ValueError, match="must define 'getitune_recipe'"):
+            getitune_converter._run_export(config)
+
+    def test_run_export_raises_when_recipe_not_found(
+        self,
+        getitune_converter,
+        sample_getitune_config,
+        tmp_path,
+    ):
+        """_run_export raises when no recipe path matches the configured recipe."""
+        with (
+            patch(f"{self.MODULE}.tempfile.mkdtemp", return_value=str(tmp_path)),
+            patch.object(GetituneConverter, "_get_recipe_paths", return_value=["/recipes/other_model.yaml"]),
+        ):
+            with pytest.raises(ValueError, match="Recipe 'dino_v2' not found"):
+                getitune_converter._run_export(sample_getitune_config)
+
+    def test_run_export_raises_when_label_info_missing(
+        self,
+        getitune_converter,
+        sample_getitune_config,
+        tmp_path,
+    ):
+        """_run_export raises when the recipe resolves without a label_info (None check)."""
+        with self._patch_export_pipeline(tmp_path, label_info=None) as mocks:
+            with pytest.raises(ValueError, match="No label_info in recipe"):
+                getitune_converter._run_export(sample_getitune_config)
+
+        # The model is never created once label_info resolution fails.
+        mocks.create.assert_not_called()
+        mocks.export.assert_not_called()
+
+    def test_run_export_recovers_head_for_classification(
+        self,
+        getitune_converter,
+        sample_getitune_config,
+        tmp_path,
+        caplog,
+    ):
+        """_run_export restores the pre-trained head for a classification task and exports."""
+        with (
+            self._patch_export_pipeline(tmp_path) as mocks,
+            caplog.at_level(logging.INFO),
+        ):
+            result = getitune_converter._run_export(sample_getitune_config)
+
+        assert result == mocks.exported
+        mocks.create.assert_called_once_with({"resolved": True}, label_info=1000, input_size=(224, 224))
+        mocks.recover.assert_called_once_with(mocks.model)
+        mocks.export.assert_called_once_with(mocks.model, output_dir=tmp_path, precision="FP16")
+        assert "Pre-trained head: loaded pre-trained head" in caplog.text
+
+    def test_run_export_logs_when_head_not_recovered(
+        self,
+        getitune_converter,
+        sample_getitune_config,
+        tmp_path,
+        caplog,
+    ):
+        """_run_export logs the skipped/failed detail when the head cannot be recovered."""
+        with (
+            self._patch_export_pipeline(tmp_path, recover=("skipped", "no head-recovery handler")) as mocks,
+            caplog.at_level(logging.INFO),
+        ):
+            result = getitune_converter._run_export(sample_getitune_config)
+
+        assert result == mocks.exported
+        mocks.recover.assert_called_once_with(mocks.model)
+        assert "Pre-trained head NOT recovered (random head): no head-recovery handler" in caplog.text
+
+    def test_run_export_skips_head_recovery_for_non_classification(
+        self,
+        getitune_converter,
+        sample_getitune_config,
+        tmp_path,
+    ):
+        """_run_export does not attempt head recovery for non-classification tasks."""
+        config = {**sample_getitune_config, "getitune_task": "DETECTION"}
+
+        with self._patch_export_pipeline(tmp_path) as mocks:
+            result = getitune_converter._run_export(config)
+
+        assert result == mocks.exported
+        mocks.recover.assert_not_called()
+        mocks.export.assert_called_once_with(mocks.model, output_dir=tmp_path, precision="FP16")
+
+    def test_run_export_logs_input_size_when_present(
+        self,
+        getitune_converter,
+        sample_getitune_config,
+        tmp_path,
+        caplog,
+    ):
+        """_run_export logs the input_size when the recipe provides one (not-None check)."""
+        with (
+            self._patch_export_pipeline(tmp_path, input_size=(336, 336)) as mocks,
+            caplog.at_level(logging.INFO),
+        ):
+            getitune_converter._run_export(sample_getitune_config)
+
+        mocks.create.assert_called_once_with({"resolved": True}, label_info=1000, input_size=(336, 336))
+        assert "input_size: (336, 336)" in caplog.text
+
+    def test_run_export_without_input_size_does_not_log_it(
+        self,
+        getitune_converter,
+        sample_getitune_config,
+        tmp_path,
+        caplog,
+    ):
+        """_run_export omits the input_size log line when the recipe has none (None branch)."""
+        with (
+            self._patch_export_pipeline(tmp_path, input_size=None) as mocks,
+            caplog.at_level(logging.INFO),
+        ):
+            getitune_converter._run_export(sample_getitune_config)
+
+        mocks.create.assert_called_once_with({"resolved": True}, label_info=1000, input_size=None)
+        assert "input_size:" not in caplog.text
 
 
 class TestRepackageModel:
@@ -861,7 +1067,7 @@ class TestReadPreprocessingFromModel:
         model_path.write_text("<net/>")
 
         mock_model = MagicMock()
-        mock_model.input.return_value = MagicMock(shape=[1, 3, 640, 640])
+        mock_model.input.return_value = MagicMock(partial_shape=_make_partial_shape([1, 3, 640, 640]))
 
         def fake_get_rt_info(path):
             values = {
@@ -901,7 +1107,7 @@ class TestReadPreprocessingFromModel:
         model_path.write_text("<net/>")
 
         mock_model = MagicMock()
-        mock_model.input.return_value = MagicMock(shape=[1, 3, 224, 224])
+        mock_model.input.return_value = MagicMock(partial_shape=_make_partial_shape([1, 3, 224, 224]))
 
         def fake_get_rt_info(path):
             values = {
@@ -938,7 +1144,7 @@ class TestReadPreprocessingFromModel:
         model_path.write_text("<net/>")
 
         mock_model = MagicMock()
-        mock_model.input.return_value = MagicMock(shape=[1, 3, 224, 224])
+        mock_model.input.return_value = MagicMock(partial_shape=_make_partial_shape([1, 3, 224, 224]))
 
         def fake_get_rt_info(path):
             values = {
@@ -969,7 +1175,7 @@ class TestReadPreprocessingFromModel:
         model_path.write_text("<net/>")
 
         mock_model = MagicMock()
-        mock_model.input.return_value = MagicMock(shape=[1, 3, 224, 224])
+        mock_model.input.return_value = MagicMock(partial_shape=_make_partial_shape([1, 3, 224, 224]))
         mock_model.get_rt_info.side_effect = RuntimeError(
             "Cannot get runtime attribute. Path to runtime attribute is incorrect.",
         )
@@ -989,3 +1195,22 @@ class TestReadPreprocessingFromModel:
         assert scale_values == "1 1 1"
         assert reverse is True
         assert intensity_scale == pytest.approx(1.0)
+
+    def test_resolves_dynamic_batch_dimension_to_one(self, tmp_path):
+        """A dynamic batch dimension is resolved to a concrete size of 1."""
+        model_path = tmp_path / "model.xml"
+        model_path.write_text("<net/>")
+
+        mock_model = MagicMock()
+        # Dynamic batch (None) like DINOv2/ViT exports; spatial dims are static.
+        mock_model.input.return_value = MagicMock(partial_shape=_make_partial_shape([None, 3, 224, 224]))
+        mock_model.get_rt_info.side_effect = RuntimeError(
+            "Cannot get runtime attribute. Path to runtime attribute is incorrect.",
+        )
+
+        mock_ov = MagicMock()
+        mock_ov.Core.return_value.read_model.return_value = mock_model
+
+        input_shape, *_ = GetituneConverter._read_preprocessing_from_model(mock_ov, model_path)
+
+        assert input_shape == [1, 3, 224, 224]
