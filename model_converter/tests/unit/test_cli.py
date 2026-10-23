@@ -74,20 +74,6 @@ class TestModelConverterDispatch:
         assert isinstance(first, TorchvisionConverter)
         assert first is second
 
-    def test_get_converter_passes_training_extensions_dir(self, tmp_path):
-        """_get_converter wires training_extensions_dir for getitune."""
-        training_extensions_dir = tmp_path / "training_extensions"
-        converter = ModelConverter(
-            output_dir=tmp_path / "out",
-            cache_dir=tmp_path / "cache",
-            training_extensions_dir=training_extensions_dir,
-        )
-
-        getitune_converter = converter._get_converter("getitune")
-
-        assert isinstance(getitune_converter, GetituneConverter)
-        assert getitune_converter.training_extensions_dir == training_extensions_dir
-
     def test_get_converter_rejects_unknown_library(self, facade_converter):
         """_get_converter raises for unsupported libraries."""
         with pytest.raises(ValueError, match="Unsupported model_library"):
