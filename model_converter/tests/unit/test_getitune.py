@@ -367,9 +367,9 @@ class TestRunExport:
         with (
             patch(f"{self.MODULE}.tempfile.mkdtemp", return_value=str(tmp_path)),
             patch.object(GetituneConverter, "_get_recipe_paths", return_value=["/recipes/other_model.yaml"]),
+            pytest.raises(ValueError, match="Recipe 'dino_v2' not found"),
         ):
-            with pytest.raises(ValueError, match="Recipe 'dino_v2' not found"):
-                getitune_converter._run_export(sample_getitune_config)
+            getitune_converter._run_export(sample_getitune_config)
 
     def test_run_export_raises_when_label_info_missing(
         self,
@@ -378,9 +378,11 @@ class TestRunExport:
         tmp_path,
     ):
         """_run_export raises when the recipe resolves without a label_info (None check)."""
-        with self._patch_export_pipeline(tmp_path, label_info=None) as mocks:
-            with pytest.raises(ValueError, match="No label_info in recipe"):
-                getitune_converter._run_export(sample_getitune_config)
+        with (
+            self._patch_export_pipeline(tmp_path, label_info=None) as mocks,
+            pytest.raises(ValueError, match="No label_info in recipe"),
+        ):
+            getitune_converter._run_export(sample_getitune_config)
 
         # The model is never created once label_info resolution fails.
         mocks.create.assert_not_called()

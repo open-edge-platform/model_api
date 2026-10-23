@@ -15,7 +15,6 @@ import pytest
 import torch
 import torch.nn as nn
 from model_converter.cli import ModelConverter, list_models, main
-from model_converter.converters.getitune import GetituneConverter
 from model_converter.converters.timm import TimmConverter
 from model_converter.converters.torchvision import TorchvisionConverter
 from model_converter.reporting import AccuracyResults

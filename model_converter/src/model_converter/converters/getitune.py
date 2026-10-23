@@ -286,7 +286,7 @@ class GetituneConverter(BaseConverter):
 
         try:
             source = handler(model_name)
-        except Exception as exc:  # ruff: ignore[blind-except]
+        except Exception as exc:  # noqa: BLE001
             # best effort: failures are surfaced in the export summary
             return "failed", f"error fetching pre-trained head: {exc}"
 

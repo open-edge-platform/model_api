@@ -20,7 +20,6 @@ from pathlib import Path
 from typing import Any
 
 from model_converter.converters import CONVERTER_REGISTRY, BaseConverter
-from model_converter.converters.getitune import GetituneConverter
 from model_converter.dataset_registry import DatasetRegistry
 from model_converter.reporting import (
     ConversionResult,
