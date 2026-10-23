@@ -28,6 +28,7 @@ classifiers = [
 ]
 dependencies = [
     "defusedxml",
+    "getitune",
     "huggingface-hub",
     "nncf",
     "numpy>=1.16.6",
