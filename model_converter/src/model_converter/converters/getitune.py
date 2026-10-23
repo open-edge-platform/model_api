@@ -624,8 +624,17 @@ class GetituneConverter(BaseConverter):
         core = ov.Core()
         model = core.read_model(model_path)
 
-        # Get input shape from the model's input layer
-        input_shape = list(model.input(0).shape)
+        # Get input shape from the model's input layer. Use ``partial_shape``
+        # rather than ``.shape`` because some backbones (e.g. DINOv2/ViT) export
+        # with a dynamic batch dimension; ``.shape`` calls ``get_shape()`` which
+        # raises "to_shape was called on a dynamic shape". Resolve any dynamic
+        # dimension to a concrete size (batch -> 1) so downstream calibration can
+        # build fixed-size tensors.
+        partial_shape = model.input(0).partial_shape
+        input_shape = [
+            dim.get_length() if dim.is_static else 1
+            for dim in partial_shape
+        ]
 
         # Read preprocessing params from model_info rt_info
         def _get_rt_str(key: str, default: str) -> str:
