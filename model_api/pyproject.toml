@@ -28,10 +28,9 @@ classifiers = [
 ]
 dependencies = [
     "numpy>=1.16.6",
-    # Cap below 4.14: OpenCV 4.14 changed resize/interpolation behavior, which
-    # shifts image preprocessing and produces slightly different detection
-    # outputs (breaking reference-based functional tests). Matches the
-    # model_converter package's constraint.
+    # Cap below 4.14: the opencv-python-headless 4.14 wheel is broken on
+    # Python 3.14 (ships without the native extension, so `import cv2` resolves
+    # to an empty namespace package and fails). Matches model_converter's pin.
     "opencv-python-headless>=4.0,<4.14",
     "openvino>=2025.3",
     "pillow",
