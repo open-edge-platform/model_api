@@ -16,13 +16,6 @@ resolution-markers = [
     "python_full_version < '3.12' and sys_platform == 'darwin'",
 ]
 
-[options]
-exclude-newer = "2026-10-19T11:04:58.822084055Z"
-exclude-newer-span = "P7D"
-
-[options.exclude-newer-package]
-datumaro = "2026-10-27T00:00:00Z"
-
 [manifest]
 overrides = [{ name = "openvino-model-api", editable = "../model_api" }]
 
@@ -2595,7 +2588,7 @@ requires-dist = [
     { name = "onnx", marker = "extra == 'onnx'" },
     { name = "onnxruntime", marker = "extra == 'examples'" },
     { name = "onnxruntime", marker = "extra == 'onnx'" },
-    { name = "opencv-python-headless", specifier = ">=4.0,<4.14" },
+    { name = "opencv-python-headless", specifier = "~=4.0" },
     { name = "openvino", specifier = ">=2025.3" },
     { name = "pillow" },
     { name = "sympy", marker = "extra == 'examples'" },
