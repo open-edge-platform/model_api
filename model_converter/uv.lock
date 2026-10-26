@@ -17,7 +17,7 @@ resolution-markers = [
 ]
 
 [options]
-exclude-newer = "2026-10-19T10:02:27.27202728Z"
+exclude-newer = "2026-10-19T11:04:58.822084055Z"
 exclude-newer-span = "P7D"
 
 [options.exclude-newer-package]
@@ -2595,7 +2595,7 @@ requires-dist = [
     { name = "onnx", marker = "extra == 'onnx'" },
     { name = "onnxruntime", marker = "extra == 'examples'" },
     { name = "onnxruntime", marker = "extra == 'onnx'" },
-    { name = "opencv-python-headless", specifier = "~=4.0" },
+    { name = "opencv-python-headless", specifier = ">=4.0,<4.14" },
     { name = "openvino", specifier = ">=2025.3" },
     { name = "pillow" },
     { name = "sympy", marker = "extra == 'examples'" },
