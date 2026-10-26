@@ -57,7 +57,10 @@ class GetituneConverter(BaseConverter):
         from pytorchcv.models.common.model_store import get_model_file
 
         path = get_model_file(model_name=model_name, local_model_store_dir_path=str(CHECKPOINT_CACHE_DIR))
-        state_dict = torch.load(path, map_location="cpu", weights_only=False)
+        # weights_only=True restricts unpickling to plain tensors/state dicts, avoiding the
+        # arbitrary-code-execution risk of full pickle deserialization (these checkpoints are
+        # just weight tensors).
+        state_dict = torch.load(path, map_location="cpu", weights_only=True)
         if isinstance(state_dict, dict) and "state_dict" in state_dict:
             state_dict = state_dict["state_dict"]
         if "output.fc.weight" not in state_dict or "output.fc.bias" not in state_dict:
