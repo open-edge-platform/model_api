@@ -2295,7 +2295,7 @@ requires-dist = [
     { name = "onnx", marker = "extra == 'onnx'" },
     { name = "onnxruntime", marker = "extra == 'examples'" },
     { name = "onnxruntime", marker = "extra == 'onnx'" },
-    { name = "opencv-python-headless", specifier = ">=4.0,<4.14" },
+    { name = "opencv-python-headless", specifier = "~=4.0" },
     { name = "openvino", specifier = ">=2025.3" },
     { name = "pillow" },
     { name = "sympy", marker = "extra == 'examples'" },
