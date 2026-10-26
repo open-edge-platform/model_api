@@ -62,6 +62,12 @@ tests = [
 docs = []
 
 [tool.uv]
+# Wait before resolving newly published package versions, so freshly released
+# (potentially malicious or unstable) packages are not picked up immediately.
+exclude-newer = "7 days"
+# getitune (tracked from git) requires a very recently published datumaro, which
+# the global cooldown would otherwise exclude. Allow datumaro past the cooldown.
+exclude-newer-package = { datumaro = "2026-10-27T00:00:00Z" }
 override-dependencies = [
     "openvino-model-api",
 ]

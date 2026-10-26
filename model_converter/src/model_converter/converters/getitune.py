@@ -60,6 +60,7 @@ class GetituneConverter(BaseConverter):
         # weights_only=True restricts unpickling to plain tensors/state dicts, avoiding the
         # arbitrary-code-execution risk of full pickle deserialization (these checkpoints are
         # just weight tensors).
+        # nosemgrep: trailofbits.python.pickles-in-pytorch.pickles-in-pytorch
         state_dict = torch.load(path, map_location="cpu", weights_only=True)
         if isinstance(state_dict, dict) and "state_dict" in state_dict:
             state_dict = state_dict["state_dict"]
