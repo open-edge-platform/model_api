@@ -3,34 +3,328 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""Getitune (training_extensions) model converter."""
+"""Getitune model converter."""
 
 import shutil
-import subprocess  # nosec B404 — fixed-argv invocation of `uv run`, no shell, no untrusted input
 import tempfile
+from copy import deepcopy
 from pathlib import Path
 from typing import Any, ClassVar
+from urllib.parse import urlparse
+
+from jsonargparse import ArgumentParser as JArgParser
+from jsonargparse import Namespace
 
 from model_converter.converters.base import BaseConverter
 from model_converter.reporting import AccuracyResults
 
+# Location where the getitune backbones cache their downloaded pre-trained checkpoints.
+CHECKPOINT_CACHE_DIR = Path.home() / ".cache" / "torch" / "hub" / "checkpoints"
+
+CLASSIFICATION_TASKS = {"MULTI_CLASS_CLS", "MULTI_LABEL_CLS"}
+
 
 class GetituneConverter(BaseConverter):
-    """Converter for getitune models from training_extensions.
+    """Converter for getitune models.
 
     Invokes the export_pretrained_models.py script as a subprocess to export
     models, then repackages the output and applies INT8 quantization.
     """
 
-    def __init__(self, training_extensions_dir: Path | None = None, **kwargs: Any):
+    def __init__(self, **kwargs: Any):
         """Initialize GetituneConverter.
 
         Args:
-            training_extensions_dir: Path to cloned training_extensions repository
             **kwargs: Arguments passed to BaseConverter
         """
         super().__init__(**kwargs)
-        self.training_extensions_dir = Path(training_extensions_dir) if training_extensions_dir else None
+
+    @staticmethod
+    def _last_linear(module):
+        """Return the last ``nn.Linear`` submodule of ``module`` (e.g. the classifier), or ``None``."""
+        from torch import nn
+
+        last = None
+        for sub in module.modules():
+            if isinstance(sub, nn.Linear):
+                last = sub
+        return last
+
+    @staticmethod
+    def _head_weights_pytorchcv_efficientnet(model_name: str):
+        """Pre-trained ImageNet-1k head for pytorchcv EfficientNet backbones (``output.fc.*``)."""
+        import torch
+        from pytorchcv.models.common.model_store import get_model_file
+
+        path = get_model_file(model_name=model_name, local_model_store_dir_path=str(CHECKPOINT_CACHE_DIR))
+        # weights_only=True restricts unpickling to plain tensors/state dicts, avoiding the
+        # arbitrary-code-execution risk of full pickle deserialization (these checkpoints are
+        # just weight tensors).
+        # nosemgrep: trailofbits.python.pickles-in-pytorch.pickles-in-pytorch
+        state_dict = torch.load(path, map_location="cpu", weights_only=True)
+        if isinstance(state_dict, dict) and "state_dict" in state_dict:
+            state_dict = state_dict["state_dict"]
+        if "output.fc.weight" not in state_dict or "output.fc.bias" not in state_dict:
+            return None
+        return state_dict["output.fc.weight"], state_dict["output.fc.bias"]
+
+    @staticmethod
+    def _head_weights_torchvision(model_name: str):
+        """Pre-trained ImageNet head for torchvision backbones (last ``nn.Linear`` of the classifier)."""
+        from torchvision.models import get_model, get_model_weights
+
+        net = get_model(name=model_name, weights=get_model_weights(model_name))
+        linear = GetituneConverter._last_linear(net)
+        if linear is None:
+            return None
+        return linear.weight.detach().clone(), linear.bias.detach().clone()
+
+    @staticmethod
+    def _head_weights_timm(model_name: str):
+        """Pre-trained head for timm backbones, if the checkpoint exposes a plain ``nn.Linear`` classifier."""
+        import timm
+        from torch import nn
+
+        net = timm.create_model(model_name, pretrained=True)
+        classifier = net.get_classifier()
+        if not isinstance(classifier, nn.Linear) or classifier.bias is None:
+            return None
+        return classifier.weight.detach().clone(), classifier.bias.detach().clone()
+
+    @staticmethod
+    def _head_weights_vit(model_name: str):
+        """Pre-trained ImageNet head for augreg ViT ``.npz`` checkpoints (``head/kernel`` / ``head/bias``).
+
+        DINOv2 checkpoints are self-supervised and contain no classification head.
+        """
+        import numpy as np
+        import torch
+        from getitune.backend.lightning.models.classification.utils.pretrained_urls import VIT_PRETRAINED_URLS
+
+        url = VIT_PRETRAINED_URLS.get(model_name)
+        if url is None or not url.endswith(".npz"):
+            return None  # dinov2 (.pth) and unknown variants have no usable head
+
+        cache_file = CHECKPOINT_CACHE_DIR / Path(urlparse(url).path).name
+        if not cache_file.exists():
+            return None
+
+        weights = np.load(cache_file)
+        for prefix in ("", "opt/target/", "params/"):
+            kernel_key, bias_key = f"{prefix}head/kernel", f"{prefix}head/bias"
+            if kernel_key in weights and bias_key in weights:
+                kernel = torch.from_numpy(weights[kernel_key]).t().contiguous()  # (in, out) -> (out, in)
+                bias = torch.from_numpy(weights[bias_key])
+                return kernel, bias
+        return None
+
+    # Maps the backbone class name to (handler, needs_model_name).
+    _HEAD_SOURCES: ClassVar[dict[str, Any]] = {
+        "EfficientNetFeatureExtractor": _head_weights_pytorchcv_efficientnet,
+        "TorchvisionBackbone": _head_weights_torchvision,
+        "TimmBackbone": _head_weights_timm,
+        "VisionTransformerBackbone": _head_weights_vit,
+    }
+
+    @staticmethod
+    def _get_recipe_paths(task: str | None = None) -> list[str]:
+        """Get all recipe YAML paths for a given task, excluding OpenVINO and tile variants."""
+        from getitune.types.task import TaskType
+        from getitune.utils import list_models
+
+        recipes = list_models(task=TaskType(task) if task is not None else None, return_recipes=True)
+        # Filter out openvino_model and tile variants
+        filtered = []
+        for r in recipes:
+            name = Path(r).stem
+            if name == "openvino_model":
+                continue
+            if "_tile" in name:
+                continue
+            filtered.append(r)
+        return sorted(filtered)
+
+    @staticmethod
+    def _load_recipe_config(recipe_path: str) -> dict:
+        """Load and resolve a recipe YAML configuration."""
+        from getitune.cli.utils.jsonargparse import get_configuration
+
+        return get_configuration(recipe_path)
+
+    @staticmethod
+    def _get_label_info_from_config(config: dict) -> int | None:
+        """Extract label_info (num_classes) from a resolved recipe config."""
+        model_config = config.get("model", {})
+        init_args = model_config.get("init_args", {})
+        label_info = init_args.get("label_info")
+        if isinstance(label_info, int):
+            return label_info
+        return None
+
+    @staticmethod
+    def _get_input_size_from_config(config: dict) -> tuple[int, int] | None:
+        """Extract input_size from a resolved recipe config (checks overrides first, then data)."""
+        # Check overrides first
+        overrides = config.get("overrides", {})
+        if isinstance(overrides, dict):
+            data_overrides = overrides.get("data", {})
+            if isinstance(data_overrides, dict):
+                input_size = data_overrides.get("input_size")
+                if input_size is not None:
+                    return tuple(input_size)
+
+        # Fallback to data config
+        data_config = config.get("data", {})
+        if isinstance(data_config, dict):
+            input_size = data_config.get("input_size")
+            if input_size is not None:
+                return tuple(input_size)
+
+        return None
+
+    @staticmethod
+    def _create_model_from_config(config: dict, label_info: int, input_size: tuple[int, int] | None = None):
+        """Create a LightningModel from config with original label_info and optional input_size.
+
+        The model is created with the original pre-trained number of classes,
+        so pre-trained weights (including the head) are loaded as-is.
+        """
+        from dataclasses import asdict
+
+        from getitune.backend.lightning.models.base import LightningModel
+        from getitune.config.data import IntensityConfig
+        from getitune.utils.utils import get_model_cls_from_config, should_pass_label_info
+
+        model_config = deepcopy(config["model"])
+
+        # Remove non-serializable fields that get_configuration may resolve to function objects.
+        # These are optional fields with defaults in the model class and are not needed for export.
+        init_args = model_config.get("init_args", {})
+        for key in list(init_args.keys()):
+            if callable(init_args[key]) and not isinstance(init_args[key], (type, dict)):
+                del init_args[key]
+
+        # Remove pre-resolved None data_input_params so we can inject ours
+        if init_args.get("data_input_params") is None:
+            init_args.pop("data_input_params", None)
+
+        # Inject data_input_params so the export embeds correct preprocessing.
+        # `intensity_config` (scale_to_unit, ÷255) is mandatory: getitune trains with
+        # a two-stage pipeline.
+        data_input_params: dict = {"intensity_config": asdict(IntensityConfig())}
+        if input_size is not None:
+            data_input_params["input_size"] = input_size
+        model_config["init_args"]["data_input_params"] = data_input_params
+
+        model_cls = get_model_cls_from_config(Namespace(model_config))
+
+        skip = set()
+        if should_pass_label_info(model_cls):
+            model_config["init_args"]["label_info"] = label_info
+            skip.add("label_info")
+
+        model_parser = JArgParser()
+        model_parser.add_subclass_arguments(
+            LightningModel,
+            "model",
+            skip=skip,
+            required=False,
+            fail_untyped=False,
+        )
+        return model_parser.instantiate_classes(Namespace(model=model_config)).get("model")
+
+    @staticmethod
+    def _find_head_linear(model):
+        """Return the final ``nn.Linear`` of a classification model's head, or ``None``.
+
+        Supports ``LinearClsHead`` / ``MultiLabelLinearClsHead`` (``head.fc``) and
+        ``VisionTransformerClsHead`` (``head.layers.head``).
+        """
+        from torch import nn
+
+        head = getattr(getattr(model, "model", None), "head", None)
+        if head is None:
+            return None
+
+        fc = getattr(head, "fc", None)
+        if isinstance(fc, nn.Linear):
+            return fc
+
+        layers = getattr(head, "layers", None)
+        vit_head = getattr(layers, "head", None) if layers is not None else None
+        if isinstance(vit_head, nn.Linear):
+            return vit_head
+
+        return None
+
+    @staticmethod
+    def _recover_pretrained_head(model) -> tuple[str, str]:
+        """Restore the pre-trained classification head weights onto ``model`` in-place.
+
+        The classification backbones are feature extractors that silently drop the
+        checkpoint's classifier head, after which ``_create_model()`` builds a fresh,
+        randomly initialized head. This copies the original pre-trained head weights
+        back onto the model's head so the exported model is accurate.
+
+        Returns:
+            A ``(status, detail)`` tuple where status is one of ``"recovered"``,
+            ``"skipped"`` or ``"failed"``.
+        """
+        import torch
+
+        target = GetituneConverter._find_head_linear(model)
+        if target is None:
+            head = getattr(getattr(model, "model", None), "head", None)
+            head_type = type(head).__name__ if head is not None else "<none>"
+            return "skipped", f"unsupported head type '{head_type}' (no plain nn.Linear classifier)"
+
+        backbone = getattr(getattr(model, "model", None), "backbone", None)
+        backbone_type = type(backbone).__name__ if backbone is not None else "<none>"
+        handler = GetituneConverter._HEAD_SOURCES.get(backbone_type)
+        if handler is None:
+            return "skipped", f"no head-recovery handler for backbone '{backbone_type}'"
+
+        model_name = getattr(model, "model_name", None)
+        if not model_name:
+            return "skipped", "model has no 'model_name'"
+
+        try:
+            source = handler(model_name)
+        except Exception as exc:  # noqa: BLE001
+            # best effort: failures are surfaced in the export summary
+            return "failed", f"error fetching pre-trained head: {exc}"
+
+        if source is None:
+            return "skipped", f"no compatible pre-trained head available for '{model_name}'"
+
+        weight, bias = source
+        if tuple(weight.shape) != tuple(target.weight.shape) or tuple(bias.shape) != tuple(target.bias.shape):
+            return (
+                "skipped",
+                f"head shape mismatch (checkpoint {tuple(weight.shape)} vs model {tuple(target.weight.shape)})",
+            )
+
+        with torch.no_grad():
+            target.weight.copy_(weight.to(target.weight.dtype))
+            target.bias.copy_(bias.to(target.bias.dtype))
+        return "recovered", f"loaded pre-trained head {tuple(weight.shape)} from '{model_name}'"
+
+    @staticmethod
+    def _export_model(model, output_dir: Path, export_format: str = "OPENVINO", precision: str = "FP32") -> Path:
+        """Export a model with its current (pre-trained) weights."""
+        from getitune.types.export import ExportFormat
+        from getitune.types.precision import Precision
+
+        fmt = ExportFormat(export_format)
+        prec = Precision(precision)
+
+        output_dir.mkdir(parents=True, exist_ok=True)
+        return model.export(
+            output_dir=output_dir,
+            base_name="exported_model",
+            export_format=fmt,
+            precision=prec,
+        )
 
     def process_model_config(self, config: dict[str, Any]) -> bool:
         """Process a getitune model configuration.
@@ -50,22 +344,11 @@ class GetituneConverter(BaseConverter):
             return True
 
         try:
-            if not self.training_extensions_dir:
-                error_msg = (
-                    "training_extensions_dir is required for getitune models. "
-                    "Use --training-extensions-dir to specify the path."
-                )
-                raise ValueError(error_msg)
-
-            if not self.training_extensions_dir.exists():
-                error_msg = f"training_extensions directory not found: {self.training_extensions_dir}"
-                raise FileNotFoundError(error_msg)
-
             self._validate_license(config, model_short_name)
 
             self._log_model_banner(config, model_short_name, label="getitune model")
 
-            # Export model using training_extensions script
+            # Export model
             exported_model_path = self._run_export(config)
 
             # Repackage into standard layout
@@ -84,14 +367,11 @@ class GetituneConverter(BaseConverter):
                 quantization_attempted=quantization_attempted,
             )
 
-        except (ValueError, RuntimeError, FileNotFoundError, OSError, subprocess.CalledProcessError) as e:
+        except (ValueError, RuntimeError, FileNotFoundError) as e:
             return self._record_failure(config, model_short_name, e, label="getitune model")
 
     def _run_export(self, config: dict[str, Any]) -> Path:
-        """Run the export_pretrained_models.py script.
-
-        Invokes the script within the training_extensions/library uv-managed
-        environment so that all ``getitune`` dependencies are available.
+        """Run the model export.
 
         Args:
             config: Model configuration dictionary
@@ -99,8 +379,6 @@ class GetituneConverter(BaseConverter):
         Returns:
             Path to the exported model XML file
         """
-        assert self.training_extensions_dir is not None
-
         getitune_task = config.get("getitune_task")
         getitune_recipe = config.get("getitune_recipe")
 
@@ -115,73 +393,54 @@ class GetituneConverter(BaseConverter):
         temp_dir = tempfile.mkdtemp(prefix="getitune_export_")
         temp_output = Path(temp_dir)
 
-        export_script = (self.training_extensions_dir / "export_pretrained_models.py").resolve()
-        if not export_script.exists():
-            error_msg = f"Export script not found: {export_script}"
-            raise FileNotFoundError(error_msg)
+        recipes = GetituneConverter._get_recipe_paths(getitune_task)
+        recipe_path = next((r for r in recipes if Path(r).stem == getitune_recipe), None)
 
-        library_dir = (self.training_extensions_dir / "library").resolve()
-        library_pyproject = library_dir / "pyproject.toml"
-        if not library_pyproject.exists():
-            error_msg = (
-                f"getitune library project not found at {library_dir}. "
-                f"Ensure training_extensions contains a 'library/' subdirectory with a pyproject.toml."
-            )
-            raise FileNotFoundError(error_msg)
+        if not recipe_path:
+            error_msg = f"Recipe '{getitune_recipe}' not found"
+            raise ValueError(error_msg)
 
-        cmd = [
-            "uv",
-            "run",
-            "--project",
-            str(library_dir),
-            "--extra",
-            "cpu",
-            "python",
-            str(export_script),
-            "--task",
-            getitune_task,
-            "--model",
-            getitune_recipe,
-            "--output-dir",
-            str(temp_output),
-            "--format",
-            "OPENVINO",
-            "--precision",
-            "FP16",
-        ]
+        # Load and parse recipe config
+        config = GetituneConverter._load_recipe_config(recipe_path)
 
-        self.logger.info(f"Running export command: {' '.join(cmd)}")
+        # Get original label_info (num_classes from pre-trained dataset)
+        label_info = GetituneConverter._get_label_info_from_config(config)
+        if label_info is None:
+            error_msg = "No label_info in recipe (requires dataset-specific labels)"
+            raise ValueError(error_msg)
 
-        result = subprocess.run(  # noqa: S603  # nosec B603 — cmd is built from validated config, no shell
-            cmd,
-            cwd=str(self.training_extensions_dir),
-            capture_output=True,
-            text=True,
-            check=False,
+        # Get input_size from config
+        input_size = GetituneConverter._get_input_size_from_config(config)
+
+        self.logger.info(f"label_info (num_classes): {label_info}")
+        if input_size:
+            self.logger.info(f"input_size: {input_size}")
+
+        # Create model with original pre-trained weights
+        self.logger.info("Creating model with original pre-trained weights...")
+        model = GetituneConverter._create_model_from_config(config, label_info=label_info, input_size=input_size)
+
+        # Restore the pre-trained classification head (backbones drop it on load,
+        # leaving a randomly initialized head -> ~0% accuracy otherwise).
+        if getitune_task in CLASSIFICATION_TASKS:
+            head_status, head_detail = GetituneConverter._recover_pretrained_head(model)
+            if head_status == "recovered":
+                self.logger.info(f"Pre-trained head: {head_detail}")
+            elif head_status == "skipped":
+                self.logger.info(f"Pre-trained head NOT recovered: {head_detail}")
+            else:  # "failed"
+                self.logger.info(f"Pre-trained head fetching failed: {head_detail}")
+                raise ValueError(head_detail)
+
+        # Export
+        self.logger.info(f"Exporting to: {temp_output}")
+        exported_path = GetituneConverter._export_model(
+            model,
+            output_dir=temp_output,
+            precision="FP16",
         )
-
-        if result.returncode != 0:
-            self.logger.error(f"Export script stderr: {result.stderr}")
-            error_msg = f"Export script failed with return code {result.returncode}: {result.stderr}"
-            raise RuntimeError(error_msg)
-
-        self.logger.debug(f"Export script stdout: {result.stdout}")
-
-        # Locate the exported model
-        # Expected path: temp_output/{task_lower}/{recipe}/exported_model.xml
-        expected_path = temp_output / getitune_task.lower() / getitune_recipe / "exported_model.xml"
-
-        if not expected_path.exists():
-            # Try searching for any .xml file in the output
-            xml_files = list(temp_output.rglob("*.xml"))
-            if xml_files:
-                expected_path = xml_files[0]
-            else:
-                error_msg = f"No exported model found in {temp_output}"
-                raise FileNotFoundError(error_msg)
-
-        self.logger.info(f"Found exported model: {expected_path}")
-        return expected_path
+        self.logger.info(f"SUCCESS: {exported_path}")
+        return exported_path
 
     def _repackage_model(self, config: dict[str, Any], exported_model_path: Path) -> None:
         """Repackage exported model into standard layout.
@@ -373,8 +632,14 @@ class GetituneConverter(BaseConverter):
         core = ov.Core()
         model = core.read_model(model_path)
 
-        # Get input shape from the model's input layer
-        input_shape = list(model.input(0).shape)
+        # Get input shape from the model's input layer. Use ``partial_shape``
+        # rather than ``.shape`` because some backbones (e.g. DINOv2/ViT) export
+        # with a dynamic batch dimension; ``.shape`` calls ``get_shape()`` which
+        # raises "to_shape was called on a dynamic shape". Resolve any dynamic
+        # dimension to a concrete size (batch -> 1) so downstream calibration can
+        # build fixed-size tensors.
+        partial_shape = model.input(0).partial_shape
+        input_shape = [dim.get_length() if dim.is_static else 1 for dim in partial_shape]
 
         # Read preprocessing params from model_info rt_info
         def _get_rt_str(key: str, default: str) -> str:
