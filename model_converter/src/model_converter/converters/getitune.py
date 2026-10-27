@@ -426,8 +426,11 @@ class GetituneConverter(BaseConverter):
             head_status, head_detail = GetituneConverter._recover_pretrained_head(model)
             if head_status == "recovered":
                 self.logger.info(f"Pre-trained head: {head_detail}")
-            else:  # "skipped" or "failed"
-                self.logger.info(f"Pre-trained head NOT recovered (random head): {head_detail}")
+            elif head_status == "skipped":
+                self.logger.info(f"Pre-trained head NOT recovered: {head_detail}")
+            else:  # "failed"
+                self.logger.info(f"Pre-trained head fetching failed: {head_detail}")
+                raise ValueError(head_detail)
 
         # Export
         self.logger.info(f"Exporting to: {temp_output}")
