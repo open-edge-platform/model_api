@@ -356,7 +356,7 @@ class GetituneConverter(BaseConverter):
 
             # Quantize if enabled and dataset is available
             accuracy: AccuracyResults | None = None
-            quantization_attempted = bool(config.get("quantize", True) and config.get("dataset_type"))
+            quantization_attempted = bool(config.get("quantize", False) and config.get("dataset_type"))
             if quantization_attempted:
                 accuracy = self._quantize_exported_model(config)
 

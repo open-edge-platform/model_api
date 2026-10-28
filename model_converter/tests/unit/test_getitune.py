@@ -415,7 +415,7 @@ class TestRunExport:
         tmp_path,
         caplog,
     ):
-        """_run_export logs the skipped/failed detail when the head cannot be recovered."""
+        """_run_export logs the skipped detail when the head recovery is skipped."""
         with (
             self._patch_export_pipeline(tmp_path, recover=("skipped", "no head-recovery handler")) as mocks,
             caplog.at_level(logging.INFO),
@@ -424,7 +424,24 @@ class TestRunExport:
 
         assert result == mocks.exported
         mocks.recover.assert_called_once_with(mocks.model)
-        assert "Pre-trained head NOT recovered (random head): no head-recovery handler" in caplog.text
+        assert "Pre-trained head NOT recovered: no head-recovery handler" in caplog.text
+
+    def test_run_export_fails_when_head_recovery_failed(
+        self,
+        getitune_converter,
+        sample_getitune_config,
+        tmp_path,
+        caplog,
+    ):
+        """_run_export fails when the head cannot be recovered."""
+        with (
+            self._patch_export_pipeline(tmp_path, recover=("failed", "recovery failed")),
+            caplog.at_level(logging.INFO),
+            pytest.raises(ValueError, match="recovery failed"),
+        ):
+            getitune_converter._run_export(sample_getitune_config)
+
+        assert "Pre-trained head fetching failed: recovery failed" in caplog.text
 
     def test_run_export_skips_head_recovery_for_non_classification(
         self,
