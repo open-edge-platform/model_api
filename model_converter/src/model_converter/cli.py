@@ -20,7 +20,6 @@ from pathlib import Path
 from typing import Any
 
 from model_converter.converters import CONVERTER_REGISTRY, BaseConverter
-from model_converter.converters.getitune import GetituneConverter
 from model_converter.dataset_registry import DatasetRegistry
 from model_converter.reporting import (
     ConversionResult,
@@ -42,7 +41,6 @@ class ModelConverter:
         cache_dir: Path,
         verbose: bool = False,
         dataset_registry: DatasetRegistry | None = None,
-        training_extensions_dir: Path | None = None,
         report_path: Path | None = None,
         measure_accuracy: bool = True,
     ):
@@ -53,7 +51,6 @@ class ModelConverter:
             cache_dir: Directory to cache downloaded weights
             verbose: Enable verbose logging
             dataset_registry: Dataset registry for resolving dataset paths
-            training_extensions_dir: Path to training_extensions repo (for getitune models)
             report_path: Path to the Markdown report file.  When set, each
                 non-skipped conversion result is written to the file immediately
                 after export.
@@ -63,7 +60,6 @@ class ModelConverter:
         self.output_dir = Path(output_dir)
         self.cache_dir = Path(cache_dir)
         self.dataset_registry = dataset_registry
-        self.training_extensions_dir = Path(training_extensions_dir) if training_extensions_dir else None
         self.report_path = Path(report_path) if report_path else None
         self.measure_accuracy = measure_accuracy
         self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -107,9 +103,6 @@ class ModelConverter:
                 "report_path": self.report_path,
                 "measure_accuracy": self.measure_accuracy,
             }
-
-            if converter_cls == GetituneConverter:
-                kwargs["training_extensions_dir"] = self.training_extensions_dir
 
             self._converters[model_library] = converter_cls(**kwargs)
 
@@ -361,13 +354,6 @@ Examples:
         help="Enable verbose logging",
     )
 
-    parser.add_argument(
-        "--training-extensions-dir",
-        type=Path,
-        default=None,
-        help="Path to cloned training_extensions repo (required for getitune models)",
-    )
-
     args = parser.parse_args()
 
     # Parse library filter
@@ -419,7 +405,6 @@ Examples:
             cache_dir=args.cache,
             verbose=args.verbose,
             dataset_registry=dataset_registry,
-            training_extensions_dir=args.training_extensions_dir,
             report_path=report_path,
             measure_accuracy=args.measure_accuracy,
         )

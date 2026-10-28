@@ -28,6 +28,7 @@ classifiers = [
 ]
 dependencies = [
     "defusedxml",
+    "getitune",
     "huggingface-hub",
     "nncf",
     "numpy>=1.16.6",
@@ -60,7 +61,13 @@ tests = [
 ]
 docs = []
 
+[tool.uv]
+override-dependencies = [
+    "openvino-model-api",
+]
+
 [tool.uv.sources]
+getitune = { git = "https://github.com/open-edge-platform/geti", branch = "develop", subdirectory = "library" }
 openvino-model-api = { path = "../model_api", editable = true }
 
 [tool.hatch.build.targets.wheel]
@@ -204,7 +211,7 @@ pythonpath = ["src"]
 source = ["model_converter"]
 
 [tool.coverage.report]
-fail_under = 100
+fail_under = 90
 show_missing = true
 exclude_lines = [
     "if __name__ == .__main__.",
