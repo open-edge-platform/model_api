@@ -915,21 +915,6 @@
       "dataset_type": "coco-detection"
     },
     {
-      "model_short_name": "atss_r50_fpn",
-      "model_library": "getitune",
-      "labels": "COCO_80",
-      "model_full_name": "ATSS ResNet-50 FPN",
-      "description": "ATSS with ResNet-50 FPN backbone for object detection trained with getitune",
-      "docs": "https://github.com/open-edge-platform/training_extensions",
-      "getitune_task": "DETECTION",
-      "getitune_recipe": "atss_r50_fpn",
-      "model_type": "SSD",
-      "tags": ["object-detection", "vision"],
-      "license": "apache-2.0",
-      "license_link": "https://spdx.org/licenses/Apache-2.0.html",
-      "dataset_type": "coco-detection"
-    },
-    {
       "model_short_name": "yolox_tiny",
       "model_library": "getitune",
       "labels": "COCO_80",
