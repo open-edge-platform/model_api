@@ -23,6 +23,32 @@ CHECKPOINT_CACHE_DIR = Path.home() / ".cache" / "torch" / "hub" / "checkpoints"
 
 CLASSIFICATION_TASKS = {"MULTI_CLASS_CLS", "MULTI_LABEL_CLS"}
 
+# Number of classes in the official DINOv2 ImageNet-1k linear head.
+_IMAGENET_NUM_CLASSES = 1000
+
+# Official facebookresearch/dinov2 ImageNet-1k linear-probe head for the single
+# DINOv2 variant exported here. The runtime ``2 * embed_dim`` shape check guards
+# against the head not matching the backbone.
+_DINOV2_LINEAR_HEAD_URL = "https://dl.fbaipublicfiles.com/dinov2/dinov2_vits14/dinov2_vits14_reg4_linear_head.pth"
+
+
+def _dinov2_backbone_forward(self, x, out_type: str = "cls_token"):
+    """Backbone forward returning ``concat(cls_token, mean(patch_tokens))`` for the default call.
+
+    Mirrors ``create_linear_input`` of facebookresearch/dinov2 with ``n_last_blocks=1``
+    and ``use_avgpool=True``. Other ``out_type`` values (e.g. ``"raw"``) fall through to
+    the original implementation.
+    """
+    import torch
+
+    original_forward = type(self).forward
+    if out_type != "cls_token":
+        return original_forward(self, x, out_type=out_type)
+    tokens = original_forward(self, x, out_type="raw")[-1]  # [B, N, D], already normalized
+    cls_token = tokens[:, 0]
+    patch_mean = tokens[:, self.num_prefix_tokens :].mean(dim=1)  # skip cls + register tokens
+    return (torch.cat([cls_token, patch_mean], dim=-1),)
+
 
 class GetituneConverter(BaseConverter):
     """Converter for getitune models.
@@ -258,6 +284,102 @@ class GetituneConverter(BaseConverter):
         return None
 
     @staticmethod
+    def _is_dinov2_multiclass(model) -> bool:
+        """Return ``True`` for a multi-class DINOv2 model needing the official linear head.
+
+        DINOv2 backbones are self-supervised ``.pth`` checkpoints (detected via
+        ``VIT_PRETRAINED_URLS``) that ship no classification head, so getitune leaves a
+        randomly initialized ``VisionTransformerClsHead`` (``head.layers.head``). Other
+        ViT variants (e.g. augreg ``.npz``) keep their usual head-recovery path.
+        """
+        from getitune.backend.lightning.models.classification.utils.pretrained_urls import VIT_PRETRAINED_URLS
+        from torch import nn
+
+        backbone = getattr(getattr(model, "model", None), "backbone", None)
+        if type(backbone).__name__ != "VisionTransformerBackbone":
+            return False
+
+        model_name = getattr(model, "model_name", None)
+        url = VIT_PRETRAINED_URLS.get(model_name) if model_name else None
+        if url is None or not url.endswith(".pth"):
+            return False
+
+        # Multi-class head only (VisionTransformerClsHead -> head.layers.head);
+        # multi-label DINOv2 uses a different head and keeps the skip path.
+        head = getattr(getattr(model, "model", None), "head", None)
+        layers = getattr(head, "layers", None)
+        return isinstance(getattr(layers, "head", None), nn.Linear)
+
+    @staticmethod
+    def _apply_dinov2_linear_head(model) -> str:
+        """Replace the DINOv2 model's head with the official facebookresearch linear head.
+
+        Downloads (and caches) the official ImageNet-1k ``*_reg4_linear_head.pth`` head,
+        rewires the backbone to emit ``concat(cls_token, mean(patch_tokens))`` and swaps the
+        final ``nn.Linear`` for the pre-trained one. Mutates ``model`` in place.
+
+        Returns:
+            A human-readable detail string describing the applied head.
+
+        Raises:
+            ValueError: If the head does not match the backbone (``2 * embed_dim`` inputs),
+                is not the 1000-class ImageNet head, or the model is not a 1000-class model.
+        """
+        import types
+
+        import torch
+        from torch import nn
+        from torch.hub import download_url_to_file
+
+        classifier = model.model
+        backbone = classifier.backbone
+        head = classifier.head
+
+        CHECKPOINT_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        head_weights = CHECKPOINT_CACHE_DIR / Path(urlparse(_DINOV2_LINEAR_HEAD_URL).path).name
+        if not head_weights.exists():
+            download_url_to_file(_DINOV2_LINEAR_HEAD_URL, str(head_weights), progress=True)
+
+        # weights_only=True restricts unpickling to plain tensors (these checkpoints are
+        # just weight tensors), avoiding arbitrary-code-execution on load.
+        # nosemgrep: trailofbits.python.pickles-in-pytorch.pickles-in-pytorch
+        state = torch.load(head_weights, map_location="cpu", weights_only=True)
+
+        embed_dim = backbone.embed_dim
+        out_features, in_features = state["weight"].shape
+        if in_features != 2 * embed_dim:
+            message = (
+                f"DINOv2 head expects {in_features} input features but backbone provides "
+                f"2*{embed_dim}; the cached linear head does not match this backbone"
+            )
+            raise ValueError(message)
+        if out_features != _IMAGENET_NUM_CLASSES:
+            message = (
+                f"DINOv2 head weights have {out_features} outputs, expected {_IMAGENET_NUM_CLASSES}; "
+                "the official ImageNet-1k *_linear_head.pth is required"
+            )
+            raise ValueError(message)
+        num_classes = getattr(model, "num_classes", None)
+        if num_classes != _IMAGENET_NUM_CLASSES:
+            message = (
+                f"Official DINOv2 head has {_IMAGENET_NUM_CLASSES} classes but the model has "
+                f"{num_classes}; the DINOv2 recipe must use the 1000 ImageNet classes"
+            )
+            raise ValueError(message)
+
+        # 1) Backbone: default call returns concat(cls, mean(patch tokens)) instead of cls only.
+        backbone.forward = types.MethodType(_dinov2_backbone_forward, backbone)
+
+        # 2) Head: replace the final Linear with the official one.
+        linear = nn.Linear(in_features, out_features)
+        linear.load_state_dict(state)
+        linear.eval()
+        head.layers.head = linear
+        head.in_channels = in_features
+
+        return f"applied official DINOv2 linear head {tuple(state['weight'].shape)} from {head_weights}"
+
+    @staticmethod
     def _recover_pretrained_head(model) -> tuple[str, str]:
         """Restore the pre-trained classification head weights onto ``model`` in-place.
 
@@ -277,6 +399,11 @@ class GetituneConverter(BaseConverter):
             head = getattr(getattr(model, "model", None), "head", None)
             head_type = type(head).__name__ if head is not None else "<none>"
             return "skipped", f"unsupported head type '{head_type}' (no plain nn.Linear classifier)"
+
+        # DINOv2 ships no classification head; load the official facebookresearch linear
+        # head (and rewire the backbone) instead of copying weights. Errors hard-fail.
+        if GetituneConverter._is_dinov2_multiclass(model):
+            return "recovered", GetituneConverter._apply_dinov2_linear_head(model)
 
         backbone = getattr(getattr(model, "model", None), "backbone", None)
         backbone_type = type(backbone).__name__ if backbone is not None else "<none>"
@@ -473,6 +600,7 @@ class GetituneConverter(BaseConverter):
 
         # Overwrite the exporter's placeholder labels with real class names.
         self._apply_config_labels(config, target_xml, fp32_xml)
+        self._apply_label_info(config, target_xml, fp32_xml)
         self._apply_model_info_overrides(config, target_xml, fp32_xml)
         self._apply_preprocessing_overrides(config, target_xml, fp32_xml)
 
@@ -545,6 +673,107 @@ class GetituneConverter(BaseConverter):
             self.logger.info(f"✓ Applied {labels_config} labels to exported model(s)")
         except (ImportError, RuntimeError) as e:
             self.logger.warning(f"Could not apply labels to exported model: {e}")
+
+    @staticmethod
+    def _make_label_names_unique(names: list[str]) -> list[str]:
+        """Disambiguate duplicate label names the way datumaro does on import.
+
+        ImageNet-1k contains two distinct ``crane`` synsets; datumaro keeps the
+        first occurrence as-is and suffixes later duplicates with an incrementing
+        count (``crane`` -> ``crane2``). getitune datasets therefore carry the
+        de-duplicated names, so the exported ``label_info`` must match them
+        exactly for the test/predict label check to pass.
+        """
+        seen: dict[str, int] = {}
+        unique: list[str] = []
+        for name in names:
+            count = seen.get(name, 0) + 1
+            seen[name] = count
+            unique.append(name if count == 1 else f"{name}{count}")
+        return unique
+
+    def _resolve_label_info_names(self, config: dict[str, Any]) -> list[str] | None:
+        """Resolve the class names for the embedded ``label_info`` (getitune convention).
+
+        getitune/datumaro name ImageNet-1k classes with their full WordNet synset
+        descriptions (e.g. ``"tench, Tinca tinca"``), de-duplicated via
+        :meth:`_make_label_names_unique`. This differs from the Model API
+        ``labels`` field (short, underscore-joined tokens), so ``label_info`` is
+        resolved separately to match the dataset the model is evaluated against.
+        """
+        labels_config = config.get("labels")
+        if not labels_config:
+            return None
+
+        if labels_config == "IMAGENET1K_V1":
+            from timm.data import ImageNetInfo
+
+            names = list(ImageNetInfo("imagenet1k").label_descriptions())
+            return self._make_label_names_unique(names)
+
+        # Fallback: reuse the Model API label strings (better than placeholders,
+        # though they may not match a specific dataset's naming convention).
+        resolved = self.get_labels(labels_config)
+        if not resolved:
+            return None
+        return resolved.split(" ")
+
+    def _apply_label_info(self, config: dict[str, Any], *model_paths: Path) -> None:
+        """Overwrite the exporter's placeholder ``model_info/label_info`` with real names.
+
+        The getitune exporter embeds ``label_info`` with placeholder
+        ``label_0..label_{N-1}`` names because the model is built from a recipe
+        without a dataset. getitune's test/predict pipeline reads this JSON blob
+        (not ``model_info/labels``) and rejects the model unless its
+        ``label_info`` matches the evaluation dataset. Rewrite the ``label_names``
+        (and ``label_groups``, preserving grouping) with the resolved class names,
+        keeping the existing ``label_ids``.
+
+        Args:
+            config: Model configuration dictionary.
+            *model_paths: OpenVINO model XML files to update in place.
+        """
+        import json
+
+        names = self._resolve_label_info_names(config)
+        if not names:
+            return
+
+        try:
+            import openvino as ov
+
+            core = ov.Core()
+            for model_path in model_paths:
+                if not model_path.exists():
+                    continue
+                model = core.read_model(model_path)
+                try:
+                    serialized = model.get_rt_info(["model_info", "label_info"]).astype(str)
+                except RuntimeError:
+                    continue
+
+                info = json.loads(serialized)
+                old_names = info.get("label_names", [])
+                if len(old_names) != len(names):
+                    self.logger.warning(
+                        f"label_info has {len(old_names)} names but resolved {len(names)}; "
+                        "skipping label_info update",
+                    )
+                    continue
+
+                name_map = dict(zip(old_names, names))
+                info["label_names"] = names
+                if isinstance(info.get("label_groups"), list):
+                    info["label_groups"] = [[name_map.get(n, n) for n in group] for group in info["label_groups"]]
+
+                model.set_rt_info(json.dumps(info), ["model_info", "label_info"])
+                tmp_xml = model_path.with_name(f"{model_path.stem}_label_info_tmp.xml")
+                ov.save_model(model, tmp_xml, compress_to_fp16=not model_path.stem.endswith("_fp32"))
+                tmp_xml.replace(model_path)
+                tmp_xml.with_suffix(".bin").replace(model_path.with_suffix(".bin"))
+            self.logger.info("✓ Applied real label_info to exported model(s)")
+        except (ImportError, RuntimeError) as e:
+            self.logger.warning(f"Could not apply label_info to exported model: {e}")
 
     def _apply_preprocessing_overrides(self, config: dict[str, Any], *model_paths: Path) -> None:
         """Override ``model_info`` preprocessing rt_info with configured values.
