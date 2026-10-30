@@ -60,6 +60,9 @@ tests = [
     "pytest-mock",
 ]
 docs = []
+lint = [
+    "ruff==0.6.2",
+]
 
 [tool.uv]
 override-dependencies = [

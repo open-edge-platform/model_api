@@ -8,12 +8,14 @@
 import contextlib
 import json
 import logging
+import sys
 import types
 from pathlib import Path
 from unittest.mock import ANY, MagicMock, patch
 
 import numpy as np
 import pytest
+import torch
 from model_converter.converters.getitune import GetituneConverter
 from model_converter.reporting import AccuracyResults
 
@@ -931,6 +933,98 @@ class TestApplyConfigLabels:
         assert "Could not apply labels to exported model" in caplog.text
 
 
+class TestApplyLabelInfo:
+    """Tests for GetituneConverter._apply_label_info and its helpers."""
+
+    def test_make_label_names_unique_dedups_like_datumaro(self, getitune_converter):
+        """Duplicate names are suffixed with an incrementing count (crane -> crane2)."""
+        result = GetituneConverter._make_label_names_unique(["crane", "tench", "crane", "crane"])
+        assert result == ["crane", "tench", "crane2", "crane3"]
+
+    def test_resolve_label_info_names_returns_none_without_labels(self, getitune_converter, sample_getitune_config):
+        """No ``labels`` config means there is nothing to resolve."""
+        assert getitune_converter._resolve_label_info_names(sample_getitune_config) is None
+
+    def test_resolve_label_info_names_fallback_splits_label_string(self, getitune_converter, sample_getitune_config):
+        """A non-ImageNet label set falls back to the Model API label tokens."""
+        config = {**sample_getitune_config, "labels": "CUSTOM"}
+        with patch.object(getitune_converter, "get_labels", return_value="cat dog bird"):
+            assert getitune_converter._resolve_label_info_names(config) == ["cat", "dog", "bird"]
+
+    def test_rewrites_label_info_preserving_ids_and_groups(self, getitune_converter, sample_getitune_config, tmp_path):
+        """label_names/label_groups are replaced with real names; label_ids are kept."""
+        config = {**sample_getitune_config, "labels": "IMAGENET1K_V1"}
+        fp16_xml = tmp_path / "dino_v2_cls.xml"
+        fp32_xml = tmp_path / "dino_v2_cls_fp32.xml"
+        _write_openvino_model(fp16_xml)
+        _write_openvino_model(fp32_xml)
+
+        placeholder = json.dumps(
+            {
+                "label_names": ["label_0", "label_1", "label_2"],
+                "label_ids": ["0", "1", "2"],
+                "label_groups": [["label_0", "label_1", "label_2"]],
+            },
+        )
+        captured: dict[str, str] = {}
+
+        fake_ov = types.ModuleType("openvino")
+        core = MagicMock()
+        model = MagicMock()
+        model.get_rt_info.return_value = MagicMock(astype=MagicMock(return_value=placeholder))
+        model.set_rt_info.side_effect = lambda value, _key: captured.__setitem__("label_info", value)
+        core.read_model.return_value = model
+        setattr(fake_ov, "Core", MagicMock(return_value=core))
+
+        def _fake_save(_m, path, compress_to_fp16):
+            _write_openvino_model(Path(path))
+
+        setattr(fake_ov, "save_model", MagicMock(side_effect=_fake_save))
+
+        with (
+            patch.object(
+                getitune_converter,
+                "_resolve_label_info_names",
+                return_value=["tench", "goldfish", "shark"],
+            ),
+            patch.dict("sys.modules", {"openvino": fake_ov}),
+        ):
+            getitune_converter._apply_label_info(config, fp16_xml, fp32_xml)
+
+        written = json.loads(captured["label_info"])
+        assert written["label_names"] == ["tench", "goldfish", "shark"]
+        assert written["label_ids"] == ["0", "1", "2"]  # unchanged
+        assert written["label_groups"] == [["tench", "goldfish", "shark"]]
+        assert not (tmp_path / "dino_v2_cls_label_info_tmp.xml").exists()
+
+    def test_skips_when_label_count_mismatches(self, getitune_converter, sample_getitune_config, tmp_path, caplog):
+        """A resolved-name count that differs from the embedded names is skipped with a warning."""
+        config = {**sample_getitune_config, "labels": "IMAGENET1K_V1"}
+        model_xml = tmp_path / "dino_v2_cls.xml"
+        _write_openvino_model(model_xml)
+
+        placeholder = json.dumps(
+            {"label_names": ["label_0", "label_1"], "label_ids": ["0", "1"], "label_groups": [["label_0", "label_1"]]},
+        )
+        fake_ov = types.ModuleType("openvino")
+        core = MagicMock()
+        model = MagicMock()
+        model.get_rt_info.return_value = MagicMock(astype=MagicMock(return_value=placeholder))
+        core.read_model.return_value = model
+        setattr(fake_ov, "Core", MagicMock(return_value=core))
+        setattr(fake_ov, "save_model", MagicMock())
+
+        with (
+            patch.object(getitune_converter, "_resolve_label_info_names", return_value=["only_one"]),
+            patch.dict("sys.modules", {"openvino": fake_ov}),
+            caplog.at_level(logging.WARNING),
+        ):
+            getitune_converter._apply_label_info(config, model_xml)
+
+        model.set_rt_info.assert_not_called()
+        assert "skipping label_info update" in caplog.text
+
+
 class TestApplyPreprocessingOverrides:
     """Tests for GetituneConverter._apply_preprocessing_overrides."""
 
@@ -1233,3 +1327,181 @@ class TestReadPreprocessingFromModel:
         input_shape, *_ = GetituneConverter._read_preprocessing_from_model(mock_ov, model_path)
 
         assert input_shape == [1, 3, 224, 224]
+
+
+class _FakeDinoV2Backbone(torch.nn.Module):
+    """Minimal stand-in for a DINOv2 ``VisionTransformerBackbone``."""
+
+    def __init__(self, embed_dim: int = 384, num_prefix_tokens: int = 5):
+        super().__init__()
+        self.embed_dim = embed_dim
+        self.num_prefix_tokens = num_prefix_tokens
+
+    def forward(self, x, out_type: str = "cls_token"):
+        # ``out_type="raw"`` returns a list of per-block normalized token tensors.
+        batch = x.shape[0] if hasattr(x, "shape") else 1
+        tokens = torch.arange(
+            batch * (self.num_prefix_tokens + 2) * self.embed_dim,
+            dtype=torch.float32,
+        ).reshape(batch, self.num_prefix_tokens + 2, self.embed_dim)
+        return [tokens]
+
+
+class _FakeClsHead(torch.nn.Module):
+    """``VisionTransformerClsHead``-like head exposing ``layers.head`` and ``in_channels``."""
+
+    def __init__(self, in_channels: int, num_classes: int):
+        super().__init__()
+        self.in_channels = in_channels
+        self.layers = torch.nn.Module()
+        self.layers.head = torch.nn.Linear(in_channels, num_classes)
+
+
+class _FakeDinoV2Model(torch.nn.Module):
+    """Minimal LightningModel-like wrapper over a DINOv2 backbone + classification head."""
+
+    def __init__(self, embed_dim: int = 384, num_classes: int = 1000, model_name: str = "dino_v2"):
+        super().__init__()
+        self.model_name = model_name
+        self.num_classes = num_classes
+        self.model = torch.nn.Module()
+        self.model.backbone = _FakeDinoV2Backbone(embed_dim=embed_dim)
+        self.model.head = _FakeClsHead(in_channels=embed_dim, num_classes=num_classes)
+
+
+def _dinov2_head_state(out_features: int, in_features: int) -> dict:
+    """Build a linear-head state dict with the given shape."""
+    return {
+        "weight": torch.randn(out_features, in_features),
+        "bias": torch.randn(out_features),
+    }
+
+
+class VisionTransformerBackbone(_FakeDinoV2Backbone):
+    """Backbone whose class name matches the real getitune ViT backbone (for detection)."""
+
+
+def _make_vit_model(model_name: str, embed_dim: int = 384, num_classes: int = 1000) -> _FakeDinoV2Model:
+    """Build a DINOv2-like model whose backbone class name is ``VisionTransformerBackbone``."""
+    model = _FakeDinoV2Model(embed_dim=embed_dim, num_classes=num_classes, model_name=model_name)
+    model.model.backbone = VisionTransformerBackbone(embed_dim=embed_dim)
+    return model
+
+
+def _fake_getitune_modules(pretrained_urls_module: types.ModuleType) -> dict[str, types.ModuleType]:
+    """Build the fake getitune package chain exposing ``VIT_PRETRAINED_URLS``."""
+    package_names = [
+        "getitune",
+        "getitune.backend",
+        "getitune.backend.lightning",
+        "getitune.backend.lightning.models",
+        "getitune.backend.lightning.models.classification",
+        "getitune.backend.lightning.models.classification.utils",
+    ]
+    modules = {name: types.ModuleType(name) for name in package_names}
+    modules["getitune.backend.lightning.models.classification.utils.pretrained_urls"] = pretrained_urls_module
+    return modules
+
+
+class TestDinoV2LinearHead:
+    """Tests for the official DINOv2 linear-head application."""
+
+    MODULE = "model_converter.converters.getitune"
+
+    def _patch_download(self, stack, state):
+        """Patch the download + torch.load so no network/file access occurs."""
+        stack.enter_context(patch(f"{self.MODULE}.Path.mkdir"))
+        stack.enter_context(patch(f"{self.MODULE}.Path.exists", return_value=True))
+        loader = stack.enter_context(patch("torch.load", return_value=state))
+        downloader = MagicMock()
+        stack.enter_context(patch("torch.hub.download_url_to_file", downloader))
+        return loader, downloader
+
+    def test_apply_dinov2_linear_head_rewires_backbone_and_head(self):
+        """The backbone emits concat(cls, mean(patch)) and the official head is installed."""
+        model = _FakeDinoV2Model(embed_dim=384, num_classes=1000)
+        state = _dinov2_head_state(out_features=1000, in_features=2 * 384)
+
+        with contextlib.ExitStack() as stack:
+            self._patch_download(stack, state)
+            detail = GetituneConverter._apply_dinov2_linear_head(model)
+
+        head = model.model.head
+        assert head.in_channels == 2 * 384
+        assert head.layers.head.in_features == 2 * 384
+        assert head.layers.head.out_features == 1000
+        torch.testing.assert_close(head.layers.head.weight, state["weight"])
+
+        # Backbone now returns a 1-tuple with concat(cls_token, mean(patch_tokens)).
+        out = model.model.backbone(torch.zeros(2, 3, 224, 224))
+        assert isinstance(out, tuple)
+        assert out[0].shape == (2, 2 * 384)
+        assert "official DINOv2 linear head" in detail
+
+    def test_apply_dinov2_linear_head_raises_on_input_feature_mismatch(self):
+        """A head whose inputs are not 2*embed_dim hard-fails."""
+        model = _FakeDinoV2Model(embed_dim=384, num_classes=1000)
+        state = _dinov2_head_state(out_features=1000, in_features=384)  # should be 768
+
+        with contextlib.ExitStack() as stack:
+            self._patch_download(stack, state)
+            with pytest.raises(ValueError, match="input features"):
+                GetituneConverter._apply_dinov2_linear_head(model)
+
+    def test_apply_dinov2_linear_head_raises_on_non_imagenet_classes(self):
+        """A head without 1000 outputs hard-fails."""
+        model = _FakeDinoV2Model(embed_dim=384, num_classes=1000)
+        state = _dinov2_head_state(out_features=10, in_features=2 * 384)
+
+        with contextlib.ExitStack() as stack:
+            self._patch_download(stack, state)
+            with pytest.raises(ValueError, match="expected 1000"):
+                GetituneConverter._apply_dinov2_linear_head(model)
+
+    def test_apply_dinov2_linear_head_raises_when_model_not_1000_classes(self):
+        """A model that is not a 1000-class classifier hard-fails."""
+        model = _FakeDinoV2Model(embed_dim=384, num_classes=5)
+        state = _dinov2_head_state(out_features=1000, in_features=2 * 384)
+
+        with contextlib.ExitStack() as stack:
+            self._patch_download(stack, state)
+            with pytest.raises(ValueError, match="1000 classes but the model"):
+                GetituneConverter._apply_dinov2_linear_head(model)
+
+    def test_recover_pretrained_head_routes_dinov2_to_official_head(self):
+        """_recover_pretrained_head applies the official head for multi-class DINOv2."""
+        model = _FakeDinoV2Model(embed_dim=384, num_classes=1000)
+
+        with (
+            patch.object(GetituneConverter, "_is_dinov2_multiclass", return_value=True),
+            patch.object(
+                GetituneConverter,
+                "_apply_dinov2_linear_head",
+                return_value="applied official DINOv2 linear head",
+            ) as apply_mock,
+        ):
+            status, detail = GetituneConverter._recover_pretrained_head(model)
+
+        apply_mock.assert_called_once_with(model)
+        assert status == "recovered"
+        assert "official DINOv2 linear head" in detail
+
+    def test_is_dinov2_multiclass_true_for_pth_vit_with_layers_head(self):
+        """A ViT backbone with a .pth checkpoint and layers.head is detected as DINOv2."""
+        model = _make_vit_model(model_name="dino_v2")
+
+        fake_urls = types.ModuleType("getitune.backend.lightning.models.classification.utils.pretrained_urls")
+        fake_urls.VIT_PRETRAINED_URLS = {"dino_v2": "https://example.com/dinov2_vits14_reg4.pth"}
+
+        with patch.dict(sys.modules, _fake_getitune_modules(fake_urls)):
+            assert GetituneConverter._is_dinov2_multiclass(model) is True
+
+    def test_is_dinov2_multiclass_false_for_npz_vit(self):
+        """A ViT backbone backed by an augreg .npz checkpoint is not treated as DINOv2."""
+        model = _make_vit_model(model_name="vit_tiny")
+
+        fake_urls = types.ModuleType("getitune.backend.lightning.models.classification.utils.pretrained_urls")
+        fake_urls.VIT_PRETRAINED_URLS = {"vit_tiny": "https://example.com/vit_tiny.npz"}
+
+        with patch.dict(sys.modules, _fake_getitune_modules(fake_urls)):
+            assert GetituneConverter._is_dinov2_multiclass(model) is False
