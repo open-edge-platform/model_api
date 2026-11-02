@@ -33,6 +33,21 @@ All properties live under the `model_info` runtime-info block of the model and
 are stored as strings (JSON-encoded where a structured value is needed), since
 OpenVINO RT-info only persists string values.
 
+> **Disclaimer — two-phase rollout.** This transformation is delivered in two
+> phases:
+>
+> 1. **Phase 1 — Original models with pre-trained weights.** The public,
+>    pre-trained checkpoints (torchvision, timm, Ultralytics, and the getitune
+>    recipes exported with their original pre-trained weights) are re-exported to
+>    carry the metadata defined here.
+> 2. **Phase 2 — Models fine-tuned in Geti.** The same models after
+>    task-specific fine-tuning in Geti (custom label sets, datasets, and
+>    thresholds).
+>
+> **This specification covers Phase 1 only.** Phase 2 is expected to reuse the
+> same metadata vocabulary, but any additional fields or constraints it requires
+> are out of scope for this document.
+
 ---
 
 ## Table of Contents
