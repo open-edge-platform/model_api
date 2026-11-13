@@ -61,7 +61,7 @@ tests = [
 ]
 docs = []
 lint = [
-    "ruff==0.17.3",
+    "ruff==0.17.5",
 ]
 
 [tool.uv]
