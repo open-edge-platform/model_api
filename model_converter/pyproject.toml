@@ -70,7 +70,7 @@ override-dependencies = [
 ]
 
 [tool.uv.sources]
-getitune = { git = "https://github.com/open-edge-platform/geti", branch = "develop", subdirectory = "library" }
+getitune = { git = "https://github.com/open-edge-platform/geti", branch = "develop", subdirectory = "libraries/getitune" }
 openvino-model-api = { path = "../model_api", editable = true }
 
 [tool.hatch.build.targets.wheel]
