@@ -20,11 +20,11 @@ repos:
       # Run the linter.
       - id: ruff
         name: ruff (model_api)
-        args: ["--fix", "--config=model_api/pyproject.toml"]
+        args: ["--config=model_api/pyproject.toml"]
         files: ^model_api/
       - id: ruff
         name: ruff (model_converter)
-        args: ["--fix", "--config=model_converter/pyproject.toml"]
+        args: ["--config=model_converter/pyproject.toml"]
         files: ^model_converter/
       # Run the formatter
       - id: ruff-format
