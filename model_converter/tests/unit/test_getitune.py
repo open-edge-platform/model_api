@@ -10,6 +10,7 @@ import json
 import logging
 import sys
 import types
+from copy import deepcopy
 from pathlib import Path
 from unittest.mock import ANY, MagicMock, patch
 
@@ -286,6 +287,106 @@ class TestProcessModelConfig:
         assert "A test getitune model" in caplog.text
 
 
+class TestCreateModelFromConfig:
+    """Tests for model construction during conversion."""
+
+    @pytest.mark.parametrize(
+        ("class_path", "model_name", "task", "input_size"),
+        [
+            ("getitune.backend.lightning.models.detection.rfdetr.RFDETR", "rfdetr_small", "DETECTION", (512, 512)),
+            (
+                "getitune.backend.lightning.models.instance_segmentation.rfdetr_inst.RFDETRInst",
+                "rfdetr_seg_s",
+                "INSTANCE_SEGMENTATION",
+                (384, 384),
+            ),
+        ],
+    )
+    def test_rfdetr_preserves_pretrained_bias_before_loading(self, class_path, model_name, task, input_size):
+        from getitune.backend.lightning.models.detection.rfdetr import RFDETR
+        from getitune.backend.lightning.models.instance_segmentation.rfdetr_inst import RFDETRInst
+
+        config = {
+            "model": {
+                "class_path": class_path,
+                "init_args": {"model_name": model_name, "reset_pretrained_class_bias": True},
+            },
+        }
+        model_cls = RFDETR if task == "DETECTION" else RFDETRInst
+        original_config = deepcopy(config)
+        load_flags = []
+
+        def capture_load(model, weights=None):
+            load_flags.append(model.reset_pretrained_class_bias)
+
+        with (
+            patch.object(model_cls, "_build_rfdetr_model", return_value=torch.nn.Identity()),
+            patch.object(model_cls, "load_pretrained", capture_load),
+        ):
+            model = GetituneConverter._create_model_from_config(
+                config,
+                label_info=91,
+                input_size=input_size,
+                task=task,
+            )
+
+        assert isinstance(model, model_cls)
+        assert load_flags == [False]
+        assert model.reset_pretrained_class_bias is False
+        assert config == original_config
+
+    @pytest.mark.parametrize(
+        ("class_path", "task"),
+        [
+            ("getitune.backend.lightning.models.instance_segmentation.rfdetr_inst.RFDETRInst", "DETECTION"),
+            ("getitune.backend.lightning.models.detection.rfdetr.RFDETR", "INSTANCE_SEGMENTATION"),
+            ("getitune.backend.lightning.models.SSD", "DETECTION"),
+            ("getitune.backend.lightning.models.SSD", "INSTANCE_SEGMENTATION"),
+        ],
+    )
+    def test_other_models_and_tasks_do_not_receive_bias_option(self, class_path, task):
+        config = {"model": {"class_path": class_path, "init_args": {}}}
+        original_config = deepcopy(config)
+        parser = MagicMock()
+        parser.instantiate_classes.return_value = {"model": object()}
+
+        with patch("model_converter.converters.getitune.JArgParser", return_value=parser):
+            GetituneConverter._create_model_from_config(config, label_info=91, task=task)
+
+        model_config = parser.instantiate_classes.call_args.args[0]["model"]
+        assert "reset_pretrained_class_bias" not in model_config["init_args"]
+        assert config == original_config
+
+    @pytest.mark.parametrize(
+        ("class_path", "task"),
+        [
+            ("getitune.backend.lightning.models.detection.rfdetr.RFDETR", "DETECTION"),
+            ("getitune.backend.lightning.models.instance_segmentation.rfdetr_inst.RFDETRInst", "INSTANCE_SEGMENTATION"),
+        ],
+    )
+    def test_rfdetr_without_bias_option_fails_instead_of_resetting(self, class_path, task):
+        from getitune.backend.lightning.models.detection.rfdetr import RFDETR
+        from getitune.backend.lightning.models.instance_segmentation.rfdetr_inst import RFDETRInst
+
+        config = {
+            "model": {
+                "class_path": class_path,
+                "init_args": {},
+            },
+        }
+        model_cls = RFDETR if task == "DETECTION" else RFDETRInst
+
+        def old_init(self, label_info, data_input_params=None):
+            msg = "Incompatible Geti constructor must not be called"
+            raise AssertionError(msg)
+
+        with (
+            patch.object(model_cls, "__init__", old_init),
+            pytest.raises((TypeError, ValueError), match="reset_pretrained_class_bias"),
+        ):
+            GetituneConverter._create_model_from_config(config, label_info=91, task=task)
+
+
 class TestRunExport:
     """Tests for GetituneConverter._run_export."""
 
@@ -405,7 +506,12 @@ class TestRunExport:
             result = getitune_converter._run_export(sample_getitune_config)
 
         assert result == mocks.exported
-        mocks.create.assert_called_once_with({"resolved": True}, label_info=1000, input_size=(224, 224))
+        mocks.create.assert_called_once_with(
+            {"resolved": True},
+            label_info=1000,
+            input_size=(224, 224),
+            task="MULTI_CLASS_CLS",
+        )
         mocks.recover.assert_called_once_with(mocks.model)
         mocks.export.assert_called_once_with(mocks.model, output_dir=tmp_path, precision="FP16")
         assert "Pre-trained head: loaded pre-trained head" in caplog.text
@@ -458,6 +564,12 @@ class TestRunExport:
             result = getitune_converter._run_export(config)
 
         assert result == mocks.exported
+        mocks.create.assert_called_once_with(
+            {"resolved": True},
+            label_info=1000,
+            input_size=(224, 224),
+            task="DETECTION",
+        )
         mocks.recover.assert_not_called()
         mocks.export.assert_called_once_with(mocks.model, output_dir=tmp_path, precision="FP16")
 
@@ -475,7 +587,12 @@ class TestRunExport:
         ):
             getitune_converter._run_export(sample_getitune_config)
 
-        mocks.create.assert_called_once_with({"resolved": True}, label_info=1000, input_size=(336, 336))
+        mocks.create.assert_called_once_with(
+            {"resolved": True},
+            label_info=1000,
+            input_size=(336, 336),
+            task="MULTI_CLASS_CLS",
+        )
         assert "input_size: (336, 336)" in caplog.text
 
     def test_run_export_without_input_size_does_not_log_it(
@@ -492,7 +609,12 @@ class TestRunExport:
         ):
             getitune_converter._run_export(sample_getitune_config)
 
-        mocks.create.assert_called_once_with({"resolved": True}, label_info=1000, input_size=None)
+        mocks.create.assert_called_once_with(
+            {"resolved": True},
+            label_info=1000,
+            input_size=None,
+            task="MULTI_CLASS_CLS",
+        )
         assert "input_size:" not in caplog.text
 
 

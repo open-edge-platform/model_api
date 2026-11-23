@@ -209,7 +209,13 @@ class GetituneConverter(BaseConverter):
         return None
 
     @staticmethod
-    def _create_model_from_config(config: dict, label_info: int, input_size: tuple[int, int] | None = None):
+    def _create_model_from_config(
+        config: dict,
+        label_info: int,
+        input_size: tuple[int, int] | None = None,
+        *,
+        task: str,
+    ):
         """Create a LightningModel from config with original label_info and optional input_size.
 
         The model is created with the original pre-trained number of classes,
@@ -243,6 +249,17 @@ class GetituneConverter(BaseConverter):
         model_config["init_args"]["data_input_params"] = data_input_params
 
         model_cls = get_model_cls_from_config(Namespace(model_config))
+
+        if task == "DETECTION":
+            from getitune.backend.lightning.models.detection.rfdetr import RFDETR
+
+            if issubclass(model_cls, RFDETR):
+                model_config["init_args"]["reset_pretrained_class_bias"] = False
+        elif task == "INSTANCE_SEGMENTATION":
+            from getitune.backend.lightning.models.instance_segmentation.rfdetr_inst import RFDETRInst
+
+            if issubclass(model_cls, RFDETRInst):
+                model_config["init_args"]["reset_pretrained_class_bias"] = False
 
         skip = set()
         if should_pass_label_info(model_cls):
@@ -545,7 +562,12 @@ class GetituneConverter(BaseConverter):
 
         # Create model with original pre-trained weights
         self.logger.info("Creating model with original pre-trained weights...")
-        model = GetituneConverter._create_model_from_config(config, label_info=label_info, input_size=input_size)
+        model = GetituneConverter._create_model_from_config(
+            config,
+            label_info=label_info,
+            input_size=input_size,
+            task=getitune_task,
+        )
 
         # Restore the pre-trained classification head (backbones drop it on load,
         # leaving a randomly initialized head -> ~0% accuracy otherwise).
@@ -756,8 +778,7 @@ class GetituneConverter(BaseConverter):
                 old_names = info.get("label_names", [])
                 if len(old_names) != len(names):
                     self.logger.warning(
-                        f"label_info has {len(old_names)} names but resolved {len(names)}; "
-                        "skipping label_info update",
+                        f"label_info has {len(old_names)} names but resolved {len(names)}; skipping label_info update",
                     )
                     continue
 
