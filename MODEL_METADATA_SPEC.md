@@ -7,7 +7,7 @@ The goal of this specification is to remove `model_type` as the single
 discriminator that selects a Python `Model` subclass. Instead, each concern
 (preprocessing, inference I/O, postprocessing, output interpretation) is
 described by explicit metadata so that **one generic pipeline per `task`**
-(classification, detection, instance segmentation, segmentation) — or
+(classification, detection, instance segmentation, semantic segmentation) — or
 any client that does **not** share the `model_api` codebase (C++, Rust, JS, …) —
 can reproduce the exact pipeline from the metadata alone.
 
@@ -58,7 +58,7 @@ OpenVINO RT-info only persists string values.
    - [`task`](#task)
 3. [Preprocessing properties](#preprocessing-properties)
    - [`input_layout`](#input_layout)
-   - [`embedded_processing`](#embedded_processing)
+   - [`embedded_pre_postprocessing`](#embedded_pre_postprocessing)
    - [`resize_type`](#resize_type)
    - [`input_dtype` / `interpolation_mode` / `pad_value`](#input_dtype--interpolation_mode--pad_value)
    - [`orig_height` / `orig_width` / `input_frame_height` / `input_frame_width`](#orig_height--orig_width--input_frame_height--input_frame_width)
@@ -132,7 +132,7 @@ plus the detailed per-stage fields.
 
 - **Stage:** Compat / Output
 - **Type:** enum string
-- **Possible values:** `classification`, `segmentation`, `detection`,
+- **Possible values:** `classification`, `semantic_segmentation`, `detection`,
   `instance_segmentation`.
 - **Description:** The semantic family of the model. Determines which task
   pipeline runs and therefore which result type is returned (see
@@ -142,7 +142,7 @@ plus the detailed per-stage fields.
   the decoder — that comes from `decoder` and the other explicit
   fields. Replaces the heuristic in `Model.detect_model_type`.
 - **Used by:** **All models**, with a distinct value each: Classification →
-  `classification`, Segmentation → `segmentation`, SSD/YOLO family → `detection`,
+  `classification`, Semantic Segmentation → `semantic_segmentation`, SSD/YOLO family → `detection`,
   MaskRCNN/DETRInstSeg → `instance_segmentation`. Needed because it is the primary
   capability-negotiation token and picks the result family.
 - **Required:** Yes.
@@ -163,7 +163,7 @@ plus the detailed per-stage fields.
   tensor to match the model input.
 - **Required:** Yes.
 
-### `embedded_processing`
+### `embedded_pre_postprocessing`
 
 - **Stage:** Pre
 - **Type:** boolean
@@ -171,13 +171,13 @@ plus the detailed per-stage fields.
 - **Description:** Whether resize + normalization were **baked into the model graph
   at export time**.
 - **What it does:** Three cases must be distinguished:
-  1. `embedded_processing = true` — the graph already contains resize/normalize;
+  1. `embedded_pre_postprocessing = true` — the graph already contains resize/normalize;
      the client feeds the raw image and MUST NOT repeat it.
-  2. `embedded_processing = false` and the client **can** embed preprocessing at
+  2. `embedded_pre_postprocessing = false` and the client **can** embed preprocessing at
      load time (e.g. OpenVINO PrePostProcessor on a static-shape model) — the
      client builds graph-side preprocessing from the resize/mean/scale
      fields. This is what `model_api` does today for most static image models.
-  3. `embedded_processing = false` and the client **cannot** embed (dynamic shapes,
+  3. `embedded_pre_postprocessing = false` and the client **cannot** embed (dynamic shapes,
      runtimes without PPP) — the client performs the full chain in host code.
 
   Cases 2 and 3 MUST produce identical tensors; the choice is a client
@@ -190,24 +190,22 @@ plus the detailed per-stage fields.
 - **Stage:** Pre
 - **Type:** enum string
 - **Possible values:**
-  - `standard` — stretch to model size, no aspect preservation.
-  - `fit_to_window` — keep aspect, pad bottom/right.
-  - `fit_to_window_letterbox` — keep aspect, pad symmetrically (centered).
-  - `fit_to_window_top_left` — keep aspect, image at the top-left, pad
-    bottom/right with `pad_value`, invert with a single scale `min(W/w, H/h)`
-    (YOLOX).
-  - `crop` — center crop after aspect-preserving resize.
+  - `stretch` — stretch to model size, no aspect preservation.
+  - `letterbox_top_left` — scale while preserving the aspect ratio, then add padding to the bottom/right side with 
+    `pad_value`, keeping the original image at the top-left.
+  - `letterbox_centered` — scale while preserving the aspect ratio, then add padding to the sides while keeping 
+    the original image centered.
+  - `center_crop` — scale until the target area is covered, then crop the excess symmetrically to achieve the 
+    target dimensions, preserves the aspect ratio but loses some original content.
 
   `RESIZE_TYPES` in `adapters/utils.py` is the authoritative list of modes
-  implemented today; `fit_to_window_top_left` formalizes logic currently hardcoded
+  implemented today; `letterbox_top_left` formalizes logic currently hardcoded
   in `YOLOX._resize_image`.
 - **Description:** Strategy used to resize the input to the model's spatial size.
 - **What it does:** Defines padding/scaling behavior. Each mode's exact padding
   rule must be specified so coordinate inversion in postprocessing matches
   (`ResizeMetadata` today).
 - **Used by:** **All image models**, and it must agree with box/mask rescaling.
-  YOLO family / Ultralytics use `fit_to_window_letterbox`, YOLOX
-  `fit_to_window_top_left`, Detection/Instance Seg usually `fit_to_window`.
 - **Required:** Yes (needed for coordinate inversion even when preprocessing is
   embedded).
 
@@ -229,24 +227,30 @@ plus the detailed per-stage fields.
   require it.
 - **Required:** Optional (defaults as above).
 
-### `orig_height` / `orig_width` / `input_frame_height` / `input_frame_width`
+### `orig_height` / `orig_width`
 
 - **Stage:** Pre / Post
 - **Type:** integer
 - **Possible values:** positive integers or unset.
-- **Description:** `orig_height`/`orig_width` = the model's spatial input size
+- **Description:** the model's spatial input size
   **before** preprocessing was embedded (after embedding, the graph input becomes
   the raw frame size, so this is the only record of the network resolution).
-  `input_frame_height`/`input_frame_width` = fixed raw-frame size used to build a
-  static-shape embedded preprocessing graph.
-- **What it does:** `orig_*` is required to invert coordinates
+- **What it does:** values are required to remap coordinates
   (`ResizeMetadata.compute(model_width=orig_width, …)`) for boxes and masks when
-  preprocessing is embedded. `input_frame_*` lets a client compile a
-  static graph (GPU/NPU) instead of a dynamic one.
+  preprocessing is embedded.
 - **Used by:** **Detection, Instance Segmentation** — any model that maps spatial
-  outputs back; `input_frame_*` for any model deployed on static-shape devices.
-- **Required:** `orig_*` required when `embedded_processing = true` and outputs
-  are spatial; `input_frame_*` optional.
+  outputs back
+- **Required:** when `embedded_pre_postprocessing = true` and outputs are spatial
+
+### `input_frame_height` / `input_frame_width`
+
+- **Stage:** Pre / Post
+- **Type:** integer
+- **Possible values:** positive integers or unset.
+- **Description:** fixed raw-frame size used to build a static-shape embedded preprocessing graph.
+- **What it does:** lets a client compile a static graph (GPU/NPU) instead of a dynamic one.
+- **Used by:** **Detection, Instance Segmentation** — any model deployed on static-shape devices.
+- **Required:** Optional.
 
 
 ### `mean_values` / `scale_values` / `reverse_input_channels`
@@ -261,7 +265,7 @@ plus the detailed per-stage fields.
   `reverse_input_channels = true`; these are currently wrapper defaults and MUST be
   written explicitly at export.
 - **Used by:** **All image models.** Applied in host code for case-3 clients
-  (see [`embedded_processing`](#embedded_processing)) and in the graph otherwise.
+  (see [`embedded_pre_postprocessing`](#embedded_pre_postprocessing)) and in the graph otherwise.
 - **Required:** Optional (defaults: empty lists, `false`).
 
 
@@ -300,7 +304,7 @@ plus the detailed per-stage fields.
   become declared rather than string-matched.
 - **Used by:** **All models.** Essential for multi-output models —
   **Instance Segmentation** (boxes/labels/masks), and
-  **Detection/Classification/Segmentation** with optional XAI
+  **Detection/Classification/Semantic Segmentation** with optional XAI
   (`saliency_map`, `feature_vector`).
 - **Required:** Yes.
 
@@ -338,7 +342,7 @@ plus the detailed per-stage fields.
   softmax — a generic pipeline MUST NOT guess; exporters write `none` when the
   graph already outputs probabilities.
 - **Used by:** **Classification** (softmax multiclass / sigmoid multilabel / none),
-  **Segmentation** (argmax), **Instance Segmentation** and YOLO masks
+  **Semantic Segmentation** (argmax), **Instance Segmentation** and YOLO masks
   (sigmoid/threshold); **YOLO family** uses `none` for Ultralytics/YOLOX.
 - **Required:** Yes for score-producing tasks.
 
@@ -348,7 +352,7 @@ plus the detailed per-stage fields.
 - **Type:** enum string
 - **Possible values:**
   - Classification: `topk`, `multilabel`.
-  - Segmentation: `seg_argmax`.
+  - Semantic Segmentation: `seg_argmax`.
   - Detection: `ssd_boxes` (SSD single / multi / boxes-labels outputs, also used by
     the DETR-based detectors exported as SSD), `yolox` (anchor-free grid × stride
     decode), `ultralytics` (YOLOv5/v8/11, `[1,4+C,N]`, no objectness).
@@ -424,7 +428,7 @@ plus the detailed per-stage fields.
   `YOLO._parse_outputs` currently runs after `_calculate_nms` is folded into this
   single pass.
 - **Used by:** **SSD / YOLO family Detection** and **Instance Segmentation**
-  (MaskRCNN/DETRInstSeg). Irrelevant to classification and segmentation.
+  (MaskRCNN/DETRInstSeg). Irrelevant to classification and semantic segmentation.
 - **Required:** Optional (detection/instance seg only).
 
 ### Threshold parameters
@@ -434,12 +438,12 @@ plus the detailed per-stage fields.
 - **Properties:**
   - `confidence_threshold` (default `0.5`) — filter low-confidence predictions
     (detection, instance seg, multilabel classification).
-  - `soft_threshold` (default `-inf`) — per-pixel confidence for segmentation.
+  - `soft_threshold` (default `-inf`) — per-pixel confidence for semantic segmentation.
   - `mask_threshold` — binarization cutoff for decoded masks (instance seg `0.5`).
 - **Description:** Confidence cutoffs applied during decoding.
 - **What it does:** Controls which predictions/pixels survive into the result.
 - **Used by:** `confidence_threshold` → **Detection, Instance Seg,
-  multilabel Classification**; `soft_threshold` → **Segmentation**;
+  multilabel Classification**; `soft_threshold` → **Semantic Segmentation**;
   `mask_threshold` → **Instance Seg**. Each task uses only the thresholds relevant
   to its decoder.
 - **Required:** Optional; depends on `task`.
@@ -453,7 +457,7 @@ plus the detailed per-stage fields.
   - **Classification:** `topk` (int ≥ 1, default `1`) — number of labels returned
     by `topk`; `output_raw_scores` (bool) — fill `raw_scores` with the full
     activated vector.
-  - **Segmentation:** `return_soft_prediction` (bool, default `true`) — fill
+  - **Semantic Segmentation:** `return_soft_prediction` (bool, default `true`) — fill
     `soft_prediction`.
   - **Instance segmentation:** `postprocess_semantic_masks` (bool, default
     `true`) — `true`: masks expanded to full image per `mask_postprocess`;
@@ -471,13 +475,13 @@ plus the detailed per-stage fields.
 - **Possible values (examples):**
   - MaskRCNN: `{ "expand_box_scale": "auto", "mask_threshold": 0.5 }`
   - DETR-Seg: `{ "mask_threshold": 0.5 }`
-  - Segmentation: `{ "blur_strength": -1 }`
+  - Semantic Segmentation: `{ "blur_strength": -1 }`
   - YOLOX: `{ "strides": [8, 16, 32] }`
 - **Description:** Externalizes constants that are currently hardcoded in Python and
   therefore invisible to non-shared-codebase clients.
 - **What it does:** Provides every numeric constant a client needs to reproduce
   mask or YOLO-family decoding exactly.
-- **Used by:** **MaskRCNN/DETRInstSeg** (mask constants), **Segmentation**
+- **Used by:** **MaskRCNN/DETRInstSeg** (mask constants), **Semantic Segmentation**
   (`blur_strength`), **YOLO family** (grids / strides / class count). Not needed by
   plain Classification.
 - **Required:** Required whenever the chosen `decoder` relies on such constants.
@@ -511,7 +515,7 @@ The result type follows from metadata that is already present:
 | Selected by | Result type |
 |---|---|
 | `task = classification` | `ClassificationResult` |
-| `task = segmentation` | `SegmentationResult` |
+| `task = semantic_segmentation` | `SegmentationResult` |
 | `task = detection` | `DetectionResult` |
 | `task = instance_segmentation` | `InstanceSegmentationResult`; `RotatedSegmentationResult` when `derived_outputs` contains `rotated_rects` |
 
@@ -603,7 +607,7 @@ classes. Optional fields MAY be empty arrays when the model does not produce the
     SHOULD instead write the complete list so this rule never fires.
   - **Missing labels.** Names are empty strings; indices are still returned.
 - **Used by:** **All models that output classes** — Classification,
-  Segmentation (contour labels), Detection, Instance Segmentation.
+  Semantic Segmentation (contour labels), Detection, Instance Segmentation.
 - **Required:** Required whenever names are expected in the result; strongly
   recommended for all class-producing models.
 
@@ -638,7 +642,7 @@ classes. Optional fields MAY be empty arrays when the model does not produce the
 
 - **Stage:** Post / Output
 - **Type:** JSON array of enum strings
-- **Possible values:** `contours` (segmentation), `rotated_rects` (instance
+- **Possible values:** `contours` (semantic segmentation), `rotated_rects` (instance
   segmentation → `RotatedSegmentationResult`). Empty array (default) = none.
 - **Description:** Optional, deterministic computations applied **after** decoding
   that enrich the result without touching model outputs.
@@ -649,7 +653,7 @@ classes. Optional fields MAY be empty arrays when the model does not produce the
   (`SegmentationModel.get_contours`, `get_contours`, `add_rotated_rects`) that
   callers invoke by hand; the field lets a model declare that its consumers expect
   them (e.g. rotated-object models).
-- **Used by:** **Segmentation** (`contours`) and **Instance Segmentation**
+- **Used by:** **Semantic Segmentation** (`contours`) and **Instance Segmentation**
   (`rotated_rects`).
 - **Required:** Optional (default `[]`).
 
@@ -658,16 +662,16 @@ classes. Optional fields MAY be empty arrays when the model does not produce the
 
 ## Per-model mapping table
 
-| Property | Classification | Segmentation | SSD / Detection | MaskRCNN | DETRInstSeg |
+| Property | Classification | Semantic Segmentation | SSD / Detection | MaskRCNN | DETRInstSeg |
 |---|---|---|---|---|---|
-| `task` | classification | segmentation | detection | instance_segmentation | instance_segmentation |
+| `task` | classification | semantic_segmentation | detection | instance_segmentation | instance_segmentation |
 | result type (implied, not metadata) | `ClassificationResult` | `SegmentationResult` | `DetectionResult` | `InstanceSegmentationResult` (`Rotated…` with `rotated_rects`) | `InstanceSegmentationResult` |
 | `labels` | class list (+`"other"` rule) | class list | class list | background + classes | background + classes |
 | `input_layout` | NCHW/NHWC | NCHW/NHWC | NCHW/NHWC | NCHW/NHWC | NCHW/NHWC |
 | `input_roles` | image | image | image (+`image_info`=`resized_hw1` opt.) | image (+`image_info`=`resized_hw1` if segmentoly) | image |
 | `output_roles` | logits (+saliency, feature, raw_scores) | seg (+feature_vector) | boxes/labels/scores (+saliency, feature) | boxes/labels/masks (+scores, saliency, feature) | boxes/labels/masks |
-| `embedded_processing` | per export | per export | per export | per export | per export |
-| `resize_type` | standard | standard | standard / fit_to_window | fit_to_window | fit_to_window |
+| `embedded_pre_postprocessing` | per export | per export | per export | per export | per export |
+| `resize_type` | stretch | stretch | stretch / letterbox_top_left | letterbox_top_left | letterbox_top_left |
 | `activation` | softmax / sigmoid / none (explicit) | argmax (+optional blur/thresh) | none (decoded in graph) | — | — |
 | `decoder` | topk / multilabel | seg_argmax | ssd_boxes | maskrcnn_crop | detr_fullmask |
 | `box_format` | — | — | xyxy_norm | xyxy_pixel | xyxy_pixel |
@@ -693,7 +697,7 @@ task's column.
 | `input_roles` | image | image |
 | `output_roles` | `predictions` | `predictions` |
 | `output_layout` | `f32:1xNx(5+C)` | `f32:1x(4+C)xN` |
-| `resize_type` | fit_to_window_top_left | fit_to_window_letterbox |
+| `resize_type` | letterbox_top_left | letterbox_centered |
 | `pad_value` / `interpolation_mode` | 114 / LINEAR | 114 / LINEAR |
 | `scale_values` / `reverse_input_channels` | per-model | `[255]` / true |
 | `activation` | none | none |
@@ -711,7 +715,7 @@ task's column.
 - **`mask_postprocess`** is the main difference between the two
   instance-segmentation decoders (`box_crop` / `full_image`).
 - **Preprocessing location is a client choice**, not model metadata: only models
-  with `embedded_processing = true` have it baked in; for the rest a client either
+  with `embedded_pre_postprocessing = true` have it baked in; for the rest a client either
   builds graph PPP at load time or runs host-side code, with identical results.
 - **`decoder_constants`** is where the currently-invisible Python constants live;
   without externalizing these, a non-shared-codebase client cannot reproduce mask
@@ -799,7 +803,7 @@ is replaced by per-decoder capability checks.
   `"other"` label insertion, `is_softmaxed` heuristic, `_setup_*` flag branching,
   XAI name string-matching.
 
-### Segmentation migration
+### Semantic Segmentation migration
 
 - **Modules:** `segmentation.py` (`SegmentationModel`,
   `create_hard_prediction_from_soft_prediction`, `_get_activation_map`,
