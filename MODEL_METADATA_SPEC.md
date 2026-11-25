@@ -48,6 +48,22 @@ OpenVINO RT-info only persists string values.
 > same metadata vocabulary, but any additional fields or constraints it requires
 > are out of scope for this document.
 
+## Execution plan
+
+### Original models (Phase 1)
+1. After the contract is finalized, new library called `getipredict` is introduced in Geti repository.
+  It must replace existing `model_api` pipelines with a new contract support only.
+  Previous model metadata format support will remain in `model_api` for backward compatibility.
+  At this step only part of new contract related to original models inference can be implemented.
+2. Module `model_converter` from Model API repository is moved to Geti repository as a library and renamed to `geticonvert`.
+  It must write both the old and new metadata formats to the exported models for backward compatibility.
+  After that all original models and be executed using new contract, all other clients can utilize it as well.
+
+### Fine-tuned models (Phase 2)
+
+3. Library `getipredict` is extended to support all new contract fields including ones related to Geti fine-tuned models.
+4. Library `getitune` is updated to write both the old and new metadata formats to the exported models for backward compatibility.
+5. Geti is switched to use new `getipredict` library for inference.
 ---
 
 ## Table of Contents
@@ -61,8 +77,8 @@ OpenVINO RT-info only persists string values.
    - [`embedded_pre_postprocessing`](#embedded_pre_postprocessing)
    - [`resize_type`](#resize_type)
    - [`input_dtype` / `interpolation_mode` / `pad_value`](#input_dtype--interpolation_mode--pad_value)
-   - [`orig_height` / `orig_width` / `input_frame_height` / `input_frame_width`](#orig_height--orig_width--input_frame_height--input_frame_width)
-   - [`mean_values` / `scale_values` / `reverse_input_channels`](#mean_values--scale_values--reverse_input_channels)
+   - [`orig_height` / `orig_width`](#orig_height--orig_width)
+   - [`mean_values` / `scale_values` / `input_color_format`](#mean_values--scale_values--input_color_format)
 4. [Input / output contract](#input--output-contract)
    - [`input_roles`](#input_roles)
    - [`output_roles`](#output_roles)
@@ -83,7 +99,6 @@ OpenVINO RT-info only persists string values.
    - [`labels`](#labels)
    - [`output_coordinate_space`](#output_coordinate_space)
    - [`output_value_range`](#output_value_range)
-   - [`derived_outputs`](#derived_outputs)
 7. [Per-model mapping table](#per-model-mapping-table)
    - [Additional wrappers](#additional-wrappers)
 8. [Governance notes for external clients](#governance-notes-for-external-clients)
@@ -242,32 +257,36 @@ plus the detailed per-stage fields.
   outputs back
 - **Required:** when `embedded_pre_postprocessing = true` and outputs are spatial
 
-### `input_frame_height` / `input_frame_width`
 
-- **Stage:** Pre / Post
-- **Type:** integer
-- **Possible values:** positive integers or unset.
-- **Description:** fixed raw-frame size used to build a static-shape embedded preprocessing graph.
-- **What it does:** lets a client compile a static graph (GPU/NPU) instead of a dynamic one.
-- **Used by:** **Detection, Instance Segmentation** — any model deployed on static-shape devices.
-- **Required:** Optional.
-
-
-### `mean_values` / `scale_values` / `reverse_input_channels`
+### `mean_values` / `scale_values` / `input_color_format`
 
 - **Stage:** Pre
-- **Type:** list[float] / list[float] / boolean
-- **Possible values:** per-channel floats; booleans `true`/`false`.
-- **Description:** Standard normalization: `(pixel - mean) / scale`, with optional
-  BGR↔RGB channel reversal.
-- **What it does:** Brings input into the distribution the model was trained on.
-  Ultralytics use `scale_values = [255]` (unit scaling) and YOLOv5/8/11 use
-  `reverse_input_channels = true`; these are currently wrapper defaults and MUST be
-  written explicitly at export.
-- **Used by:** **All image models.** Applied in host code for case-3 clients
-  (see [`embedded_pre_postprocessing`](#embedded_pre_postprocessing)) and in the graph otherwise.
-- **Required:** Optional (defaults: empty lists, `false`).
+- **Type:** list[float] / list[float] / enum string
+- **Possible values:**
+  - `mean_values`: per-channel floats, in `input_color_format` order.
+  - `scale_values`: per-channel floats, in `input_color_format` order.
+  - `input_color_format`: `RGB` or `BGR`.
+- **Description:** Standard normalization and the channel order expected by the
+  model input: `(pixel - mean) / scale`, followed by conversion to
+  `input_layout`.
+- **What it does:** Brings input into the distribution the model was trained on
+  and removes hidden channel-reversal behavior. `input_color_format` declares
+  the model input channel order explicitly:
+  - `RGB` — the first channel is red, the second green, the third blue.
+  - `BGR` — the first channel is blue, the second green, the third red.
 
+  Exporters MUST convert from the decoded image's channel order to the declared
+  format before applying `mean_values` and `scale_values`. `mean_values` and
+  `scale_values` are interpreted in the same channel order and MUST contain one
+  value per input channel. There is no implicit reversal flag or default reversal.
+- **Used by:** **All RGB or BGR image models.** Ultralytics models use
+  `input_color_format = RGB` with `scale_values = [255, 255, 255]`; models that
+  retain the OpenCV BGR convention declare `BGR` explicitly.
+- **Required:** `input_color_format` is required for all three-channel image
+  models. `mean_values` and `scale_values` are optional only when normalization
+  is the identity transform (`mean_values = [0,0,0]`,
+  `scale_values = [1,1,1]`) and MUST still be written explicitly when their
+  values affect the model input.
 
 ---
 
@@ -403,12 +422,24 @@ plus the detailed per-stage fields.
 - **Stage:** Post
 - **Type:** enum string
 - **Possible values:** `none`, `box_crop`, `full_image`.
-- **Description:** How a raw instance mask is expanded into image space.
-- **What it does:** `box_crop` resizes a small per-box mask (e.g. 28×28) into the
-  bounding box (MaskRCNN); `full_image` resizes a whole-image mask to the original
-  dimensions and thresholds it (DETR-Seg).
-- **Used by:** **MaskRCNN** (`box_crop`), **DETRInstSeg** (`full_image`). Not
-  applicable to other tasks.
+- **Description:** How a decoded instance mask is converted into a binary result mask.
+- **What it does:**
+  - `box_crop` — crop and resize a small per-box mask to the expanded bounding-box
+    dimensions, using bilinear (`LINEAR`) interpolation on a `float32` mask. Threshold
+    the resized mask **after resizing** with `mask_threshold` (baseline `0.5`), then
+    place the binary result into the original-image canvas.
+  - `full_image` — resize a full-image mask to `H × W` of the original image using
+    bilinear (`LINEAR`) interpolation on a `float32` mask. Threshold the resized mask
+    **after resizing** with `mask_threshold` (baseline `0.5`).
+  - `none` — preserve the decoded masks without resizing or thresholding.
+
+  Values in the range `(0,1)` are not retained in result masks: every active
+  postprocessing mode produces `u8{0,1}` masks. Interpolation is always `LINEAR` for
+  the float mask; thresholding is not performed before resizing, because doing so
+  would change interpolation artifacts and boundary placement.
+- **Used by:** **MaskRCNN** (`box_crop`), **DETRInstSeg** (`full_image`), and other
+  instance-segmentation decoders that use the corresponding raw-mask layout. Not
+  applicable to detection or semantic segmentation.
 - **Required:** Required for instance segmentation.
 
 ### `nms` and NMS parameters
@@ -517,7 +548,7 @@ The result type follows from metadata that is already present:
 | `task = classification` | `ClassificationResult` |
 | `task = semantic_segmentation` | `SegmentationResult` |
 | `task = detection` | `DetectionResult` |
-| `task = instance_segmentation` | `InstanceSegmentationResult`; `RotatedSegmentationResult` when `derived_outputs` contains `rotated_rects` |
+| `task = instance_segmentation` | `InstanceSegmentationResult` |
 
 Optional fields inside a result type are controlled by other metadata
 (e.g. `return_soft_prediction`, `output_raw_scores`, XAI `output_roles`) and are
@@ -530,7 +561,7 @@ left empty when not produced; the result type itself never changes.
 > model metadata. They map to the existing `model_api` result classes
 > as follows: `SegmentationResult` → `ImageResultWithSoftPrediction`; the others
 > keep the same name (`ClassificationResult`, `DetectionResult`,
-> `InstanceSegmentationResult`, `RotatedSegmentationResult`). External clients MUST
+> `InstanceSegmentationResult`). External clients MUST
 > rely on the field definitions here, not on the Python class names.
 
 Each schema below lists its fields as `name: type [shape] — meaning`. `N` = number
@@ -551,9 +582,6 @@ classes. Optional fields MAY be empty arrays when the model does not produce the
   single-channel confidence; present iff the model returns soft predictions.
 - `saliency_map: u8[H,W]` (optional) — activation map, empty if absent.
 - `feature_vector: f32[D]` (optional) — empty if absent.
-- `contours: array<Contour>` (optional, [derived](#derived_outputs)) — each
-  `Contour = { label: string, probability: f32, shape: i32[M,2],
-  excluded_shapes: array<i32[M,2]> }`; background class is skipped.
 
 > **Normative change vs. current code.** Today `SegmentationModel.postprocess`
 > returns a bare `i32[H,W]` array instead of a result object when
@@ -581,14 +609,6 @@ classes. Optional fields MAY be empty arrays when the model does not produce the
 - `label_names: array<string>[N]` (optional).
 - `saliency_map: array<u8[h,w]>[C]` (optional) — per-class aggregated map.
 - `feature_vector: f32[D]` (optional).
-
-#### `RotatedSegmentationResult`
-- All fields of `InstanceSegmentationResult`, plus:
-- `rotated_rects: array<RotatedRect>[N]` — minimum-area rotated rectangle per
-  instance, `RotatedRect = { center: (f32 cx, f32 cy), size: (f32 w, f32 h),
-  angle: f32 (degrees) }`, computed from each instance mask
-  ([derived](#derived_outputs) `rotated_rects`).
-
 
 ### `labels`
 
@@ -638,25 +658,6 @@ classes. Optional fields MAY be empty arrays when the model does not produce the
   for all models so clients render/threshold outputs correctly.
 - **Required:** Recommended.
 
-### `derived_outputs`
-
-- **Stage:** Post / Output
-- **Type:** JSON array of enum strings
-- **Possible values:** `contours` (semantic segmentation), `rotated_rects` (instance
-  segmentation → `RotatedSegmentationResult`). Empty array (default) = none.
-- **Description:** Optional, deterministic computations applied **after** decoding
-  that enrich the result without touching model outputs.
-- **What it does:** `contours` runs contour extraction per class on `result_image`
-  (holes included) and averages the class soft prediction inside each contour for
-  `probability`. `rotated_rects` computes a minimum-area rotated rectangle from each
-  instance mask's largest contour. Today these are helper functions
-  (`SegmentationModel.get_contours`, `get_contours`, `add_rotated_rects`) that
-  callers invoke by hand; the field lets a model declare that its consumers expect
-  them (e.g. rotated-object models).
-- **Used by:** **Semantic Segmentation** (`contours`) and **Instance Segmentation**
-  (`rotated_rects`).
-- **Required:** Optional (default `[]`).
-
 ---
 
 
@@ -665,7 +666,7 @@ classes. Optional fields MAY be empty arrays when the model does not produce the
 | Property | Classification | Semantic Segmentation | SSD / Detection | MaskRCNN | DETRInstSeg |
 |---|---|---|---|---|---|
 | `task` | classification | semantic_segmentation | detection | instance_segmentation | instance_segmentation |
-| result type (implied, not metadata) | `ClassificationResult` | `SegmentationResult` | `DetectionResult` | `InstanceSegmentationResult` (`Rotated…` with `rotated_rects`) | `InstanceSegmentationResult` |
+| result type (implied, not metadata) | `ClassificationResult` | `SegmentationResult` | `DetectionResult` | `InstanceSegmentationResult`| `InstanceSegmentationResult` |
 | `labels` | class list (+`"other"` rule) | class list | class list | background + classes | background + classes |
 | `input_layout` | NCHW/NHWC | NCHW/NHWC | NCHW/NHWC | NCHW/NHWC | NCHW/NHWC |
 | `input_roles` | image | image | image (+`image_info`=`resized_hw1` opt.) | image (+`image_info`=`resized_hw1` if segmentoly) | image |
@@ -681,7 +682,6 @@ classes. Optional fields MAY be empty arrays when the model does not produce the
 | thresholds | `confidence_threshold` (multilabel) | `soft_threshold` | `confidence_threshold` | `confidence_threshold`, `mask_threshold` | `confidence_threshold`, `mask_threshold` |
 | task options | `topk`, `output_raw_scores` | `return_soft_prediction` | — | `postprocess_semantic_masks` | `postprocess_semantic_masks` |
 | `decoder_constants` | — | `blur_strength` | — | expand_box scale, mask>0.5 | mask>0.5 |
-| `derived_outputs` | — | `contours` (opt.) | — | `rotated_rects` (opt.) | `rotated_rects` (opt.) |
 | `output_coordinate_space` | n/a | original_image_pixels | original_image_pixels | original_image_pixels | original_image_pixels |
 | `output_value_range` | scores [0,1] | labels int / soft u8 | scores [0,1] | masks {0,1}, scores [0,1] | masks {0,1} |
 
@@ -699,7 +699,7 @@ task's column.
 | `output_layout` | `f32:1xNx(5+C)` | `f32:1x(4+C)xN` |
 | `resize_type` | letterbox_top_left | letterbox_centered |
 | `pad_value` / `interpolation_mode` | 114 / LINEAR | 114 / LINEAR |
-| `scale_values` / `reverse_input_channels` | per-model | `[255]` / true |
+| `scale_values` / `input_color_format` | per-model | `[255, 255, 255]` / `RGB` |
 | `activation` | none | none |
 | `box_format` | `cxcywh_pixel` | `cxcywh_pixel` |
 | `label_shift` | 0 | 0 |
@@ -810,8 +810,7 @@ is replaced by per-decoder capability checks.
   `get_contours`).
 - **Target:** `SegmentationPipeline`.
 - **Metadata to emit:** `decoder = seg_argmax`; `decoder_constants.blur_strength`;
-  `soft_threshold`; `return_soft_prediction`; `labels`; `derived_outputs`
-  (`contours` if consumers need them); `output_roles` for `seg`/`feature_vector`.
+  `soft_threshold`; `return_soft_prediction`; `labels`; `output_roles` for `seg`/`feature_vector`.
 - **Steps:**
   1. Drive the 3D-argmaxed vs 4D-logits branch from `output_layout`/`output_roles`
      instead of inspecting `out_channels`.
@@ -832,7 +831,7 @@ is replaced by per-decoder capability checks.
   {`ssd_boxes`,`yolox`,`ultralytics`}.
 - **Metadata to emit:** `decoder`; `box_format`; NMS group (incl.
   `nms_include_boundaries`); `confidence_threshold`; `resize_type`, `pad_value`,
-  `interpolation_mode`, `scale_values`, `reverse_input_channels`, `orig_*`;
+  `interpolation_mode`, `scale_values`, `input_color_format`, `orig_*`;
   `labels`; `output_roles` + `output_layout`; `input_roles.image_info` with
   `image_info_content`; YOLOX `decoder_constants` (strides, class counts).
 - **Steps:**
@@ -854,14 +853,12 @@ is replaced by per-decoder capability checks.
 
 - **Modules:** `instance_segmentation.py` (`InstanceSegmentationModel`,
   `MaskRCNNModel`, `DETRInstanceSegmentation`, `_segm_postprocess`,
-  `_full_image_mask_postprocess`, `_average_and_normalize`),
-  `utils.py` (`add_rotated_rects`, `get_contours`).
+  `_full_image_mask_postprocess`, `_average_and_normalize`).
 - **Target:** `InstanceSegmentationPipeline`.
 - **Metadata to emit:** `mask_postprocess` ∈ {`box_crop`,`full_image`};
   `label_shift`; `labels`; `postprocess_semantic_masks`; `mask_threshold`; NMS
   group; `confidence_threshold`; `box_format`; `output_roles` + `output_layout`;
-  `input_roles.image_info` for the segmentoly variant; optional `derived_outputs`
-  (`rotated_rects`).
+  `input_roles.image_info` for the segmentoly variant.
 - **Steps:**
   1. Replace the subclasses with one pipeline that calls `_segm_postprocess`
      (`box_crop`) or `_full_image_mask_postprocess` (`full_image`) per metadata.
@@ -869,7 +866,6 @@ is replaced by per-decoder capability checks.
      both `labels` and `label_names`.
   3. Replace `_get_outputs`/`_get_segmentoly_outputs` output detection with
      `output_roles`; detect segmentoly via `input_roles` not `len(inputs) == 2`.
-  4. Produce `RotatedSegmentationResult` via the `rotated_rects` derived output.
 - **Removable logic:** `MaskRCNNModel`/`DETRInstanceSegmentation` subclasses;
   `_labels_shift` class var; shape-length output detection; `is_segmentoly` by
   input count; class count derived from shapes.
