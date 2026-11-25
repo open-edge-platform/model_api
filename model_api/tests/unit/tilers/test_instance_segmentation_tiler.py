@@ -58,6 +58,10 @@ def _make_detr_model():
         model,
         *args,
     )
+    model._postprocess_tile_mask_crop.side_effect = lambda *args: DETRInstanceSegmentation._postprocess_tile_mask_crop(  # noqa: SLF001
+        model,
+        *args,
+    )
     return model
 
 
@@ -115,12 +119,12 @@ class TestInstanceSegmentationTilerPostprocessTile:
 
 class TestInstanceSegmentationTilerMergeResults:
     @patch("model_api.tilers.instance_segmentation.multiclass_nms")
-    @patch("model_api.tilers.instance_segmentation._segm_postprocess")
+    @patch("model_api.tilers.instance_segmentation._segm_postprocess_crop")
     def test_merge_results_with_detections(self, mock_segm, mock_nms):
         model = _make_model()
         tiler = InstanceSegmentationTiler(model, execution_mode="sync")
         mock_nms.return_value = np.array([0])
-        mock_segm.return_value = np.ones((100, 100), dtype=np.uint8)
+        mock_segm.return_value = (np.ones((100, 100), dtype=np.uint8), 0, 0)
 
         results = [
             {
@@ -133,6 +137,29 @@ class TestInstanceSegmentationTilerMergeResults:
         ]
         merged = tiler._merge_results(results, (100, 100, 3))  # noqa: SLF001
         assert isinstance(merged, InstanceSegmentationResult)
+
+    def test_merge_results_crops_match_dense(self):
+        """Merged result keeps compact crops; lazily densified `masks` equals the old dense output."""
+        tiler = InstanceSegmentationTiler(_make_model(), execution_mode="sync")
+        raw = np.ones((8, 8), dtype=np.float32)
+        results = [
+            {
+                "bboxes": np.array([[0, 0.9, 10, 20, 30, 40]], dtype=np.float32),
+                "features": np.array([1.0]),
+                "saliency_map": [],
+                "coords": [0, 0, 100, 100],
+                "masks": [raw],
+            },
+        ]
+        merged = tiler._merge_results(results, (100, 200, 3))  # noqa: SLF001
+        ((crop, _x0, _y0),) = merged.mask_crops
+        assert crop.size < 100 * 200
+        assert merged._masks is None  # noqa: SLF001
+        expected = _segm_postprocess(np.array([10, 20, 30, 40], dtype=np.float32), raw, 100, 200)
+        assert merged.masks.shape == (1, 100, 200)
+        np.testing.assert_array_equal(merged.masks[0], expected)
+        assert crop.shape[0] > 0
+        assert merged.masks[0, y0 : y0 + crop.shape[0], x0 : x0 + crop.shape[1]].sum() == crop.sum()
 
     def test_merge_results_empty(self):
         model = _make_model()
@@ -300,12 +327,12 @@ class TestInstanceSegmentationTilerPredictTiles:
         np.testing.assert_array_equal(actual, _segm_postprocess(box, mask, 50, 100))
 
     @patch("model_api.tilers.instance_segmentation.multiclass_nms")
-    @patch("model_api.tilers.instance_segmentation._segm_postprocess")
+    @patch("model_api.tilers.instance_segmentation._segm_postprocess_crop")
     def test_predict_tiles_sync_end_to_end(self, mock_segm, mock_nms):
         """predict_tiles infers each pre-cropped tile once and merges masks + boxes."""
         model = _make_model()
         mock_nms.return_value = np.array([0])
-        mock_segm.return_value = np.ones((50, 100), dtype=np.uint8)
+        mock_segm.return_value = (np.ones((50, 100), dtype=np.uint8), 0, 0)
         tiler = InstanceSegmentationTiler(model, execution_mode="sync")
         model.side_effect = [_make_instance_seg_result(n=1), _make_instance_seg_result(n=1)]
         tiles = [np.zeros((50, 50, 3), dtype=np.uint8), np.zeros((50, 50, 3), dtype=np.uint8)]
