@@ -152,7 +152,7 @@ class TestInstanceSegmentationTilerMergeResults:
             },
         ]
         merged = tiler._merge_results(results, (100, 200, 3))  # noqa: SLF001
-        ((crop, _x0, _y0),) = merged.mask_crops
+        ((crop, x0, y0),) = merged.mask_crops
         assert crop.size < 100 * 200
         assert merged._masks is None  # noqa: SLF001
         expected = _segm_postprocess(np.array([10, 20, 30, 40], dtype=np.float32), raw, 100, 200)
