@@ -29,9 +29,36 @@ tensor shapes**, or hardcode them (see [`decoder_constants`](#decoder_constants)
 Those values simply have to be captured explicitly as metadata during the same
 re-export, since static RT-info cannot reproduce the introspection.
 
-All properties live under the `model_info` runtime-info block of the model and
-are stored as strings (JSON-encoded where a structured value is needed), since
-OpenVINO RT-info only persists string values.
+All properties defined by this contract live under the dedicated
+`model_metadata` root element runtime-info block. Keeping the new contract 
+beneath this single root prevents collisions with properties written by the legacy metadata format. 
+These properties are represented as structured XML elements rather than flattened into serialized
+strings. Each scalar is serialized as a `value` attribute on its element;
+objects use child elements named for their fields; lists use `item0`, `item1`,
+etc. child elements in order. Scalar lexical forms follow the property's
+declared type (for example, `true`/`false` for booleans and decimal notation
+for numbers). For example:
+
+```xml
+<model_metadata>
+    <metadata_schema_version value="1.0" />
+    <task value="detection" />
+    <input_roles>
+      <image value="input_tensor" />
+    </input_roles>
+    <decoder_constants>
+      <strides>
+        <item0 value="8" />
+        <item1 value="16" />
+        <item2 value="32" />
+      </strides>
+    </decoder_constants>
+</model_metadata>
+```
+
+OpenVINO RT-info supports nested maps, which are serialized into the model's
+XML representation. The XML structure rooted at `model_metadata` defined
+here is the wire format for this contract.
 
 > **Disclaimer — two-phase rollout.** This transformation is delivered in two
 > phases:
@@ -295,7 +322,9 @@ plus the detailed per-stage fields.
 ### `input_roles`
 
 - **Stage:** Infer / Pre
-- **Type:** JSON object `{ role: tensor_name }`
+- **Type:** XML object with role-named child elements whose `value` attributes
+  contain tensor names. For example:
+  `<input_roles><image value="input_tensor" /></input_roles>`.
 - **Possible roles:** `image`, `image_info`.
 - **Description:** Maps logical input roles to the actual model input tensor names.
 - **What it does:** Removes shape-based input sniffing (e.g. "4D tensor = image,
@@ -312,7 +341,9 @@ plus the detailed per-stage fields.
 ### `output_roles`
 
 - **Stage:** Infer / Post
-- **Type:** JSON object `{ role: tensor_name }`
+- **Type:** XML object with role-named child elements whose `value` attributes
+  contain tensor names. For example:
+  `<output_roles><boxes value="boxes_tensor" /></output_roles>`.
 - **Possible roles:** `logits`, `boxes`, `labels`, `scores`, `masks`, `seg`,
   `saliency_map`, `feature_vector`, `raw_scores`, `predictions` (fused
   box/score/class tensor — Ultralytics, YOLOX).
@@ -330,7 +361,9 @@ plus the detailed per-stage fields.
 ### `output_layout`
 
 - **Stage:** Post
-- **Type:** JSON object `{ role: "<dtype>:<shape_grammar>" }`
+- **Type:** XML object with role-named child elements whose `value` attributes
+  contain `<dtype>:<shape_grammar>` strings. For example:
+  `<output_layout><boxes value="f32:Nx5" /></output_layout>`.
 - **Possible values (examples):** `"f32:1x1xNx7"` (SSD single output),
   `"f32:Nx5"` (boxes+score), `"f32:1x(4+C)xN"` (Ultralytics, transposed),
   `"f32:1xNx(5+C)"` (YOLOX).
@@ -502,12 +535,17 @@ plus the detailed per-stage fields.
 ### `decoder_constants`
 
 - **Stage:** Post
-- **Type:** JSON object (free-form, decoder-specific)
+- **Type:** XML object (free-form, decoder-specific); field names are child
+  element names and lists use indexed `item0`, `item1`, etc. child elements.
 - **Possible values (examples):**
-  - MaskRCNN: `{ "expand_box_scale": "auto", "mask_threshold": 0.5 }`
-  - DETR-Seg: `{ "mask_threshold": 0.5 }`
-  - Semantic Segmentation: `{ "blur_strength": -1 }`
-  - YOLOX: `{ "strides": [8, 16, 32] }`
+  - MaskRCNN:
+    `<decoder_constants><expand_box_scale value="auto" /><mask_threshold value="0.5" /></decoder_constants>`
+  - DETR-Seg:
+    `<decoder_constants><mask_threshold value="0.5" /></decoder_constants>`
+  - Semantic Segmentation:
+    `<decoder_constants><blur_strength value="-1" /></decoder_constants>`
+  - YOLOX:
+    `<decoder_constants><strides><item0 value="8" /><item1 value="16" /><item2 value="32" /></strides></decoder_constants>`
 - **Description:** Externalizes constants that are currently hardcoded in Python and
   therefore invisible to non-shared-codebase clients.
 - **What it does:** Provides every numeric constant a client needs to reproduce
@@ -647,10 +685,11 @@ classes. Optional fields MAY be empty arrays when the model does not produce the
 ### `output_value_range`
 
 - **Stage:** Output
-- **Type:** JSON object `{ role: range_descriptor }`
+- **Type:** XML object with role-named child elements whose `value` attributes
+  contain range descriptors.
 - **Possible values (examples):**
-  - `{ "scores": "f32[0,1]" }`
-  - `{ "masks": "u8{0,1}" }`
+  - `<output_value_range><scores value="f32[0,1]" /></output_value_range>`
+  - `<output_value_range><masks value="u8{0,1}" /></output_value_range>`
 - **Description:** The dtype and value range of each output role.
 - **What it does:** Enables correct interpretation/rendering of raw output tensors
   without reading reference code.
@@ -732,7 +771,7 @@ task's column.
 
 ## Governance notes for external clients
 
-- **Publish the schema as a standalone artifact** (JSON Schema + prose spec),
+- **Publish the schema as a standalone artifact** (XML Schema (XSD) + prose spec),
   versioned independently of the Python package, so a C++/Rust/JS team can validate
   `model_info` without any Python dependency. The artifact also includes the
   [Result schema definitions](#result-schema-definitions), which clients use to
@@ -869,5 +908,3 @@ is replaced by per-decoder capability checks.
 - **Removable logic:** `MaskRCNNModel`/`DETRInstanceSegmentation` subclasses;
   `_labels_shift` class var; shape-length output detection; `is_segmentoly` by
   input count; class count derived from shapes.
-
-
