@@ -368,7 +368,10 @@ def _expand_box(box: np.ndarray, scale: float) -> np.ndarray:
 
 
 def _segm_postprocess_crop(
-    box: np.ndarray, raw_cls_mask: np.ndarray, im_h: int, im_w: int
+    box: np.ndarray,
+    raw_cls_mask: np.ndarray,
+    im_h: int,
+    im_w: int,
 ) -> tuple[np.ndarray, int, int]:
     """Resize an object-crop mask to its box; return ``(mask, x0, y0)`` clipped to the image."""
     # Add zero border to prevent upsampling artifacts on segment borders.
