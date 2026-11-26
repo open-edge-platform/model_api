@@ -9,8 +9,8 @@ import pytest
 from model_api.models import InstanceSegmentationResult
 from model_api.models.instance_segmentation import (
     DETRInstanceSegmentation,
-    MaskRCNNModel,
     InstanceSegmentationModel,
+    MaskRCNNModel,
     _expand_box,
     _full_image_mask_postprocess,
     _segm_postprocess,
@@ -28,7 +28,8 @@ def _legacy_segm_postprocess(box, raw_cls_mask, im_h, im_w):
     mask = (cv2.resize(raw_cls_mask.astype(np.float32), (w, h)) > 0.5).astype(np.uint8)
     im_mask = np.zeros((im_h, im_w), dtype=np.uint8)
     im_mask[y0:y1, x0:x1] = mask[
-        (y0 - extended_box[1]) : (y1 - extended_box[1]), (x0 - extended_box[0]) : (x1 - extended_box[0])
+        (y0 - extended_box[1]) : (y1 - extended_box[1]),
+        (x0 - extended_box[0]) : (x1 - extended_box[0]),
     ]
     return im_mask
 
@@ -189,6 +190,16 @@ class TestInstanceSegmentationTilerMergeResults:
         expected = _legacy_segm_postprocess(np.array(box, dtype=np.float32), raw, 100, 120)
         assert merged.masks.shape == (1, 100, 120)
         np.testing.assert_array_equal(merged.masks[0], expected)
+
+    @pytest.mark.parametrize("box", _BOXES)
+    def test_maskrcnn_crop_hook_matches_legacy_dense(self, box):
+        model = object.__new__(MaskRCNNModel)
+        raw = np.random.default_rng(2).random((28, 28)).astype(np.float32)
+        box = np.array(box, dtype=np.float32)
+        crop, x0, y0 = model._postprocess_tile_mask_crop(box, raw, [0, 0, 120, 100], 100, 120)  # noqa: SLF001
+        dense = np.zeros((100, 120), dtype=np.uint8)
+        dense[y0 : y0 + crop.shape[0], x0 : x0 + crop.shape[1]] = crop
+        np.testing.assert_array_equal(dense, _legacy_segm_postprocess(box, raw, 100, 120))
 
     def test_detr_crop_is_trimmed_and_matches_dense(self):
         """A full-image tile must not keep an (H, W) mask per detection; dense output stays identical."""
