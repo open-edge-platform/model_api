@@ -3,16 +3,38 @@
 
 from unittest.mock import MagicMock, patch
 
+import cv2
 import numpy as np
 import pytest
 from model_api.models import InstanceSegmentationResult
 from model_api.models.instance_segmentation import (
     DETRInstanceSegmentation,
     MaskRCNNModel,
+    InstanceSegmentationModel,
+    _expand_box,
     _full_image_mask_postprocess,
     _segm_postprocess,
 )
 from model_api.tilers.instance_segmentation import InstanceSegmentationTiler
+
+
+def _legacy_segm_postprocess(box, raw_cls_mask, im_h, im_w):
+    """Verbatim copy of the pre-crop `_segm_postprocess`: the independent reference for dense output."""
+    raw_cls_mask = np.pad(raw_cls_mask, ((1, 1), (1, 1)), "constant", constant_values=0)
+    extended_box = _expand_box(box, raw_cls_mask.shape[0] / (raw_cls_mask.shape[0] - 2.0)).astype(int)
+    w, h = np.maximum(extended_box[2:] - extended_box[:2] + 1, 1)
+    x0, y0 = np.clip(extended_box[:2], a_min=0, a_max=[im_w, im_h])
+    x1, y1 = np.clip(extended_box[2:] + 1, a_min=0, a_max=[im_w, im_h])
+    mask = (cv2.resize(raw_cls_mask.astype(np.float32), (w, h)) > 0.5).astype(np.uint8)
+    im_mask = np.zeros((im_h, im_w), dtype=np.uint8)
+    im_mask[y0:y1, x0:x1] = mask[
+        (y0 - extended_box[1]) : (y1 - extended_box[1]), (x0 - extended_box[0]) : (x1 - extended_box[0])
+    ]
+    return im_mask
+
+
+# Inside the image, clipped on every side, partly outside, and one pixel wide.
+_BOXES = [[10, 20, 50, 60], [-15, -10, 30, 25], [80, 70, 130, 120], [-5, 60, 40, 140], [30, 30, 30, 30]]
 
 
 def _make_model():
@@ -138,28 +160,81 @@ class TestInstanceSegmentationTilerMergeResults:
         merged = tiler._merge_results(results, (100, 100, 3))  # noqa: SLF001
         assert isinstance(merged, InstanceSegmentationResult)
 
-    def test_merge_results_crops_match_dense(self):
-        """Merged result keeps compact crops; lazily densified `masks` equals the old dense output."""
+    @pytest.mark.parametrize("box", _BOXES)
+    def test_segm_postprocess_matches_legacy(self, box):
+        raw = np.random.default_rng(0).random((28, 28)).astype(np.float32)
+        box = np.array(box, dtype=np.float32)
+        np.testing.assert_array_equal(
+            _segm_postprocess(box, raw, 100, 120),
+            _legacy_segm_postprocess(box, raw, 100, 120),
+        )
+
+    @pytest.mark.parametrize("box", _BOXES)
+    def test_merge_results_crops_match_legacy_dense(self, box):
+        """Merged result keeps compact crops; lazily densified `masks` equals the legacy dense output."""
         tiler = InstanceSegmentationTiler(_make_model(), execution_mode="sync")
-        raw = np.ones((8, 8), dtype=np.float32)
+        raw = np.random.default_rng(1).random((28, 28)).astype(np.float32)
         results = [
             {
-                "bboxes": np.array([[0, 0.9, 10, 20, 30, 40]], dtype=np.float32),
+                "bboxes": np.array([[0, 0.9, *box]], dtype=np.float32),
                 "features": np.array([1.0]),
                 "saliency_map": [],
-                "coords": [0, 0, 100, 100],
+                "coords": [0, 0, 120, 100],
                 "masks": [raw],
             },
         ]
-        merged = tiler._merge_results(results, (100, 200, 3))  # noqa: SLF001
-        ((crop, x0, y0),) = merged.mask_crops
-        assert crop.size < 100 * 200
+        merged = tiler._merge_results(results, (100, 120, 3))  # noqa: SLF001
         assert merged._masks is None  # noqa: SLF001
-        expected = _segm_postprocess(np.array([10, 20, 30, 40], dtype=np.float32), raw, 100, 200)
-        assert merged.masks.shape == (1, 100, 200)
+        assert merged.mask_crops[0][0].size < 100 * 120
+        expected = _legacy_segm_postprocess(np.array(box, dtype=np.float32), raw, 100, 120)
+        assert merged.masks.shape == (1, 100, 120)
         np.testing.assert_array_equal(merged.masks[0], expected)
-        assert crop.shape[0] > 0
-        assert merged.masks[0, y0 : y0 + crop.shape[0], x0 : x0 + crop.shape[1]].sum() == crop.sum()
+
+    def test_detr_crop_is_trimmed_and_matches_dense(self):
+        """A full-image tile must not keep an (H, W) mask per detection; dense output stays identical."""
+        model = object.__new__(DETRInstanceSegmentation)
+        raw = np.zeros((96, 96), dtype=np.float32)
+        raw[40:50, 60:75] = 1
+        box, coord = np.array([0, 0, 5, 5], dtype=np.float32), [20, 10, 220, 210]
+        crop, x0, y0 = model._postprocess_tile_mask_crop(box, raw, coord, 400, 300)  # noqa: SLF001
+        assert crop.size < 0.1 * 200 * 200
+        dense = np.zeros((400, 300), dtype=np.uint8)
+        dense[y0 : y0 + crop.shape[0], x0 : x0 + crop.shape[1]] = crop
+        np.testing.assert_array_equal(dense, model._postprocess_tile_mask(box, raw, coord, 400, 300))  # noqa: SLF001
+        assert crop.base is None
+
+    def test_detr_crop_empty_mask(self):
+        model = object.__new__(DETRInstanceSegmentation)
+        crop, x0, y0 = model._postprocess_tile_mask_crop(  # noqa: SLF001
+            np.zeros(4, dtype=np.float32),
+            np.zeros((96, 96), dtype=np.float32),
+            [20, 10, 220, 210],
+            400,
+            300,
+        )
+        assert crop.shape == (0, 0)
+        assert (x0, y0) == (20, 10)
+
+    def test_base_crop_hook_respects_subclass_decoding(self):
+        """The base hook goes through `_postprocess_single_mask`, so custom decoding is not bypassed."""
+
+        class _Custom(InstanceSegmentationModel):
+            __model__ = "CustomIS"
+
+            def _postprocess_single_mask(self, box, raw_cls_mask, im_h, im_w):
+                mask = np.zeros((im_h, im_w), dtype=np.uint8)
+                mask[5:8, 9:12] = 1
+                return mask
+
+        crop, x0, y0 = object.__new__(_Custom)._postprocess_tile_mask_crop(  # noqa: SLF001
+            np.zeros(4),
+            np.zeros((4, 4)),
+            [0, 0, 50, 50],
+            50,
+            50,
+        )
+        assert crop.shape == (3, 3)
+        assert (x0, y0) == (9, 5)
 
     def test_merge_results_empty(self):
         model = _make_model()

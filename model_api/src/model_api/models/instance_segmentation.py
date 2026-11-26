@@ -150,8 +150,12 @@ class InstanceSegmentationModel(ImageModel):
         im_h: int,
         im_w: int,
     ) -> tuple[np.ndarray, int, int]:
-        """Like `_postprocess_tile_mask` but returns ``(crop, x0, y0)`` without a full-image canvas."""
-        return _segm_postprocess_crop(box, raw_cls_mask, im_h, im_w)
+        """Like `_postprocess_tile_mask` but returns ``(crop, x0, y0)``, trimmed to the mask's nonzero extent.
+
+        Goes through `_postprocess_tile_mask` so subclasses that customize it (or `_postprocess_single_mask`)
+        keep their decoding. The full-image canvas is transient; only the small crop is kept.
+        """
+        return _trim_to_extent(self._postprocess_tile_mask(box, raw_cls_mask, coord, im_h, im_w), 0, 0)
 
     def postprocess(self, outputs: dict, meta: dict) -> InstanceSegmentationResult:
         if (
@@ -296,6 +300,17 @@ class MaskRCNNModel(InstanceSegmentationModel):
     def _postprocess_single_mask(self, box: np.ndarray, raw_cls_mask: np.ndarray, im_h: int, im_w: int) -> np.ndarray:
         return _segm_postprocess(box, raw_cls_mask, im_h, im_w)
 
+    def _postprocess_tile_mask_crop(
+        self,
+        box: np.ndarray,
+        raw_cls_mask: np.ndarray,
+        coord: list[int],
+        im_h: int,
+        im_w: int,
+    ) -> tuple[np.ndarray, int, int]:
+        """Box-sized crop without a full-image canvas."""
+        return _segm_postprocess_crop(box, raw_cls_mask, im_h, im_w)
+
 
 class DETRInstanceSegmentation(InstanceSegmentationModel):
     """Instance segmentation model for DETR-family architectures (e.g. RF-DETR-Seg).
@@ -338,7 +353,8 @@ class DETRInstanceSegmentation(InstanceSegmentationModel):
     ) -> tuple[np.ndarray, int, int]:
         x1, y1, x2, y2 = coord
         tile_mask = self._postprocess_single_mask(box, raw_cls_mask, y2 - y1, x2 - x1)
-        return tile_mask, x1, y1
+        # A full-image tile would otherwise keep an (H, W) mask per detection.
+        return _trim_to_extent(tile_mask, x1, y1)
 
 
 def _average_and_normalize(saliency_maps: list) -> list:
@@ -365,6 +381,15 @@ def _expand_box(box: np.ndarray, scale: float) -> np.ndarray:
     box_exp[1] = y_c - h_half
     box_exp[3] = y_c + h_half
     return box_exp
+
+
+def _trim_to_extent(mask: np.ndarray, x0: int, y0: int) -> tuple[np.ndarray, int, int]:
+    """Copy of ``mask`` cut to its nonzero extent, with the offset moved to match; empty masks become 0x0."""
+    rows, cols = np.flatnonzero(mask.any(axis=1)), np.flatnonzero(mask.any(axis=0))
+    if len(rows) == 0:
+        return np.zeros((0, 0), dtype=mask.dtype), x0, y0
+    r0, r1, c0, c1 = rows[0], rows[-1] + 1, cols[0], cols[-1] + 1
+    return mask[r0:r1, c0:c1].copy(), x0 + int(c0), y0 + int(r0)
 
 
 def _segm_postprocess_crop(
