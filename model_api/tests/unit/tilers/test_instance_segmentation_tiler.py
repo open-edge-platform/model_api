@@ -11,17 +11,30 @@ from model_api.models.instance_segmentation import (
     DETRInstanceSegmentation,
     InstanceSegmentationModel,
     MaskRCNNModel,
-    _expand_box,
     _full_image_mask_postprocess,
     _segm_postprocess,
 )
 from model_api.tilers.instance_segmentation import InstanceSegmentationTiler
 
 
+def _legacy_expand_box(box, scale):
+    """Copy of `_expand_box`, so the reference below shares no production code."""
+    w_half = (box[2] - box[0]) * 0.5 * scale
+    h_half = (box[3] - box[1]) * 0.5 * scale
+    x_c = (box[2] + box[0]) * 0.5
+    y_c = (box[3] + box[1]) * 0.5
+    box_exp = np.zeros(box.shape)
+    box_exp[0] = x_c - w_half
+    box_exp[2] = x_c + w_half
+    box_exp[1] = y_c - h_half
+    box_exp[3] = y_c + h_half
+    return box_exp
+
+
 def _legacy_segm_postprocess(box, raw_cls_mask, im_h, im_w):
-    """Verbatim copy of the pre-crop `_segm_postprocess`: the independent reference for dense output."""
+    """Verbatim copy of the pre-crop `_segm_postprocess` (and `_expand_box`): the independent reference."""
     raw_cls_mask = np.pad(raw_cls_mask, ((1, 1), (1, 1)), "constant", constant_values=0)
-    extended_box = _expand_box(box, raw_cls_mask.shape[0] / (raw_cls_mask.shape[0] - 2.0)).astype(int)
+    extended_box = _legacy_expand_box(box, raw_cls_mask.shape[0] / (raw_cls_mask.shape[0] - 2.0)).astype(int)
     w, h = np.maximum(extended_box[2:] - extended_box[:2] + 1, 1)
     x0, y0 = np.clip(extended_box[:2], a_min=0, a_max=[im_w, im_h])
     x1, y1 = np.clip(extended_box[2:] + 1, a_min=0, a_max=[im_w, im_h])

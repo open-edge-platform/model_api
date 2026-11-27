@@ -154,6 +154,11 @@ class InstanceSegmentationModel(ImageModel):
 
         Goes through `_postprocess_tile_mask` so subclasses that customize it (or `_postprocess_single_mask`)
         keep their decoding. The full-image canvas is transient; only the small crop is kept.
+
+        This default allocates one full-image canvas per detection (CPU time and transient memory grow with the image
+        size), because `_postprocess_single_mask` is defined to return a full-image mask. Subclasses used on large
+        tiled images should override this method and return the crop directly, as `MaskRCNNModel` and
+        `DETRInstanceSegmentation` do.
         """
         return _trim_to_extent(self._postprocess_tile_mask(box, raw_cls_mask, coord, im_h, im_w), 0, 0)
 

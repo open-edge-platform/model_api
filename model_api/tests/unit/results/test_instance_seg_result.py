@@ -159,3 +159,21 @@ def test_image_result_with_soft_prediction():
     s = str(result)
     assert "[10,10]" in s  # soft prediction shape
     assert "[2]" in s  # feature vector shape
+
+
+def test_masks_none_requires_crops_and_image_shape():
+    boxes, labels = np.zeros((1, 4)), np.zeros(1)
+    with pytest.raises(ValueError, match="mask_crops"):
+        InstanceSegmentationResult(boxes, labels, None)
+    with pytest.raises(ValueError, match="mask_crops"):
+        InstanceSegmentationResult(boxes, labels, None, mask_crops=[(np.ones((2, 2), np.uint8), 0, 0)])
+
+    result = InstanceSegmentationResult(
+        boxes,
+        labels,
+        None,
+        mask_crops=[(np.ones((2, 2), np.uint8), 1, 1)],
+        image_shape=(4, 4),
+    )
+    assert result.masks.shape == (1, 4, 4)
+    assert result.masks[0, 1:3, 1:3].all()

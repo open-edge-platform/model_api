@@ -24,18 +24,22 @@ class InstanceSegmentationResult(DetectionResult):
     Args:
         bboxes (np.ndarray): bounding boxes in dim (N, 4) where N is the number of boxes.
         labels (np.ndarray): labels for each bounding box in dim (N,).
-        masks (np.ndarray): masks for each bounding box in dim (N, H, W).
+        masks (np.ndarray | None): masks for each bounding box in dim (N, H, W). May be None only when ``mask_crops``
+            and ``image_shape`` are given; ``masks`` then builds the dense array on first access.
         scores (np.ndarray | None, optional): confidence scores for each bounding box in dim (N,). Defaults to None.
         label_names (list[str] | None, optional): class names for each label. Defaults to None.
         saliency_map (list[np.ndarray] | None, optional): saliency maps for XAI. Defaults to None.
         feature_vector (np.ndarray | None, optional): feature vector for XAI. Defaults to None.
+        mask_crops (list[tuple[np.ndarray, int, int]] | None, optional): one ``(crop, x0, y0)`` per object in
+            full-image coordinates, a memory-bounded alternative to dense masks. Defaults to None.
+        image_shape (tuple[int, int] | None, optional): ``(H, W)`` of the image the crops belong to. Defaults to None.
     """
 
     def __init__(
         self,
         bboxes: np.ndarray,
         labels: np.ndarray,
-        masks: np.ndarray,
+        masks: np.ndarray | None,
         scores: np.ndarray | None = None,
         label_names: list[str] | None = None,
         saliency_map: list[np.ndarray] | None = None,
@@ -44,6 +48,9 @@ class InstanceSegmentationResult(DetectionResult):
         image_shape: tuple[int, int] | None = None,
     ):
         super().__init__(bboxes, labels, scores, label_names, saliency_map, feature_vector)
+        if masks is None and (mask_crops is None or image_shape is None):
+            msg = "InstanceSegmentationResult needs `masks`, or both `mask_crops` and `image_shape`"
+            raise ValueError(msg)
         self._masks = masks
         # Memory-bounded alternative to dense masks: one (crop, x0, y0) per object in full-image
         # coordinates. When set, `masks` stays None until accessed, then is densified on demand.
