@@ -71,10 +71,7 @@ here is the wire format for this contract.
 >    task-specific fine-tuning in Geti (custom label sets, datasets, and
 >    thresholds).
 >
-> **This specification covers Phase 1 only.** Phase 2 is expected to reuse the
-> same metadata vocabulary, but any additional fields or constraints it requires
-> are out of scope for this document.
-
+> 
 ## Execution plan
 
 ### Original models (Phase 1)
@@ -106,6 +103,7 @@ here is the wire format for this contract.
    - [`input_dtype` / `interpolation_mode` / `pad_value`](#input_dtype--interpolation_mode--pad_value)
    - [`orig_height` / `orig_width`](#orig_height--orig_width)
    - [`mean_values` / `scale_values` / `input_color_format`](#mean_values--scale_values--input_color_format)
+   - [`intensity_config`](#intensity_config)
 4. [Input / output contract](#input--output-contract)
    - [`input_roles`](#input_roles)
    - [`output_roles`](#output_roles)
@@ -210,11 +208,12 @@ plus the detailed per-stage fields.
 - **Stage:** Pre
 - **Type:** boolean
 - **Possible values:** `true`, `false`.
-- **Description:** Whether resize + normalization were **baked into the model graph
-  at export time**.
+- **Description:** Whether the specified preprocessing, including resize,
+  intensity processing, channel repetition, and normalization where applicable,
+  was **baked into the model graph at export time**.
 - **What it does:** Three cases must be distinguished:
-  1. `embedded_pre_postprocessing = true` — the graph already contains resize/normalize;
-     the client feeds the raw image and MUST NOT repeat it.
+  1. `embedded_pre_postprocessing = true` — the graph already contains the
+     specified preprocessing; the client feeds the raw image and MUST NOT repeat it.
   2. `embedded_pre_postprocessing = false` and the client **can** embed preprocessing at
      load time (e.g. OpenVINO PrePostProcessor on a static-shape model) — the
      client builds graph-side preprocessing from the resize/mean/scale
@@ -256,7 +255,7 @@ plus the detailed per-stage fields.
 - **Stage:** Pre
 - **Type:** enum string / enum string / integer
 - **Possible values:**
-  - `input_dtype`: `u8` (default), `f32`.
+  - `input_dtype`: `u8` (default), `f32`, `u16`, `i16`.
   - `interpolation_mode`: `LINEAR` (default), `CUBIC`, `NEAREST`.
   - `pad_value`: `0..65535` (default `0`; Ultralytics and YOLOX use `114`).
 - **Description:** Element type of the image fed to the pipeline, the resize
@@ -314,6 +313,72 @@ plus the detailed per-stage fields.
   is the identity transform (`mean_values = [0,0,0]`,
   `scale_values = [1,1,1]`) and MUST still be written explicitly when their
   values affect the model input.
+
+### `intensity_config`
+
+- **Stage:** Pre
+- **Type:** XML object containing the following scalar child elements:
+  - `mode`: enum string; `none` (default), `scale_to_unit`, `window`,
+    `percentile`, or `range_scale`.
+  - `max_value`: float; maximum used by `scale_to_unit` and
+    `range_scale`. Required and positive for `scale_to_unit`; optional for
+    `range_scale`.
+  - `window_center`: float; center of the input window, required for
+    `window`.
+  - `window_width`: positive float; width of the input window, required
+    for `window`.
+  - `percentile_low` / `percentile_high`: floats in
+    `0..100`, with low strictly less than high; used by `percentile`, default
+    `1.0` / `99.0`.
+  - `scale_factor`: float; multiplier used by `range_scale`, default
+    `1.0`.
+  - `min_value`: float; lower clipping bound used by `range_scale`,
+    default `0.0`.
+  - `repeat_channels`: boolean; repeat single-channel input to three
+    channels, default `false`.
+- **Description:** Controls input intensity conversion and optional grayscale
+  channel expansion. For example:
+
+  ```xml
+  <model_metadata>
+    <intensity_config>
+      <mode value="window" />
+      <window_center value="100" />
+      <window_width value="200" />
+      <repeat_channels value="true" />
+    </intensity_config>
+  </model_metadata>
+  ```
+
+- **What it does:** When enabled, repeat a single channel three times before
+  resize; already three-channel input remains unchanged. Apply the intensity
+  transform after resize and before color conversion and mean/scale
+  normalization. Convert intensity inputs to `f32` before arithmetic in every
+  mode except `none`:
+  - `none`: leave intensities unchanged.
+  - `scale_to_unit`: compute `x / max_value`, without clipping.
+  - `window`: let `low = center - width / 2`; compute
+    `clip((x - low) / width, 0, 1)`.
+  - `percentile`: calculate the low and high percentiles over all values of the
+    resized image, using linear interpolation between sorted samples. Compute
+    `clip((x - low) / (high - low), 0, 1)`; if the two percentiles are equal,
+    return zeros.
+  - `range_scale`: multiply by `scale_factor` and clip to
+    `min_value` and, when provided, `max_value`. If the
+    maximum is provided and differs from the minimum, subtract the minimum and
+    divide by `(maximum - minimum)`; otherwise return the clipped value. A
+    provided maximum MUST be greater than or equal to the minimum.
+
+  The declared operations must not be repeated when they are embedded in the
+  graph. A client that cannot embed a requested operation, such as percentile
+  scaling, must perform it on the host instead.
+- **Used by:** Image models requiring intensity conversion or single-channel
+  expansion, including models trained on higher-bit-depth images.
+- **Required:** Optional when no intensity transform or channel expansion is
+  needed. When omitted, `mode` is `none` and
+  `repeat_channels` is `false`. Mode-specific required values MUST
+  be supplied explicitly; other fields may be omitted and use the defaults
+  above where specified.
 
 ---
 
@@ -820,8 +885,9 @@ Each plan follows the same shape:
 A shared prerequisite for all tasks: implement the metadata reader on `Model`
 (parse `task`, `*_roles`, `output_layout`, `labels`, `decoder`,
 `decoder_constants`, …), a shared preprocessing builder driven
-by `resize_type` / `pad_value` / `interpolation_mode` / `input_dtype` / mean /
-scale / `orig_*`, and a `model_type → metadata` back-compat expansion table so
+by `resize_type` / `pad_value` / `interpolation_mode` / `input_dtype` /
+`intensity_config` / mean / scale / `orig_*`, and a `model_type → metadata`
+back-compat expansion table so
 un-migrated models keep loading. The ONNX adapter allow-list in `Model.__init__`
 is replaced by per-decoder capability checks.
 
