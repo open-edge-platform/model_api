@@ -24,25 +24,38 @@ class InstanceSegmentationResult(DetectionResult):
     Args:
         bboxes (np.ndarray): bounding boxes in dim (N, 4) where N is the number of boxes.
         labels (np.ndarray): labels for each bounding box in dim (N,).
-        masks (np.ndarray): masks for each bounding box in dim (N, H, W).
+        masks (np.ndarray | None): masks for each bounding box in dim (N, H, W). May be None only when ``mask_crops``
+            and ``image_shape`` are given; ``masks`` then builds the dense array on first access.
         scores (np.ndarray | None, optional): confidence scores for each bounding box in dim (N,). Defaults to None.
         label_names (list[str] | None, optional): class names for each label. Defaults to None.
         saliency_map (list[np.ndarray] | None, optional): saliency maps for XAI. Defaults to None.
         feature_vector (np.ndarray | None, optional): feature vector for XAI. Defaults to None.
+        mask_crops (list[tuple[np.ndarray, int, int]] | None, optional): one ``(crop, x0, y0)`` per object in
+            full-image coordinates, a memory-bounded alternative to dense masks. Defaults to None.
+        image_shape (tuple[int, int] | None, optional): ``(H, W)`` of the image the crops belong to. Defaults to None.
     """
 
     def __init__(
         self,
         bboxes: np.ndarray,
         labels: np.ndarray,
-        masks: np.ndarray,
+        masks: np.ndarray | None,
         scores: np.ndarray | None = None,
         label_names: list[str] | None = None,
         saliency_map: list[np.ndarray] | None = None,
         feature_vector: np.ndarray | None = None,
+        mask_crops: list[tuple[np.ndarray, int, int]] | None = None,
+        image_shape: tuple[int, int] | None = None,
     ):
         super().__init__(bboxes, labels, scores, label_names, saliency_map, feature_vector)
+        if masks is None and (mask_crops is None or image_shape is None):
+            msg = "InstanceSegmentationResult needs `masks`, or both `mask_crops` and `image_shape`"
+            raise ValueError(msg)
         self._masks = masks
+        # Memory-bounded alternative to dense masks: one (crop, x0, y0) per object in full-image
+        # coordinates. When set, `masks` stays None until accessed, then is densified on demand.
+        self.mask_crops = mask_crops
+        self.image_shape = image_shape
 
     def __str__(self) -> str:
         repr_str = ""
@@ -65,6 +78,12 @@ class InstanceSegmentationResult(DetectionResult):
 
     @property
     def masks(self) -> np.ndarray:
+        if self._masks is None and self.mask_crops is not None and self.image_shape is not None:
+            h, w = self.image_shape
+            dense = np.zeros((len(self.mask_crops), h, w), dtype=np.uint8)
+            for i, (crop, x0, y0) in enumerate(self.mask_crops):
+                dense[i, y0 : y0 + crop.shape[0], x0 : x0 + crop.shape[1]] = crop
+            self._masks = dense
         return self._masks
 
     @masks.setter

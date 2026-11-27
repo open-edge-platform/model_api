@@ -142,6 +142,26 @@ class InstanceSegmentationModel(ImageModel):
         """Place a tile's object-crop mask using its full-image bounding box."""
         return self._postprocess_single_mask(box, raw_cls_mask, im_h, im_w)
 
+    def _postprocess_tile_mask_crop(
+        self,
+        box: np.ndarray,
+        raw_cls_mask: np.ndarray,
+        coord: list[int],
+        im_h: int,
+        im_w: int,
+    ) -> tuple[np.ndarray, int, int]:
+        """Like `_postprocess_tile_mask` but returns ``(crop, x0, y0)``, trimmed to the mask's nonzero extent.
+
+        Goes through `_postprocess_tile_mask` so subclasses that customize it (or `_postprocess_single_mask`)
+        keep their decoding. The full-image canvas is transient; only the small crop is kept.
+
+        This default allocates one full-image canvas per detection (CPU time and transient memory grow with the image
+        size), because `_postprocess_single_mask` is defined to return a full-image mask. Subclasses used on large
+        tiled images should override this method and return the crop directly, as `MaskRCNNModel` and
+        `DETRInstanceSegmentation` do.
+        """
+        return _trim_to_extent(self._postprocess_tile_mask(box, raw_cls_mask, coord, im_h, im_w), 0, 0)
+
     def postprocess(self, outputs: dict, meta: dict) -> InstanceSegmentationResult:
         if (
             outputs[self.output_blob_name["labels"]].ndim == 2
@@ -285,6 +305,17 @@ class MaskRCNNModel(InstanceSegmentationModel):
     def _postprocess_single_mask(self, box: np.ndarray, raw_cls_mask: np.ndarray, im_h: int, im_w: int) -> np.ndarray:
         return _segm_postprocess(box, raw_cls_mask, im_h, im_w)
 
+    def _postprocess_tile_mask_crop(
+        self,
+        box: np.ndarray,
+        raw_cls_mask: np.ndarray,
+        coord: list[int],
+        im_h: int,
+        im_w: int,
+    ) -> tuple[np.ndarray, int, int]:
+        """Box-sized crop without a full-image canvas."""
+        return _segm_postprocess_crop(box, raw_cls_mask, im_h, im_w)
+
 
 class DETRInstanceSegmentation(InstanceSegmentationModel):
     """Instance segmentation model for DETR-family architectures (e.g. RF-DETR-Seg).
@@ -317,6 +348,19 @@ class DETRInstanceSegmentation(InstanceSegmentationModel):
         image_mask[y1:y2, x1:x2] = tile_mask
         return image_mask
 
+    def _postprocess_tile_mask_crop(
+        self,
+        box: np.ndarray,
+        raw_cls_mask: np.ndarray,
+        coord: list[int],
+        im_h: int,
+        im_w: int,
+    ) -> tuple[np.ndarray, int, int]:
+        x1, y1, x2, y2 = coord
+        tile_mask = self._postprocess_single_mask(box, raw_cls_mask, y2 - y1, x2 - x1)
+        # A full-image tile would otherwise keep an (H, W) mask per detection.
+        return _trim_to_extent(tile_mask, x1, y1)
+
 
 def _average_and_normalize(saliency_maps: list) -> list:
     aggregated = []
@@ -344,7 +388,22 @@ def _expand_box(box: np.ndarray, scale: float) -> np.ndarray:
     return box_exp
 
 
-def _segm_postprocess(box: np.ndarray, raw_cls_mask: np.ndarray, im_h: int, im_w: int) -> np.ndarray:
+def _trim_to_extent(mask: np.ndarray, x0: int, y0: int) -> tuple[np.ndarray, int, int]:
+    """Copy of ``mask`` cut to its nonzero extent, with the offset moved to match; empty masks become 0x0."""
+    rows, cols = np.flatnonzero(mask.any(axis=1)), np.flatnonzero(mask.any(axis=0))
+    if len(rows) == 0:
+        return np.zeros((0, 0), dtype=mask.dtype), x0, y0
+    r0, r1, c0, c1 = rows[0], rows[-1] + 1, cols[0], cols[-1] + 1
+    return mask[r0:r1, c0:c1].copy(), x0 + int(c0), y0 + int(r0)
+
+
+def _segm_postprocess_crop(
+    box: np.ndarray,
+    raw_cls_mask: np.ndarray,
+    im_h: int,
+    im_w: int,
+) -> tuple[np.ndarray, int, int]:
+    """Resize an object-crop mask to its box; return ``(mask, x0, y0)`` clipped to the image."""
     # Add zero border to prevent upsampling artifacts on segment borders.
     raw_cls_mask = np.pad(raw_cls_mask, ((1, 1), (1, 1)), "constant", constant_values=0)
     extended_box = _expand_box(
@@ -357,12 +416,18 @@ def _segm_postprocess(box: np.ndarray, raw_cls_mask: np.ndarray, im_h: int, im_w
 
     raw_cls_mask = cv2.resize(raw_cls_mask.astype(np.float32), (w, h)) > 0.5
     mask = raw_cls_mask.astype(np.uint8)
-    # Put an object mask in an image mask.
-    im_mask = np.zeros((im_h, im_w), dtype=np.uint8)
-    im_mask[y0:y1, x0:x1] = mask[
+    crop = mask[
         (y0 - extended_box[1]) : (y1 - extended_box[1]),
         (x0 - extended_box[0]) : (x1 - extended_box[0]),
     ]
+    return crop, int(x0), int(y0)
+
+
+def _segm_postprocess(box: np.ndarray, raw_cls_mask: np.ndarray, im_h: int, im_w: int) -> np.ndarray:
+    crop, x0, y0 = _segm_postprocess_crop(box, raw_cls_mask, im_h, im_w)
+    # Put an object mask in an image mask.
+    im_mask = np.zeros((im_h, im_w), dtype=np.uint8)
+    im_mask[y0 : y0 + crop.shape[0], x0 : x0 + crop.shape[1]] = crop
     return im_mask
 
 

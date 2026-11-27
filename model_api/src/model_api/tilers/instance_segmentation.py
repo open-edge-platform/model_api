@@ -9,7 +9,10 @@ import cv2 as cv
 import numpy as np
 
 from model_api.models import InstanceSegmentationResult
-from model_api.models.instance_segmentation import InstanceSegmentationModel, _segm_postprocess
+from model_api.models.instance_segmentation import (
+    InstanceSegmentationModel,
+    _segm_postprocess_crop,
+)
 from model_api.models.utils import multiclass_nms
 
 from .detection import DetectionTiler
@@ -127,23 +130,26 @@ class InstanceSegmentationTiler(DetectionTiler[InstanceSegmentationResult]):
 
         labels, scores, bboxes = np.hsplit(detections_array, [1, 2])
         labels = labels.astype(np.int32)
-        resized_masks, label_names = [], []
+        mask_crops, label_names = [], []
         for mask, box, label_idx, coord in zip(masks, bboxes, labels, mask_coords):
             label_names.append(self.model.get_label_name(int(label_idx.squeeze())))
             if isinstance(self.model, InstanceSegmentationModel):
-                resized_masks.append(self.model._postprocess_tile_mask(box, mask, coord, *shape[:-1]))  # noqa: SLF001
+                mask_crops.append(self.model._postprocess_tile_mask_crop(box, mask, coord, *shape[:2]))  # noqa: SLF001
             else:
-                resized_masks.append(_segm_postprocess(box, mask, *shape[:-1]))
+                mask_crops.append(_segm_postprocess_crop(box, mask, *shape[:2]))
 
-        resized_masks = np.stack(resized_masks) if resized_masks else masks
+        # Crops, not a dense (N, H, W) stack: that is N full-image canvases (GBs on 20 MP inputs).
+        # `result.masks` densifies lazily for callers that still need it.
         return InstanceSegmentationResult(
             bboxes=np.round(bboxes).astype(np.int32),
             labels=labels.squeeze(),
             scores=scores.squeeze(),
-            masks=resized_masks,
+            masks=None if mask_crops else np.empty((0, *shape[:2]), dtype=np.uint8),
             label_names=label_names or None,
             saliency_map=saliency_map,
             feature_vector=merged_vector,
+            mask_crops=mask_crops,
+            image_shape=tuple(shape[:2]),
         )
 
     def _merge_saliency_maps(self, saliency_maps, shape, tiles_coords):
